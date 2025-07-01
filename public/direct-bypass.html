@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Bypass</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #4a0bff 0%, #0080ff 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+        }
+        h1 {
+            color: #ffd700;
+            margin-top: 0;
+        }
+        button {
+            background: #ffd700;
+            color: #4a0bff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Direct Bypass Access</h1>
+        <p>This page will directly enable bypass mode and take you to the application with the new design.</p>
+        <button id="bypassButton">Access App With New Design</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('bypassButton').addEventListener('click', function() {
+                // Clear any cached data
+                localStorage.removeItem('bypass_auth');
+                sessionStorage.clear();
+                
+                // Set bypass flag
+                localStorage.setItem('bypass_auth', 'true');
+                
+                // Force a new page load
+                window.location.href = '/?t=' + new Date().getTime();
+            });
+        });
+    </script>
+</body>
+</html>

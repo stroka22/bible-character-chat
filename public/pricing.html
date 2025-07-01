@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - Bible Character Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary-50: #f0f9ff;
+            --color-primary-100: #e0f2fe;
+            --color-primary-500: #0ea5e9;
+            --color-primary-600: #0284c7;
+            --color-primary-700: #0369a1;
+            --color-primary-800: #075985;
+            --color-primary-900: #0c4a6e;
+            --color-secondary-500: #8b5cf6;
+            --color-secondary-600: #7c3aed;
+            --color-secondary-700: #6d28d9;
+            --color-yellow-300: #fcd34d;
+            --color-yellow-400: #fbbf24;
+            --color-yellow-500: #f59e0b;
+            --color-yellow-600: #d97706;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: white;
+            background: linear-gradient(to bottom, #1e3a8a, #1e40af, #3b82f6);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logo span {
+            color: var(--color-yellow-400);
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+        }
+        
+        /* Background effects */
+        .bg-effect {
+            position: absolute;
+            z-index: -1;
+        }
+        
+        .light-ray {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: radial-gradient(ellipse at top, rgba(255, 255, 255, 0.3), transparent 70%);
+            z-index: -1;
+        }
+        
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            filter: blur(40px);
+        }
+        
+        .cloud-1 {
+            top: 20%;
+            left: 25%;
+            width: 300px;
+            height: 100px;
+            opacity: 0.2;
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        .cloud-2 {
+            top: 40%;
+            right: 20%;
+            width: 400px;
+            height: 150px;
+            opacity: 0.15;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+        
+        .cloud-3 {
+            bottom: 30%;
+            left: 30%;
+            width: 350px;
+            height: 120px;
+            opacity: 0.1;
+            animation: float 30s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        /* Pricing toggle */
+        .pricing-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .toggle-container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            border-radius: 9999px;
+            padding: 0.25rem;
+            display: flex;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toggle-option {
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-option.active {
+            background-color: var(--color-yellow-400);
+            color: #1e3a8a;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .toggle-option:not(.active) {
+            color: white;
+        }
+        
+        .toggle-option:not(.active):hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Pricing cards */
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .pricing-card.premium {
+            border: 2px solid var(--color-yellow-400);
+            transform: scale(1.05);
+            z-index: 1;
+        }
+        
+        .pricing-card.premium:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+        
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--color-yellow-400);
+            color: #1e3a8a;
+            font-weight: 700;
+            font-size: 0.875rem;
+            padding: 0.25rem 1rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .plan-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--color-yellow-300);
+        }
+        
+        .plan-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .price-period {
+            font-size: 1.25rem;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+        
+        .card-body {
+            padding: 2rem;
+            flex-grow: 1;
+        }
+        
+        .features-list {
+            list-style-type: none;
+            margin-bottom: 2rem;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .feature-icon {
+            flex-shrink: 0;
+            margin-right: 0.75rem;
+            color: var(--color-yellow-400);
+        }
+        
+        .card-footer {
+            padding: 0 2rem 2rem;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--color-yellow-500);
+            color: #1e3a8a;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--color-yellow-600);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* FAQ section */
+        .faq-section {
+            margin-top: 4rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--color-yellow-300);
+        }
+        
+        .faq-item {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1.5rem;
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        
+        .faq-answer {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: var(--color-yellow-400);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .pricing-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .pricing-card.premium {
+                transform: scale(1);
+            }
+            
+            .pricing-card.premium:hover {
+                transform: translateY(-5px);
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Animation for the CTA button */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .btn-premium {
+            animation: pulse 2s infinite;
+            background-color: var(--color-yellow-400);
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+        
+        .btn-premium:hover {
+            animation: none;
+            background-color: var(--color-yellow-500);
+        }
+        
+        /* Back to home link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: var(--color-yellow-400);
+        }
+        
+        .back-icon {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background effects -->
+    <div class="light-ray"></div>
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    
+    <div class="container">
+        <!-- Back to home link -->
+        <a href="/" class="back-link">
+            <svg class="back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Back to Home
+        </a>
+        
+        <header>
+            <h1 class="logo">Ask<span>Jesus</span>AI</h1>
+            <p class="subtitle">Choose the perfect plan for your spiritual journey</p>
+        </header>
+        
+        <!-- Pricing toggle -->
+        <div class="pricing-toggle">
+            <div class="toggle-container">
+                <div class="toggle-option monthly active" id="monthly-toggle">Monthly</div>
+                <div class="toggle-option yearly" id="yearly-toggle">Yearly (Save 17%)</div>
+            </div>
+        </div>
+        
+        <!-- Pricing cards -->
+        <div class="pricing-cards">
+            <!-- Free plan -->
+            <div class="pricing-card">
+                <div class="card-header">
+                    <h2 class="plan-name">Free</h2>
+                    <p class="plan-description">Start your spiritual journey</p>
+                    <div class="price">$0<span class="price-period">/month</span></div>
+                </div>
+                <div class="card-body">
+                    <ul class="features-list">
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Limited character selection (major characters)</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>5 messages per conversation</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Basic denominations only</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>English language support</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>No conversation saving</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-secondary">Current Plan</button>
+                </div>
+            </div>
+            
+            <!-- Premium plan -->
+            <div class="pricing-card premium">
+                <div class="popular-badge">Most Popular</div>
+                <div class="card-header">
+                    <h2 class="plan-name">Premium</h2>
+                    <p class="plan-description">Unlock the full spiritual experience</p>
+                    <div class="price" id="premium-price">$9.97<span class="price-period">/month</span></div>
+                </div>
+                <div class="card-body">
+                    <ul class="features-list">
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span><strong>Full character library (50+ characters)</strong></span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span><strong>Unlimited conversation length</strong></span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>All denominations and theological perspectives</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Multi-language support</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Save and export conversations</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Voice input/output</span>
+                        </li>
+                        <li class="feature-item">
+                            <span class="feature-icon">✓</span>
+                            <span>Ad-free experience</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="/checkout.html" class="btn btn-premium">Upgrade to Premium</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FAQ section -->
+        <div class="faq-section">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <h3 class="faq-question">How accurate are the Bible character responses?</h3>
+                <p class="faq-answer">Our AI is trained on biblical texts, historical context, and theological scholarship to provide responses that align with each character's known attributes, teachings, and historical context. While no AI can perfectly represent historical figures, we strive for theological and historical accuracy.</p>
+            </div>
+            
+            <div class="faq-item">
+                <h3 class="faq-question">Can I change plans later?</h3>
+                <p class="faq-answer">Yes! You can upgrade to Premium at any time. If you subscribe and later wish to downgrade, you can cancel your Premium subscription and return to the Free plan at the end of your billing period.</p>
+            </div>
+            
+            <div class="faq-item">
+                <h3 class="faq-question">Which Bible characters are included?</h3>
+                <p class="faq-answer">The Free plan includes major figures like Jesus, Paul, Moses, and David. Premium unlocks over 50 characters including prophets, apostles, women of the Bible, and lesser-known but significant biblical figures from both testaments.</p>
+            </div>
+            
+            <div class="faq-item">
+                <h3 class="faq-question">Is my payment information secure?</h3>
+                <p class="faq-answer">Absolutely. We use Stripe, a PCI-compliant payment processor, to handle all transactions. Your payment details are never stored on our servers.</p>
+            </div>
+            
+            <div class="faq-item">
+                <h3 class="faq-question">Can I get a refund if I'm not satisfied?</h3>
+                <p class="faq-answer">Yes, we offer a 7-day money-back guarantee for Premium subscriptions. If you're not completely satisfied, contact our support team within 7 days of purchase for a full refund.</p>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="footer-links">
+                <a href="/" class="footer-link">Home</a>
+                <a href="/terms.html" class="footer-link">Terms of Service</a>
+                <a href="/privacy.html" class="footer-link">Privacy Policy</a>
+                <a href="/contact.html" class="footer-link">Contact Us</a>
+            </div>
+            <p>&copy; 2025 AskJesusAI. All rights reserved.</p>
+            <p class="scripture-quote">"All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness." - 2 Timothy 3:16</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Simple pricing toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthlyToggle = document.getElementById('monthly-toggle');
+            const yearlyToggle = document.getElementById('yearly-toggle');
+            const premiumPrice = document.getElementById('premium-price');
+            
+            monthlyToggle.addEventListener('click', function() {
+                monthlyToggle.classList.add('active');
+                yearlyToggle.classList.remove('active');
+                premiumPrice.innerHTML = '$9.97<span class="price-period">/month</span>';
+            });
+            
+            yearlyToggle.addEventListener('click', function() {
+                yearlyToggle.classList.add('active');
+                monthlyToggle.classList.remove('active');
+                premiumPrice.innerHTML = '$97.97<span class="price-period">/year</span>';
+            });
+            
+            // Set auth bypass flag for easy testing
+            localStorage.setItem('bypass_auth', 'true');
+        });
+    </script>
+</body>
+</html>
