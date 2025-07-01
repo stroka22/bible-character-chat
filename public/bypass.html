@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Bypass</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to bottom, #1e3a8a, #3b82f6);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            margin-top: 0;
+            color: #eab308;
+            font-size: 2rem;
+        }
+        p {
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        button {
+            background: #eab308;
+            color: #1e3a8a;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #f59e0b;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AskJesusAI Authentication Bypass</h1>
+        <p>Click the button below to bypass the login screen and access the Bible Character Chat interface directly.</p>
+        <button id="bypassButton">Enable Bypass & Launch App</button>
+    </div>
+
+    <script>
+        document.getElementById('bypassButton').addEventListener('click', function() {
+            // Set the bypass flag in localStorage
+            localStorage.setItem('bypass_auth', 'true');
+            
+            // Redirect to the main app
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

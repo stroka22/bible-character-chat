@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------
+  Global base styles
+  These styles ensure the application always fills the viewport height
+  and provide a single spot for additional base tweaks if needed.
+------------------------------------------------------------------------ */
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    /* Neutral light background & readable foreground text */
+    /* Use literal Tailwind palette values instead of the theme() helper */
+    /* Let descendants define their own palette (e.g. heavenly gradient) */
+    /* Improve text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Tailwind already sets a default sans-serif stack via @tailwind base */
+    line-height: 1.5;
+  }
+}
+
+/* ---------------------------------------------------------------------
+  Spiritual background animations (clouds & light-rays)
+------------------------------------------------------------------------ */
+
+@keyframes float {
+  0%   { transform: translateY(0)      translateX(0);   }
+  50%  { transform: translateY(-12px)  translateX(4px); }
+  100% { transform: translateY(0)      translateX(0);   }
+}
+
+@keyframes float-delayed {
+  0%   { transform: translateY(0)       translateX(0);  }
+  50%  { transform: translateY(-16px)   translateX(-6px); }
+  100% { transform: translateY(0)       translateX(0);  }
+}
+
+@keyframes float-slow {
+  0%   { transform: translateY(0)      translateX(0);   }
+  50%  { transform: translateY(-8px)   translateX(2px); }
+  100% { transform: translateY(0)      translateX(0);   }
+}
+
+@keyframes ray-pulse {
+  0%,100% { opacity: .25; }
+  50%     { opacity: .4;  }
+}
+
+@layer utilities {
+  .animate-float           { animation: float 6s ease-in-out infinite; }
+  .animate-float-delayed   { animation: float-delayed 7s ease-in-out infinite; }
+  .animate-float-slow      { animation: float-slow 9s ease-in-out infinite; }
+  .animate-ray-pulse       { animation: ray-pulse 5s ease-in-out infinite; }
+}
