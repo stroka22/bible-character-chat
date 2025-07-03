@@ -6,8 +6,6 @@ import { supabase } from './supabase';
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
 const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY;
-const edgeFunctionUrl = import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_URL || 
-  `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co/create-checkout-session`;
 
 // Determine Stripe mode (live or test) from the public key
 const STRIPE_MODE = stripePublicKey?.startsWith('pk_live_') ? 'live' : 'test';
@@ -98,7 +96,7 @@ export async function createCustomer(userId: string, email: string): Promise<str
 }
 
 /**
- * Creates a checkout session by calling a secure Edge Function.
+ * Creates a checkout session by calling the Vercel Serverless Function.
  * @param options - Options for the checkout session
  * @returns The checkout session ID and URL
  */
@@ -122,12 +120,14 @@ export async function createCheckoutSession(options: CheckoutSessionOptions): Pr
   }
 
   try {
-    console.log(`Calling Edge Function at: ${edgeFunctionUrl}`);
-    const response = await fetch(edgeFunctionUrl, {
+    // Use the Vercel Serverless Function
+    const apiRoute = '/api/create-checkout-session';
+    console.log(`Calling Vercel API route: ${apiRoute}`);
+
+    const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabase.auth.getSession()?.data.session?.access_token}`
       },
       body: JSON.stringify(options),
     });
