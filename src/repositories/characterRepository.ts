@@ -202,7 +202,7 @@ export const characterRepository = {
     try {
       const { data, error } = await supabase
         .from('characters')
-        .insert(characters, { ignoreDuplicates: true })
+        .insert(characters)
         .select('*');
 
       if (error) {

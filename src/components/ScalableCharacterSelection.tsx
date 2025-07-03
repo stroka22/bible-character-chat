@@ -49,10 +49,19 @@ const GROUP_IMAGERY = {
 };
 
 // Flat list of Bible books in canonical order
-const ALL_BOOKS: string[] = [
-  ...BIBLE_BOOKS.oldTestament,
-  ...BIBLE_BOOKS.newTestament,
-];
+/*
+ * NOTE:
+ * The canonical book list isn’t currently used in this component.  Leaving the
+ * spread lines outside of a comment block caused the TypeScript parser to throw
+ * a “Declaration or statement expected” error.  We wrap the entire declaration
+ * in a block-comment so it can be re-enabled later without breaking the build.
+ *
+ * Example usage if needed:
+ * const ALL_BOOKS: string[] = [
+ *   ...BIBLE_BOOKS.oldTestament,
+ *   ...BIBLE_BOOKS.newTestament,
+ * ];
+ */
 
 // Helper to detect testament from book name
 function getTestament(book: string): 'old' | 'new' | 'unknown' {

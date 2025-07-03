@@ -1,214 +1,181 @@
-# 📦 Deployment Guide — Bible Character Chat
+# 🚀 Deployment Guide – Bible Character Chat
 
-A step-by-step handbook for putting the **Bible Character Chat** platform into production.  
-Covers hosting choices, database provisioning, environment variables, CI/CD, domain + SSL, plus hardening tips.
+This guide walks you through taking the project **from GitHub → live production** with working Stripe payments and Supabase back-end.
 
 ---
 
 ## 1. Prerequisites
 
-| Requirement | Why you need it |
-|-------------|-----------------|
-| **Git & GitHub** | Source-control + CI integration |
-| **Node ≥ 20 & npm ≥ 10** | Building the React + Vite front-end |
-| **Supabase account** | PostgreSQL DB, Auth & Storage |
-| **OpenAI account** | GPT-4 API key |
-| A domain name | e.g. `askjesus.ai` |
-| Optional Stripe account | If you plan to charge users |
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Node | 18 + | Front-end / CLI scripts |
+| npm / pnpm | latest | dependency management |
+| Supabase CLI | ≥ 1.134 | push SQL & deploy Edge Functions |
+| Vercel CLI | latest | optional zero-config frontend hosting |
+| Stripe account | Test & Live keys | subscriptions |
+| GitHub | repo hosting | CI / branch rulesets |
 
 ---
 
-## 2. Repository Setup
-
-1. Initialise Git inside the project folder  
-   `git init && git add . && git commit -m "Initial commit"`
-2. Create a **private** GitHub repo, then:  
-   `git remote add origin https://github.com/<org>/bible-character-chat.git`  
-   `git push -u origin main`
-3. Add the default `.gitignore` (already in the project) – confirm `node_modules`, `dist`, `.env*` are ignored.
-
----
-
-## 3. Supabase Configuration
-
-### 3.1  Create a project
-- In the Supabase dashboard click **New Project** → choose region → set strong DB password.
-
-### 3.2  Apply SQL schema
-```bash
-supabase login
-supabase link --project-ref <PROJECT_ID>
-supabase db push        # applies migrations/supabase/migrations/*
-```
-
-### 3.3  Storage Buckets (optional)
-Create `avatars` bucket for custom character images (public).
-
-### 3.4  Secrets & Policies
-- In **Project Settings → API** copy:
-  - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
-- RLS is already enabled in the provided schema.
-
----
-
-## 4. Environment Variables
-
-Create two files:
-
-### `.env.local` (frontend / Vite)
-```
-VITE_SUPABASE_URL=https://xxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=pk_xxxxxxxxxx
-***REMOVED***
-```
-
-### Production secrets  
-Store **server–side** keys (OpenAI, Stripe) in:
-
-* **Vercel / Netlify** → Project → Settings → Environment Variables  
-* **Docker** → `docker-compose.yml` → `environment:`  
-* **DigitalOcean / AWS** → Secret Manager / Parameter Store  
-
-Never expose the real `OPENAI_API_KEY` to the browser in production.  
-Use a Supabase Edge Function or tiny Node/Cloudflare worker to proxy chat requests.
-
----
-
-## 5. Hosting Options
-
-| Option | Notes | CLI |
-|--------|-------|-----|
-| **Vercel** | Easiest, auto-detects Vite. Free SSL. | `vercel` |
-| **Netlify** | Similar simplicity, functions built-in. | `ntl deploy` |
-| **Cloudflare Pages + Functions** | Good for global latency. | `wrangler pages deploy dist` |
-| **DigitalOcean Droplet + Docker** | Full control, SSH access. | `docker compose up -d` |
-| **AWS Amplify / ECS** | Enterprise scale. | – |
-
-### Build settings (Vercel / Netlify)
-```
-Framework: Other (Vite)
-Build command: npm run build
-Output directory: dist
-```
-
----
-
-## 6. Continuous Deployment (GitHub Actions)
-
-`.github/workflows/deploy.yml` (example for Vercel):
-
-```yaml
-name: Deploy Frontend
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-      - run: pnpm install
-      - run: pnpm run build
-      - uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-args: '--prod'
-          working-directory: ./
-```
-
-Add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` as repo secrets.
-
----
-
-## 7. Domain & SSL
-
-1. **Add domain** in hosting provider (e.g. Vercel → Domains → Add).
-2. Update your DNS registrar with the provided A/CNAME records.
-3. Wait for propagation; provider issues Let’s Encrypt cert automatically.
-4. Force HTTPS:
-   - Vercel: *Settings → Domains → Enforce HTTPS*.
-   - Netlify: *Domain management → HTTPS → Enforce*.
-
----
-
-## 8. Supabase Edge Function (secure OpenAI key)
+## 2. Clone & Install
 
 ```bash
-supabase functions new chat-proxy
-# functions/chat-proxy/index.ts
-import OpenAI from "openai";
-import { serve } from "std/server";
-
-serve(async (req) => {
-  const { messages, character } = await req.json();
-  const openai = new OpenAI({ apiKey: Deno.env.get("OPENAI_API_KEY") });
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: character.persona_prompt },
-      ...messages
-    ],
-    stream: true,
-  });
-  return new Response(completion.stream);
-});
+git clone https://github.com/your-org/bible-character-chat.git
+cd bible-character-chat
+npm install          # or pnpm install
 ```
 
-Deploy and set secret:  
-`supabase secrets set ***REMOVED***
-In the frontend call `/functions/v1/chat-proxy` instead of OpenAI directly.
+---
+
+## 3. Environment Variables
+
+Create a local file called `.env.local` (NOT committed):
+
+```
+# Public (sent to browser via Vite)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_KEY
+VITE_STRIPE_PUBLIC_KEY=pk_test_xxx              # or pk_live_xxx
+VITE_STRIPE_PRICE_MONTHLY=price_xxx
+VITE_STRIPE_PRICE_YEARLY=price_xxx
+
+# Server-only (Supabase Edge / Vercel)
+STRIPE_SECRET_KEY=sk_test_xxx                  # never exposed client-side
+```
+
+Add `STRIPE_SECRET_KEY` inside:
+
+1. **Supabase Dashboard → Project Settings → Environment Variables → Add variable**  
+2. **Vercel Dashboard → Project → Settings → Environment Variables**
 
 ---
 
-## 9. Scaling & Monitoring
+## 4. Database & Auth
 
-| Concern | Tool |
-|---------|------|
-| Error tracking | Sentry / LogRocket |
-| Performance | Vercel Analytics / Lighthouse CI |
-| DB load | Supabase Observability |
-| Cron & jobs | Supabase Scheduled Functions |
-| Backups | Supabase daily snapshots (enable in **Database Backups**) |
+### 4.1 Spin up Supabase locally (optional)
 
----
+```bash
+supabase start
+```
 
-## 10. Security Hardening Checklist
+### 4.2 Apply SQL schema
 
-- [ ] Use HTTPS everywhere (`Strict-Transport-Security` header).
-- [ ] Set CSP, X-Frame-Options via hosting provider.
-- [ ] Rotate OpenAI & Supabase keys periodically.
-- [ ] Enable 2FA on GitHub and hosting dashboards.
-- [ ] Review Supabase RLS policies before launch.
+```bash
+supabase db reset        # wipes local db
+supabase db push         # applies /supabase/migrations/*.sql
+```
+
+### 4.3 Enable Email Auth  
+Supabase Dashboard → Authentication → Providers → Email → **ON**
 
 ---
 
-## 11. Go-Live Smoke Test
+## 5. Stripe Setup
 
-1. `curl -I https://yourdomain.com` → returns **200** + `Content-Type: text/html`.
-2. Load homepage → upgrade button links to `/pricing.html`.
-3. Supabase auth → sign-up/login works.
-4. Character chat → GPT-4 responses within 10 s.
-5. Pricing → Stripe test checkout succeeds.
-6. Admin panel → can edit character prompt, change persists.
-7. Mobile device → responsive layout OK.
-
----
-
-## 12. Future Upgrades
-
-- **Docker + Traefik** for multi-service orchestration
-- **Redis** for rate-limiting / caching chat history
-- **Cloudflare Stream** if you add video avatars
-- **Kubernetes** if traffic exceeds 50k DAU
+1. Dashboard → **Products → Prices**  
+   Create two recurring prices that match `VITE_STRIPE_PRICE_*`.
+2. Developers → Webhooks → **Add endpoint**  
+   URL: `https://<your-vercel-app>/api/stripe-webhook`  
+   Events:  
+   `checkout.session.completed`, `invoice.payment_succeeded`,  
+   `customer.subscription.updated`, `customer.subscription.deleted`
+3. Copy the webhook secret → `STRIPE_WEBHOOK_SECRET` env var *(if you validate signatures)*.
 
 ---
 
-### 🎉 You’re Ready to Deploy!
+## 6. Supabase Edge Function – `create-checkout-session`
 
-Push `main → production` and watch the Gospel-powered conversations begin.  
-Questions? Open an issue in GitHub or ping the dev channel.  
-Blessings on your launch! 🚀🙏
+### 6.1 File layout
+
+```
+supabase/
+└─ functions/
+   └─ create-checkout-session/
+      └─ index.ts
+```
+
+Code already included in repo (imports Stripe, uses `STRIPE_SECRET_KEY`).
+
+### 6.2 Deploy
+
+```bash
+supabase functions deploy create-checkout-session
+supabase secrets set STRIPE_SECRET_KEY=sk_test_xxx
+```
+
+Supabase prints the **invoke URL** (e.g.  
+`https://<project>.functions.supabase.co/create-checkout-session`).
+
+---
+
+## 7. Front-end Wiring
+
+`src/services/stripeClient.ts` calls the Edge Function:
+
+```ts
+const resp = await fetch('/api/create-checkout', { ... });
+const { url } = await resp.json();
+window.location.href = url;          // redirect to Stripe
+```
+
+Vite proxy (vite.config.ts) can forward `/api/*` locally.
+
+---
+
+## 8. Local Development
+
+```bash
+# one tab: Supabase & Edge Functions
+supabase start
+supabase dev         # hot-reload functions
+
+# second tab: Vite React
+npm run dev
+```
+
+App loads at `http://localhost:5173`.
+
+---
+
+## 9. Production Deploy (Vercel)
+
+```bash
+# first time only
+vercel link          # select existing project
+vercel env add       # add all env vars incl. STRIPE_SECRET_KEY
+vercel --prod        # build & deploy
+```
+
+The Vercel build uses `vite build` → `dist/` → served as static front-end.
+
+---
+
+## 10. Secure Keys Checklist
+
+- **Never** expose `STRIPE_SECRET_KEY` or Supabase service role key to the browser.
+- Only `VITE_*` vars are exposed client-side.
+- Rotate keys immediately if committed accidentally (GitHub history).
+
+---
+
+## 11. Common Errors & Fixes
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| Checkout returns to home instantly | Client couldn’t fetch Edge Function | Check function URL / CORS |
+| Stripe “No such price” | Wrong `VITE_STRIPE_PRICE_*` | Copy live/test price IDs |
+| Webhooks fail (400) | Missing secret validation or wrong URL | Re-set endpoint & secret |
+| Supabase RLS blocking inserts | Auth user missing | Ensure `auth.uid()` matches row policy |
+
+---
+
+## 12. Production Hardening
+
+- Enable **Row Level Security** (already in migrations).
+- Enforce HTTPS only cookies in Supabase auth.
+- Add CI status checks (GitHub Actions) then re-enable branch protection rules.
+
+---
+
+**You’re ready to launch!**  
+May your chats be blessed and your deployments smooth. ✨

@@ -10,10 +10,11 @@ import TestLoginPage from './pages/TestLoginPage'; // <- added
 import PricingPage from './pages/PricingPage';     // <- added
 import Header from './components/layout/Header';
 import { supabase } from './services/supabase';
+import DebugPanel from './components/DebugPanel';  // <- added
 
 // Direct login component with enhanced error reporting and troubleshooting
 const DirectLogin = () => {
-  const { signIn, user } = useAuth();
+  const { user } = useAuth();
   const [email, setEmail] = useState('test@example.com');
   const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);
@@ -357,6 +358,9 @@ function App() {
             
             {/* Footer component - uncomment if implemented */}
             {/* <Footer /> */}
+
+            {/* Global debug panel (visible only when toggled) */}
+            <DebugPanel />
           </div>
         </ChatProvider>
       </AuthProvider>

@@ -1,0 +1,17 @@
+{
+  "buildCommand": "vite build",
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "github": {
+    "silent": true
+    },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+        }
+    }

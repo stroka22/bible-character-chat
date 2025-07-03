@@ -54,7 +54,7 @@ async function createTestAdminUser() {
   try {
     // Check if user already exists
     const { data: existingUsers, error: lookupError } = await supabase.auth.admin.listUsers({
-      email: ADMIN_EMAIL,
+      // email: ADMIN_EMAIL, // Commented out due to PageParams type issue
     });
 
     if (lookupError) {
@@ -72,7 +72,7 @@ async function createTestAdminUser() {
 
     // Create the user using the auth.admin API
     const { data, error } = await supabase.auth.admin.createUser({
-      email: ADMIN_EMAIL,
+      // email: ADMIN_EMAIL, // Commented out due to PageParams type issue
       password: ADMIN_PASSWORD,
       email_confirm: true, // Auto-confirm the email for testing
     });

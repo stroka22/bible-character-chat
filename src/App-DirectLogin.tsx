@@ -5,7 +5,7 @@ import { ChatProvider } from './contexts/ChatContext';
 import { useAuth } from './contexts/AuthContext';
 import HomePage from './pages/HomePage';
 import ConversationsPage from './pages/ConversationsPage';
-import Header from './components/layout/Header';
+// import Header from './components/layout/Header';
 import { supabase } from './services/supabase';
 
 // Placeholder for the Admin Panel page
@@ -110,7 +110,7 @@ const AdminPage: React.FC = () => {
 
 // Direct login component with enhanced error reporting and troubleshooting
 const DirectLogin = () => {
-  const { signIn, user } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('test@example.com');
   const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);

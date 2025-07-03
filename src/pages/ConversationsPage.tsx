@@ -33,7 +33,7 @@ const ConversationsPage: React.FC = () => {
 
   // Hooks
   const { user } = useAuth();
-  const { selectCharacter, loadChat, resumeLocalChat } = useChat();
+  const { selectCharacter, resumeLocalChat } = useChat();
   const navigate = useNavigate();
 
   // Check for bypass mode on component mount
@@ -68,7 +68,8 @@ const ConversationsPage: React.FC = () => {
               name: localChat.character_name,
               description: '',
               persona_prompt: '',
-              created_at: localChat.timestamp
+              created_at: localChat.timestamp,
+              updated_at: localChat.timestamp
             }
           }));
           

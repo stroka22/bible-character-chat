@@ -2,16 +2,16 @@ import React, {
   useState,
   useEffect,
   useCallback,
-  FormEvent,
   Fragment,
 } from 'react';
-import {
-  groupRepository,
+import type { FormEvent } from 'react';
+import { groupRepository } from '../../repositories/groupRepository';
+import type {
   CharacterGroup,
   CharacterGroupMapping,
 } from '../../repositories/groupRepository';
 import { characterRepository } from '../../repositories/characterRepository';
-import { type Character } from '../../services/supabase';
+import type { Character } from '../../services/supabase';
 
 const GroupManagement: React.FC = () => {
   /* ------------------------------------------------------ */

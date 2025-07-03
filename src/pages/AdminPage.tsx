@@ -1,4 +1,5 @@
-import React, { useState, useEffect, FormEvent, useCallback } from 'react';
+import type { FormEvent } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import { type Character } from '../services/supabase';

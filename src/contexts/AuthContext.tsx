@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import type { ReactNode } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
 // Importing as `type` ensures these interfaces are erased during compilation,
 // preventing runtime “export not found” errors while still providing full
 // TypeScript support.
@@ -36,7 +37,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Initialize the auth state when the component mounts
   useEffect(() => {
     // Get the current session
-    const getInitialSession = async () => {
+    // We keep a reference to whatever unsubscribe function the auth listener
+    // gives us so the effect can clean it up **synchronously**, instead of
+    // trying to await an async function’s return value.
+    let cleanup: (() => void) | undefined;
+
+    const initAuth = async () => {
       try {
         setLoading(true);
         
@@ -53,9 +59,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         );
 
-        return () => {
-          subscription.unsubscribe();
-        };
+        // Assign the unsubscribe function so it can be called later
+        cleanup = () => subscription.unsubscribe();
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
@@ -67,13 +72,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    const unsubscribe = getInitialSession();
+    // Kick off the async auth initialisation
+    initAuth();
 
     // Clean up subscription on unmount
     return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
-      }
+      if (cleanup) cleanup();
     };
   }, []);
 
