@@ -1,0 +1,7 @@
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
+import { Link } from 'react-router-dom';
+var Footer = function () {
+    var currentYear = new Date().getFullYear();
+    return (_jsx("footer", { className: "bg-white border-t border-gray-200 py-6", children: _jsx("div", { className: "container mx-auto px-4", children: _jsxs("div", { className: "flex flex-col md:flex-row items-center justify-between", children: [_jsxs("div", { className: "text-center md:text-left mb-4 md:mb-0", children: [_jsxs("p", { className: "text-sm text-gray-600", children: ["\u00A9 ", currentYear, " Bible Characters Chat. All rights reserved."] }), _jsxs("p", { className: "text-xs text-gray-500 mt-1", children: ["\"All Scripture is God-breathed and is useful for teaching, rebuking, correcting and training in righteousness.\"", _jsx("span", { className: "italic ml-1", children: "- 2 Timothy 3:16" })] })] }), _jsxs("div", { className: "flex space-x-6", children: [_jsx(Link, { to: "/about", className: "text-sm text-gray-600 hover:text-primary-600 transition-colors", children: "About" }), _jsx(Link, { to: "/privacy", className: "text-sm text-gray-600 hover:text-primary-600 transition-colors", children: "Privacy" }), _jsx(Link, { to: "/terms", className: "text-sm text-gray-600 hover:text-primary-600 transition-colors", children: "Terms" }), _jsx(Link, { to: "/contact", className: "text-sm text-gray-600 hover:text-primary-600 transition-colors", children: "Contact" })] })] }) }) }));
+};
+export default Footer;

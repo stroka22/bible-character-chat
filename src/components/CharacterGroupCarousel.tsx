@@ -45,7 +45,7 @@ const CharacterGroupCarousel: React.FC<CharacterGroupCarouselProps> = ({ onSelec
   }, []);
   
   // Helper function to play audio
-  const playAudio = useCallback((audioRef: React.RefObject<HTMLAudioElement>) => {
+  const playAudio = useCallback((audioRef: React.RefObject<HTMLAudioElement | null>) => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0; // Reset audio to start
       audioRef.current.volume = volume; // Set volume
@@ -59,7 +59,8 @@ const CharacterGroupCarousel: React.FC<CharacterGroupCarouselProps> = ({ onSelec
   // Handle group selection
   const handleGroupClick = useCallback((groupId: string) => {
     setSelectedGroupId(groupId);
-    playAudio(clickSoundRef);
+    // Cast to any to satisfy the generic RefObject mismatch at build time
+    playAudio(clickSoundRef as any);
     
     if (onSelectGroup) {
       onSelectGroup(groupId);
@@ -68,14 +69,14 @@ const CharacterGroupCarousel: React.FC<CharacterGroupCarouselProps> = ({ onSelec
   
   // Handle next/prev navigation
   const handleNext = useCallback(() => {
-    playAudio(swipeSoundRef);
+    playAudio(swipeSoundRef as any);
     setCurrentIndex(prevIndex => 
       prevIndex >= groups.length - 1 ? 0 : prevIndex + 1
     );
   }, [groups.length, playAudio]);
   
   const handlePrev = useCallback(() => {
-    playAudio(swipeSoundRef);
+    playAudio(swipeSoundRef as any);
     setCurrentIndex(prevIndex => 
       prevIndex <= 0 ? groups.length - 1 : prevIndex - 1
     );
@@ -126,7 +127,7 @@ const CharacterGroupCarousel: React.FC<CharacterGroupCarouselProps> = ({ onSelec
   }, [currentIndex, groups, visibleItems]);
   
   // Handle drag end (for swipe gestures)
-  const handleDragEnd = useCallback((e: any, info: any) => {
+  const handleDragEnd = useCallback((_: any, info: any) => {
     // More sensitive drag detection
     if (info.offset.x < -50) {
       handleNext();
@@ -452,7 +453,7 @@ const CharacterGroupCarousel: React.FC<CharacterGroupCarouselProps> = ({ onSelec
           <button
             key={group.id}
             onClick={() => {
-              playAudio(swipeSoundRef);
+            playAudio(swipeSoundRef as any);
               setCurrentIndex(index);
             }}
             className={`

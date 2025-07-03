@@ -1,37 +1,40 @@
 import Stripe from 'stripe';
 import { supabase } from './supabase';
 
-// Initialize Stripe with API key from environment variables
-const stripeSecretKey = import.meta.env.VITE_STRIPE_SECRET_KEY;
+// --- Stripe Configuration ---
+// Load environment variables for Stripe
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
+const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY;
+const edgeFunctionUrl = import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_URL || 
+  `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co/create-checkout-session`;
 
-if (!stripeSecretKey) {
-  console.error('Missing Stripe secret key. Please check your .env file.');
+// Determine Stripe mode (live or test) from the public key
+const STRIPE_MODE = stripePublicKey?.startsWith('pk_live_') ? 'live' : 'test';
+console.log(`Stripe service initialized in ${STRIPE_MODE.toUpperCase()} mode.`);
+
+// Validate that all required environment variables are set
+const missingVars = [];
+if (!stripePublicKey) missingVars.push('VITE_STRIPE_PUBLIC_KEY');
+if (!monthlyPriceId) missingVars.push('VITE_STRIPE_PRICE_MONTHLY');
+if (!yearlyPriceId) missingVars.push('VITE_STRIPE_PRICE_YEARLY');
+
+if (missingVars.length > 0) {
+  console.error(`🔴 Missing required Stripe environment variables: ${missingVars.join(', ')}`);
+  console.error('Please check your .env file and ensure all required variables are set.');
 }
 
-// Initialize Stripe client
-const stripe = new Stripe(stripeSecretKey as string, {
-  apiVersion: '2023-10-16', // Use the latest stable API version
-});
+// This is a placeholder for TypeScript type compatibility.
+// The full Stripe SDK should only be initialized on the server with a secret key.
+const stripe: Stripe = {} as Stripe;
 
-// Price IDs for different subscription tiers
+// Export price IDs for use in the application
 export const SUBSCRIPTION_PRICES = {
-  MONTHLY: import.meta.env.VITE_STRIPE_PRICE_MONTHLY || 'price_monthly',
-  YEARLY: import.meta.env.VITE_STRIPE_PRICE_YEARLY || 'price_yearly',
+  MONTHLY: monthlyPriceId || 'price_monthly_fallback',
+  YEARLY: yearlyPriceId || 'price_yearly_fallback',
 };
 
-// Feature flags for subscription tiers
-export const PREMIUM_FEATURES = [
-  'full_character_library',
-  'unlimited_conversations',
-  'all_denominations',
-  'multi_language',
-  'conversation_saving',
-  'voice_input_output',
-  'ad_free',
-];
-
-// Types for Stripe-related data
+// --- Interfaces and Types ---
 export interface SubscriptionData {
   id: string;
   customerId: string;
@@ -50,15 +53,19 @@ export interface CheckoutSessionOptions {
   metadata?: Record<string, string>;
 }
 
+// --- Client-Side Service Functions ---
+
 /**
- * Creates a Stripe customer for a new user
+ * Creates a Stripe customer for a new user by calling a secure Edge Function.
  * @param userId - Supabase user ID
  * @param email - User's email address
  * @returns The Stripe customer ID
  */
 export async function createCustomer(userId: string, email: string): Promise<string> {
+  console.log(`Requesting to create Stripe customer for user ${userId}`);
+  if (!userId || !email) throw new Error('User ID and email are required to create a customer.');
+
   try {
-    // Check if customer already exists
     const { data: userData } = await supabase
       .from('users')
       .select('stripe_customer_id')
@@ -66,408 +73,143 @@ export async function createCustomer(userId: string, email: string): Promise<str
       .single();
 
     if (userData?.stripe_customer_id) {
+      console.log(`User ${userId} already has Stripe customer ID: ${userData.stripe_customer_id}`);
       return userData.stripe_customer_id;
     }
 
-    // Create new customer in Stripe
-    const customer = await stripe.customers.create({
-      email,
-      metadata: {
-        userId,
-      },
+    const response = await supabase.functions.invoke('create-customer', {
+      body: { userId, email },
     });
 
-    // Update user record with Stripe customer ID
+    if (response.error) throw response.error;
+    const customerId = response.data.customerId;
+    console.log(`Stripe customer created via Edge Function: ${customerId}`);
+
     await supabase
       .from('users')
-      .update({ stripe_customer_id: customer.id })
+      .update({ stripe_customer_id: customerId })
       .eq('id', userId);
 
-    return customer.id;
+    return customerId;
   } catch (error) {
-    console.error('Error creating Stripe customer:', error);
-    throw new Error('Failed to create customer');
+    console.error('🔴 Error in createCustomer:', error);
+    throw new Error(`Failed to create Stripe customer: ${error.message}`);
   }
 }
 
 /**
- * Creates a checkout session for subscription purchase
+ * Creates a checkout session by calling a secure Edge Function.
  * @param options - Options for the checkout session
  * @returns The checkout session ID and URL
  */
 export async function createCheckoutSession(options: CheckoutSessionOptions): Promise<{ id: string; url: string }> {
+  console.log('Requesting Stripe checkout session with options:', options);
+
+  // --- Environment Consistency Check ---
+  // This check prevents mixing live keys with test prices, which causes 401 errors.
+  if (STRIPE_MODE === 'live' && options.priceId.includes('_test_')) {
+    const errorMessage = 'Environment Mismatch: A test price ID was used in live mode.';
+    console.error(`🔴 ${errorMessage}`);
+    throw new Error(errorMessage);
+  }
+  if (STRIPE_MODE === 'test' && !options.priceId.includes('_test_') && !options.priceId.includes('monthly_fallback') && !options.priceId.includes('yearly_fallback')) {
+     // A simple check, as live price IDs don't have a specific prefix
+    console.warn('🟡 Environment Warning: A non-test price ID was used in test mode.');
+  }
+  
+  if (!options.priceId || !options.successUrl || !options.cancelUrl) {
+    throw new Error('Missing required parameters for checkout session.');
+  }
+
   try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: options.priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: options.successUrl,
-      cancel_url: options.cancelUrl,
-      customer: options.customerId,
-      customer_email: options.customerEmail,
-      metadata: options.metadata,
-      allow_promotion_codes: true,
+    console.log(`Calling Edge Function at: ${edgeFunctionUrl}`);
+    const response = await fetch(edgeFunctionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabase.auth.getSession()?.data.session?.access_token}`
+      },
+      body: JSON.stringify(options),
     });
 
-    return {
-      id: session.id,
-      url: session.url as string,
-    };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    }
+
+    const session = await response.json();
+    console.log(`✅ Checkout session created successfully: ${session.id}`);
+    
+    if (!session.url) throw new Error('Checkout session URL is missing from response.');
+
+    return { id: session.id, url: session.url };
   } catch (error) {
-    console.error('Error creating checkout session:', error);
-    throw new Error('Failed to create checkout session');
+    console.error('🔴 Error creating checkout session:', error);
+    throw new Error(`Failed to create checkout session: ${error.message}`);
   }
 }
 
 /**
- * Retrieves a user's active subscription
+ * Retrieves a user's active subscription by calling a secure Edge Function.
  * @param userId - Supabase user ID
  * @returns The subscription data or null if no active subscription
  */
 export async function getActiveSubscription(userId: string): Promise<SubscriptionData | null> {
-  try {
-    // Get user's Stripe customer ID
-    const { data: userData } = await supabase
-      .from('users')
-      .select('stripe_customer_id')
-      .eq('id', userId)
-      .single();
+    console.log(`Fetching active subscription for user ${userId}`);
+    if (!userId) throw new Error('User ID is required to get subscription.');
 
-    if (!userData?.stripe_customer_id) {
-      return null;
-    }
-
-    // Get subscriptions from Stripe
-    const subscriptions = await stripe.subscriptions.list({
-      customer: userData.stripe_customer_id,
-      status: 'active',
-      expand: ['data.default_payment_method'],
-    });
-
-    if (!subscriptions.data.length) {
-      return null;
-    }
-
-    const subscription = subscriptions.data[0];
-
-    return {
-      id: subscription.id,
-      customerId: subscription.customer as string,
-      status: subscription.status,
-      priceId: subscription.items.data[0].price.id,
-      currentPeriodEnd: subscription.current_period_end,
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-    };
-  } catch (error) {
-    console.error('Error retrieving subscription:', error);
-    throw new Error('Failed to retrieve subscription');
-  }
-}
-
-/**
- * Cancels a subscription at the end of the current billing period
- * @param subscriptionId - Stripe subscription ID
- * @returns The updated subscription
- */
-export async function cancelSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
-  try {
-    return await stripe.subscriptions.update(subscriptionId, {
-      cancel_at_period_end: true,
-    });
-  } catch (error) {
-    console.error('Error canceling subscription:', error);
-    throw new Error('Failed to cancel subscription');
-  }
-}
-
-/**
- * Reactivates a subscription that was set to cancel at period end
- * @param subscriptionId - Stripe subscription ID
- * @returns The updated subscription
- */
-export async function reactivateSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
-  try {
-    return await stripe.subscriptions.update(subscriptionId, {
-      cancel_at_period_end: false,
-    });
-  } catch (error) {
-    console.error('Error reactivating subscription:', error);
-    throw new Error('Failed to reactivate subscription');
-  }
-}
-
-/**
- * Changes a subscription's plan
- * @param subscriptionId - Stripe subscription ID
- * @param newPriceId - New price ID to switch to
- * @returns The updated subscription
- */
-export async function changeSubscriptionPlan(
-  subscriptionId: string,
-  newPriceId: string
-): Promise<Stripe.Subscription> {
-  try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    const subscriptionItemId = subscription.items.data[0].id;
-
-    return await stripe.subscriptions.update(subscriptionId, {
-      items: [
-        {
-          id: subscriptionItemId,
-          price: newPriceId,
-        },
-      ],
-    });
-  } catch (error) {
-    console.error('Error changing subscription plan:', error);
-    throw new Error('Failed to change subscription plan');
-  }
-}
-
-/**
- * Creates a billing portal session for managing subscriptions
- * @param customerId - Stripe customer ID
- * @param returnUrl - URL to return to after the portal session
- * @returns The URL for the billing portal
- */
-export async function createBillingPortalSession(
-  customerId: string,
-  returnUrl: string
-): Promise<string> {
-  try {
-    const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: returnUrl,
-    });
-
-    return session.url;
-  } catch (error) {
-    console.error('Error creating billing portal session:', error);
-    throw new Error('Failed to create billing portal session');
-  }
-}
-
-/**
- * Handles Stripe webhook events
- * @param event - The Stripe event object
- * @returns A response indicating success or failure
- */
-export async function handleWebhookEvent(event: Stripe.Event): Promise<{ status: string; message: string }> {
-  try {
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        
-        // Extract the user ID from metadata
-        const userId = session.metadata?.userId;
-        if (!userId) {
-          throw new Error('No user ID in session metadata');
-        }
-
-        // Get subscription details
-        if (session.subscription && typeof session.subscription === 'string') {
-          const subscription = await stripe.subscriptions.retrieve(session.subscription);
-          
-          // Update user subscription status in database
-          await supabase
+    try {
+        const { data: userData } = await supabase
             .from('users')
-            .update({
-              subscription_status: 'active',
-              stripe_subscription_id: subscription.id,
-              subscription_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            })
-            .eq('id', userId);
-          
-          // Add to subscriptions table
-          await supabase
-            .from('subscriptions')
-            .insert({
-              user_id: userId,
-              stripe_customer_id: subscription.customer as string,
-              stripe_subscription_id: subscription.id,
-              status: subscription.status,
-              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              price_id: subscription.items.data[0].price.id,
-              product_id: subscription.items.data[0].price.product as string,
-            });
-        }
-        
-        return { status: 'success', message: 'Checkout session completed' };
-      }
-      
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
-        
-        if (invoice.subscription && typeof invoice.subscription === 'string') {
-          const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
-          
-          // Find the user with this subscription
-          const { data: subscriptionData } = await supabase
-            .from('subscriptions')
-            .select('user_id')
-            .eq('stripe_subscription_id', subscription.id)
+            .select('stripe_customer_id')
+            .eq('id', userId)
             .single();
-          
-          if (subscriptionData) {
-            // Update subscription details
-            await supabase
-              .from('users')
-              .update({
-                subscription_status: 'active',
-                subscription_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              })
-              .eq('id', subscriptionData.user_id);
-            
-            // Update subscription record
-            await supabase
-              .from('subscriptions')
-              .update({
-                status: subscription.status,
-                current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-                current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              })
-              .eq('stripe_subscription_id', subscription.id);
-          }
+
+        if (!userData?.stripe_customer_id) {
+            console.log(`No Stripe customer ID found for user ${userId}`);
+            return null;
+        }
+
+        const response = await supabase.functions.invoke('get-subscription', {
+            body: { customerId: userData.stripe_customer_id },
+        });
+
+        if (response.error) throw response.error;
+        
+        const subscriptions = response.data.subscriptions;
+        if (!subscriptions || subscriptions.length === 0) {
+            console.log(`No active subscriptions found for customer ${userData.stripe_customer_id}`);
+            return null;
         }
         
-        return { status: 'success', message: 'Invoice payment succeeded' };
-      }
-      
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
-        
-        // Find the user with this subscription
-        const { data: subscriptionData } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', subscription.id)
-          .single();
-        
-        if (subscriptionData) {
-          // Update subscription details
-          await supabase
-            .from('users')
-            .update({
-              subscription_status: subscription.status,
-              subscription_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            })
-            .eq('id', subscriptionData.user_id);
-          
-          // Update subscription record
-          await supabase
-            .from('subscriptions')
-            .update({
-              status: subscription.status,
-              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            })
-            .eq('stripe_subscription_id', subscription.id);
-        }
-        
-        return { status: 'success', message: 'Subscription updated' };
-      }
-      
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        
-        // Find the user with this subscription
-        const { data: subscriptionData } = await supabase
-          .from('subscriptions')
-          .select('user_id')
-          .eq('stripe_subscription_id', subscription.id)
-          .single();
-        
-        if (subscriptionData) {
-          // Update user subscription status
-          await supabase
-            .from('users')
-            .update({
-              subscription_status: 'canceled',
-            })
-            .eq('id', subscriptionData.user_id);
-          
-          // Update subscription record
-          await supabase
-            .from('subscriptions')
-            .update({
-              status: 'canceled',
-            })
-            .eq('stripe_subscription_id', subscription.id);
-        }
-        
-        return { status: 'success', message: 'Subscription deleted' };
-      }
-      
-      default:
-        return { status: 'ignored', message: `Unhandled event type: ${event.type}` };
+        // Assuming the first subscription is the relevant one
+        const sub = subscriptions[0];
+        return {
+            id: sub.id,
+            customerId: sub.customer,
+            status: sub.status,
+            priceId: sub.items.data[0].price.id,
+            currentPeriodEnd: sub.current_period_end,
+            cancelAtPeriodEnd: sub.cancel_at_period_end,
+        };
+    } catch (error) {
+        console.error('🔴 Error retrieving active subscription:', error);
+        throw new Error(`Failed to retrieve subscription: ${error.message}`);
     }
-  } catch (error) {
-    console.error('Error handling webhook event:', error);
-    throw new Error(`Failed to handle webhook event: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
 }
 
 /**
- * Checks if a user has access to a premium feature
- * @param userId - Supabase user ID
- * @param feature - The feature to check access for
- * @returns Whether the user has access to the feature
+ * Gets the Stripe public key for frontend use.
+ * @returns The Stripe public key.
  */
-export async function hasFeatureAccess(userId: string, feature: string): Promise<boolean> {
-  try {
-    // Free features are available to everyone
-    const FREE_FEATURES = [
-      'basic_characters',
-      'limited_conversations',
-      'basic_denominations',
-      'english_language',
-    ];
-    
-    if (FREE_FEATURES.includes(feature)) {
-      return true;
-    }
-    
-    // Check if feature requires premium
-    if (!PREMIUM_FEATURES.includes(feature)) {
-      console.warn(`Unknown feature requested: ${feature}`);
-      return false;
-    }
-    
-    // Get user's subscription status
-    const { data: userData } = await supabase
-      .from('users')
-      .select('subscription_status, subscription_period_end')
-      .eq('id', userId)
-      .single();
-    
-    if (!userData) {
-      return false;
-    }
-    
-    // Check if subscription is active and not expired
-    if (
-      userData.subscription_status === 'active' &&
-      userData.subscription_period_end &&
-      new Date(userData.subscription_period_end) > new Date()
-    ) {
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error('Error checking feature access:', error);
-    return false;
+export function getPublicKey(): string {
+  if (!stripePublicKey) {
+    console.error('🔴 CRITICAL: Missing Stripe public key in environment configuration.');
+    // Return a placeholder to avoid crashing the app, but checkout will fail.
+    return 'pk_missing_key';
   }
+  return stripePublicKey;
 }
 
-// Export Stripe public key for frontend use
-export const getPublicKey = (): string => stripePublicKey as string;
-
-// Export the Stripe instance for direct access if needed
+// Export the placeholder stripe object for type compatibility where needed.
 export { stripe };

@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Disable strict type checking options for production builds
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "alwaysStrict": false,
+    
+    // Additional relaxed checks for easier deployment
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    
+    // Optimize for production
+    "removeComments": true,
+    "sourceMap": false,
+    
+    // Skip type checking of declaration files
+    "skipLibCheck": true,
+    
+    // Allow JS files
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
+}

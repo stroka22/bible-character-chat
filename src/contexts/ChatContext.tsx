@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import type { ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { 
   generateCharacterResponse, 
   streamCharacterResponse, 
@@ -63,7 +64,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
   const [error, setError] = useState<string | null>(null);
   const [chatId, setChatId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState<boolean>(false);
-  const [currentResponse, setCurrentResponse] = useState<string>('');
+  const [, setCurrentResponse] = useState<string>('');
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   
   // Get the current user from auth context

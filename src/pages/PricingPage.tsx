@@ -1,33 +1,97 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js'; // Import loadStripe
 import { useAuth } from '../contexts/AuthContext';
-import { getPublicKey, createCheckoutSession, SUBSCRIPTION_PRICES, PREMIUM_FEATURES } from '../services/stripe'; // Import necessary Stripe functions
+import { getPublicKey, createCheckoutSession, SUBSCRIPTION_PRICES } from '../services/stripe'; // Import necessary Stripe functions
 
 // Initialize Stripe outside of component render to avoid re-creating it
 const stripePromise = loadStripe(getPublicKey());
 
+// Log Stripe initialization attempt
+console.log('Initializing Stripe with public key:', getPublicKey() ? '[VALID KEY]' : '[MISSING KEY]');
+stripePromise.then(stripe => {
+  console.log('Stripe loaded successfully:', !!stripe);
+}).catch(err => {
+  console.error('Failed to load Stripe:', err);
+});
+
 const PricingPage: React.FC = () => {
   const { user } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly'); // State for billing period
+  const location = useLocation();
+  const navigate = useNavigate();
+  const checkoutTriggered = useRef(false); // guard to avoid double-fire
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [isCheckoutInProgress, setIsCheckoutInProgress] = useState(false);
+  const [stripeLoaded, setStripeLoaded] = useState<boolean | null>(null);
 
   // Determine the price based on the selected billing period
   const selectedPriceId = billingPeriod === 'monthly' ? SUBSCRIPTION_PRICES.MONTHLY : SUBSCRIPTION_PRICES.YEARLY;
   const displayPrice = billingPeriod === 'monthly' ? '$9.97' : '$97.97';
   const displayPeriod = billingPeriod === 'monthly' ? '/month' : '/year';
 
+  // Check if Stripe is loaded when component mounts
+  useEffect(() => {
+    const checkStripeLoaded = async () => {
+      try {
+        const stripe = await stripePromise;
+        setStripeLoaded(!!stripe);
+        console.log('Stripe loaded status:', !!stripe);
+      } catch (error) {
+        console.error('Error checking Stripe loaded status:', error);
+        setStripeLoaded(false);
+      }
+    };
+    
+    checkStripeLoaded();
+  }, []);
+
+  // Handle redirection if user isn't logged in
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const wantsCheckout = params.get('checkout') === 'true';
+    
+    // If checkout is requested but user isn't logged in, redirect to login
+    if (wantsCheckout && !user && !checkoutTriggered.current) {
+      console.log('Checkout requested but user not logged in, redirecting to login');
+      checkoutTriggered.current = true; // Prevent infinite redirects
+      navigate('/login?redirect=pricing&checkout=true&period=' + billingPeriod);
+    }
+  }, [user, location.search, billingPeriod, navigate]);
+
   const handleCheckout = async () => {
+    console.log('Starting checkout process...');
+    console.log('User:', user ? 'Logged in' : 'Not logged in');
+    console.log('Selected price ID:', selectedPriceId);
+    
+    if (isCheckoutInProgress) {
+      console.log('Checkout already in progress, ignoring request');
+      return;
+    }
+    
     try {
+      setIsCheckoutInProgress(true);
+      setErrMsg(null);
+      
       const stripe = await stripePromise;
       if (!stripe) {
+        console.error('Stripe.js failed to load');
+        setErrMsg('Payment system unavailable. Please try again later.');
         throw new Error('Stripe.js failed to load.');
       }
 
       if (!user) {
-        alert('Please log in to subscribe.');
+        console.log('No user found, redirecting to login');
+        navigate('/login?redirect=pricing&checkout=true&period=' + billingPeriod);
         return;
       }
 
+      console.log('Creating checkout session with:', {
+        priceId: selectedPriceId,
+        customerId: user.id,
+        email: user.email
+      });
+      
       const session = await createCheckoutSession({
         priceId: selectedPriceId,
         successUrl: window.location.origin + '/conversations?checkout=success', // Redirect to conversations on success
@@ -39,18 +103,63 @@ const PricingPage: React.FC = () => {
         },
       });
 
+      console.log('Checkout session created:', session.id);
+      
       // Redirect to Stripe Checkout
+      console.log('Redirecting to Stripe Checkout...');
       const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
 
       if (error) {
         console.error('Stripe Checkout Error:', error);
-        alert(`Error: ${error.message}`);
+        setErrMsg(`Stripe redirect error: ${error.message}`);
       }
     } catch (error) {
       console.error('Checkout initiation failed:', error);
-      alert(`Failed to initiate checkout. Please try again. ${error instanceof Error ? error.message : ''}`);
+      setErrMsg(
+        `Failed to initiate checkout. ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+    } finally {
+      setIsCheckoutInProgress(false);
     }
   };
+
+  /* ------------------------------------------------------------------
+     Read URL parameters for deep-link checkout
+     e.g. /pricing?checkout=true&period=yearly
+  ------------------------------------------------------------------ */
+  useEffect(() => {
+    console.log('Processing URL parameters...');
+    console.log('Current location:', location.search);
+    console.log('User status:', user ? 'Logged in' : 'Not logged in');
+    
+    const params = new URLSearchParams(location.search);
+    const period = params.get('period');
+    const wantsCheckout = params.get('checkout') === 'true';
+    
+    console.log('URL parameters:', { period, wantsCheckout });
+
+    // Set billing period based on URL parameter
+    if (period === 'yearly') {
+      console.log('Setting billing period to yearly');
+      setBillingPeriod('yearly');
+    }
+
+    // Initiate checkout if requested and not already triggered
+    if (wantsCheckout && !checkoutTriggered.current && user && stripeLoaded) {
+      console.log('Auto-initiating checkout from URL parameters');
+      checkoutTriggered.current = true; // ensure single attempt
+      handleCheckout();
+    }
+  }, [location.search, user, stripeLoaded, billingPeriod]); // Include proper dependencies
+
+  // Reset checkout triggered flag when location changes
+  useEffect(() => {
+    return () => {
+      checkoutTriggered.current = false;
+    };
+  }, [location.pathname]);
 
   const freeFeatures = [
     'Limited character selection (major characters)',
@@ -140,6 +249,11 @@ const PricingPage: React.FC = () => {
                 </li>
               ))}
             </ul>
+            {errMsg && (
+              <div className="mb-4 rounded bg-red-100 text-red-700 p-3 text-sm">
+                {errMsg}
+              </div>
+            )}
             <button
               onClick={() => alert('You are already on the Free plan!')}
               className="w-full bg-white/20 text-white py-3 rounded-lg font-semibold text-lg hover:bg-white/30 transition-all"
@@ -172,10 +286,24 @@ const PricingPage: React.FC = () => {
             </ul>
             <button
               onClick={handleCheckout}
-              className="w-full bg-yellow-500 text-blue-900 py-3 rounded-lg font-bold text-lg hover:bg-yellow-600 transition-all shadow-lg"
+              disabled={isCheckoutInProgress}
+              className={`w-full ${isCheckoutInProgress ? 'bg-yellow-400' : 'bg-yellow-500 hover:bg-yellow-600'} text-blue-900 py-3 rounded-lg font-bold text-lg transition-all shadow-lg`}
             >
-              Upgrade to Premium
+              {isCheckoutInProgress ? 'Processing...' : 'Upgrade to Premium'}
             </button>
+            
+            {/* Manual test button for developers */}
+            {process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={() => {
+                  checkoutTriggered.current = false;
+                  handleCheckout();
+                }}
+                className="mt-4 w-full bg-purple-500 text-white py-2 rounded-lg font-medium text-sm hover:bg-purple-600 transition-all"
+              >
+                Test Checkout (Dev Only)
+              </button>
+            )}
           </div>
         </div>
 
