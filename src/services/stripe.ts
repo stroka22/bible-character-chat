@@ -6,6 +6,8 @@ import { supabase } from './supabase';
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
 const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY;
+const edgeFunctionUrl = import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_URL || 
+  `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co/create-checkout-session`;
 
 // Determine Stripe mode (live or test) from the public key
 const STRIPE_MODE = stripePublicKey?.startsWith('pk_live_') ? 'live' : 'test';
@@ -54,6 +56,21 @@ export interface CheckoutSessionOptions {
 // --- Client-Side Service Functions ---
 
 /**
+ * Decide which endpoint to call for creating a Stripe checkout session.
+ * Prefer the Supabase Edge Function if it is properly configured; otherwise,
+ * fall back to the local Vercel API route.
+ */
+function getCheckoutEndpoint(): string {
+  if (edgeFunctionUrl && !edgeFunctionUrl.startsWith('https://undefined')) {
+    return edgeFunctionUrl;
+  }
+  console.warn(
+    '🟡 Supabase Edge Function URL missing or mis-configured. Falling back to Vercel API route.'
+  );
+  return '/api/create-checkout-session';
+}
+
+/**
  * Creates a Stripe customer for a new user by calling a secure Edge Function.
  * @param userId - Supabase user ID
  * @param email - User's email address
@@ -96,7 +113,7 @@ export async function createCustomer(userId: string, email: string): Promise<str
 }
 
 /**
- * Creates a checkout session by calling the Vercel Serverless Function.
+ * Creates a checkout session by calling a secure Edge Function.
  * @param options - Options for the checkout session
  * @returns The checkout session ID and URL
  */
@@ -120,14 +137,21 @@ export async function createCheckoutSession(options: CheckoutSessionOptions): Pr
   }
 
   try {
-    // Use the Vercel Serverless Function
-    const apiRoute = '/api/create-checkout-session';
-    console.log(`Calling Vercel API route: ${apiRoute}`);
+    // Prefer the Supabase Edge Function, but fall back to the Vercel route.
+    const apiRoute = getCheckoutEndpoint();
+    console.log(`Calling checkout session endpoint: ${apiRoute}`);
+
+    // Retrieve the current auth session (async) so we can pass the JWT if needed.
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const accessToken = session?.access_token;
 
     const response = await fetch(apiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       body: JSON.stringify(options),
     });

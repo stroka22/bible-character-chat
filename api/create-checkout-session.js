@@ -1,14 +1,21 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+import Stripe from 'stripe';
+// Initialize Stripe with an explicit, pinned API version for stability.
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
+});
 
 /**
- * Vercel Serverless Function to create a Stripe Checkout Session.
- * This function securely handles the creation of a checkout session on the server-side,
- * preventing the exposure of the Stripe secret key to the client.
+ * Legacy Vercel Serverless Function to create a Stripe Checkout Session.
+ * --------------------------------------------------------------------
+ * This implementation is maintained for backward-compatibility while the
+ * project transitions to Supabase Edge Functions. It securely handles the
+ * creation of a checkout session on the server-side, preventing exposure of
+ * the Stripe secret key to the client.
  *
  * @param {import('@vercel/node').VercelRequest} req The incoming request object.
  * @param {import('@vercel/node').VercelResponse} res The outgoing response object.
  */
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // --- CORS Preflight Handling ---
   // Vercel automatically handles OPTIONS requests, but it's good practice to include
   // headers in the actual response for browser compatibility.
