@@ -6,12 +6,13 @@ import { supabase } from './supabase';
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
 const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY;
+const supabaseProjectRef = import.meta.env.VITE_SUPABASE_PROJECT_REF;
 const edgeFunctionUrl = import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_URL || 
-  `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co/create-checkout-session`;
+  (supabaseProjectRef ? `https://${supabaseProjectRef}.functions.supabase.co/create-checkout-session` : null);
 
 // Determine Stripe mode (live or test) from the public key
 const STRIPE_MODE = stripePublicKey?.startsWith('pk_live_') ? 'live' : 'test';
-console.log(`Stripe service initialized in ${STRIPE_MODE.toUpperCase()} mode.`);
+console.log(`[Stripe] 🚀 Service initialized in ${STRIPE_MODE.toUpperCase()} mode at ${new Date().toISOString()}`);
 
 // Validate that all required environment variables are set
 const missingVars = [];
@@ -20,8 +21,8 @@ if (!monthlyPriceId) missingVars.push('VITE_STRIPE_PRICE_MONTHLY');
 if (!yearlyPriceId) missingVars.push('VITE_STRIPE_PRICE_YEARLY');
 
 if (missingVars.length > 0) {
-  console.error(`🔴 Missing required Stripe environment variables: ${missingVars.join(', ')}`);
-  console.error('Please check your .env file and ensure all required variables are set.');
+  console.error(`[Stripe] 🔴 Missing required environment variables: ${missingVars.join(', ')}`);
+  console.error('[Stripe] Please check your .env file and ensure all required variables are set.');
 }
 
 // This is a placeholder for TypeScript type compatibility.
@@ -53,20 +54,60 @@ export interface CheckoutSessionOptions {
   metadata?: Record<string, string>;
 }
 
+// Custom error types for better error handling
+export class StripeConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StripeConfigurationError';
+  }
+}
+
+export class StripeEndpointError extends Error {
+  constructor(message: string, public statusCode?: number) {
+    super(message);
+    this.name = 'StripeEndpointError';
+  }
+}
+
 // --- Client-Side Service Functions ---
 
 /**
  * Decide which endpoint to call for creating a Stripe checkout session.
- * Prefer the Supabase Edge Function if it is properly configured; otherwise,
- * fall back to the local Vercel API route.
+ * Implements a multi-level fallback strategy to ensure reliability.
+ * 
+ * Priority order:
+ * 1. Explicitly configured Edge Function URL
+ * 2. Derived Edge Function URL from project reference
+ * 3. Vercel API route
+ * 4. Direct API route
+ * 
+ * @param preferEdgeFunction Whether to prefer Edge Functions over Vercel (default: true)
+ * @returns The best available endpoint URL
  */
-function getCheckoutEndpoint(): string {
-  if (edgeFunctionUrl && !edgeFunctionUrl.startsWith('https://undefined')) {
+function getCheckoutEndpoint(preferEdgeFunction = true): string {
+  // Log the available configuration for debugging
+  console.log(`[Stripe] 🔍 Endpoint configuration:
+  - Edge Function URL: ${edgeFunctionUrl || 'Not configured'}
+  - Supabase Project Ref: ${supabaseProjectRef || 'Not configured'}
+  - Preference: ${preferEdgeFunction ? 'Edge Function' : 'Vercel Function'}`);
+
+  // Option 1: Explicitly configured Edge Function URL
+  if (preferEdgeFunction && edgeFunctionUrl && 
+      !edgeFunctionUrl.includes('undefined') && 
+      edgeFunctionUrl.startsWith('https://')) {
+    console.log(`[Stripe] ✅ Using explicitly configured Edge Function: ${edgeFunctionUrl}`);
     return edgeFunctionUrl;
   }
-  console.warn(
-    '🟡 Supabase Edge Function URL missing or mis-configured. Falling back to Vercel API route.'
-  );
+
+  // Option 2: Derived Edge Function URL from project reference
+  if (preferEdgeFunction && supabaseProjectRef) {
+    const derivedUrl = `https://${supabaseProjectRef}.functions.supabase.co/create-checkout-session`;
+    console.log(`[Stripe] ✅ Using derived Edge Function URL: ${derivedUrl}`);
+    return derivedUrl;
+  }
+
+  // Option 3: Vercel API route (relative URL, handled by same-origin or proxy)
+  console.log('[Stripe] 🟡 Edge Function not available, falling back to Vercel API route');
   return '/api/create-checkout-session';
 }
 
@@ -77,99 +118,217 @@ function getCheckoutEndpoint(): string {
  * @returns The Stripe customer ID
  */
 export async function createCustomer(userId: string, email: string): Promise<string> {
-  console.log(`Requesting to create Stripe customer for user ${userId}`);
-  if (!userId || !email) throw new Error('User ID and email are required to create a customer.');
+  console.log(`[Stripe] 📝 Requesting to create customer for user ${userId}`);
+  
+  if (!userId || !email) {
+    const error = 'User ID and email are required to create a customer';
+    console.error(`[Stripe] 🔴 ${error}`);
+    throw new StripeConfigurationError(error);
+  }
 
   try {
-    const { data: userData } = await supabase
+    // First check if the user already has a customer ID
+    const { data: userData, error: dbError } = await supabase
       .from('users')
       .select('stripe_customer_id')
       .eq('id', userId)
       .single();
 
+    if (dbError) {
+      console.error(`[Stripe] 🔴 Database error when checking for existing customer: ${dbError.message}`);
+      throw new Error(`Database error: ${dbError.message}`);
+    }
+
     if (userData?.stripe_customer_id) {
-      console.log(`User ${userId} already has Stripe customer ID: ${userData.stripe_customer_id}`);
+      console.log(`[Stripe] ℹ️ User ${userId} already has Stripe customer ID: ${userData.stripe_customer_id}`);
       return userData.stripe_customer_id;
     }
 
+    console.log(`[Stripe] 🔄 Creating new Stripe customer for user ${userId}`);
+    
+    // Call the Edge Function to create a customer
     const response = await supabase.functions.invoke('create-customer', {
       body: { userId, email },
     });
 
-    if (response.error) throw response.error;
-    const customerId = response.data.customerId;
-    console.log(`Stripe customer created via Edge Function: ${customerId}`);
+    if (response.error) {
+      console.error(`[Stripe] 🔴 Edge Function error: ${response.error.message}`);
+      throw new StripeEndpointError(`Edge Function error: ${response.error.message}`);
+    }
 
-    await supabase
+    if (!response.data?.customerId) {
+      console.error('[Stripe] 🔴 Edge Function returned no customer ID');
+      throw new StripeEndpointError('Edge Function returned no customer ID');
+    }
+
+    const customerId = response.data.customerId;
+    console.log(`[Stripe] ✅ Customer created successfully: ${customerId}`);
+
+    // Update the user record with the new customer ID
+    const { error: updateError } = await supabase
       .from('users')
       .update({ stripe_customer_id: customerId })
       .eq('id', userId);
 
+    if (updateError) {
+      console.error(`[Stripe] 🟡 Warning: Could not update user record with customer ID: ${updateError.message}`);
+      // Don't throw here, as the customer was created successfully
+    }
+
     return customerId;
   } catch (error) {
-    console.error('🔴 Error in createCustomer:', error);
-    throw new Error(`Failed to create Stripe customer: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[Stripe] 🔴 Failed to create customer: ${errorMessage}`, error);
+    
+    // Rethrow with a clear message
+    if (error instanceof StripeConfigurationError || error instanceof StripeEndpointError) {
+      throw error;
+    }
+    throw new Error(`Failed to create Stripe customer: ${errorMessage}`);
   }
 }
 
 /**
- * Creates a checkout session by calling a secure Edge Function.
+ * Creates a checkout session by calling a secure endpoint.
+ * Implements fallback mechanisms between Supabase Edge Functions and Vercel Serverless Functions.
+ * 
  * @param options - Options for the checkout session
+ * @param attemptNumber - Internal parameter for tracking retry attempts
  * @returns The checkout session ID and URL
  */
-export async function createCheckoutSession(options: CheckoutSessionOptions): Promise<{ id: string; url: string }> {
-  console.log('Requesting Stripe checkout session with options:', options);
+export async function createCheckoutSession(
+  options: CheckoutSessionOptions, 
+  attemptNumber = 1
+): Promise<{ id: string; url: string }> {
+  const maxAttempts = 2;
+  const timestamp = new Date().toISOString();
+  console.log(`[Stripe] 🛒 [${timestamp}] Requesting checkout session (attempt ${attemptNumber}/${maxAttempts})`, options);
 
   // --- Environment Consistency Check ---
   // This check prevents mixing live keys with test prices, which causes 401 errors.
   if (STRIPE_MODE === 'live' && options.priceId.includes('_test_')) {
     const errorMessage = 'Environment Mismatch: A test price ID was used in live mode.';
-    console.error(`🔴 ${errorMessage}`);
-    throw new Error(errorMessage);
+    console.error(`[Stripe] 🔴 ${errorMessage}`);
+    throw new StripeConfigurationError(errorMessage);
   }
-  if (STRIPE_MODE === 'test' && !options.priceId.includes('_test_') && !options.priceId.includes('monthly_fallback') && !options.priceId.includes('yearly_fallback')) {
-     // A simple check, as live price IDs don't have a specific prefix
-    console.warn('🟡 Environment Warning: A non-test price ID was used in test mode.');
+  
+  if (STRIPE_MODE === 'test' && 
+      !options.priceId.includes('_test_') && 
+      !options.priceId.includes('monthly_fallback') && 
+      !options.priceId.includes('yearly_fallback')) {
+    // A simple check, as live price IDs don't have a specific prefix
+    console.warn('[Stripe] 🟡 Environment Warning: A non-test price ID was used in test mode.');
   }
   
   if (!options.priceId || !options.successUrl || !options.cancelUrl) {
-    throw new Error('Missing required parameters for checkout session.');
+    const missing = [];
+    if (!options.priceId) missing.push('priceId');
+    if (!options.successUrl) missing.push('successUrl');
+    if (!options.cancelUrl) missing.push('cancelUrl');
+    
+    const errorMessage = `Missing required parameters: ${missing.join(', ')}`;
+    console.error(`[Stripe] 🔴 ${errorMessage}`);
+    throw new StripeConfigurationError(errorMessage);
   }
 
   try {
-    // Prefer the Supabase Edge Function, but fall back to the Vercel route.
-    const apiRoute = getCheckoutEndpoint();
-    console.log(`Calling checkout session endpoint: ${apiRoute}`);
+    // Try Edge Function first on first attempt, fallback to Vercel on retry
+    const preferEdgeFunction = attemptNumber === 1;
+    const apiRoute = getCheckoutEndpoint(preferEdgeFunction);
+    console.log(`[Stripe] 🔄 Calling checkout endpoint: ${apiRoute}`);
 
-    // Retrieve the current auth session (async) so we can pass the JWT if needed.
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const accessToken = session?.access_token;
-
-    const response = await fetch(apiRoute, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      },
-      body: JSON.stringify(options),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `HTTP error ${response.status}`);
+    // Retrieve the current auth session (async) so we can pass the JWT if needed
+    let accessToken: string | undefined;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      accessToken = session?.access_token;
+      
+      if (!accessToken) {
+        console.warn('[Stripe] 🟡 No auth token available for request');
+      } else {
+        console.log('[Stripe] ✅ Auth token retrieved successfully');
+      }
+    } catch (authError) {
+      console.error('[Stripe] 🟡 Failed to get auth token:', authError);
+      // Continue without token
     }
 
-    const session = await response.json();
-    console.log(`✅ Checkout session created successfully: ${session.id}`);
+    // Prepare headers with conditional auth token
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
     
-    if (!session.url) throw new Error('Checkout session URL is missing from response.');
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    // Add debugging headers
+    headers['X-Client-Timestamp'] = timestamp;
+    headers['X-Client-Mode'] = STRIPE_MODE;
+    headers['X-Client-Attempt'] = String(attemptNumber);
+
+    // Make the API call
+    const startTime = performance.now();
+    const response = await fetch(apiRoute, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(options),
+    });
+    const endTime = performance.now();
+    const duration = Math.round(endTime - startTime);
+
+    console.log(`[Stripe] ⏱️ Checkout request completed in ${duration}ms with status ${response.status}`);
+
+    // Handle non-OK responses
+    if (!response.ok) {
+      let errorData: any = { error: `HTTP error ${response.status}` };
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        // If we can't parse JSON, use the status text
+        errorData = { error: response.statusText || `HTTP error ${response.status}` };
+      }
+
+      const errorMessage = errorData.error || `HTTP error ${response.status}`;
+      console.error(`[Stripe] 🔴 Checkout endpoint error: ${errorMessage}`);
+
+      // If this was the first attempt using Edge Function, try Vercel Function
+      if (attemptNumber < maxAttempts && preferEdgeFunction) {
+        console.log('[Stripe] 🔄 Retrying with alternative endpoint...');
+        return createCheckoutSession(options, attemptNumber + 1);
+      }
+
+      throw new StripeEndpointError(errorMessage, response.status);
+    }
+
+    // Parse the successful response
+    const session = await response.json();
+    console.log(`[Stripe] ✅ Checkout session created: ${session.id}`);
+    
+    if (!session.url) {
+      const error = 'Checkout session URL is missing from response';
+      console.error(`[Stripe] 🔴 ${error}`);
+      throw new StripeEndpointError(error);
+    }
 
     return { id: session.id, url: session.url };
   } catch (error) {
-    console.error('🔴 Error creating checkout session:', error);
-    throw new Error(`Failed to create checkout session: ${error.message}`);
+    // If this is not already a known error type, wrap it
+    if (!(error instanceof StripeConfigurationError) && !(error instanceof StripeEndpointError)) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[Stripe] 🔴 Checkout session creation failed: ${errorMessage}`, error);
+      
+      // If we haven't tried all options yet, attempt with the alternative endpoint
+      if (attemptNumber < maxAttempts) {
+        console.log('[Stripe] 🔄 Error occurred, retrying with alternative endpoint...');
+        return createCheckoutSession(options, attemptNumber + 1);
+      }
+      
+      throw new Error(`Failed to create checkout session: ${errorMessage}`);
+    }
+    
+    // Re-throw known error types
+    throw error;
   }
 }
 
@@ -179,35 +338,54 @@ export async function createCheckoutSession(options: CheckoutSessionOptions): Pr
  * @returns The subscription data or null if no active subscription
  */
 export async function getActiveSubscription(userId: string): Promise<SubscriptionData | null> {
-    console.log(`Fetching active subscription for user ${userId}`);
-    if (!userId) throw new Error('User ID is required to get subscription.');
+    console.log(`[Stripe] 🔍 Fetching active subscription for user ${userId}`);
+    
+    if (!userId) {
+        const error = 'User ID is required to get subscription';
+        console.error(`[Stripe] 🔴 ${error}`);
+        throw new StripeConfigurationError(error);
+    }
 
     try {
-        const { data: userData } = await supabase
+        // First get the customer ID from the database
+        const { data: userData, error: dbError } = await supabase
             .from('users')
             .select('stripe_customer_id')
             .eq('id', userId)
             .single();
 
+        if (dbError) {
+            console.error(`[Stripe] 🔴 Database error when fetching customer ID: ${dbError.message}`);
+            throw new Error(`Database error: ${dbError.message}`);
+        }
+
         if (!userData?.stripe_customer_id) {
-            console.log(`No Stripe customer ID found for user ${userId}`);
+            console.log(`[Stripe] ℹ️ No Stripe customer ID found for user ${userId}`);
             return null;
         }
 
+        console.log(`[Stripe] 🔄 Fetching subscriptions for customer ${userData.stripe_customer_id}`);
+        
+        // Call the Edge Function to get subscription data
         const response = await supabase.functions.invoke('get-subscription', {
             body: { customerId: userData.stripe_customer_id },
         });
 
-        if (response.error) throw response.error;
-        
-        const subscriptions = response.data.subscriptions;
+        if (response.error) {
+            console.error(`[Stripe] 🔴 Edge Function error: ${response.error.message}`);
+            throw new StripeEndpointError(`Edge Function error: ${response.error.message}`);
+        }
+
+        const subscriptions = response.data?.subscriptions;
         if (!subscriptions || subscriptions.length === 0) {
-            console.log(`No active subscriptions found for customer ${userData.stripe_customer_id}`);
+            console.log(`[Stripe] ℹ️ No active subscriptions found for customer ${userData.stripe_customer_id}`);
             return null;
         }
         
         // Assuming the first subscription is the relevant one
         const sub = subscriptions[0];
+        console.log(`[Stripe] ✅ Found active subscription: ${sub.id} (${sub.status})`);
+        
         return {
             id: sub.id,
             customerId: sub.customer,
@@ -217,8 +395,14 @@ export async function getActiveSubscription(userId: string): Promise<Subscriptio
             cancelAtPeriodEnd: sub.cancel_at_period_end,
         };
     } catch (error) {
-        console.error('🔴 Error retrieving active subscription:', error);
-        throw new Error(`Failed to retrieve subscription: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`[Stripe] 🔴 Failed to retrieve subscription: ${errorMessage}`, error);
+        
+        // Rethrow with a clear message
+        if (error instanceof StripeConfigurationError || error instanceof StripeEndpointError) {
+            throw error;
+        }
+        throw new Error(`Failed to retrieve subscription: ${errorMessage}`);
     }
 }
 
@@ -228,11 +412,112 @@ export async function getActiveSubscription(userId: string): Promise<Subscriptio
  */
 export function getPublicKey(): string {
   if (!stripePublicKey) {
-    console.error('🔴 CRITICAL: Missing Stripe public key in environment configuration.');
+    console.error('[Stripe] 🔴 CRITICAL: Missing Stripe public key in environment configuration.');
     // Return a placeholder to avoid crashing the app, but checkout will fail.
     return 'pk_missing_key';
   }
   return stripePublicKey;
+}
+
+/**
+ * Tests the Stripe configuration and connectivity.
+ * This function can be called to verify that the payment setup is working correctly.
+ * 
+ * @returns A report of the test results
+ */
+export async function testStripeConfiguration(): Promise<{
+  success: boolean;
+  environment: {
+    mode: string;
+    publicKeyValid: boolean;
+    priceIdsValid: boolean;
+    edgeFunctionConfigured: boolean;
+  };
+  endpoints: {
+    vercelEndpoint: boolean;
+    edgeFunctionEndpoint: boolean;
+  };
+  message: string;
+}> {
+  console.log('[Stripe] 🧪 Running configuration test...');
+  
+  const results = {
+    success: false,
+    environment: {
+      mode: STRIPE_MODE,
+      publicKeyValid: !!stripePublicKey && !stripePublicKey.includes('missing'),
+      priceIdsValid: !!monthlyPriceId && !!yearlyPriceId,
+      edgeFunctionConfigured: !!edgeFunctionUrl && !edgeFunctionUrl.includes('undefined'),
+    },
+    endpoints: {
+      vercelEndpoint: false,
+      edgeFunctionEndpoint: false,
+    },
+    message: '',
+  };
+
+  // Test environment variables
+  if (!results.environment.publicKeyValid) {
+    results.message = 'Missing or invalid Stripe public key';
+    console.error(`[Stripe] 🔴 ${results.message}`);
+    return results;
+  }
+
+  if (!results.environment.priceIdsValid) {
+    results.message = 'Missing or invalid Stripe price IDs';
+    console.error(`[Stripe] 🔴 ${results.message}`);
+    return results;
+  }
+
+  // Test Vercel endpoint
+  try {
+    const vercelResponse = await fetch('/api/create-checkout-session', {
+      method: 'HEAD',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    // Even a 405 Method Not Allowed is OK - it means the endpoint exists
+    results.endpoints.vercelEndpoint = vercelResponse.status !== 404;
+    console.log(`[Stripe] ${results.endpoints.vercelEndpoint ? '✅' : '❌'} Vercel endpoint check: ${vercelResponse.status}`);
+  } catch (error) {
+    console.error('[Stripe] 🔴 Vercel endpoint check failed:', error);
+  }
+
+  // Test Edge Function endpoint if configured
+  if (results.environment.edgeFunctionConfigured) {
+    try {
+      const edgeResponse = await fetch(edgeFunctionUrl!, {
+        method: 'OPTIONS',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      results.endpoints.edgeFunctionEndpoint = edgeResponse.status === 204 || edgeResponse.status === 200;
+      console.log(`[Stripe] ${results.endpoints.edgeFunctionEndpoint ? '✅' : '❌'} Edge Function check: ${edgeResponse.status}`);
+    } catch (error) {
+      console.error('[Stripe] 🔴 Edge Function check failed:', error);
+    }
+  } else {
+    console.log('[Stripe] ℹ️ Edge Function not configured, skipping check');
+  }
+
+  // Determine overall success
+  results.success = results.environment.publicKeyValid && 
+                   results.environment.priceIdsValid && 
+                   (results.endpoints.vercelEndpoint || results.endpoints.edgeFunctionEndpoint);
+
+  if (results.success) {
+    results.message = 'Stripe configuration test passed';
+    console.log(`[Stripe] ✅ ${results.message}`);
+  } else {
+    if (!results.endpoints.vercelEndpoint && !results.endpoints.edgeFunctionEndpoint) {
+      results.message = 'No payment endpoints are accessible';
+    } else {
+      results.message = 'Configuration test failed with partial success';
+    }
+    console.error(`[Stripe] 🔴 ${results.message}`);
+  }
+
+  return results;
 }
 
 // Export the placeholder stripe object for type compatibility where needed.

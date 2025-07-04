@@ -2,7 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js'; // Import loadStripe
 import { useAuth } from '../contexts/AuthContext';
-import { getPublicKey, createCheckoutSession, SUBSCRIPTION_PRICES } from '../services/stripe'; // Import necessary Stripe functions
+import {
+  getPublicKey,
+  createCheckoutSession,
+  SUBSCRIPTION_PRICES,
+  testStripeConfiguration,
+} from '../services/stripe'; // Import necessary Stripe functions
 
 // Initialize Stripe outside of component render to avoid re-creating it
 const stripePromise = loadStripe(getPublicKey());
@@ -24,6 +29,9 @@ const PricingPage: React.FC = () => {
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [isCheckoutInProgress, setIsCheckoutInProgress] = useState(false);
   const [stripeLoaded, setStripeLoaded] = useState<boolean | null>(null);
+  // Dev-only Stripe config test state
+  const [testingConfig, setTestingConfig] = useState(false);
+  const [configResult, setConfigResult] = useState<any | null>(null);
 
   // Determine the price based on the selected billing period
   const selectedPriceId = billingPeriod === 'monthly' ? SUBSCRIPTION_PRICES.MONTHLY : SUBSCRIPTION_PRICES.YEARLY;
@@ -58,6 +66,23 @@ const PricingPage: React.FC = () => {
       navigate('/login?redirect=pricing&checkout=true&period=' + billingPeriod);
     }
   }, [user, location.search, billingPeriod, navigate]);
+
+  /* ------------------------------------------------------------------
+     Dev-only helpers
+  ------------------------------------------------------------------ */
+  const handleTestConfig = async () => {
+    setTestingConfig(true);
+    setConfigResult(null);
+    try {
+      const result = await testStripeConfiguration();
+      setConfigResult(result);
+    } catch (error) {
+      console.error('Stripe configuration test failed:', error);
+      setConfigResult({ success: false, error: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setTestingConfig(false);
+    }
+  };
 
   const handleCheckout = async () => {
     console.log('Starting checkout process...');
@@ -303,6 +328,26 @@ const PricingPage: React.FC = () => {
               >
                 Test Checkout (Dev Only)
               </button>
+            )}
+
+            {/* Stripe configuration diagnostic (dev only) */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-6 w-full text-left">
+                <button
+                  onClick={handleTestConfig}
+                  disabled={testingConfig}
+                  className={`w-full ${
+                    testingConfig ? 'bg-blue-400' : 'bg-blue-500 hover:bg-blue-600'
+                  } text-white py-2 rounded-lg font-medium text-sm transition-all`}
+                >
+                  {testingConfig ? 'Testing Configuration...' : 'Test Stripe Configuration'}
+                </button>
+                {configResult && (
+                  <pre className="mt-3 text-xs bg-black/30 text-white p-2 rounded overflow-x-auto">
+                    {JSON.stringify(configResult, null, 2)}
+                  </pre>
+                )}
+              </div>
             )}
           </div>
         </div>

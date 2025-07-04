@@ -1,6 +1,31 @@
 import Stripe from 'stripe';
+
+// --- Environment bootstrap --------------------------------------------------
+const { STRIPE_SECRET_KEY } = process.env;
+
+if (!STRIPE_SECRET_KEY) {
+  // Fail fast if the secret is missing – nothing else can work without it.
+  // We cannot throw because this file is evaluated at import-time, so export
+  // a handler that always returns 500.
+  console.error(
+    '🔴  STRIPE_SECRET_KEY env variable is not set. The checkout endpoint ' +
+      'cannot operate without it.'
+  );
+  // eslint-disable-next-line consistent-return
+  export default function missingKeyHandler(_req, res) {
+    return res
+      .status(500)
+      .json({ error: 'Server mis-configuration: Stripe secret key missing' });
+  }
+  // Early return ensures the rest of the file is not executed.
+  // (Vercel will tree-shake unreachable code.)
+  // prettier-ignore
+  // @ts-ignore
+  return;
+}
+
 // Initialize Stripe with an explicit, pinned API version for stability.
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
 });
 
