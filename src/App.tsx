@@ -8,6 +8,7 @@ import ConversationsPage from './pages/ConversationsPage';
 import AdminPage from './pages/AdminPage';
 import TestLoginPage from './pages/TestLoginPage'; // <- added
 import PricingPage from './pages/PricingPage';     // <- added
+import StripeTestPage from './pages/StripeTestPage'; // <- added for payment testing
 import Header from './components/layout/Header';
 import { supabase } from './services/supabase';
 import DebugPanel from './components/DebugPanel';  // <- added
@@ -302,6 +303,7 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
             {/* standalone test-login route */}
             <Route path="/test-login" element={<TestLoginPage />} />
+            <Route path="/stripe-test" element={<StripeTestPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/characters" element={<AdminPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -348,6 +350,7 @@ function App() {
               <Routes>
                 {/* Public pricing page (accessible even when not logged in) */}
                 <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/stripe-test" element={<StripeTestPage />} />
                 <Route path="/*" element={<MainContent />} />
                 {/* 
                   Admin routes are handled inside MainContent to ensure
