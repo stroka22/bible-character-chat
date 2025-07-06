@@ -57,6 +57,7 @@ const AdminPage: React.FC = () => {
   const [formPersonaPrompt, setFormPersonaPrompt] = useState<string>('');
   const [formScripturalContext, setFormScripturalContext] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>(''); // Assuming description is also part of the form
+  const [formIsVisible, setFormIsVisible] = useState<boolean>(true); // New state for is_visible
 
   const resetForm = useCallback(() => {
     setEditingCharacterId(null);
@@ -69,13 +70,15 @@ const AdminPage: React.FC = () => {
     setFormPersonaPrompt('');
     setFormScripturalContext('');
     setFormDescription('');
+    setFormIsVisible(true); // Reset is_visible
   }, []);
 
   const fetchCharacters = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const fetchedCharacters = await characterRepository.getAll();
+      // Pass isAdmin=true to fetch all characters for admin view
+      const fetchedCharacters = await characterRepository.getAll(true);
       setCharacters(fetchedCharacters);
     } catch (err) {
       console.error('Failed to fetch characters:', err);
@@ -124,6 +127,7 @@ const AdminPage: React.FC = () => {
         persona_prompt: row.persona_prompt || '',
         scriptural_context: row.scriptural_context || '',
         description: row.description || '', // Assuming description is also in CSV
+        is_visible: row.is_visible ? row.is_visible.toLowerCase() === 'true' : true, // Default to true if not specified
       })).filter(char => char.name && char.persona_prompt); // Basic validation
 
       if (charactersToCreate.length === 0) {
@@ -158,6 +162,7 @@ const AdminPage: React.FC = () => {
       persona_prompt: formPersonaPrompt,
       scriptural_context: formScripturalContext,
       description: formDescription,
+      is_visible: formIsVisible, // Add is_visible to the data object
     };
 
     try {
@@ -190,6 +195,7 @@ const AdminPage: React.FC = () => {
     setFormPersonaPrompt(character.persona_prompt);
     setFormScripturalContext(character.scriptural_context || '');
     setFormDescription(character.description);
+    setFormIsVisible(character.is_visible ?? true); // Set is_visible from character data, default to true
   };
 
   // Handle deleting a character
@@ -207,6 +213,24 @@ const AdminPage: React.FC = () => {
     } catch (err) {
       console.error('Character deletion error:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete character.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle toggling character visibility
+  const handleToggleVisibility = async (character: Character) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const newVisibility = !(character.is_visible ?? true); // Toggle current state, default to true
+      await characterRepository.updateCharacter(character.id, { is_visible: newVisibility });
+      setSuccessMessage(`Character '${character.name}' visibility updated to ${newVisibility ? 'visible' : 'hidden'}.`);
+      fetchCharacters(); // Refresh list
+    } catch (err) {
+      console.error('Character visibility toggle error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to toggle character visibility.');
     } finally {
       setIsLoading(false);
     }
@@ -277,7 +301,7 @@ const AdminPage: React.FC = () => {
         <p className="text-gray-600 mb-4">
           Upload a CSV file to add or update multiple characters.
           Expected fields: `character_name`, `avatar_url`, `feature_image_url`, `short_biography`,
-          `bible_book`, `opening_sentence`, `persona_prompt`, `scriptural_context`, `description`.
+          `bible_book`, `opening_sentence`, `persona_prompt`, `scriptural_context`, `description`, `is_visible` (true/false).
         </p>
         <input
           type="file"
@@ -387,6 +411,19 @@ const AdminPage: React.FC = () => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             ></textarea>
           </div>
+          {/* New: is_visible checkbox */}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="is_visible"
+              checked={formIsVisible}
+              onChange={(e) => setFormIsVisible(e.target.checked)}
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            />
+            <label htmlFor="is_visible" className="ml-2 block text-sm font-medium text-gray-700">
+              Is Visible to Users
+            </label>
+          </div>
           <div className="flex space-x-4">
             <button
               type="submit"
@@ -436,6 +473,7 @@ const AdminPage: React.FC = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bible Book</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visibility</th> {/* New column */}
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -462,6 +500,19 @@ const AdminPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{character.bible_book || '-'}</div>
+                    </td>
+                    {/* New: Visibility column with toggle */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleToggleVisibility(character)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          (character.is_visible ?? true) // Default to true if null/undefined
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        } hover:opacity-75 transition-opacity`}
+                      >
+                        {(character.is_visible ?? true) ? 'Visible' : 'Hidden'}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
