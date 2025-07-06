@@ -29,6 +29,13 @@ export type Character = {
   short_biography?: string;
   bible_book?: string;
   scriptural_context?: string;
+  /**
+   * Indicates whether this character should be displayed to regular users.
+   * Admins can toggle this field in the dashboard. Defaults to `true`
+   * for backward-compatibility with existing rows that don't yet have
+   * the column populated.
+   */
+  is_visible?: boolean;
   created_at: string;
   updated_at: string;
 };

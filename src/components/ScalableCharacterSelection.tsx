@@ -51,9 +51,9 @@ const GROUP_IMAGERY = {
 // Flat list of Bible books in canonical order
 /*
  * NOTE:
- * The canonical book list isn’t currently used in this component.  Leaving the
+ * The canonical book list isn't currently used in this component.  Leaving the
  * spread lines outside of a comment block caused the TypeScript parser to throw
- * a “Declaration or statement expected” error.  We wrap the entire declaration
+ * a "Declaration or statement expected" error.  We wrap the entire declaration
  * in a block-comment so it can be re-enabled later without breaking the build.
  *
  * Example usage if needed:

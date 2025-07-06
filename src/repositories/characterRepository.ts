@@ -8,11 +8,20 @@ export const characterRepository = {
    * Fetch all available Bible characters
    * @returns Promise resolving to an array of Character objects
    */
-  async getAll(): Promise<Character[]> {
+  async getAll(isAdmin: boolean = false): Promise<Character[]> {
     try {
       const { data, error } = await supabase
         .from('characters')
         .select('*')
+        // Hide characters that are not marked as visible **unless** this
+        // method is called by an admin user.
+        .modify((query) => {
+          if (!isAdmin) {
+            // Either `is_visible` is true *or* the column is NULL
+            // (NULL means legacy rows created before the column existed)
+            query.or('is_visible.is.null,is_visible.eq.true');
+          }
+        })
         .order('name');
       
       if (error) {
@@ -87,12 +96,17 @@ export const characterRepository = {
    * @param query - The search query
    * @returns Promise resolving to an array of Character objects
    */
-  async search(query: string): Promise<Character[]> {
+  async search(query: string, isAdmin: boolean = false): Promise<Character[]> {
     try {
       const { data, error } = await supabase
         .from('characters')
         .select('*')
         .ilike('name', `%${query}%`)
+        .modify((builder) => {
+          if (!isAdmin) {
+            builder.or('is_visible.is.null,is_visible.eq.true');
+          }
+        })
         .order('name');
       
       if (error) {
