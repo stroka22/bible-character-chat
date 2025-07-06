@@ -36,6 +36,36 @@ export type Character = {
    * the column populated.
    */
   is_visible?: boolean;
+
+  /* ------------------------------------------------------------------
+   * Character Insights fields (for the Character Insights Panel)
+   * ---------------------------------------------------------------- */
+
+  /** A short label that places the character in biblical history
+   *  e.g. "Patriarchs", "United Kingdom", "Exile", "Early Church" */
+  timeline_period?: string;
+
+  /** A brief description of the historical / cultural backdrop
+   *  in which the character lived (politics, society, key events) */
+  historical_context?: string;
+
+  /** Primary geographic location associated with the character
+   *  (city, region, or modern-day country) */
+  geographic_location?: string;
+
+  /** Comma-separated list of key scripture references
+   *  (e.g. "Genesis 37-50; Hebrews 11:22") */
+  key_scripture_references?: string;
+
+  /** One-paragraph summary of the character’s theological significance */
+  theological_significance?: string;
+
+  /** JSON object containing relationship arrays, e.g.
+   *  { "parents": ["Jacob", "Rachel"], "siblings": ["Benjamin"], "spouse": [] } */
+  relationships?: Record<string, string[]>;
+
+  /** Optional list of suggested study or reflection questions  */
+  study_questions?: string;
   created_at: string;
   updated_at: string;
 };

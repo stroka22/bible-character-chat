@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useChat } from '../../contexts/ChatContext';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
+import CharacterInsightsPanel from './CharacterInsightsPanel'; // Import the CharacterInsightsPanel component
 
 const ChatInterface: React.FC = () => {
   const { 
@@ -14,6 +15,9 @@ const ChatInterface: React.FC = () => {
     retryLastMessage,
     resetChat
   } = useChat();
+
+  // State to track whether the insights panel is open
+  const [showInsightsPanel, setShowInsightsPanel] = useState(false);
 
   // Reference for auto-scrolling to the bottom of the chat
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -111,9 +115,22 @@ const ChatInterface: React.FC = () => {
           </div>
         </div>
         
+        {/* Insights Panel Toggle Button */}
+        <button
+          onClick={() => setShowInsightsPanel(!showInsightsPanel)}
+          className="ml-auto mr-3 flex items-center rounded-md bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors"
+          aria-label="Toggle character insights"
+          title="Toggle character insights"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Insights
+        </button>
+
         <button 
           onClick={resetChat}
-          className="ml-auto flex items-center rounded-md bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors"
+          className="flex items-center rounded-md bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors"
           aria-label="End conversation"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,6 +211,13 @@ const ChatInterface: React.FC = () => {
         {/* Invisible element to scroll to */}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Character Insights Panel */}
+      <CharacterInsightsPanel
+        character={character}
+        isOpen={showInsightsPanel}
+        onClose={() => setShowInsightsPanel(false)}
+      />
 
       {/* Chat actions (save / favorite / delete etc.) */}
       {/* Rendered above the input so actions are always accessible */}

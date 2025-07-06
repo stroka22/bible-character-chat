@@ -22,6 +22,15 @@ const parseCSV = (csvText: string): Array<Record<string, string>> => {
   return data;
 };
 
+// Helper to safely parse JSON
+function tryParseJson(str: string) {
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return null;
+  }
+}
+
 const AdminPage: React.FC = () => {
   const { user } = useAuth();
 
@@ -59,6 +68,15 @@ const AdminPage: React.FC = () => {
   const [formDescription, setFormDescription] = useState<string>(''); // Assuming description is also part of the form
   const [formIsVisible, setFormIsVisible] = useState<boolean>(true); // New state for is_visible
 
+  // New states for Character Insights fields
+  const [formTimelinePeriod, setFormTimelinePeriod] = useState<string>('');
+  const [formHistoricalContext, setFormHistoricalContext] = useState<string>('');
+  const [formGeographicLocation, setFormGeographicLocation] = useState<string>('');
+  const [formKeyScriptureRefs, setFormKeyScriptureRefs] = useState<string>('');
+  const [formTheologicalSignificance, setFormTheologicalSignificance] = useState<string>('');
+  const [formRelationships, setFormRelationships] = useState<string>(''); // Stored as stringified JSON
+  const [formStudyQuestions, setFormStudyQuestions] = useState<string>('');
+
   const resetForm = useCallback(() => {
     setEditingCharacterId(null);
     setFormName('');
@@ -71,6 +89,14 @@ const AdminPage: React.FC = () => {
     setFormScripturalContext('');
     setFormDescription('');
     setFormIsVisible(true); // Reset is_visible
+    // Reset Character Insights fields
+    setFormTimelinePeriod('');
+    setFormHistoricalContext('');
+    setFormGeographicLocation('');
+    setFormKeyScriptureRefs('');
+    setFormTheologicalSignificance('');
+    setFormRelationships('');
+    setFormStudyQuestions('');
   }, []);
 
   const fetchCharacters = useCallback(async () => {
@@ -128,6 +154,14 @@ const AdminPage: React.FC = () => {
         scriptural_context: row.scriptural_context || '',
         description: row.description || '', // Assuming description is also in CSV
         is_visible: row.is_visible ? row.is_visible.toLowerCase() === 'true' : true, // Default to true if not specified
+        // New Character Insights fields
+        timeline_period: row.timeline_period || '',
+        historical_context: row.historical_context || '',
+        geographic_location: row.geographic_location || '',
+        key_scripture_references: row.key_scripture_references || '',
+        theological_significance: row.theological_significance || '',
+        relationships: tryParseJson(row.relationships) || {},
+        study_questions: row.study_questions || '',
       })).filter(char => char.name && char.persona_prompt); // Basic validation
 
       if (charactersToCreate.length === 0) {
@@ -163,6 +197,14 @@ const AdminPage: React.FC = () => {
       scriptural_context: formScripturalContext,
       description: formDescription,
       is_visible: formIsVisible, // Add is_visible to the data object
+      // Add Character Insights fields
+      timeline_period: formTimelinePeriod,
+      historical_context: formHistoricalContext,
+      geographic_location: formGeographicLocation,
+      key_scripture_references: formKeyScriptureRefs,
+      theological_significance: formTheologicalSignificance,
+      relationships: tryParseJson(formRelationships), // Parse JSON string to object
+      study_questions: formStudyQuestions,
     };
 
     try {
@@ -196,6 +238,17 @@ const AdminPage: React.FC = () => {
     setFormScripturalContext(character.scriptural_context || '');
     setFormDescription(character.description);
     setFormIsVisible(character.is_visible ?? true); // Set is_visible from character data, default to true
+
+    // Populate insight fields
+    setFormTimelinePeriod(character.timeline_period || '');
+    setFormHistoricalContext(character.historical_context || '');
+    setFormGeographicLocation(character.geographic_location || '');
+    setFormKeyScriptureRefs(character.key_scripture_references || '');
+    setFormTheologicalSignificance(character.theological_significance || '');
+    setFormRelationships(
+      character.relationships ? JSON.stringify(character.relationships, null, 2) : ''
+    );
+    setFormStudyQuestions(character.study_questions || '');
   };
 
   // Handle deleting a character
@@ -302,6 +355,7 @@ const AdminPage: React.FC = () => {
           Upload a CSV file to add or update multiple characters.
           Expected fields: `character_name`, `avatar_url`, `feature_image_url`, `short_biography`,
           `bible_book`, `opening_sentence`, `persona_prompt`, `scriptural_context`, `description`, `is_visible` (true/false).
+          For Character Insights, also include: `timeline_period`, `historical_context`, `geographic_location`, `key_scripture_references`, `theological_significance`, `relationships` (JSON string), `study_questions`.
         </p>
         <input
           type="file"
@@ -424,6 +478,85 @@ const AdminPage: React.FC = () => {
               Is Visible to Users
             </label>
           </div>
+
+          {/* New section for Character Insights data */}
+          <div className="mt-6 border-t border-gray-300 pt-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Character Insights</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="timeline_period" className="block text-sm font-medium text-gray-700">Time Period</label>
+                <input
+                  type="text"
+                  id="timeline_period"
+                  value={formTimelinePeriod}
+                  onChange={(e) => setFormTimelinePeriod(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="historical_context" className="block text-sm font-medium text-gray-700">Historical Context</label>
+                <textarea
+                  id="historical_context"
+                  rows={3}
+                  value={formHistoricalContext}
+                  onChange={(e) => setFormHistoricalContext(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                ></textarea>
+              </div>
+              <div>
+                <label htmlFor="geographic_location" className="block text-sm font-medium text-gray-700">Geographic Location</label>
+                <input
+                  type="text"
+                  id="geographic_location"
+                  value={formGeographicLocation}
+                  onChange={(e) => setFormGeographicLocation(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="key_scripture_references" className="block text-sm font-medium text-gray-700">Key Scripture References (comma or semicolon separated)</label>
+                <textarea
+                  id="key_scripture_references"
+                  rows={3}
+                  value={formKeyScriptureRefs}
+                  onChange={(e) => setFormKeyScriptureRefs(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                ></textarea>
+              </div>
+              <div>
+                <label htmlFor="theological_significance" className="block text-sm font-medium text-gray-700">Theological Significance</label>
+                <textarea
+                  id="theological_significance"
+                  rows={3}
+                  value={formTheologicalSignificance}
+                  onChange={(e) => setFormTheologicalSignificance(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                ></textarea>
+              </div>
+              <div>
+                <label htmlFor="relationships" className="block text-sm font-medium text-gray-700">Relationships (JSON string, e.g., {"parents":["Jacob","Rachel"]})</label>
+                <textarea
+                  id="relationships"
+                  rows={5}
+                  value={formRelationships}
+                  onChange={(e) => setFormRelationships(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                ></textarea>
+              </div>
+              <div>
+                <label htmlFor="study_questions" className="block text-sm font-medium text-gray-700">Study Questions (one per line)</label>
+                <textarea
+                  id="study_questions"
+                  rows={5}
+                  value={formStudyQuestions}
+                  onChange={(e) => setFormStudyQuestions(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
           <div className="flex space-x-4">
             <button
               type="submit"
