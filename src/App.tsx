@@ -9,6 +9,8 @@ import AdminPage from './pages/AdminPage';
 import TestLoginPage from './pages/TestLoginPage'; // <- added
 import PricingPage from './pages/PricingPage';     // <- added
 import StripeTestPage from './pages/StripeTestPage'; // <- added for payment testing
+import DirectStripePage from './pages/DirectStripePage'; // <- added for direct Stripe link testing
+import AdminAccessPage from './pages/AdminAccessPage'; // <- temporary admin bypass
 import Header from './components/layout/Header';
 import { supabase } from './services/supabase';
 import DebugPanel from './components/DebugPanel';  // <- added
@@ -351,6 +353,9 @@ function App() {
                 {/* Public pricing page (accessible even when not logged in) */}
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/stripe-test" element={<StripeTestPage />} />
+                <Route path="/direct-stripe" element={<DirectStripePage />} />
+                {/* Temporary route to set bypass flag and redirect to /admin */}
+                <Route path="/admin-access" element={<AdminAccessPage />} />
                 <Route path="/*" element={<MainContent />} />
                 {/* 
                   Admin routes are handled inside MainContent to ensure
