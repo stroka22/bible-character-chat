@@ -41,8 +41,18 @@ const AdminPage: React.FC = () => {
   const bypassAuth =
     typeof window !== 'undefined' &&
     localStorage.getItem('bypass_auth') === 'true';
-  // Simple admin email check (replace with real role‐based logic as needed)
-  const isAdmin = bypassAuth || (user && user.email === 'admin@example.com');
+  /*
+   * ------------------------------------------------------------------
+   * TEMPORARY TESTING OVERRIDE
+   * ------------------------------------------------------------------
+   * For local testing we want to reach the admin panel without having
+   * to configure an admin account or set the bypass flag.  The line
+   * below forces `isAdmin` to `true` so **any** logged-in (or bypassed)
+   * user can access the page.  REMOVE OR REPLACE WITH PROPER ROLE
+   * CHECKS BEFORE DEPLOYING TO PRODUCTION.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const isAdmin = true;
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
