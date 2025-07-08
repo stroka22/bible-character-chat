@@ -10,13 +10,23 @@ import { supabase } from '../services/supabase';
 interface AuthContextType {
   session: Session | null;
   user: User | null;
+  /** Full row from `profiles` table (may be null if not yet fetched) */
+  profile: Profile | null;
+  /** Convenience role string: 'admin' | 'pastor' | 'user' | 'unknown' */
+  role: UserRole;
   loading: boolean;
   error: string | null;
+  /** Returns true for admin role */
+  isAdmin: () => boolean;
+  /** Returns true for pastor (or admin) role */
+  isPastor: () => boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: { username?: string; website?: string; avatar_url?: string }) => Promise<void>;
+  /** Manually re-query the user's profile (role) */
+  refreshProfile: () => Promise<void>;
 }
 
 // Create the context with a default value
@@ -27,12 +37,49 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+type UserRole = 'admin' | 'pastor' | 'user' | 'unknown';
+interface Profile {
+  id: string;
+  role: UserRole;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+}
+
 // Provider component that wraps the app and makes auth available to any child component
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [role, setRole] = useState<UserRole>('unknown');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  /* ------------------------------------------------------------------
+   * Helper – retrieve profile/role for current user
+   * ---------------------------------------------------------------- */
+  const fetchProfile = async (uid: string | undefined | null = user?.id) => {
+    if (!uid) {
+      setProfile(null);
+      setRole('unknown');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select<Profile>('id, role, email, display_name, avatar_url')
+      .eq('id', uid)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Failed to fetch profile:', error);
+      setProfile(null);
+      setRole('unknown');
+      return;
+    }
+    setProfile(data);
+    setRole(data?.role ?? 'unknown');
+  };
 
   // Initialize the auth state when the component mounts
   useEffect(() => {
@@ -50,12 +97,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id);
+        }
         
         // Set up auth state listener for future changes
         const { data: { subscription } } = await supabase.auth.onAuthStateChange(
           (_event, newSession) => {
             setSession(newSession);
             setUser(newSession?.user ?? null);
+            // when auth state changes, refresh profile
+            if (newSession?.user) {
+              fetchProfile(newSession.user.id);
+            } else {
+              setProfile(null);
+              setRole('unknown');
+            }
           }
         );
 
@@ -95,6 +152,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         throw error;
       }
+      // refresh profile after successful login
+      await fetchProfile();
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
@@ -121,6 +180,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         throw error;
       }
+      // new users start with 'user' role; fetch profile row
+      await fetchProfile();
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
@@ -144,6 +205,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (error) {
         throw error;
       }
+      // clear local profile/role
+      setProfile(null);
+      setRole('unknown');
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
@@ -192,12 +256,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       
       const { error } = await supabase
-        .from('users')
-        .upsert({
-          id: user.id,
-          ...data,
-          updated_at: new Date().toISOString(),
-        });
+        .from('profiles')
+        .upsert(() => {
+          // only pass columns that actually exist in the `profiles` table
+          const updates: Partial<Profile> & { id: string; updated_at: string } = {
+            id: user.id,
+            updated_at: new Date().toISOString(),
+          };
+
+          if (data.username) {
+            updates.display_name = data.username;
+          }
+
+          if (data.avatar_url) {
+            updates.avatar_url = data.avatar_url;
+          }
+
+          return updates;
+        }());
       
       if (error) {
         throw error;
@@ -214,17 +290,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  /* ------------------------------------------------------------------
+   * Role helpers
+   * ---------------------------------------------------------------- */
+  const isAdmin = () => role === 'admin';
+  const isPastor = () => role === 'pastor' || role === 'admin';
+
   // Create the value object that will be provided to consumers
   const value = {
     session,
     user,
+    profile,
+    role,
     loading,
     error,
+    isAdmin,
+    isPastor,
     signIn,
     signUp,
     signOut,
     resetPassword,
     updateProfile,
+    refreshProfile: fetchProfile,
   };
 
   // Provide the auth context to children components

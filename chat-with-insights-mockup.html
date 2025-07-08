@@ -150,6 +150,8 @@
         .insights-panel.open {
             transform: translateX(0);
         }
+        /* raise z-index a bit so close button is always on top */
+        .insights-panel { z-index: 30; }
         /* Portrait inside panel */
         .insights-panel .portrait {
             width: 120px;
@@ -267,6 +269,29 @@
         .insights-toggle-button.active {
             background-color: #facc15;
             color: #0a0a2a;
+        }
+
+        /* Close (X) button inside insights panel */
+        .close-insights {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(250,204,21,0.15);
+            border: 1px solid #facc15;
+            color: #facc15;
+            font-weight: bold;
+            line-height: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s ease;
+        }
+        .close-insights:hover {
+            background: #facc15;
+            color: #0a0a2a;
+            transform: rotate(90deg);
         }
         /* mobile */
         @media (max-width: 640px){
@@ -432,6 +457,8 @@
         </div>
 
         <div id="insightsPanel" class="insights-panel">
+            <!-- Close (X) button -->
+            <div id="closeInsights" class="close-insights">×</div>
             <img id="insightsAvatar" class="portrait" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80" alt="portrait">
             <h3>Character Insights</h3>
             <section>
@@ -521,6 +548,13 @@
                 const isOpen = insightsPanel.classList.toggle('open');
                 insightsToggle.classList.toggle('active', isOpen);
                 chatMain.classList.toggle('panel-open', isOpen);
+            });
+
+            // Close (X) button inside insights panel
+            document.getElementById('closeInsights').addEventListener('click', () => {
+                insightsPanel.classList.remove('open');
+                insightsToggle.classList.remove('active');
+                chatMain.classList.remove('panel-open');
             });
             
             // Share button functionality
