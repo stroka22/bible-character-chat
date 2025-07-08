@@ -1,9 +1,11 @@
 import type { FormEvent } from "react";
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import { type Character } from '../services/supabase';
 import GroupManagement from '../components/admin/GroupManagement';
+import { supabase } from '../services/supabase';
 
 // Helper function for basic CSV parsing
 const parseCSV = (csvText: string): Array<Record<string, string>> => {
@@ -31,39 +33,30 @@ function tryParseJson(str: string) {
   }
 }
 
-const AdminPage: React.FC = () => {
-  const { user } = useAuth();
+// Interface for profile management
+interface UserProfile {
+  id: string;
+  email: string;
+  display_name: string | null;
+  role: 'admin' | 'pastor' | 'user';
+  created_at: string;
+}
+
+const SecureAdminPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading, isAdmin, isPastor, role } = useAuth();
 
   /* ------------------------------------------------------------
-   * ADMIN / BYPASS ACCESS CHECK
+   * Top-level Admin Tabs
    * ---------------------------------------------------------- */
-  // Read bypass flag once on component render
-  const bypassAuth =
-    typeof window !== 'undefined' &&
-    localStorage.getItem('bypass_auth') === 'true';
-  /*
-   * ------------------------------------------------------------------
-   * TEMPORARY TESTING OVERRIDE
-   * ------------------------------------------------------------------
-   * For local testing we want to reach the admin panel without having
-   * to configure an admin account or set the bypass flag.  The line
-   * below forces `isAdmin` to `true` so **any** logged-in (or bypassed)
-   * user can access the page.  REMOVE OR REPLACE WITH PROPER ROLE
-   * CHECKS BEFORE DEPLOYING TO PRODUCTION.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const isAdmin = true;
+  type AdminMainTab = 'characters' | 'groups' | 'users';
+  const [activeTab, setActiveTab] = useState<AdminMainTab>('characters');
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-
-  /* ------------------------------------------------------------
-   * Top-level Admin Tabs
-   * ---------------------------------------------------------- */
-  type AdminMainTab = 'characters' | 'groups';
-  const [activeTab, setActiveTab] = useState<AdminMainTab>('characters');
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
 
   // Form state for manual creation/editing
   const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
@@ -75,16 +68,16 @@ const AdminPage: React.FC = () => {
   const [formOpeningSentence, setFormOpeningSentence] = useState<string>('');
   const [formPersonaPrompt, setFormPersonaPrompt] = useState<string>('');
   const [formScripturalContext, setFormScripturalContext] = useState<string>('');
-  const [formDescription, setFormDescription] = useState<string>(''); // Assuming description is also part of the form
-  const [formIsVisible, setFormIsVisible] = useState<boolean>(true); // New state for is_visible
+  const [formDescription, setFormDescription] = useState<string>('');
+  const [formIsVisible, setFormIsVisible] = useState<boolean>(true);
 
-  // New states for Character Insights fields
+  // States for Character Insights fields
   const [formTimelinePeriod, setFormTimelinePeriod] = useState<string>('');
   const [formHistoricalContext, setFormHistoricalContext] = useState<string>('');
   const [formGeographicLocation, setFormGeographicLocation] = useState<string>('');
   const [formKeyScriptureRefs, setFormKeyScriptureRefs] = useState<string>('');
   const [formTheologicalSignificance, setFormTheologicalSignificance] = useState<string>('');
-  const [formRelationships, setFormRelationships] = useState<string>(''); // Stored as stringified JSON
+  const [formRelationships, setFormRelationships] = useState<string>('');
   const [formStudyQuestions, setFormStudyQuestions] = useState<string>('');
 
   const resetForm = useCallback(() => {
@@ -98,7 +91,7 @@ const AdminPage: React.FC = () => {
     setFormPersonaPrompt('');
     setFormScripturalContext('');
     setFormDescription('');
-    setFormIsVisible(true); // Reset is_visible
+    setFormIsVisible(true);
     // Reset Character Insights fields
     setFormTimelinePeriod('');
     setFormHistoricalContext('');
@@ -124,20 +117,90 @@ const AdminPage: React.FC = () => {
     }
   }, []);
 
-  // Fetch characters after the access flags are set
-  useEffect(() => {
-    if (isAdmin) fetchCharacters();
-  }, [isAdmin, fetchCharacters]);
+  // Fetch user profiles (admin only)
+  const fetchUserProfiles = useCallback(async () => {
+    if (!isAdmin()) return;
+    
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select<'*', UserProfile>('id, email, display_name, role, created_at')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setUserProfiles(data || []);
+    } catch (err) {
+      console.error('Failed to fetch user profiles:', err);
+      setError('Failed to load user profiles.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAdmin]);
 
-  if (!isAdmin) {
+  // Handle promoting a user to pastor role (admin only)
+  const handlePromoteUser = async (userId: string, newRole: 'pastor' | 'user') => {
+    if (!isAdmin()) return;
+    
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      setSuccessMessage(`User role updated to ${newRole} successfully!`);
+      fetchUserProfiles();
+    } catch (err) {
+      console.error('Failed to update user role:', err);
+      setError('Failed to update user role.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch characters after authentication is confirmed
+  useEffect(() => {
+    if (!authLoading) {
+      if (isPastor()) {
+        fetchCharacters();
+        if (activeTab === 'users' && isAdmin()) {
+          fetchUserProfiles();
+        }
+      } else {
+        // Redirect non-admin/pastor users
+        navigate('/access-denied');
+      }
+    }
+  }, [authLoading, isPastor, isAdmin, fetchCharacters, fetchUserProfiles, activeTab, navigate]);
+
+  // Fetch appropriate data when tab changes
+  useEffect(() => {
+    if (activeTab === 'characters') {
+      fetchCharacters();
+    } else if (activeTab === 'users' && isAdmin()) {
+      fetchUserProfiles();
+    }
+  }, [activeTab, fetchCharacters, fetchUserProfiles, isAdmin]);
+
+  // Show loading state while checking authentication
+  if (authLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-red-50 p-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-800 mb-4">Access Denied</h2>
-          <p className="text-red-700">You do not have administrative privileges to view this page.</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
       </div>
     );
+  }
+
+  // Redirect non-admin/pastor users (this is a backup to the useEffect redirect)
+  if (!isPastor()) {
+    navigate('/access-denied');
+    return null;
   }
 
   // Handle CSV upload
@@ -162,8 +225,8 @@ const AdminPage: React.FC = () => {
         opening_line: row.opening_sentence || '',
         persona_prompt: row.persona_prompt || '',
         scriptural_context: row.scriptural_context || '',
-        description: row.description || '', // Assuming description is also in CSV
-        is_visible: row.is_visible ? row.is_visible.toLowerCase() === 'true' : true, // Default to true if not specified
+        description: row.description || '',
+        is_visible: row.is_visible ? row.is_visible.toLowerCase() === 'true' : true,
         // New Character Insights fields
         timeline_period: row.timeline_period || '',
         historical_context: row.historical_context || '',
@@ -172,7 +235,7 @@ const AdminPage: React.FC = () => {
         theological_significance: row.theological_significance || '',
         relationships: tryParseJson(row.relationships) || {},
         study_questions: row.study_questions || '',
-      })).filter(char => char.name && char.persona_prompt); // Basic validation
+      })).filter(char => char.name && char.persona_prompt);
 
       if (charactersToCreate.length === 0) {
         throw new Error('No valid characters found in CSV. Ensure headers and data are correct.');
@@ -180,7 +243,7 @@ const AdminPage: React.FC = () => {
 
       await characterRepository.bulkCreateCharacters(charactersToCreate);
       setSuccessMessage(`Successfully uploaded ${charactersToCreate.length} characters.`);
-      fetchCharacters(); // Refresh list
+      fetchCharacters();
     } catch (err) {
       console.error('CSV upload error:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload CSV.');
@@ -206,14 +269,14 @@ const AdminPage: React.FC = () => {
       persona_prompt: formPersonaPrompt,
       scriptural_context: formScripturalContext,
       description: formDescription,
-      is_visible: formIsVisible, // Add is_visible to the data object
+      is_visible: formIsVisible,
       // Add Character Insights fields
       timeline_period: formTimelinePeriod,
       historical_context: formHistoricalContext,
       geographic_location: formGeographicLocation,
       key_scripture_references: formKeyScriptureRefs,
       theological_significance: formTheologicalSignificance,
-      relationships: tryParseJson(formRelationships), // Parse JSON string to object
+      relationships: tryParseJson(formRelationships),
       study_questions: formStudyQuestions,
     };
 
@@ -226,7 +289,7 @@ const AdminPage: React.FC = () => {
         setSuccessMessage('Character created successfully!');
       }
       resetForm();
-      fetchCharacters(); // Refresh list
+      fetchCharacters();
     } catch (err) {
       console.error('Character form submission error:', err);
       setError(err instanceof Error ? err.message : 'Failed to save character.');
@@ -247,7 +310,7 @@ const AdminPage: React.FC = () => {
     setFormPersonaPrompt(character.persona_prompt);
     setFormScripturalContext(character.scriptural_context || '');
     setFormDescription(character.description);
-    setFormIsVisible(character.is_visible ?? true); // Set is_visible from character data, default to true
+    setFormIsVisible(character.is_visible ?? true);
 
     // Populate insight fields
     setFormTimelinePeriod(character.timeline_period || '');
@@ -272,7 +335,7 @@ const AdminPage: React.FC = () => {
     try {
       await characterRepository.deleteCharacter(id);
       setSuccessMessage('Character deleted successfully!');
-      fetchCharacters(); // Refresh list
+      fetchCharacters();
     } catch (err) {
       console.error('Character deletion error:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete character.');
@@ -287,10 +350,10 @@ const AdminPage: React.FC = () => {
     setError(null);
     setSuccessMessage(null);
     try {
-      const newVisibility = !(character.is_visible ?? true); // Toggle current state, default to true
+      const newVisibility = !(character.is_visible ?? true);
       await characterRepository.updateCharacter(character.id, { is_visible: newVisibility });
       setSuccessMessage(`Character '${character.name}' visibility updated to ${newVisibility ? 'visible' : 'hidden'}.`);
-      fetchCharacters(); // Refresh list
+      fetchCharacters();
     } catch (err) {
       console.error('Character visibility toggle error:', err);
       setError(err instanceof Error ? err.message : 'Failed to toggle character visibility.');
@@ -309,9 +372,9 @@ const AdminPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin Panel - Character Management</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin Panel</h1>
       <p className="text-gray-700 mb-4">
-        Welcome, Admin! Here you can manage Bible characters.
+        Welcome, {user?.email}! Your role: <span className="font-semibold capitalize">{role}</span>
       </p>
 
       {/* Top-level tab navigation */}
@@ -337,6 +400,19 @@ const AdminPage: React.FC = () => {
           >
             Groups
           </button>
+          {/* User Management tab - only visible to admins */}
+          {isAdmin() && (
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'users'
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              User Management
+            </button>
+          )}
         </nav>
       </div>
 
@@ -356,6 +432,7 @@ const AdminPage: React.FC = () => {
         </div>
       )}
 
+      {/* Character Management Tab */}
       {activeTab === 'characters' && (
       <>
       {/* Part A: CSV Upload Tool */}
@@ -475,7 +552,6 @@ const AdminPage: React.FC = () => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             ></textarea>
           </div>
-          {/* New: is_visible checkbox */}
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -489,7 +565,7 @@ const AdminPage: React.FC = () => {
             </label>
           </div>
 
-          {/* New section for Character Insights data */}
+          {/* Character Insights section */}
           <div className="mt-6 border-t border-gray-300 pt-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Character Insights</h3>
             
@@ -616,7 +692,7 @@ const AdminPage: React.FC = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bible Book</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visibility</th> {/* New column */}
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visibility</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -644,12 +720,11 @@ const AdminPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">{character.bible_book || '-'}</div>
                     </td>
-                    {/* New: Visibility column with toggle */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggleVisibility(character)}
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          (character.is_visible ?? true) // Default to true if null/undefined
+                          (character.is_visible ?? true)
                             ? 'bg-green-100 text-green-800'
                             : 'bg-red-100 text-red-800'
                         } hover:opacity-75 transition-opacity`}
@@ -681,26 +756,93 @@ const AdminPage: React.FC = () => {
       </>
       )}
 
+      {/* Group Management Tab */}
       {activeTab === 'groups' && (
         <GroupManagement />
       )}
 
-      {/* ----------------------------------------------------------------
-       * User Management – visible only to admins
-       * -------------------------------------------------------------- */}
-      {activeTab === 'users' && isAdmin && (
+      {/* User Management Tab - Admin Only */}
+      {activeTab === 'users' && isAdmin() && (
         <section className="p-6 bg-white rounded-lg shadow-md">
           <h2 className="text-2xl font-semibold text-gray-800 mb-4">
             User Management
           </h2>
           <p className="text-gray-600 mb-6">
-            (Coming soon) – As an administrator you will be able to view users
-            and promote them to the “pastor” role.
+            As an administrator, you can view all users and promote regular users to the "pastor" role.
+            Pastors can manage characters and groups but cannot manage other users.
           </p>
+          
+          {/* User list */}
+          {userProfiles.length === 0 ? (
+            <p className="text-gray-500 italic">No users found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Display Name</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {userProfiles.map((profile) => (
+                    <tr key={profile.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{profile.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{profile.display_name || '-'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          profile.role === 'admin' 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : profile.role === 'pastor'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {profile.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(profile.created_at).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {profile.role === 'user' && (
+                          <button
+                            onClick={() => handlePromoteUser(profile.id, 'pastor')}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
+                          >
+                            Promote to Pastor
+                          </button>
+                        )}
+                        {profile.role === 'pastor' && (
+                          <button
+                            onClick={() => handlePromoteUser(profile.id, 'user')}
+                            className="text-gray-600 hover:text-gray-900"
+                          >
+                            Demote to User
+                          </button>
+                        )}
+                        {profile.role === 'admin' && (
+                          <span className="text-gray-400">Admin (cannot modify)</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       )}
     </div>
   );
 };
 
-export default AdminPage;
+export default SecureAdminPage;
