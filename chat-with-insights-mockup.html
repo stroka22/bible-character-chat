@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat with Insights Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            min-height: 100vh;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden; /* Prevent scrollbar from panel */
+        }
+        .chat-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.1); /* Slightly darker to differentiate */
+            transition: width 0.3s ease-in-out;
+            width: 100%;
+        }
+        .chat-main.panel-open {
+            width: calc(100% - 350px);
+        }
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .chat-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid #facc15;
+        }
+        .chat-header h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #facc15;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            line-height: 1.5;
+        }
+        .user-message {
+            background-color: #4a5568; /* Darker blue-gray */
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .character-message {
+            background-color: #2d3748; /* Even darker blue-gray */
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+        .chat-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-area input {
+            flex-grow: 1;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: #e0e0e0;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .chat-input-area input:focus {
+            border-color: #facc15;
+            box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.3);
+        }
+        .chat-input-area input::placeholder {
+            color: #a0aec0;
+        }
+        .chat-input-area button {
+            background-color: #facc15;
+            color: #0a0a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .chat-input-area button:hover {
+            background-color: #fbbf24;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .chat-input-area button:active {
+            transform: translateY(0);
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            width: 350px;
+            background: linear-gradient(to bottom, #1a1a4a, #2a2a6a);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 20;
+        }
+        .insights-panel.open {
+            transform: translateX(0);
+        }
+        /* Portrait inside panel */
+        .insights-panel .portrait {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #facc15;
+            margin: 0 auto 15px;
+            display: block;
+        }
+        .insights-panel h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            color: #facc15;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .insights-panel section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.2s ease;
+        }
+        .insights-panel section:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+        .insights-panel section.collapsed .section-content {
+            display: none;
+        }
+        .insights-panel section h4 {
+            font-size: 1.2rem;
+            color: #90cdf4;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .insights-panel section h4:hover {
+            color: #63b3ed;
+        }
+        .insights-panel section h4::after {
+            content: '−';
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+        .insights-panel section.collapsed h4::after {
+            content: '+';
+        }
+        .insights-panel p, .insights-panel ul, .insights-panel pre {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.5;
+        }
+        .insights-panel ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+        .insights-panel pre {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        /* Relationships formatting */
+        .relationship-group {
+            margin-bottom: 12px;
+        }
+        .relationship-group h5 {
+            font-weight: 600;
+            color: #facc15;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+        .relationship-chip {
+            display: inline-block;
+            background-color: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 9999px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            margin: 2px 4px 6px 0;
+            white-space: nowrap;
+        }
+        .insights-toggle-button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .insights-toggle-button:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+            transform: translateY(-2px);
+        }
+        .insights-toggle-button:active {
+            transform: translateY(0);
+        }
+        .insights-toggle-button.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+        }
+        /* mobile */
+        @media (max-width: 640px){
+            .insights-panel{
+                width: 100%;
+            }
+            .chat-main.panel-open{
+                width: 0; /* hide main on very small screens */
+            }
+        }
+
+        /* Scripture Reference Popover */
+        .scripture-reference {
+            color: #63b3ed; /* Blue for links */
+            text-decoration: underline;
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            padding: 0 2px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+        .scripture-reference:hover {
+            background-color: rgba(99, 179, 237, 0.2);
+            text-decoration: none;
+        }
+        .scripture-popover {
+            position: absolute;
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 100;
+            width: 300px;
+            max-width: 90vw;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            transform: translateX(-50%); /* Center popover horizontally */
+            left: 50%;
+            bottom: calc(100% + 10px); /* Position above the link */
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+        .scripture-reference:hover .scripture-popover {
+            opacity: 1;
+            visibility: visible;
+        }
+        .scripture-popover::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+        .scripture-popover strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c5282;
+            font-size: 0.9rem;
+        }
+        .scripture-popover p {
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+        .scripture-popover .attribution {
+            font-size: 0.75rem;
+            color: #718096;
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        /* Breadcrumb and navigation */
+        .breadcrumb a {
+            transition: color 0.2s ease;
+        }
+        .breadcrumb a:hover {
+            color: #facc15;
+        }
+        #backBtn {
+            transition: all 0.2s ease;
+        }
+        #backBtn:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            transform: translateY(-2px);
+        }
+        #backBtn:active {
+            transform: translateY(0);
+        }
+        
+        /* Scroll to top button */
+        .scroll-top {
+            transition: all 0.2s ease;
+        }
+        .scroll-top:hover {
+            transform: translateY(-3px);
+            background-color: #facc15;
+            color: #0a0a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-main" id="chatMain">
+            <!-- Breadcrumb + Back button -->
+            <div class="flex items-center justify-between px-4 py-2 text-sm bg-[rgba(255,255,255,.03)] border-b border-[rgba(255,255,255,.08)]">
+                <div class="breadcrumb space-x-1">
+                    <a href="#" class="text-gray-300 hover:text-facc15">Home</a>
+                    <span>&gt;</span>
+                    <a href="#" class="text-gray-300 hover:text-facc15">Characters</a>
+                    <span>&gt;</span>
+                    <span class="text-facc15 font-semibold">Jesus</span>
+                </div>
+                <button id="backBtn" class="text-sm px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-facc15 hover:bg-facc15 hover:text-[#0a0a2a] transition">Back to Characters</button>
+            </div>
+            <div class="chat-header">
+                <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=100&q=80" alt="Jesus">
+                <h2>Chat with Jesus</h2>
+                <button id="insightsToggle" class="insights-toggle-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    Insights
+                </button>
+                <button id="shareBtn" class="insights-toggle-button ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"  viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M15 8a3 3 0 100-6 3 3 0 000 6zM15 18a3 3 0 100-6 3 3 0 000 6zM5 13a3 3 0 100-6 3 3 0 000 6z" />
+                        <path d="M8.59 7.51l2.83-1.31M8.59 12.49l2.83 1.31" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Share
+                </button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message-bubble character-message">Peace be with you. What is on your heart today?</div>
+                <div class="message-bubble user-message">Hello Jesus, can you tell me about the parable of the sower?</div>
+                <div class="message-bubble character-message">Indeed. The parable of the sower, found in <span class="scripture-reference" data-reference="Matthew 13:1-23">Matthew 13:1-23
+                    <div class="scripture-popover">
+                        <strong>Matthew 13:1-23</strong>
+                        <p>That same day Jesus went out of the house and sat by the lake. Such large crowds gathered around him that he got into a boat and sat in it, while all the people stood on the shore. Then he told them many things in parables, saying: "A farmer went out to sow his seed. As he was scattering the seed, some fell along the path, and the birds came and ate it up. Some fell on rocky places, where it did not have much soil. It sprang up quickly, because the soil was shallow. But when the sun came up, the plants were scorched, and they withered because they had no root. Other seed fell among thorns, which grew up and choked the plants. Still other seed fell on good soil, where it produced a crop—a hundred, sixty or thirty times what was sown. Whoever has ears, let them hear."</p>
+                        <div class="attribution">ESV® Text Edition: 2016</div>
+                    </div>
+                </span>, speaks of a sower who scatters seeds on different types of ground. Each ground represents a different way people receive the word of God.</div>
+                <div class="message-bubble user-message">What does the seed represent?</div>
+                <div class="message-bubble character-message">The seed is the word of God, the message of the kingdom. And the different soils illustrate how hearts respond to this divine truth. As it is written in <span class="scripture-reference" data-reference="Luke 8:11">Luke 8:11
+                    <div class="scripture-popover">
+                        <strong>Luke 8:11</strong>
+                        <p>"This is the meaning of the parable: The seed is the word of God."</p>
+                        <div class="attribution">ESV® Text Edition: 2016</div>
+                    </div>
+                </span>, "The seed is the word of God."</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" placeholder="Ask Jesus anything...">
+                <button>Send</button>
+            </div>
+        </div>
+
+        <div id="insightsPanel" class="insights-panel">
+            <img id="insightsAvatar" class="portrait" src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80" alt="portrait">
+            <h3>Character Insights</h3>
+            <section>
+                <h4 class="collapsible">Historical Context</h4>
+                <div class="section-content">
+                    <p><strong>Time Period:</strong> New Testament Era</p>
+                    <p><strong>Location:</strong> Bethlehem, Nazareth, Jerusalem, Galilee</p>
+                    <p>Born in Bethlehem, lived in Nazareth, ministered throughout Galilee and Judea under Roman rule. A time of significant religious and political tension between Jewish traditions and Roman occupation.</p>
+                </div>
+            </section>
+            <section>
+                <h4 class="collapsible">Key Scripture References</h4>
+                <div class="section-content">
+                    <ul>
+                        <li><span class="scripture-reference" data-reference="John 3:16">John 3:16
+                            <div class="scripture-popover">
+                                <strong>John 3:16</strong>
+                                <p>For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.</p>
+                                <div class="attribution">ESV® Text Edition: 2016</div>
+                            </div>
+                        </span></li>
+                        <li><span class="scripture-reference" data-reference="Matthew 28:19-20">Matthew 28:19-20
+                            <div class="scripture-popover">
+                                <strong>Matthew 28:19-20</strong>
+                                <p>Go therefore and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, to the end of the age.</p>
+                                <div class="attribution">ESV® Text Edition: 2016</div>
+                            </div>
+                        </span></li>
+                        <li><span class="scripture-reference" data-reference="Philippians 2:5-11">Philippians 2:5-11
+                            <div class="scripture-popover">
+                                <strong>Philippians 2:5-11</strong>
+                                <p>Have this mind among yourselves, which is yours in Christ Jesus, who, though he was in the form of God, did not count equality with God a thing to be grasped, but emptied himself, by taking the form of a servant, being born in the likeness of men. And being found in human form, he humbled himself by becoming obedient to the point of death, even death on a cross. Therefore God has highly exalted him and bestowed on him the name that is above every name, so that at the name of Jesus every knee should bow, in heaven and on earth and under the earth, and every tongue confess that Jesus Christ is Lord, to the glory of God the Father.</p>
+                                <div class="attribution">ESV® Text Edition: 2016</div>
+                            </div>
+                        </span></li>
+                    </ul>
+                </div>
+            </section>
+            <section>
+                <h4 class="collapsible">Theological Significance</h4>
+                <div class="section-content">
+                    <p>Jesus is the embodiment of God's love and salvation. He is the bridge between God and humanity, offering forgiveness of sins and eternal life through His sacrifice. His teachings emphasize love, compassion, justice, and the establishment of God's kingdom.</p>
+                </div>
+            </section>
+            <section id="relationshipsSection">
+                <h4 class="collapsible">Relationships</h4>
+                <div class="section-content">
+                    <!-- dynamic relationships will be injected here -->
+                </div>
+            </section>
+            <section>
+                <h4 class="collapsible">Study Questions</h4>
+                <div class="section-content">
+                    <ul>
+                        <li>What does it mean to truly love your neighbor?</li>
+                        <li>How can one find peace in a troubled world?</li>
+                        <li>What is the most important commandment?</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Scroll-to-Top -->
+    <button id="scrollTopBtn" class="scroll-top fixed bottom-6 right-6 bg-[rgba(250,204,21,.3)] border border-facc15 text-facc15 p-2 rounded-full hidden hover:bg-facc15 hover:text-[#0a0a2a]">
+        &#8679;
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const insightsToggle = document.getElementById('insightsToggle');
+            const insightsPanel = document.getElementById('insightsPanel');
+            const chatMain = document.getElementById('chatMain');
+            const chatMessages = document.getElementById('chatMessages');
+            const sections = document.querySelectorAll('.insights-panel section');
+            
+            // Initialize collapsible sections
+            sections.forEach(section => {
+                const heading = section.querySelector('h4');
+                heading.addEventListener('click', () => {
+                    section.classList.toggle('collapsed');
+                });
+            });
+            
+            // Toggle insights panel
+            insightsToggle.addEventListener('click', () => {
+                const isOpen = insightsPanel.classList.toggle('open');
+                insightsToggle.classList.toggle('active', isOpen);
+                chatMain.classList.toggle('panel-open', isOpen);
+            });
+            
+            // Share button functionality
+            document.getElementById('shareBtn').addEventListener('click', () => {
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Chat with Jesus',
+                        text: 'Check out my conversation with Jesus!',
+                        url: window.location.href
+                    }).catch(() => {
+                        alert('Link copied to clipboard');
+                    });
+                } else {
+                    // Fallback for browsers that don't support Web Share API
+                    alert('Link copied to clipboard');
+                }
+            });
+            
+            // Scroll-to-top button
+            const scrollBtn = document.getElementById('scrollTopBtn');
+            
+            chatMessages.addEventListener('scroll', () => {
+                if (chatMessages.scrollTop > 300) {
+                    scrollBtn.classList.remove('hidden');
+                } else {
+                    scrollBtn.classList.add('hidden');
+                }
+            });
+            
+            scrollBtn.addEventListener('click', () => {
+                chatMessages.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Back button functionality
+            document.getElementById('backBtn').addEventListener('click', () => {
+                // In a real app, this would navigate back to character selection
+                alert('This would navigate back to character selection');
+            });
+            
+            // Send message when pressing Enter in input
+            const chatInput = document.querySelector('.chat-input-area input');
+            const sendButton = document.querySelector('.chat-input-area button');
+            
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && chatInput.value.trim()) {
+                    sendMessage();
+                }
+            });
+            
+            sendButton.addEventListener('click', () => {
+                if (chatInput.value.trim()) {
+                    sendMessage();
+                }
+            });
+            
+            function sendMessage() {
+                const messageText = chatInput.value.trim();
+                
+                // Create user message
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message-bubble user-message';
+                userMessage.textContent = messageText;
+                chatMessages.appendChild(userMessage);
+                
+                // Clear input
+                chatInput.value = '';
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // In a real app, this would send the message to the backend
+                // and wait for a response. Here we'll simulate a response.
+                setTimeout(() => {
+                    const responseMessage = document.createElement('div');
+                    responseMessage.className = 'message-bubble character-message';
+                    responseMessage.textContent = `I hear your question about "${messageText}". In my teachings, I often spoke about seeking first the kingdom of God.`;
+                    chatMessages.appendChild(responseMessage);
+                    
+                    // Scroll to bottom again
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1000);
+            }
+
+            /* ------------------------------------------------------------------
+             * Relationships rendering
+             * ---------------------------------------------------------------- */
+            const relationshipsData = {
+                "disciples": ["Peter", "James", "John", "Andrew", "Philip", "Bartholomew", "Matthew", "Thomas", "James (son of Alphaeus)", "Thaddaeus", "Simon the Zealot", "Judas Iscariot"],
+                "family": ["Mary", "Joseph", "James", "Joses", "Simon", "Judas"],
+                "followers": ["Mary Magdalene", "Martha", "Lazarus"]
+            };
+
+            /**
+             * Render relationships in a user-friendly format
+             * @param {Record<string,string[]>} data
+             */
+            function renderRelationships(data) {
+                const container = document.querySelector(
+                    '#relationshipsSection .section-content'
+                );
+                if (!container) return;
+
+                // Clear any existing content
+                container.innerHTML = '';
+
+                Object.entries(data).forEach(([group, members]) => {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'relationship-group';
+
+                    const title = document.createElement('h5');
+                    title.textContent =
+                        group.charAt(0).toUpperCase() + group.slice(1);
+                    groupDiv.appendChild(title);
+
+                    members.forEach((name) => {
+                        const chip = document.createElement('span');
+                        chip.className = 'relationship-chip';
+                        chip.textContent = name;
+                        groupDiv.appendChild(chip);
+                    });
+
+                    container.appendChild(groupDiv);
+                });
+            }
+
+            // Initial render
+            renderRelationships(relationshipsData);
+        });
+    </script>
+</body>
+</html>

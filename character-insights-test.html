@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Insights Test</title>
+    <!-- Supabase JS client library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to bottom, #1a202c, #2d3748, #4a5568); /* Dark blue gradient */
+            color: #e2e8f0; /* Light gray text */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.05); /* Semi-transparent white */
+            backdrop-filter: blur(10px); /* Glass effect */
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        h1 {
+            color: #fbd38d; /* Yellow accent */
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .character-card h2 {
+            color: #fbd38d;
+            font-size: 1.8em;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .character-card p {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .character-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid #fbd38d;
+        }
+        .character-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .insights-section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .insights-section h3 {
+            color: #90cdf4; /* Light blue accent */
+            font-size: 1.2em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+        .insights-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .insights-section li {
+            margin-bottom: 5px;
+        }
+        .insights-section pre {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .error-message {
+            color: #fc8181; /* Red accent */
+            background-color: rgba(252, 129, 129, 0.1);
+            border: 1px solid #fc8181;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .loading-message {
+            text-align: center;
+            font-size: 1.2em;
+            color: #90cdf4;
+        }
+        .scripture-reference {
+            color: #63b3ed; /* Blue for links */
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Character Insights</h1>
+        <div id="content">
+            <div class="loading-message">Loading characters...</div>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace with your actual Supabase URL and Anon Key
+        const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const contentDiv = document.getElementById('content');
+
+        // Helper to safely parse JSON
+        function tryParseJson(str) {
+            try {
+                return JSON.parse(str);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Function to render a single character card
+        function renderCharacter(character) {
+            const card = document.createElement('div');
+            card.className = 'character-card';
+
+            const header = document.createElement('div');
+            header.className = 'character-header';
+
+            const avatar = document.createElement('img');
+            avatar.src = character.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
+            avatar.alt = character.name;
+            header.appendChild(avatar);
+
+            const nameDesc = document.createElement('div');
+            const name = document.createElement('h2');
+            name.textContent = character.name;
+            const description = document.createElement('p');
+            description.textContent = character.description || 'No description available.';
+            nameDesc.appendChild(name);
+            nameDesc.appendChild(description);
+            header.appendChild(nameDesc);
+            card.appendChild(header);
+
+            // General Info
+            const generalInfo = document.createElement('p');
+            generalInfo.innerHTML = `<strong>Persona Prompt:</strong> ${character.persona_prompt || 'N/A'}<br>`;
+            generalInfo.innerHTML += `<strong>Opening Line:</strong> ${character.opening_line || 'N/A'}<br>`;
+            generalInfo.innerHTML += `<strong>Bible Book:</strong> ${character.bible_book || 'N/A'}<br>`;
+            generalInfo.innerHTML += `<strong>Scriptural Context:</strong> ${character.scriptural_context || 'N/A'}<br>`;
+            generalInfo.innerHTML += `<strong>Visible:</strong> ${character.is_visible ? 'Yes' : 'No'}`;
+            card.appendChild(generalInfo);
+
+            // Character Insights Section
+            const insightsSection = document.createElement('div');
+            insightsSection.className = 'insights-section';
+            insightsSection.innerHTML = '<h3>Character Insights</h3>';
+
+            if (character.timeline_period || character.historical_context || character.geographic_location) {
+                insightsSection.innerHTML += `<p><strong>Time Period:</strong> ${character.timeline_period || 'N/A'}</p>`;
+                insightsSection.innerHTML += `<p><strong>Historical Context:</strong> ${character.historical_context || 'N/A'}</p>`;
+                insightsSection.innerHTML += `<p><strong>Geographic Location:</strong> ${character.geographic_location || 'N/A'}</p>`;
+            } else {
+                insightsSection.innerHTML += '<p>No historical context available.</p>';
+            }
+
+            if (character.key_scripture_references) {
+                const refs = character.key_scripture_references.split(';').map(ref => ref.trim());
+                insightsSection.innerHTML += '<p><strong>Key Scripture References:</strong></p><ul>';
+                refs.forEach(ref => {
+                    insightsSection.innerHTML += `<li><a href="https://www.biblegateway.com/passage/?search=${encodeURIComponent(ref)}&version=ESV" target="_blank" rel="noopener noreferrer" class="scripture-reference">${ref}</a></li>`;
+                });
+                insightsSection.innerHTML += '</ul>';
+            } else {
+                insightsSection.innerHTML += '<p>No key scripture references available.</p>';
+            }
+
+            if (character.theological_significance) {
+                insightsSection.innerHTML += `<p><strong>Theological Significance:</strong> ${character.theological_significance}</p>`;
+            } else {
+                insightsSection.innerHTML += '<p>No theological significance provided.</p>';
+            }
+
+            if (character.relationships && Object.keys(character.relationships).length > 0) {
+                insightsSection.innerHTML += '<p><strong>Relationships:</strong></p><pre>';
+                insightsSection.innerHTML += JSON.stringify(character.relationships, null, 2);
+                insightsSection.innerHTML += '</pre>';
+            } else {
+                insightsSection.innerHTML += '<p>No relationship data available.</p>';
+            }
+
+            if (character.study_questions) {
+                insightsSection.innerHTML += '<p><strong>Study Questions:</strong></p><ul>';
+                character.study_questions.split('\n').forEach(q => {
+                    if (q.trim()) insightsSection.innerHTML += `<li>${q.trim()}</li>`;
+                });
+                insightsSection.innerHTML += '</ul>';
+            } else {
+                insightsSection.innerHTML += '<p>No study questions available.</p>';
+            }
+
+            card.appendChild(insightsSection);
+            return card;
+        }
+
+        // Fetch and display characters
+        async function fetchAndDisplayCharacters() {
+            contentDiv.innerHTML = '<div class="loading-message">Loading characters...</div>';
+            try {
+                const { data, error } = await supabase
+                    .from('characters')
+                    .select('*')
+                    .order('name', { ascending: true });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data && data.length > 0) {
+                    contentDiv.innerHTML = ''; // Clear loading message
+                    data.forEach(character => {
+                        // Ensure JSON fields are parsed if they come as strings
+                        if (typeof character.relationships === 'string') {
+                            character.relationships = tryParseJson(character.relationships);
+                        }
+                        contentDiv.appendChild(renderCharacter(character));
+                    });
+                } else {
+                    contentDiv.innerHTML = '<div class="error-message">No characters found in the database.</div>';
+                }
+            } catch (err) {
+                console.error('Error fetching characters:', err);
+                contentDiv.innerHTML = `<div class="error-message">Failed to load characters: ${err.message || 'Unknown error'}. Please check your Supabase configuration and network connection.</div>`;
+            }
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', fetchAndDisplayCharacters);
+    </script>
+</body>
+</html>
