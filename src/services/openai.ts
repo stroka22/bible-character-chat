@@ -1,18 +1,37 @@
 import OpenAI from 'openai';
 import { type ChatMessage } from './supabase';
 
-// Initialize OpenAI client with API key from environment variables
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+// ---------------------------------------------------------------------------
 
-if (!apiKey) {
-  console.error('Missing OpenAI API key. Please check your .env file.');
+// ---------------------------------------------------------------------------
+
+/**
+ * Public (browser-safe) API key pulled from `.env`.
+ * In production you should proxy requests through a secure backend instead
+ * of exposing the key in client-side code.
+ */
+const apiKey = import.meta.env.VITE_OPENAI_API_KEY ?? '';
+
+/** Whether the current environment is able to call OpenAI. */
+const OPENAI_ENABLED = Boolean(apiKey);
+
+// Only instantiate the SDK when we actually have a key.  This prevents the
+// library from throwing at import-time when the key is missing (e.g. on
+// contributor machines that don’t need chat features).
+const openai = OPENAI_ENABLED
+  ? new OpenAI({
+      apiKey,
+      // NOTE: For real production deployments route this through a backend.
+      dangerouslyAllowBrowser: true,
+    })
+  : null;
+
+if (!OPENAI_ENABLED) {
+  console.warn(
+    '[OpenAI] No API key detected. Chat features will return placeholder ' +
+      'responses.  Provide VITE_OPENAI_API_KEY in your .env file to enable.',
+  );
 }
-
-const openai = new OpenAI({
-  apiKey: apiKey as string,
-  dangerouslyAllowBrowser: true // Note: For production, use server-side API calls instead
-});
-
 // Message types for OpenAI API
 export type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -33,6 +52,11 @@ export async function generateCharacterResponse(
   characterPersona: string,
   messages: Message[]
 ): Promise<string> {
+  // Fallback when OpenAI is disabled
+  if (!OPENAI_ENABLED || !openai) {
+    return `(${characterName} is silent because no OpenAI API key is configured.)`;
+  }
+
   try {
     // Create the system message that defines the character's persona
     const systemMessage: Message = {
@@ -96,6 +120,14 @@ export async function streamCharacterResponse(
   messages: Message[],
   onChunk: (chunk: string) => void
 ): Promise<void> {
+  // Fallback when OpenAI is disabled
+  if (!OPENAI_ENABLED || !openai) {
+    onChunk(
+      `(Streaming is unavailable because no OpenAI API key is configured.)`,
+    );
+    return;
+  }
+
   try {
     // Create the system message that defines the character's persona
     const systemMessage: Message = {
