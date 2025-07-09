@@ -8,6 +8,16 @@ import ConversationsPage from './pages/ConversationsPage';
 // import Header from './components/layout/Header';
 import { supabase } from './services/supabase';
 
+/* ------------------------------------------------------------------
+ * Helpers
+ * ----------------------------------------------------------------- */
+
+// Lightweight fallback-avatar generator (duplicated to avoid extra import)
+const generateFallbackAvatar = (name: string = 'User') =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name,
+  )}&background=random`;
+
 // Placeholder for the Admin Panel page
 const AdminPage: React.FC = () => {
   const { user } = useAuth();
@@ -409,6 +419,49 @@ function App() {
       <AuthProvider>
         <ChatProvider>
           <div className="flex min-h-screen flex-col bg-gray-50">
+
+            {/* ------------------------------------------------------------------
+             * Global listeners
+             * ---------------------------------------------------------------- */}
+            {/* Image load error interceptor (blocks example.com images) */}
+            {(
+              (() => {
+                /* hook wrapper to use React's lifecycle */
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                useEffect(() => {
+                  function handleImgError(ev: Event) {
+                    const target = ev.target as HTMLElement;
+                    if (
+                      target instanceof HTMLImageElement &&
+                      target.src &&
+                      (target.src.includes('example.com') ||
+                        target.src === window.location.origin)
+                    ) {
+                      console.warn(
+                        '[GlobalImageError] Replacing failed image:',
+                        target.src,
+                      );
+                      target.src = generateFallbackAvatar(target.alt);
+                    }
+                  }
+                  window.addEventListener('error', handleImgError, true);
+                  return () => {
+                    window.removeEventListener('error', handleImgError, true);
+                  };
+                }, []);
+
+                /* Warn if OpenAI key missing to avoid runtime errors */
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                useEffect(() => {
+                  if (!import.meta.env.VITE_OPENAI_API_KEY) {
+                    console.warn(
+                      '[OpenAI] No VITE_OPENAI_API_KEY provided – chat responses will be disabled.',
+                    );
+                  }
+                }, []);
+              })()
+            )}
+
             {/* Header component - uncomment if implemented */}
             {/* <Header /> */}
             
