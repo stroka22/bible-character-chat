@@ -3,31 +3,41 @@ import { supabase } from './supabase';
 
 // --- Stripe Configuration ---
 // Load environment variables for Stripe
-const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY;
-const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY;
-const supabaseProjectRef = import.meta.env.VITE_SUPABASE_PROJECT_REF;
+const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '';
+const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY ?? '';
+const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY ?? '';
+const supabaseProjectRef = import.meta.env.VITE_SUPABASE_PROJECT_REF ?? '';
 const edgeFunctionUrl = import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_URL || 
   (supabaseProjectRef ? `https://${supabaseProjectRef}.functions.supabase.co/create-checkout-session` : null);
 
+// Check if Stripe is properly configured
+const STRIPE_ENABLED = Boolean(stripePublicKey);
+
 // Determine Stripe mode (live or test) from the public key
 const STRIPE_MODE = stripePublicKey?.startsWith('pk_live_') ? 'live' : 'test';
-console.log(`[Stripe] 🚀 Service initialized in ${STRIPE_MODE.toUpperCase()} mode at ${new Date().toISOString()}`);
 
-// Validate that all required environment variables are set
+// Log initialization status with appropriate level
+if (STRIPE_ENABLED) {
+  console.log(`[Stripe] 🚀 Service initialized in ${STRIPE_MODE.toUpperCase()} mode at ${new Date().toISOString()}`);
+} else {
+  console.warn('[Stripe] ⚠️ Service initialized in DISABLED mode - payment features unavailable');
+}
+
+// Check for missing variables but use warnings instead of errors
 const missingVars = [];
 if (!stripePublicKey) missingVars.push('VITE_STRIPE_PUBLIC_KEY');
 if (!monthlyPriceId) missingVars.push('VITE_STRIPE_PRICE_MONTHLY');
 if (!yearlyPriceId) missingVars.push('VITE_STRIPE_PRICE_YEARLY');
 
 if (missingVars.length > 0) {
-  console.error(`[Stripe] 🔴 Missing required environment variables: ${missingVars.join(', ')}`);
-  console.error('[Stripe] Please check your .env file and ensure all required variables are set.');
+  console.warn(`[Stripe] ⚠️ Missing configuration variables: ${missingVars.join(', ')}`);
+  console.warn('[Stripe] Payment features will be disabled. Add these variables to your .env file to enable payments.');
 }
 
-// This is a placeholder for TypeScript type compatibility.
-// The full Stripe SDK should only be initialized on the server with a secret key.
-const stripe: Stripe = {} as Stripe;
+// Only initialize Stripe if we have a valid API key
+const stripe: Stripe | null = STRIPE_ENABLED 
+  ? new Stripe(stripePublicKey, { apiVersion: '2023-10-16' }) as unknown as Stripe
+  : null;
 
 // Export price IDs for use in the application
 export const SUBSCRIPTION_PRICES = {
@@ -118,6 +128,12 @@ function getCheckoutEndpoint(preferEdgeFunction = true): string {
  * @returns The Stripe customer ID
  */
 export async function createCustomer(userId: string, email: string): Promise<string> {
+  // Check if Stripe is enabled
+  if (!STRIPE_ENABLED) {
+    console.warn('[Stripe] ⚠️ Cannot create customer - Stripe is not configured');
+    throw new StripeConfigurationError('Stripe is not configured. Please add VITE_STRIPE_PUBLIC_KEY to your .env file.');
+  }
+
   console.log(`[Stripe] 📝 Requesting to create customer for user ${userId}`);
   
   if (!userId || !email) {
@@ -200,6 +216,12 @@ export async function createCheckoutSession(
   options: CheckoutSessionOptions, 
   attemptNumber = 1
 ): Promise<{ id: string; url: string }> {
+  // Check if Stripe is enabled
+  if (!STRIPE_ENABLED) {
+    console.warn('[Stripe] ⚠️ Cannot create checkout session - Stripe is not configured');
+    throw new StripeConfigurationError('Stripe is not configured. Please add VITE_STRIPE_PUBLIC_KEY to your .env file.');
+  }
+
   const maxAttempts = 2;
   const timestamp = new Date().toISOString();
   console.log(`[Stripe] 🛒 [${timestamp}] Requesting checkout session (attempt ${attemptNumber}/${maxAttempts})`, options);
@@ -338,6 +360,12 @@ export async function createCheckoutSession(
  * @returns The subscription data or null if no active subscription
  */
 export async function getActiveSubscription(userId: string): Promise<SubscriptionData | null> {
+    // Check if Stripe is enabled
+    if (!STRIPE_ENABLED) {
+      console.warn('[Stripe] ⚠️ Cannot get subscription - Stripe is not configured');
+      return null; // Return null instead of throwing to allow the app to function
+    }
+
     console.log(`[Stripe] 🔍 Fetching active subscription for user ${userId}`);
     
     if (!userId) {
@@ -408,12 +436,11 @@ export async function getActiveSubscription(userId: string): Promise<Subscriptio
 
 /**
  * Gets the Stripe public key for frontend use.
- * @returns The Stripe public key.
+ * @returns The Stripe public key or a placeholder if not configured.
  */
 export function getPublicKey(): string {
-  if (!stripePublicKey) {
-    console.error('[Stripe] 🔴 CRITICAL: Missing Stripe public key in environment configuration.');
-    // Return a placeholder to avoid crashing the app, but checkout will fail.
+  if (!STRIPE_ENABLED) {
+    console.warn('[Stripe] ⚠️ Requested public key but Stripe is not configured');
     return 'pk_missing_key';
   }
   return stripePublicKey;
@@ -445,7 +472,7 @@ export async function testStripeConfiguration(): Promise<{
     success: false,
     environment: {
       mode: STRIPE_MODE,
-      publicKeyValid: !!stripePublicKey && !stripePublicKey.includes('missing'),
+      publicKeyValid: STRIPE_ENABLED,
       priceIdsValid: !!monthlyPriceId && !!yearlyPriceId,
       edgeFunctionConfigured: !!edgeFunctionUrl && !edgeFunctionUrl.includes('undefined'),
     },
@@ -459,13 +486,13 @@ export async function testStripeConfiguration(): Promise<{
   // Test environment variables
   if (!results.environment.publicKeyValid) {
     results.message = 'Missing or invalid Stripe public key';
-    console.error(`[Stripe] 🔴 ${results.message}`);
+    console.warn(`[Stripe] ⚠️ ${results.message}`);
     return results;
   }
 
   if (!results.environment.priceIdsValid) {
     results.message = 'Missing or invalid Stripe price IDs';
-    console.error(`[Stripe] 🔴 ${results.message}`);
+    console.warn(`[Stripe] ⚠️ ${results.message}`);
     return results;
   }
 
@@ -514,7 +541,7 @@ export async function testStripeConfiguration(): Promise<{
     } else {
       results.message = 'Configuration test failed with partial success';
     }
-    console.error(`[Stripe] 🔴 ${results.message}`);
+    console.warn(`[Stripe] ⚠️ ${results.message}`);
   }
 
   return results;
