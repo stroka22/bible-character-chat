@@ -306,8 +306,15 @@
     // -------------------------------------------------------------------------
     
     // Initialize Supabase client
-    const SUPABASE_URL = 'https://gzlpzsrpyytatfumkwgr.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bHB6c3JweXl0YXRmdW1rd2dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU5MDQ5NzksImV4cCI6MjAzMTQ4MDk3OX0.RJpBzLDPkBgbmAQmrX_mLQFgSzDqLvVnUdJLLW5-Wqw';
+    /* ---------------------------------------------------------------------
+     * IMPORTANT: Update these constants with your own Supabase project info
+     * ------------------------------------------------------------------- */
+    const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+    // TODO: Replace the placeholder below with **your** anon/public key
+    // 1. Sign in to https://app.supabase.com
+    // 2. Select project → Settings → API
+    // 3. Copy the "anon" key (public) and paste it here
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     
     logDebug('Initializing Supabase client', 'info', { url: SUPABASE_URL });
     

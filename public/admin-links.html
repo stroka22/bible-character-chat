@@ -291,8 +291,14 @@
   
   <script>
     // Initialize Supabase client
-    const SUPABASE_URL = 'https://gzlpzsrpyytatfumkwgr.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bHB6c3JweXl0YXRmdW1rd2dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU5MDQ5NzksImV4cCI6MjAzMTQ4MDk3OX0.RJpBzLDPkBgbmAQmrX_mLQFgSzDqLvVnUdJLLW5-Wqw';
+    /* ---------------------------------------------------------------------
+     * IMPORTANT: Replace the values below with **your own** Supabase details.
+     * 1. `SUPABASE_URL` must include your project ID (`sihfbzltlhkerkxozadt`).
+     * 2. `SUPABASE_ANON_KEY` should be the *anon/public* key found in
+     *    Project → Settings → API.  The placeholder below **will not work**.
+     * ------------------------------------------------------------------- */
+    const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     // DOM elements
