@@ -5,9 +5,9 @@ import './index.css';
 import App from './App';
 
 // Import safe service versions that gracefully handle missing API keys
-// A single barrel file initializes all safe service shims in one place
-// (OpenAI, Stripe, and any future external services).
-import './services/import-services';
+// These are imported here to ensure they're initialized before any components
+import './services/openai-safe';
+import './services/stripe-safe';
 
 // Initialize network interceptor for image requests
 (() => {

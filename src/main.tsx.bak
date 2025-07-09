@@ -4,23 +4,6 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 
-// Import safe service versions that gracefully handle missing API keys
-// A single barrel file initializes all safe service shims in one place
-// (OpenAI, Stripe, and any future external services).
-import './services/import-services';
-
-// Initialize network interceptor for image requests
-(() => {
-  // Add script to intercept network requests for example.com images
-  const id = 'network-interceptor';
-  if (!document.getElementById(id)) {
-    const script = document.createElement('script');
-    script.id = id;
-    script.src = '/intercept.js';
-    document.head.appendChild(script);
-  }
-})();
-
 // Inject Google Font "Cinzel" for a more biblical look
 (() => {
   const id = 'google-font-cinzel';
@@ -41,9 +24,6 @@ const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Root element with id 'root' not found");
 }
-
-// Log initialization
-console.log('[App] Starting Bible Character Chat with safe service initialization');
 
 // Mount the React application
 createRoot(rootElement).render(
