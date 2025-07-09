@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Character Chat - Emergency App</title>
+  <!-- Load Supabase directly from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary-color: #f59e0b;
+      --text-color: #1e293b;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --warning-color: #f59e0b;
+      --info-color: #3b82f6;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      color: #ffffff;
+    }
+    
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #e2e8f0;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .message {
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    
+    .success {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success-color);
+      border-left: 4px solid var(--success-color);
+    }
+    
+    .error {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--error-color);
+      border-left: 4px solid var(--error-color);
+    }
+    
+    .warning {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: var(--warning-color);
+      border-left: 4px solid var(--warning-color);
+    }
+    
+    .info {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--info-color);
+      border-left: 4px solid var(--info-color);
+    }
+    
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-right: 10px;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    button.secondary {
+      background-color: var(--secondary-color);
+    }
+    
+    button.secondary:hover {
+      background-color: #d97706;
+    }
+    
+    button.danger {
+      background-color: var(--error-color);
+    }
+    
+    button.danger:hover {
+      background-color: #dc2626;
+    }
+    
+    input, select {
+      padding: 10px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #4b5563;
+    }
+    
+    pre {
+      background-color: #f1f5f9;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .tabs {
+      display: flex;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8px 8px 0 0;
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+    
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      color: #e2e8f0;
+      font-weight: 500;
+      transition: background-color 0.2s;
+      flex: 1;
+      text-align: center;
+    }
+    
+    .tab:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .tab.active {
+      background-color: var(--card-bg);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    .tab-content {
+      display: none;
+      border-radius: 0 0 8px 8px;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .character-card {
+      background-color: #f8fafc;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .character-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .character-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 10px;
+      border: 3px solid var(--primary-color);
+    }
+    
+    .character-name {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .nav-link {
+      background-color: #f1f5f9;
+      padding: 10px 15px;
+      border-radius: 4px;
+      color: var(--text-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    
+    .nav-link:hover {
+      background-color: #e2e8f0;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f1f5f9;
+      border-radius: 8px;
+    }
+    
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+    
+    .user-details {
+      flex: 1;
+    }
+    
+    .user-email {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    
+    .user-role {
+      font-size: 14px;
+      color: #6b7280;
+    }
+    
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary-color);
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .flex-col {
+      flex-direction: column;
+    }
+    
+    .items-center {
+      align-items: center;
+    }
+    
+    .justify-between {
+      justify-content: space-between;
+    }
+    
+    .mb-4 {
+      margin-bottom: 16px;
+    }
+    
+    .mt-4 {
+      margin-top: 16px;
+    }
+    
+    .text-sm {
+      font-size: 14px;
+    }
+    
+    .text-xs {
+      font-size: 12px;
+    }
+    
+    .text-gray {
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bible Character Chat</h1>
+    <p class="subtitle">Emergency Direct Access Mode</p>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="login">Login</div>
+      <div class="tab" data-tab="app">Application</div>
+      <div class="tab" data-tab="debug">Debug</div>
+      <div class="tab" data-tab="admin">Admin</div>
+    </div>
+    
+    <div class="tab-content card active" id="login">
+      <h2>Authentication</h2>
+      <div id="auth-messages"></div>
+      
+      <div id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="your@email.com" value="test@example.com">
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Your password" value="password123">
+        </div>
+        
+        <div class="actions">
+          <button id="login-button">Login</button>
+          <button id="signup-button" class="secondary">Sign Up</button>
+          <button id="reset-password" class="text-sm">Reset Password</button>
+        </div>
+      </div>
+      
+      <div id="logged-in-view" class="hidden">
+        <div class="user-info">
+          <img id="user-avatar" class="user-avatar" src="https://ui-avatars.com/api/?name=User&background=random" alt="User">
+          <div class="user-details">
+            <div id="user-email" class="user-email">user@example.com</div>
+            <div id="user-role" class="user-role">Role: User</div>
+          </div>
+        </div>
+        
+        <div class="actions">
+          <button id="logout-button" class="danger">Logout</button>
+          <button id="go-to-app-button">Go to App</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tab-content card" id="app">
+      <h2>Bible Characters</h2>
+      <div id="app-messages"></div>
+      
+      <div id="app-loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading characters...</p>
+      </div>
+      
+      <div id="app-content" class="hidden">
+        <div class="form-group">
+          <label for="character-filter">Filter Characters</label>
+          <input type="text" id="character-filter" placeholder="Search by name...">
+        </div>
+        
+        <div id="character-grid" class="character-grid">
+          <!-- Characters will be populated here -->
+        </div>
+      </div>
+      
+      <div id="not-logged-in" class="hidden">
+        <div class="message warning">
+          You need to log in first to view characters.
+        </div>
+        <button id="go-to-login-button">Go to Login</button>
+      </div>
+    </div>
+    
+    <div class="tab-content card" id="debug">
+      <h2>Debug Information</h2>
+      
+      <div class="form-group">
+        <h3>Supabase Configuration</h3>
+        <pre id="supabase-config"></pre>
+      </div>
+      
+      <div class="form-group">
+        <h3>Current Session</h3>
+        <pre id="session-info">No active session</pre>
+      </div>
+      
+      <div class="form-group">
+        <h3>User Profile</h3>
+        <pre id="user-profile">No user profile loaded</pre>
+      </div>
+      
+      <div class="form-group">
+        <h3>Log</h3>
+        <pre id="debug-log"></pre>
+      </div>
+      
+      <div class="actions">
+        <button id="refresh-session">Refresh Session</button>
+        <button id="clear-log">Clear Log</button>
+        <button id="test-connection">Test Connection</button>
+      </div>
+    </div>
+    
+    <div class="tab-content card" id="admin">
+      <h2>Admin Panel</h2>
+      <div id="admin-messages"></div>
+      
+      <div id="admin-loading" class="loading">
+        <div class="spinner"></div>
+        <p>Checking permissions...</p>
+      </div>
+      
+      <div id="admin-content" class="hidden">
+        <div class="nav-links">
+          <a href="/admin" class="nav-link" target="_blank">Full Admin Panel</a>
+          <a href="/admin/characters" class="nav-link" target="_blank">Character Management</a>
+          <a href="/admin/users" class="nav-link" target="_blank">User Management</a>
+        </div>
+        
+        <div class="form-group">
+          <h3>Quick Actions</h3>
+          <button id="list-characters">List All Characters</button>
+          <button id="list-users">List All Users</button>
+        </div>
+        
+        <div class="form-group">
+          <h3>Results</h3>
+          <pre id="admin-results">No results yet</pre>
+        </div>
+      </div>
+      
+      <div id="not-admin" class="hidden">
+        <div class="message error">
+          You don't have admin permissions to access this area.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Supabase client
+    const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+    
+    // Display configuration (without showing full key)
+    document.getElementById('supabase-config').textContent = 
+      `URL: ${SUPABASE_URL}\nAnon Key: ${SUPABASE_ANON_KEY.substring(0, 10)}...`;
+    
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Current user state
+    let currentUser = null;
+    let userProfile = null;
+    
+    // Debug logging function
+    function log(message, type = 'info') {
+      const timestamp = new Date().toISOString().substring(11, 19);
+      const logElement = document.getElementById('debug-log');
+      logElement.textContent = `[${timestamp}] ${message}\n` + logElement.textContent;
+      
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+    
+    // Show message in a specific container
+    function showMessage(containerId, message, type = 'info') {
+      const container = document.getElementById(containerId);
+      const messageElement = document.createElement('div');
+      messageElement.className = `message ${type}`;
+      messageElement.textContent = message;
+      
+      // Insert at the top
+      if (container.firstChild) {
+        container.insertBefore(messageElement, container.firstChild);
+      } else {
+        container.appendChild(messageElement);
+      }
+      
+      // Auto-remove after 5 seconds for success messages
+      if (type === 'success') {
+        setTimeout(() => {
+          messageElement.remove();
+        }, 5000);
+      }
+    }
+    
+    // Generate a fallback avatar URL
+    function generateAvatarUrl(name) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+    }
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Deactivate all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activate clicked tab
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+    
+    // Login
+    document.getElementById('login-button').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        showMessage('auth-messages', 'Email and password are required', 'error');
+        return;
+      }
+      
+      try {
+        log(`Attempting login with email: ${email}...`);
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) {
+          showMessage('auth-messages', `Login failed: ${error.message}`, 'error');
+          log(`Login failed: ${error.message}`, 'error');
+        } else {
+          showMessage('auth-messages', 'Login successful!', 'success');
+          log('Login successful!', 'success');
+          currentUser = data.user;
+          updateUserInterface();
+          await fetchUserProfile();
+          await updateSessionInfo();
+        }
+      } catch (err) {
+        showMessage('auth-messages', `Unexpected error: ${err.message}`, 'error');
+        log(`Unexpected error during login: ${err.message}`, 'error');
+      }
+    });
+    
+    // Sign up
+    document.getElementById('signup-button').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        showMessage('auth-messages', 'Email and password are required', 'error');
+        return;
+      }
+      
+      try {
+        log(`Attempting signup with email: ${email}...`);
+        
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password
+        });
+        
+        if (error) {
+          showMessage('auth-messages', `Signup failed: ${error.message}`, 'error');
+          log(`Signup failed: ${error.message}`, 'error');
+        } else {
+          if (data.user?.identities?.length === 0) {
+            showMessage('auth-messages', 'User already exists. Try logging in instead.', 'warning');
+            log('User already exists', 'warning');
+          } else {
+            showMessage('auth-messages', 'Signup successful! Check your email for confirmation.', 'success');
+            log('Signup successful!', 'success');
+            currentUser = data.user;
+            updateUserInterface();
+            await updateSessionInfo();
+          }
+        }
+      } catch (err) {
+        showMessage('auth-messages', `Unexpected error: ${err.message}`, 'error');
+        log(`Unexpected error during signup: ${err.message}`, 'error');
+      }
+    });
+    
+    // Reset password
+    document.getElementById('reset-password').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      
+      if (!email) {
+        showMessage('auth-messages', 'Email is required', 'error');
+        return;
+      }
+      
+      try {
+        log(`Sending password reset email to: ${email}...`);
+        
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        
+        if (error) {
+          showMessage('auth-messages', `Failed to send reset email: ${error.message}`, 'error');
+          log(`Failed to send reset email: ${error.message}`, 'error');
+        } else {
+          showMessage('auth-messages', `Password reset email sent to ${email}`, 'success');
+          log(`Password reset email sent to ${email}`, 'success');
+        }
+      } catch (err) {
+        showMessage('auth-messages', `Unexpected error: ${err.message}`, 'error');
+        log(`Unexpected error during password reset: ${err.message}`, 'error');
+      }
+    });
+    
+    // Logout
+    document.getElementById('logout-button').addEventListener('click', async () => {
+      try {
+        log('Logging out...');
+        
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
+          showMessage('auth-messages', `Logout failed: ${error.message}`, 'error');
+          log(`Logout failed: ${error.message}`, 'error');
+        } else {
+          showMessage('auth-messages', 'Logout successful!', 'success');
+          log('Logout successful!', 'success');
+          currentUser = null;
+          userProfile = null;
+          updateUserInterface();
+          await updateSessionInfo();
+        }
+      } catch (err) {
+        showMessage('auth-messages', `Unexpected error: ${err.message}`, 'error');
+        log(`Unexpected error during logout: ${err.message}`, 'error');
+      }
+    });
+    
+    // Go to App button
+    document.getElementById('go-to-app-button').addEventListener('click', () => {
+      document.querySelector('[data-tab="app"]').click();
+    });
+    
+    // Go to Login button
+    document.getElementById('go-to-login-button').addEventListener('click', () => {
+      document.querySelector('[data-tab="login"]').click();
+    });
+    
+    // Clear log
+    document.getElementById('clear-log').addEventListener('click', () => {
+      document.getElementById('debug-log').textContent = '';
+      log('Log cleared');
+    });
+    
+    // Refresh session
+    document.getElementById('refresh-session').addEventListener('click', async () => {
+      await updateSessionInfo();
+      log('Session info refreshed');
+    });
+    
+    // Test connection
+    document.getElementById('test-connection').addEventListener('click', async () => {
+      try {
+        log('Testing Supabase connection...');
+        
+        // Simple health check - we expect this to fail with a "relation does not exist" error
+        // which actually means the connection is working
+        const { data, error } = await supabase.from('_test_connection').select('*').limit(1);
+        
+        if (error) {
+          if (error.code === 'PGRST116' || error.code === '42P01') {
+            // These are actually good errors - they mean we connected but the table doesn't exist
+            log('✅ Connection successful! (Table does not exist, but that\'s expected)', 'success');
+            showMessage('debug-log', 'Connection successful!', 'success');
+          } else {
+            log(`❌ Connection error: ${error.message}`, 'error');
+            showMessage('debug-log', `Connection error: ${error.message}`, 'error');
+          }
+        } else {
+          log('✅ Connection successful!', 'success');
+          showMessage('debug-log', 'Connection successful!', 'success');
+        }
+      } catch (err) {
+        log(`❌ Unexpected error: ${err.message}`, 'error');
+        showMessage('debug-log', `Unexpected error: ${err.message}`, 'error');
+      }
+    });
+    
+    // List all characters (admin function)
+    document.getElementById('list-characters').addEventListener('click', async () => {
+      if (!currentUser) {
+        showMessage('admin-messages', 'You must be logged in', 'error');
+        return;
+      }
+      
+      try {
+        log('Fetching all characters...');
+        document.getElementById('admin-results').textContent = 'Loading characters...';
+        
+        const { data, error } = await supabase
+          .from('characters')
+          .select('*')
+          .order('character_name');
+        
+        if (error) {
+          showMessage('admin-messages', `Error fetching characters: ${error.message}`, 'error');
+          log(`Error fetching characters: ${error.message}`, 'error');
+          document.getElementById('admin-results').textContent = `Error: ${error.message}`;
+        } else {
+          log(`Successfully fetched ${data.length} characters`);
+          document.getElementById('admin-results').textContent = 
+            `Total: ${data.length} characters\n\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (err) {
+        showMessage('admin-messages', `Unexpected error: ${err.message}`, 'error');
+        log(`Unexpected error listing characters: ${err.message}`, 'error');
+        document.getElementById('admin-results').textContent = `Error: ${err.message}`;
+      }
+    });
+    
+    // List all users (admin function)
+    document.getElementById('list-users').addEventListener('click', async () => {
+      if (!currentUser) {
+        showMessage('admin-messages', 'You must be logged in', 'error');
+        return;
+      }
+      
+      if (!userProfile || userProfile.role !== 'admin') {
+        showMessage('admin-messages', 'Admin permissions required', 'error');
+        return;
+      }
+      
+      try {
+        log('Fetching all users...');
+        document.getElementById('admin-results').textContent = 'Loading users...';
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at');
+        
+        if (error) {
+          showMessage('admin-messages', `Error fetching users: ${error.message}`, 'error');
+          log(`Error fetching users: ${error.message}`, 'error');
+          document.getElementById('admin-results').textContent = `Error: ${error.message}`;
+        } else {
+          log(`Successfully fetched ${data.length} users`);
+          document.getElementById('admin-results').textContent = 
+            `Total: ${data.length} users\n\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (err) {
+        showMessage('admin-messages', `Unexpected error: ${err.message}`, 'error');
+        log(`Unexpected error listing users: ${err.message}`, 'error');
+        document.getElementById('admin-results').textContent = `Error: ${err.message}`;
+      }
+    });
+    
+    // Character filter
+    document.getElementById('character-filter').addEventListener('input', (e) => {
+      const filterText = e.target.value.toLowerCase();
+      const characters = document.querySelectorAll('.character-card');
+      
+      characters.forEach(character => {
+        const name = character.querySelector('.character-name').textContent.toLowerCase();
+        if (name.includes(filterText)) {
+          character.style.display = 'block';
+        } else {
+          character.style.display = 'none';
+        }
+      });
+    });
+    
+    // Update session info display
+    async function updateSessionInfo() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          document.getElementById('session-info').textContent = 
+            `Error retrieving session: ${error.message}`;
+          log(`Error retrieving session: ${error.message}`, 'error');
+        } else {
+          document.getElementById('session-info').textContent = 
+            JSON.stringify(data, null, 2);
+            
+          // Update user info if we have a session
+          if (data.session) {
+            currentUser = data.session.user;
+            updateUserInterface();
+            await fetchUserProfile();
+          } else {
+            currentUser = null;
+            userProfile = null;
+            updateUserInterface();
+          }
+        }
+      } catch (err) {
+        document.getElementById('session-info').textContent = 
+          `Unexpected error: ${err.message}`;
+        log(`Unexpected error updating session: ${err.message}`, 'error');
+      }
+    }
+    
+    // Fetch user profile from the database
+    async function fetchUserProfile() {
+      if (!currentUser) return;
+      
+      try {
+        log(`Fetching profile for user: ${currentUser.id}`);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        
+        if (error) {
+          log(`Error fetching user profile: ${error.message}`, 'error');
+          document.getElementById('user-profile').textContent = 
+            `Error: ${error.message}`;
+        } else if (data) {
+          userProfile = data;
+          document.getElementById('user-profile').textContent = 
+            JSON.stringify(data, null, 2);
+          log(`Successfully fetched user profile. Role: ${data.role || 'user'}`);
+          
+          // Update UI with role information
+          document.getElementById('user-role').textContent = `Role: ${data.role || 'user'}`;
+          
+          // Check admin access
+          checkAdminAccess();
+        } else {
+          log('No profile found for user', 'warning');
+          document.getElementById('user-profile').textContent = 'No profile found';
+        }
+      } catch (err) {
+        log(`Unexpected error fetching profile: ${err.message}`, 'error');
+        document.getElementById('user-profile').textContent = 
+          `Error: ${err.message}`;
+      }
+    }
+    
+    // Load characters for the app view
+    async function loadCharacters() {
+      if (!currentUser) {
+        document.getElementById('app-loading').classList.add('hidden');
+        document.getElementById('app-content').classList.add('hidden');
+        document.getElementById('not-logged-in').classList.remove('hidden');
+        return;
+      }
+      
+      document.getElementById('app-loading').classList.remove('hidden');
+      document.getElementById('app-content').classList.add('hidden');
+      document.getElementById('not-logged-in').classList.add('hidden');
+      
+      try {
+        log('Loading characters...');
+        
+        const { data, error } = await supabase
+          .from('characters')
+          .select('*')
+          .order('character_name');
+        
+        if (error) {
+          showMessage('app-messages', `Error loading characters: ${error.message}`, 'error');
+          log(`Error loading characters: ${error.message}`, 'error');
+        } else {
+          log(`Successfully loaded ${data.length} characters`);
+          
+          // Clear existing characters
+          const characterGrid = document.getElementById('character-grid');
+          characterGrid.innerHTML = '';
+          
+          // Add characters to the grid
+          data.forEach(character => {
+            const card = document.createElement('div');
+            card.className = 'character-card';
+            card.dataset.id = character.id;
+            
+            // Use fallback avatar if needed
+            const avatarUrl = character.avatar_url && !character.avatar_url.includes('example.com')
+              ? character.avatar_url
+              : generateAvatarUrl(character.character_name);
+            
+            card.innerHTML = `
+              <img src="${avatarUrl}" alt="${character.character_name}" class="character-avatar">
+              <div class="character-name">${character.character_name}</div>
+            `;
+            
+            card.addEventListener('click', () => {
+              window.location.href = `/chat?character=${character.id}`;
+            });
+            
+            characterGrid.appendChild(card);
+          });
+          
+          document.getElementById('app-loading').classList.add('hidden');
+          document.getElementById('app-content').classList.remove('hidden');
+        }
+      } catch (err) {
+        showMessage('app-messages', `Unexpected error: ${err.message}`, 'error');
+        log(`Unexpected error loading characters: ${err.message}`, 'error');
+        document.getElementById('app-loading').classList.add('hidden');
+      }
+    }
+    
+    // Check admin access
+    function checkAdminAccess() {
+      document.getElementById('admin-loading').classList.add('hidden');
+      
+      if (!currentUser) {
+        document.getElementById('admin-content').classList.add('hidden');
+        document.getElementById('not-admin').classList.remove('hidden');
+        showMessage('admin-messages', 'You must be logged in to access admin features', 'warning');
+        return;
+      }
+      
+      const isAdmin = userProfile && (userProfile.role === 'admin' || userProfile.role === 'pastor');
+      
+      if (isAdmin) {
+        document.getElementById('admin-content').classList.remove('hidden');
+        document.getElementById('not-admin').classList.add('hidden');
+        log(`Admin access granted for user: ${currentUser.email}`);
+      } else {
+        document.getElementById('admin-content').classList.add('hidden');
+        document.getElementById('not-admin').classList.remove('hidden');
+        showMessage('admin-messages', 'You don\'t have admin permissions', 'error');
+        log(`Admin access denied for user: ${currentUser.email}`, 'warning');
+      }
+    }
+    
+    // Update user interface based on authentication state
+    function updateUserInterface() {
+      if (currentUser) {
+        // User is logged in
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('logged-in-view').classList.remove('hidden');
+        
+        // Update user info
+        document.getElementById('user-email').textContent = currentUser.email;
+        document.getElementById('user-avatar').src = generateAvatarUrl(currentUser.email.split('@')[0]);
+        
+        // Load characters in the app view
+        loadCharacters();
+        
+        // Check admin access
+        checkAdminAccess();
+      } else {
+        // User is not logged in
+        document.getElementById('login-form').classList.remove('hidden');
+        document.getElementById('logged-in-view').classList.add('hidden');
+        
+        // Update app view
+        document.getElementById('app-loading').classList.add('hidden');
+        document.getElementById('app-content').classList.add('hidden');
+        document.getElementById('not-logged-in').classList.remove('hidden');
+        
+        // Update admin view
+        document.getElementById('admin-loading').classList.add('hidden');
+        document.getElementById('admin-content').classList.add('hidden');
+        document.getElementById('not-admin').classList.remove('hidden');
+      }
+    }
+    
+    // Initial setup
+    (async function init() {
+      log('Initializing emergency app...', 'info');
+      await updateSessionInfo();
+      log('Initialization complete', 'success');
+    })();
+  </script>
+</body>
+</html>
