@@ -14,7 +14,8 @@ export const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
 // 3. Go to Project Settings > API
 // 4. Copy the "anon" key (public) - it's safe to use in browser code
 // 5. Paste it below between the quotes
-export const SUPABASE_ANON_KEY = 'your-anon-key-goes-here';
+export const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
 
 // =========================================================================
 // Database Types - these should match your Supabase schema
@@ -108,6 +109,6 @@ export function getSupabaseConfig() {
   return {
     url: SUPABASE_URL,
     projectId: SUPABASE_URL.split('https://')[1].split('.')[0],
-    hasAnonKey: SUPABASE_ANON_KEY !== 'your-anon-key-goes-here',
+    hasAnonKey: !!SUPABASE_ANON_KEY,
   };
 }

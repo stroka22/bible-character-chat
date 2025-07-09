@@ -310,11 +310,11 @@
      * IMPORTANT: Update these constants with your own Supabase project info
      * ------------------------------------------------------------------- */
     const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
-    // TODO: Replace the placeholder below with **your** anon/public key
-    // 1. Sign in to https://app.supabase.com
-    // 2. Select project → Settings → API
-    // 3. Copy the "anon" key (public) and paste it here
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+    // Supabase anon (public) key
+    // SAFETY NOTE: This key is safe to expose in client-side code; do NOT use
+    // your service-role or any secret keys in browser JavaScript.
+    const SUPABASE_ANON_KEY =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
     
     logDebug('Initializing Supabase client', 'info', { url: SUPABASE_URL });
     
