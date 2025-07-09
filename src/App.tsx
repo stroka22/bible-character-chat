@@ -15,6 +15,55 @@ import DirectStripePage from './pages/DirectStripePage';
 import Header from './components/layout/Header';
 import DebugPanel from './components/DebugPanel';
 
+/* -------------------------------------------------------------
+ * Helpers / Error-handling utilities
+ * ----------------------------------------------------------- */
+
+// Very small fallback-avatar generator (avoid extra import for quick fix)
+const generateFallbackAvatar = (name: string = 'User') =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+
+/**
+ * Simple React error boundary – logs render errors and shows a friendly fallback.
+ */
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown, info: unknown) {
+    // Centralised render-error logging
+    console.error('[ErrorBoundary] Unhandled rendering error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-blue-900 text-white">
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl font-bold">Something went wrong.</h1>
+            <p className="opacity-70">
+              Please refresh the page – our team has been notified.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-amber-400 text-blue-900 font-semibold px-4 py-2 rounded-lg"
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // Route Logger - logs route changes
 const RouteLogger = () => {
   const location = useLocation();
@@ -168,10 +217,31 @@ const MainContent = () => {
 
 // Main App Component with routes
 function App() {
+  /* -----------------------------------------------------------
+   * Global image-error interceptor (runtime, non-render errors)
+   * --------------------------------------------------------- */
+  useEffect(() => {
+    function handleImgError(ev: Event) {
+      const target = ev.target as HTMLElement;
+      if (
+        target instanceof HTMLImageElement &&
+        target.src &&
+        (target.src.includes('example.com') || target.src === window.location.origin)
+      ) {
+        console.warn('[GlobalImageError] Replacing failed image:', target.src);
+        target.src = generateFallbackAvatar(target.alt);
+      }
+    }
+    // use capture to catch as early as possible
+    window.addEventListener('error', handleImgError, true);
+    return () => window.removeEventListener('error', handleImgError, true);
+  }, []);
+
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ChatProvider>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <ChatProvider>
           {/* Global gradient background */}
           <div
             data-design="vivid-purple"
@@ -227,8 +297,9 @@ function App() {
             <DebugPanel />
           </div>
         </ChatProvider>
-      </AuthProvider>
-    </BrowserRouter>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
