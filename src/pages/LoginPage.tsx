@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, loading, error } = useAuth();
+  const { signIn, loading, error, isAdmin, isPastor, refreshProfile } = useAuth();
+  const location = useLocation();
   
   // Form state
   const [email, setEmail] = useState('');
@@ -30,12 +31,28 @@ const LoginPage: React.FC = () => {
     try {
       // Call the signIn function from AuthContext
       await signIn(email, password);
-      
-      // Redirect to home page on successful login
-      navigate('/');
+
+      // Force-refresh the profile so role helpers are up-to-date
+      await refreshProfile();
+
+      /* ------------------------------------------------------------------
+       * Decide where to send the user based on their role
+       * ---------------------------------------------------------------- */
+      const target =
+        new URLSearchParams(location.search).get('to') || // ?to=/some/path
+        (isAdmin() || isPastor() ? '/admin' : '/');
+
+      console.debug(
+        `[LoginPage] login OK → role=${
+          isAdmin() ? 'admin' : isPastor() ? 'pastor' : 'user'
+        } redirect=${target}`
+      );
+
+      navigate(target, { replace: true });
     } catch (err) {
       // Error is handled by the AuthContext and available via the error state
       console.error('Login error:', err);
+      setFormError('Invalid email or password, please try again.');
     }
   };
 
@@ -214,6 +231,10 @@ const LoginPage: React.FC = () => {
           </form>
         )}
       </div>
+    </div>
+    {/* Debug: show current route */}
+    <div className="fixed bottom-2 left-1/2 -translate-x-1/2 text-xs text-white/70 pointer-events-none select-none">
+      path: {location.pathname}
     </div>
   );
 };

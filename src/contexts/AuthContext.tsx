@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState, useEffect } from 'react';
 // Importing as `type` ensures these interfaces are erased during compilation,
-// preventing runtime “export not found” errors while still providing full
+// preventing runtime "export not found" errors while still providing full
 // TypeScript support.
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
@@ -56,29 +56,95 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [error, setError] = useState<string | null>(null);
 
   /* ------------------------------------------------------------------
-   * Helper – retrieve profile/role for current user
+   * Debug helpers
    * ---------------------------------------------------------------- */
-  const fetchProfile = async (uid: string | undefined | null = user?.id) => {
+  /**
+   * Toggle verbose auth debugging by setting VITE_AUTH_DEBUG=true
+   * in your Vite/CRA env file or shell.  Defaults to false.
+   */
+  const DEBUG = import.meta.env.VITE_AUTH_DEBUG === 'true';
+
+  const dbg = (...args: unknown[]) => {
+    if (DEBUG) console.debug('[AuthContext]', ...args);
+  };
+  const dbgwarn = (...args: unknown[]) => {
+    if (DEBUG) console.warn('[AuthContext]', ...args);
+  };
+  // NOTE: We intentionally *do not* suppress console.error – errors should
+  // always surface in the console for production troubleshooting.
+
+  /* ------------------------------------------------------------------
+   * Helper – retrieve profile/role for current user with enhanced debugging
+   * ---------------------------------------------------------------- */
+  const fetchProfile = async (uid: string | undefined | null = user?.id, retryCount = 0) => {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; // ms
+    
     if (!uid) {
+      dbg('fetchProfile: No user ID provided, skipping profile fetch');
       setProfile(null);
       setRole('unknown');
       return;
     }
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select<Profile>('id, role, email, display_name, avatar_url')
-      .eq('id', uid)
-      .maybeSingle();
+    dbg(
+      `fetchProfile: Fetching profile for user ID ${uid} ` +
+        `(attempt ${retryCount + 1}/${MAX_RETRIES + 1})`,
+    );
+    
+    try {
+      const { data, error, status } = await supabase
+        .from('profiles')
+        .select('id, role, email, display_name, avatar_url')
+        .eq('id', uid)
+        .maybeSingle();
 
-    if (error) {
-      console.error('Failed to fetch profile:', error);
+      console.log(`fetchProfile: Query completed with status ${status}`);
+      dbg(
+        `fetchProfile: data ${
+          data ? 'received' : 'null'
+        } | error ${error ? 'present' : 'none'}`,
+      );
+      
+      if (error) {
+        console.error('fetchProfile: Failed to fetch profile:', error);
+        setProfile(null);
+        setRole('unknown');
+        return;
+      }
+      
+      if (!data && retryCount < MAX_RETRIES) {
+        dbgwarn(
+          `fetchProfile: No profile found for user ${uid}, retrying in ${RETRY_DELAY}ms...`,
+        );
+        // Wait before retrying to allow for potential database propagation delay
+        setTimeout(() => fetchProfile(uid, retryCount + 1), RETRY_DELAY);
+        return;
+      }
+      
+      if (!data) {
+        console.error(`fetchProfile: No profile found for user ${uid} after ${retryCount + 1} attempts`);
+        setProfile(null);
+        setRole('unknown');
+        return;
+      }
+      
+      dbg('fetchProfile: Successfully retrieved profile:', {
+        id: data.id,
+        email: data.email,
+        role: data.role,
+        hasDisplayName: !!data.display_name,
+        hasAvatar: !!data.avatar_url
+      });
+      
+      setProfile(data);
+      setRole(data.role ?? 'unknown');
+      dbg(`fetchProfile: User role set to "${data.role || 'unknown'}"`);
+    } catch (unexpectedError) {
+      console.error('fetchProfile: Unexpected error during profile fetch:', unexpectedError);
       setProfile(null);
       setRole('unknown');
-      return;
     }
-    setProfile(data);
-    setRole(data?.role ?? 'unknown');
   };
 
   // Initialize the auth state when the component mounts
@@ -86,7 +152,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Get the current session
     // We keep a reference to whatever unsubscribe function the auth listener
     // gives us so the effect can clean it up **synchronously**, instead of
-    // trying to await an async function’s return value.
+    // trying to await an async function's return value.
     let cleanup: (() => void) | undefined;
 
     const initAuth = async () => {
@@ -144,16 +210,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       setError(null);
       
-      const { error } = await supabase.auth.signInWithPassword({
+      dbg(`signIn: Attempting to sign in user ${email}`);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        console.error('signIn: Authentication failed:', error);
         throw error;
       }
+      
+      dbg('signIn: Authentication successful, fetching profile');
       // refresh profile after successful login
-      await fetchProfile();
+      if (data?.user) {
+        await fetchProfile(data.user.id);
+      } else {
+        dbgwarn('signIn: Authentication succeeded but no user data returned');
+      }
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
