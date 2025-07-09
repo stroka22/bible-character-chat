@@ -9,6 +9,32 @@ interface CharacterInsightsPanelProps {
   onClose: () => void;
 }
 
+/* --------------------------------------------------------------------------
+ * Avatar helpers (duplicated from ChatInterface for now)
+ * ------------------------------------------------------------------------ */
+
+const generateFallbackAvatar = (name: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name,
+  )}&background=random`;
+
+const getSafeAvatarUrl = (name: string, url?: string | null) => {
+  if (!url) return generateFallbackAvatar(name);
+  try {
+    const { hostname } = new URL(url);
+    if (
+      hostname === 'example.com' ||
+      hostname.endsWith('.example.com') ||
+      hostname === 'localhost'
+    ) {
+      return generateFallbackAvatar(name);
+    }
+    return url;
+  } catch {
+    return generateFallbackAvatar(name);
+  }
+};
+
 const panelVariants = {
   hidden: { x: '100%', opacity: 0 },
   visible: { x: '0%', opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
@@ -77,14 +103,14 @@ const CharacterInsightsPanel: React.FC<CharacterInsightsPanelProps> = ({
             {/* Character Header */}
             <div className="text-center mb-8 pt-4">
               <img
-                src={
-                  character.avatar_url ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    character.name,
-                  )}&background=random`
-                }
+                src={getSafeAvatarUrl(character.name, character.avatar_url)}
                 alt={character.name}
                 className="h-24 w-24 rounded-full object-cover mx-auto mb-4 border-4 border-yellow-300 shadow-lg"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = generateFallbackAvatar(
+                    character.name,
+                  );
+                }}
               />
               <h2
                 className="text-3xl font-extrabold text-white mb-2"

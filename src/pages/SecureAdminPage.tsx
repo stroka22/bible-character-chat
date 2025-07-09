@@ -44,7 +44,7 @@ interface UserProfile {
 
 const SecureAdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, isAdmin, isPastor, role } = useAuth();
+  const { user, loading: authLoading, isAdmin, isPastor, role, refreshProfile } = useAuth();
 
   /* ------------------------------------------------------------
    * Top-level Admin Tabs
@@ -57,6 +57,7 @@ const SecureAdminPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
+  const [showDebugInfo, setShowDebugInfo] = useState<boolean>(false);
 
   // Form state for manual creation/editing
   const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
@@ -79,6 +80,26 @@ const SecureAdminPage: React.FC = () => {
   const [formTheologicalSignificance, setFormTheologicalSignificance] = useState<string>('');
   const [formRelationships, setFormRelationships] = useState<string>('');
   const [formStudyQuestions, setFormStudyQuestions] = useState<string>('');
+
+  // Debug logging for authentication and role status
+  useEffect(() => {
+    console.log('=== AUTH DEBUG INFO ===');
+    console.log('User:', user?.email);
+    console.log('Role:', role);
+    console.log('Is Admin?', isAdmin());
+    console.log('Is Pastor?', isPastor());
+    console.log('Auth Loading:', authLoading);
+    console.log('=====================');
+  }, [user, role, isAdmin, isPastor, authLoading]);
+
+  // Handle manual profile refresh for debugging
+  const handleRefreshProfile = async () => {
+    console.log('Manually refreshing profile...');
+    await refreshProfile();
+    console.log('Profile refreshed. New role:', role);
+    console.log('Is Admin?', isAdmin());
+    console.log('Is Pastor?', isPastor());
+  };
 
   const resetForm = useCallback(() => {
     setEditingCharacterId(null);
@@ -119,11 +140,15 @@ const SecureAdminPage: React.FC = () => {
 
   // Fetch user profiles (admin only)
   const fetchUserProfiles = useCallback(async () => {
-    if (!isAdmin()) return;
+    if (!isAdmin()) {
+      console.log('Skipping user profile fetch - not an admin');
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
     try {
+      console.log('Fetching user profiles as admin');
       const { data, error } = await supabase
         .from('profiles')
         .select<'*', UserProfile>('id, email, display_name, role, created_at')
@@ -131,6 +156,7 @@ const SecureAdminPage: React.FC = () => {
       
       if (error) throw error;
       setUserProfiles(data || []);
+      console.log(`Fetched ${data?.length || 0} user profiles`);
     } catch (err) {
       console.error('Failed to fetch user profiles:', err);
       setError('Failed to load user profiles.');
@@ -141,13 +167,17 @@ const SecureAdminPage: React.FC = () => {
 
   // Handle promoting a user to pastor role (admin only)
   const handlePromoteUser = async (userId: string, newRole: 'pastor' | 'user') => {
-    if (!isAdmin()) return;
+    if (!isAdmin()) {
+      console.warn('Attempted to promote user without admin privileges');
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
     setSuccessMessage(null);
     
     try {
+      console.log(`Promoting user ${userId} to ${newRole} role`);
       const { error } = await supabase
         .from('profiles')
         .update({ role: newRole })
@@ -167,12 +197,15 @@ const SecureAdminPage: React.FC = () => {
   // Fetch characters after authentication is confirmed
   useEffect(() => {
     if (!authLoading) {
+      console.log('Auth loading complete, checking permissions...');
       if (isPastor()) {
+        console.log('User has pastor/admin privileges, fetching data...');
         fetchCharacters();
         if (activeTab === 'users' && isAdmin()) {
           fetchUserProfiles();
         }
       } else {
+        console.log('User lacks pastor/admin privileges, redirecting...');
         // Redirect non-admin/pastor users
         navigate('/access-denied');
       }
@@ -199,6 +232,7 @@ const SecureAdminPage: React.FC = () => {
 
   // Redirect non-admin/pastor users (this is a backup to the useEffect redirect)
   if (!isPastor()) {
+    console.log('isPastor() check failed, redirecting to access denied');
     navigate('/access-denied');
     return null;
   }
@@ -373,9 +407,42 @@ const SecureAdminPage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin Panel</h1>
-      <p className="text-gray-700 mb-4">
-        Welcome, {user?.email}! Your role: <span className="font-semibold capitalize">{role}</span>
-      </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+        <p className="text-gray-700 mb-2 md:mb-0">
+          Welcome, {user?.email}! Your role: <span className="font-semibold capitalize">{role}</span>
+        </p>
+        
+        {/* Debug controls */}
+        <div className="flex space-x-2">
+          <button 
+            onClick={handleRefreshProfile}
+            className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-sm"
+          >
+            Refresh Profile
+          </button>
+          <button 
+            onClick={() => setShowDebugInfo(!showDebugInfo)}
+            className="px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+          >
+            {showDebugInfo ? 'Hide Debug' : 'Show Debug'}
+          </button>
+        </div>
+      </div>
+      
+      {/* Debug information panel */}
+      {showDebugInfo && (
+        <div className="mb-6 p-4 bg-gray-100 rounded-lg text-sm">
+          <h3 className="font-medium mb-2">Authentication Debug Info</h3>
+          <div className="grid grid-cols-2 gap-2">
+            <div><span className="font-medium">User ID:</span> {user?.id || 'Not logged in'}</div>
+            <div><span className="font-medium">Email:</span> {user?.email || 'N/A'}</div>
+            <div><span className="font-medium">Role:</span> {role}</div>
+            <div><span className="font-medium">Is Admin:</span> {isAdmin() ? 'Yes' : 'No'}</div>
+            <div><span className="font-medium">Is Pastor:</span> {isPastor() ? 'Yes' : 'No'}</div>
+            <div><span className="font-medium">Auth Loading:</span> {authLoading ? 'Yes' : 'No'}</div>
+          </div>
+        </div>
+      )}
 
       {/* Top-level tab navigation */}
       <div className="mb-8 border-b border-gray-200">

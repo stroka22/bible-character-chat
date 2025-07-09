@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, Outlet, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ChatProvider } from './contexts/ChatContext';
 import { useAuth } from './contexts/AuthContext';
@@ -15,6 +15,50 @@ import DirectStripePage from './pages/DirectStripePage';
 import Header from './components/layout/Header';
 import DebugPanel from './components/DebugPanel';
 
+// Route Logger - logs route changes
+const RouteLogger = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.debug(`[Router] Navigation to: ${location.pathname}${location.search}`);
+  }, [location]);
+  
+  return null; // This component doesn't render anything
+};
+
+// Logout component - handles session clearing and redirect
+const LogoutPage = () => {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const performLogout = async () => {
+      console.debug('[Logout] Clearing session and redirecting to login');
+      try {
+        await signOut();
+        // Force clear any local storage as a safety measure
+        localStorage.clear();
+      } catch (error) {
+        console.error('[Logout] Error during logout:', error);
+      } finally {
+        // Always redirect to login, even if there was an error
+        navigate('/login', { replace: true });
+      }
+    };
+    
+    performLogout();
+  }, [signOut, navigate]);
+  
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+        <p className="text-white text-lg">Logging out...</p>
+      </div>
+    </div>
+  );
+};
+
 // Protected Route Component - Checks authentication and roles
 const ProtectedRoute = ({ 
   requireAuth = true, 
@@ -27,11 +71,25 @@ const ProtectedRoute = ({
   requirePastor?: boolean, 
   children?: React.ReactNode 
 }) => {
-  const { user, loading, isAdmin, isPastor } = useAuth();
+  const { user, loading, role, isAdmin, isPastor } = useAuth();
   const location = useLocation();
+  
+  // Enhanced debug logging
+  useEffect(() => {
+    console.debug(
+      `[ProtectedRoute] Path: ${location.pathname} | ` +
+      `Auth Required: ${requireAuth} | ` +
+      `Admin Required: ${requireAdmin} | ` +
+      `Pastor Required: ${requirePastor} | ` +
+      `User: ${user?.email || 'none'} | ` +
+      `Role: ${role} | ` +
+      `Loading: ${loading}`
+    );
+  }, [location.pathname, requireAuth, requireAdmin, requirePastor, user, role, loading]);
 
-  // Show loading state while checking authentication
-  if (loading) {
+  // Show loading state while checking authentication or if role is still unknown
+  if (loading || (user && role === 'unknown')) {
+    console.debug('[ProtectedRoute] Still loading auth state or role information');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
@@ -42,20 +100,24 @@ const ProtectedRoute = ({
   // Check authentication
   if (requireAuth && !user) {
     // Redirect to login, but remember where they were trying to go
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    console.debug('[ProtectedRoute] Auth required but no user - redirecting to login');
+    return <Navigate to={`/login?to=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   // Check admin role if required
   if (requireAdmin && !isAdmin()) {
+    console.debug('[ProtectedRoute] Admin required but user is not admin - access denied');
     return <Navigate to="/access-denied" replace />;
   }
 
   // Check pastor role if required
   if (requirePastor && !isPastor()) {
+    console.debug('[ProtectedRoute] Pastor required but user is not pastor - access denied');
     return <Navigate to="/access-denied" replace />;
   }
 
   // If all checks pass, render the children or outlet
+  console.debug('[ProtectedRoute] All checks passed - rendering protected content');
   return <>{children || <Outlet />}</>;
 };
 
@@ -115,6 +177,9 @@ function App() {
             data-design="vivid-purple"
             className="flex min-h-screen flex-col bg-gradient-to-b from-blue-900 via-blue-600 to-blue-400"
           >
+            {/* Route change logger */}
+            <RouteLogger />
+            
             {/* Full-width upgrade banner (always visible) */}
             <div className="fixed top-0 left-0 w-full z-[10000] bg-amber-400 text-blue-900 shadow-lg border-b-2 border-amber-500">
               <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-center gap-4">
@@ -140,6 +205,7 @@ function App() {
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/access-denied" element={<AccessDeniedPage />} />
+                <Route path="/logout" element={<LogoutPage />} />
                 
                 {/* Testing routes - will be removed in production */}
                 <Route path="/stripe-test" element={<StripeTestPage />} />

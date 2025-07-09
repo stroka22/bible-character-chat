@@ -1,9 +1,43 @@
 import { supabase, type Character } from '../services/supabase';
+import { getSafeAvatarUrl } from '../utils/imageUtils';
 
 /**
  * Repository for interacting with Bible character data in Supabase
  */
 export const characterRepository = {
+  /**
+   * Sanitizes character data by replacing unsafe URLs with fallbacks
+   * @param character - The character object to sanitize
+   * @returns The sanitized character object
+   */
+  sanitizeCharacter(character: Character): Character {
+    if (!character) return character;
+    
+    // Create a copy to avoid mutating the original
+    const sanitized = { ...character };
+    
+    // Sanitize avatar URL if present
+    if (sanitized.avatar_url) {
+      sanitized.avatar_url = getSafeAvatarUrl(sanitized.name, sanitized.avatar_url);
+    }
+    
+    // Sanitize feature image URL if present
+    if (sanitized.feature_image_url) {
+      sanitized.feature_image_url = getSafeAvatarUrl(sanitized.name, sanitized.feature_image_url);
+    }
+    
+    return sanitized;
+  },
+  
+  /**
+   * Sanitizes an array of character objects
+   * @param characters - Array of character objects
+   * @returns Array of sanitized character objects
+   */
+  sanitizeCharacters(characters: Character[]): Character[] {
+    return characters.map(char => this.sanitizeCharacter(char));
+  },
+
   /**
    * Fetch all available Bible characters
    * @returns Promise resolving to an array of Character objects
@@ -28,7 +62,8 @@ export const characterRepository = {
         throw error;
       }
       
-      return data as Character[];
+      // Sanitize URLs in character data before returning
+      return this.sanitizeCharacters(data as Character[]);
     } catch (error) {
       console.error('Failed to fetch characters:', error);
       throw new Error('Failed to fetch characters. Please try again later.');
@@ -56,7 +91,8 @@ export const characterRepository = {
         throw error;
       }
       
-      return data as Character;
+      // Sanitize URLs in character data before returning
+      return this.sanitizeCharacter(data as Character);
     } catch (error) {
       console.error(`Failed to fetch character with ID ${id}:`, error);
       throw new Error('Failed to fetch character. Please try again later.');
@@ -84,7 +120,8 @@ export const characterRepository = {
         throw error;
       }
       
-      return data as Character;
+      // Sanitize URLs in character data before returning
+      return this.sanitizeCharacter(data as Character);
     } catch (error) {
       console.error(`Failed to fetch character with name ${name}:`, error);
       throw new Error('Failed to fetch character. Please try again later.');
@@ -113,7 +150,8 @@ export const characterRepository = {
         throw error;
       }
       
-      return data as Character[];
+      // Sanitize URLs in character data before returning
+      return this.sanitizeCharacters(data as Character[]);
     } catch (error) {
       console.error(`Failed to search characters with query ${query}:`, error);
       throw new Error('Failed to search characters. Please try again later.');
@@ -132,9 +170,20 @@ export const characterRepository = {
     >
   ): Promise<Character> {
     try {
+      // Sanitize URLs before storing in the database
+      const sanitizedCharacter = {
+        ...character,
+        avatar_url: character.avatar_url ? 
+          getSafeAvatarUrl(character.name, character.avatar_url) : 
+          character.avatar_url,
+        feature_image_url: character.feature_image_url ? 
+          getSafeAvatarUrl(character.name, character.feature_image_url) : 
+          character.feature_image_url
+      };
+
       const { data, error } = await supabase
         .from('characters')
-        .insert(character)
+        .insert(sanitizedCharacter)
         .select('*')
         .single();
 
@@ -142,7 +191,7 @@ export const characterRepository = {
         throw error;
       }
 
-      return data as Character;
+      return this.sanitizeCharacter(data as Character);
     } catch (error) {
       console.error('Failed to create character:', error);
       throw new Error('Failed to create character. Please try again later.');
@@ -162,9 +211,20 @@ export const characterRepository = {
     >
   ): Promise<Character> {
     try {
+      // Sanitize URLs in updates before storing
+      const sanitizedUpdates = { ...updates };
+      
+      if (updates.avatar_url && updates.name) {
+        sanitizedUpdates.avatar_url = getSafeAvatarUrl(updates.name, updates.avatar_url);
+      }
+      
+      if (updates.feature_image_url && updates.name) {
+        sanitizedUpdates.feature_image_url = getSafeAvatarUrl(updates.name, updates.feature_image_url);
+      }
+
       const { data, error } = await supabase
         .from('characters')
-        .update({ ...updates, updated_at: new Date().toISOString() })
+        .update({ ...sanitizedUpdates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select('*')
         .single();
@@ -173,7 +233,7 @@ export const characterRepository = {
         throw error;
       }
 
-      return data as Character;
+      return this.sanitizeCharacter(data as Character);
     } catch (error) {
       console.error(`Failed to update character ${id}:`, error);
       throw new Error('Failed to update character. Please try again later.');
@@ -214,16 +274,27 @@ export const characterRepository = {
     if (characters.length === 0) return [];
 
     try {
+      // Sanitize URLs in all characters before storing
+      const sanitizedCharacters = characters.map(char => ({
+        ...char,
+        avatar_url: char.avatar_url ? 
+          getSafeAvatarUrl(char.name, char.avatar_url) : 
+          char.avatar_url,
+        feature_image_url: char.feature_image_url ? 
+          getSafeAvatarUrl(char.name, char.feature_image_url) : 
+          char.feature_image_url
+      }));
+
       const { data, error } = await supabase
         .from('characters')
-        .insert(characters)
+        .insert(sanitizedCharacters)
         .select('*');
 
       if (error) {
         throw error;
       }
 
-      return data as Character[];
+      return this.sanitizeCharacters(data as Character[]);
     } catch (error) {
       console.error('Failed to bulk create characters:', error);
       throw new Error('Failed to bulk create characters. Please try again later.');
