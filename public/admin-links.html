@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Character Chat - Admin Links</title>
+  
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    :root {
+      --primary-color: #1e3a8a;
+      --secondary-color: #3b82f6;
+      --accent-color: #f59e0b;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --text-color: #1f2937;
+      --bg-color: #f9fafb;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #1e3a8a, #2563eb, #3b82f6);
+      color: white;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    h2 {
+      font-size: 1.75rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 0.5rem;
+    }
+    
+    .card {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    
+    .link-card {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      transition: all 0.2s;
+    }
+    
+    .link-card:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .link-title {
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      color: var(--accent-color);
+    }
+    
+    .link-description {
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+    
+    a {
+      color: white;
+      text-decoration: none;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: var(--accent-color);
+      color: var(--primary-color);
+      font-weight: bold;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      margin-top: 0.5rem;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background-color: #fbbf24;
+    }
+    
+    .button-small {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .button-secondary {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+    
+    .button-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    .button-danger {
+      background-color: var(--error-color);
+      color: white;
+    }
+    
+    .button-danger:hover {
+      background-color: #dc2626;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+    
+    .status-authenticated {
+      background-color: var(--success-color);
+    }
+    
+    .status-unauthenticated {
+      background-color: var(--error-color);
+    }
+    
+    .debug-panel {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.875rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Bible Character Chat</h1>
+      <p>Admin Navigation Links & Testing Tools</p>
+    </header>
+    
+    <div class="card">
+      <div id="auth-status">
+        <span class="status-indicator status-unauthenticated"></span>
+        <span id="auth-status-text">Checking authentication status...</span>
+      </div>
+      
+      <div id="user-info" style="margin-top: 0.5rem; display: none;">
+        <div><strong>Email:</strong> <span id="user-email">-</span></div>
+        <div><strong>Role:</strong> <span id="user-role">-</span></div>
+        <div><strong>User ID:</strong> <span id="user-id">-</span></div>
+      </div>
+      
+      <div style="margin-top: 1rem;">
+        <a href="/login-fix.html" class="button button-small">Login</a>
+        <a href="/logout.html" class="button button-small button-danger">Logout</a>
+        <button id="refresh-status" class="button button-small button-secondary">Refresh Status</button>
+      </div>
+    </div>
+    
+    <h2>Admin Pages</h2>
+    
+    <div class="links-grid">
+      <div class="link-card">
+        <div class="link-title">Admin Dashboard</div>
+        <div class="link-description">Main admin dashboard with overview statistics and quick actions.</div>
+        <a href="/admin" class="button button-small">Access Dashboard</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">Character Management</div>
+        <div class="link-description">Add, edit, and delete Bible characters.</div>
+        <a href="/admin/characters" class="button button-small">Manage Characters</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">CSV Import</div>
+        <div class="link-description">Bulk import characters from CSV files.</div>
+        <a href="/admin/import" class="button button-small">Import Characters</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">User Management</div>
+        <div class="link-description">View and manage user accounts and roles.</div>
+        <a href="/admin/users" class="button button-small">Manage Users</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">System Settings</div>
+        <div class="link-description">Configure application settings and defaults.</div>
+        <a href="/admin/settings" class="button button-small">System Settings</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">Conversation Logs</div>
+        <div class="link-description">View logs of user conversations with Bible characters.</div>
+        <a href="/admin/logs" class="button button-small">View Logs</a>
+      </div>
+    </div>
+    
+    <h2>Utility Pages</h2>
+    
+    <div class="links-grid">
+      <div class="link-card">
+        <div class="link-title">Image Loading Diagnostic</div>
+        <div class="link-description">Debug and fix image loading issues.</div>
+        <a href="/check-image-loading.html" class="button button-small">Open Diagnostic</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">Direct Login</div>
+        <div class="link-description">Login page with enhanced debugging.</div>
+        <a href="/login-fix.html" class="button button-small">Open Login</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">Logout Page</div>
+        <div class="link-description">Clear session data and log out.</div>
+        <a href="/logout.html" class="button button-small">Open Logout</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">Character Selection</div>
+        <div class="link-description">Test the character selection interface.</div>
+        <a href="/" class="button button-small">Open Selection</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">Character Insights</div>
+        <div class="link-description">Test the character insights panel.</div>
+        <a href="/character-insights-test.html" class="button button-small">Open Insights</a>
+      </div>
+      
+      <div class="link-card">
+        <div class="link-title">Chat Interface</div>
+        <div class="link-description">Test the chat interface directly.</div>
+        <a href="/chat" class="button button-small">Open Chat</a>
+      </div>
+    </div>
+    
+    <div id="debug-panel" class="debug-panel">
+      Loading session information...
+    </div>
+    
+    <div class="footer">
+      Bible Character Chat Admin Tools - For testing purposes only
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Supabase client
+    const SUPABASE_URL = 'https://gzlpzsrpyytatfumkwgr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bHB6c3JweXl0YXRmdW1rd2dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU5MDQ5NzksImV4cCI6MjAzMTQ4MDk3OX0.RJpBzLDPkBgbmAQmrX_mLQFgSzDqLvVnUdJLLW5-Wqw';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // DOM elements
+    const authStatusText = document.getElementById('auth-status-text');
+    const authStatusIndicator = document.querySelector('.status-indicator');
+    const userInfoSection = document.getElementById('user-info');
+    const userEmailElement = document.getElementById('user-email');
+    const userRoleElement = document.getElementById('user-role');
+    const userIdElement = document.getElementById('user-id');
+    const debugPanel = document.getElementById('debug-panel');
+    const refreshButton = document.getElementById('refresh-status');
+    
+    // Check authentication status
+    async function checkAuthStatus() {
+      try {
+        // Get current session
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          updateDebugPanel('Error checking session', error);
+          setUnauthenticated();
+          return;
+        }
+        
+        if (!data.session) {
+          updateDebugPanel('No active session found', { timestamp: new Date().toISOString() });
+          setUnauthenticated();
+          return;
+        }
+        
+        // Get user profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, role, email, display_name')
+          .eq('id', data.session.user.id)
+          .maybeSingle();
+        
+        if (profileError) {
+          updateDebugPanel('Error fetching profile', profileError);
+        }
+        
+        const role = profileData?.role || 'user';
+        
+        // Update UI
+        authStatusText.textContent = 'Authenticated';
+        authStatusIndicator.classList.remove('status-unauthenticated');
+        authStatusIndicator.classList.add('status-authenticated');
+        
+        userInfoSection.style.display = 'block';
+        userEmailElement.textContent = data.session.user.email;
+        userRoleElement.textContent = role;
+        userIdElement.textContent = data.session.user.id;
+        
+        updateDebugPanel('User authenticated', {
+          session: {
+            userId: data.session.user.id,
+            email: data.session.user.email,
+            role: role,
+            expiresAt: new Date(data.session.expires_at * 1000).toISOString()
+          },
+          profile: profileData || 'No profile found'
+        });
+      } catch (error) {
+        updateDebugPanel('Unexpected error checking auth status', error);
+        setUnauthenticated();
+      }
+    }
+    
+    // Set UI to unauthenticated state
+    function setUnauthenticated() {
+      authStatusText.textContent = 'Not authenticated';
+      authStatusIndicator.classList.remove('status-authenticated');
+      authStatusIndicator.classList.add('status-unauthenticated');
+      userInfoSection.style.display = 'none';
+    }
+    
+    // Update debug panel with information
+    function updateDebugPanel(message, data = null) {
+      const timestamp = new Date().toISOString();
+      let content = `[${timestamp}] ${message}\n`;
+      
+      if (data) {
+        if (typeof data === 'object') {
+          content += JSON.stringify(data, null, 2);
+        } else {
+          content += data;
+        }
+      }
+      
+      debugPanel.textContent = content;
+    }
+    
+    // Event listeners
+    refreshButton.addEventListener('click', checkAuthStatus);
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', checkAuthStatus);
+  </script>
+</body>
+</html>

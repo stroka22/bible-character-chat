@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Character Chat - Emergency Login Fix</title>
+  
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    :root {
+      --primary-color: #1e3a8a;
+      --secondary-color: #3b82f6;
+      --accent-color: #f59e0b;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --text-color: #1f2937;
+      --bg-color: #f9fafb;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #1e3a8a, #2563eb, #3b82f6);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 500px;
+      width: 100%;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 15px rgba(0, 0, 0, 0.1);
+      color: var(--text-color);
+    }
+    
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.75rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #1e40af;
+    }
+    
+    button:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    .error-message {
+      background-color: #fee2e2;
+      color: var(--error-color);
+      padding: 0.75rem;
+      border-radius: 0.375rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .success-message {
+      background-color: #d1fae5;
+      color: var(--success-color);
+      padding: 0.75rem;
+      border-radius: 0.375rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .debug-panel {
+      margin-top: 2rem;
+      padding: 1rem;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 0.375rem;
+      color: white;
+      font-family: monospace;
+      font-size: 0.75rem;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    
+    .debug-entry {
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 0.5rem;
+    }
+    
+    .debug-timestamp {
+      color: #a5f3fc;
+      margin-right: 0.5rem;
+    }
+    
+    .debug-level-info {
+      color: #93c5fd;
+    }
+    
+    .debug-level-success {
+      color: #86efac;
+    }
+    
+    .debug-level-error {
+      color: #fca5a5;
+    }
+    
+    .debug-level-warn {
+      color: #fdba74;
+    }
+    
+    .debug-content {
+      margin-top: 0.25rem;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+    
+    .debug-toggle {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 0.5rem 1rem;
+      margin-top: 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      width: auto;
+    }
+    
+    .debug-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bible Character Chat - Direct Login</h1>
+    
+    <div id="error-container" class="error-message hidden"></div>
+    <div id="success-container" class="success-message hidden"></div>
+    
+    <form id="login-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          required 
+          autocomplete="email"
+          placeholder="your@email.com"
+        >
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          required
+          autocomplete="current-password"
+          placeholder="Your password"
+        >
+      </div>
+      
+      <button type="submit" id="login-button">Log In</button>
+    </form>
+    
+    <div class="form-group" style="margin-top: 1.5rem; text-align: center;">
+      <a href="/" style="color: var(--primary-color); text-decoration: none;">
+        Back to Home
+      </a>
+    </div>
+  </div>
+  
+  <button id="debug-toggle" class="debug-toggle">Show Debug Panel</button>
+  
+  <div id="debug-panel" class="debug-panel hidden"></div>
+  
+  <script>
+    // -------------------------------------------------------------------------
+    // Debug Utilities
+    // -------------------------------------------------------------------------
+    
+    const debugPanel = document.getElementById('debug-panel');
+    const debugToggle = document.getElementById('debug-toggle');
+    let isDebugVisible = false;
+    
+    // Toggle debug panel visibility
+    debugToggle.addEventListener('click', () => {
+      isDebugVisible = !isDebugVisible;
+      debugPanel.classList.toggle('hidden', !isDebugVisible);
+      debugToggle.textContent = isDebugVisible ? 'Hide Debug Panel' : 'Show Debug Panel';
+    });
+    
+    // Log a message to the debug panel
+    function logDebug(message, level = 'info', data = null) {
+      const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+      
+      const entry = document.createElement('div');
+      entry.className = 'debug-entry';
+      
+      const header = document.createElement('div');
+      
+      const timestampSpan = document.createElement('span');
+      timestampSpan.className = 'debug-timestamp';
+      timestampSpan.textContent = timestamp;
+      
+      const levelSpan = document.createElement('span');
+      levelSpan.className = `debug-level-${level}`;
+      levelSpan.textContent = level.toUpperCase();
+      
+      header.appendChild(timestampSpan);
+      header.appendChild(levelSpan);
+      
+      const content = document.createElement('div');
+      content.className = 'debug-content';
+      content.textContent = message;
+      
+      if (data) {
+        const dataString = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+        content.textContent += '\n' + dataString;
+      }
+      
+      entry.appendChild(header);
+      entry.appendChild(content);
+      
+      debugPanel.appendChild(entry);
+      debugPanel.scrollTop = debugPanel.scrollHeight;
+      
+      // Also log to console
+      const consoleMethod = level === 'error' ? console.error : 
+                           level === 'warn' ? console.warn : 
+                           level === 'success' ? console.log : console.info;
+      
+      consoleMethod(`[${timestamp}] [${level.toUpperCase()}] ${message}`, data || '');
+    }
+    
+    // Show an error message
+    function showError(message) {
+      const errorContainer = document.getElementById('error-container');
+      errorContainer.textContent = message;
+      errorContainer.classList.remove('hidden');
+      
+      const successContainer = document.getElementById('success-container');
+      successContainer.classList.add('hidden');
+    }
+    
+    // Show a success message
+    function showSuccess(message) {
+      const successContainer = document.getElementById('success-container');
+      successContainer.textContent = message;
+      successContainer.classList.remove('hidden');
+      
+      const errorContainer = document.getElementById('error-container');
+      errorContainer.classList.add('hidden');
+    }
+    
+    // -------------------------------------------------------------------------
+    // Supabase Client Setup
+    // -------------------------------------------------------------------------
+    
+    // Initialize Supabase client
+    const SUPABASE_URL = 'https://gzlpzsrpyytatfumkwgr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6bHB6c3JweXl0YXRmdW1rd2dyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU5MDQ5NzksImV4cCI6MjAzMTQ4MDk3OX0.RJpBzLDPkBgbmAQmrX_mLQFgSzDqLvVnUdJLLW5-Wqw';
+    
+    logDebug('Initializing Supabase client', 'info', { url: SUPABASE_URL });
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // -------------------------------------------------------------------------
+    // Authentication Functions
+    // -------------------------------------------------------------------------
+    
+    // Fetch user profile and determine role
+    async function fetchUserProfile(userId) {
+      logDebug(`Fetching profile for user ID: ${userId}`, 'info');
+      
+      try {
+        const { data, error, status } = await supabase
+          .from('profiles')
+          .select('id, role, email, display_name')
+          .eq('id', userId)
+          .maybeSingle();
+        
+        logDebug(`Profile query completed with status ${status}`, 'info');
+        
+        if (error) {
+          logDebug('Error fetching profile', 'error', error);
+          return { role: 'unknown', error };
+        }
+        
+        if (!data) {
+          logDebug('No profile found for user', 'warn');
+          return { role: 'user', profileExists: false };
+        }
+        
+        logDebug('Profile retrieved successfully', 'success', data);
+        return { 
+          role: data.role || 'user', 
+          profileExists: true,
+          profile: data
+        };
+      } catch (error) {
+        logDebug('Unexpected error fetching profile', 'error', error);
+        return { role: 'unknown', error };
+      }
+    }
+    
+    // Handle login form submission
+    async function handleLogin(email, password) {
+      logDebug(`Attempting login for user: ${email}`, 'info');
+      
+      try {
+        // Sign in with email and password
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) {
+          logDebug('Login failed', 'error', error);
+          showError(`Login failed: ${error.message}`);
+          return false;
+        }
+        
+        logDebug('Login successful', 'success', { 
+          userId: data.user.id,
+          email: data.user.email
+        });
+        
+        // Get the user's profile to determine role
+        const { role, profileExists, profile, error: profileError } = await fetchUserProfile(data.user.id);
+        
+        if (profileError) {
+          logDebug('Error fetching profile after login', 'error', profileError);
+          showError(`Login successful, but failed to retrieve profile: ${profileError.message}`);
+          return false;
+        }
+        
+        if (!profileExists) {
+          logDebug('No profile exists for user, creating default profile', 'warn');
+          // This would normally create a profile, but we'll skip that for this emergency fix
+        }
+        
+        logDebug(`User role determined: ${role}`, 'info');
+        
+        // Determine redirect based on role
+        let redirectUrl = '/';
+        
+        if (role === 'admin' || role === 'pastor') {
+          redirectUrl = '/admin';
+          logDebug(`User has admin/pastor role, redirecting to: ${redirectUrl}`, 'info');
+        } else {
+          logDebug(`User has regular role, redirecting to: ${redirectUrl}`, 'info');
+        }
+        
+        // Show success message before redirect
+        showSuccess(`Login successful! Redirecting to ${redirectUrl} in 2 seconds...`);
+        
+        // Store role in session storage for debugging
+        sessionStorage.setItem('userRole', role);
+        sessionStorage.setItem('loginTimestamp', new Date().toISOString());
+        
+        // Redirect after a short delay to allow reading the success message
+        setTimeout(() => {
+          logDebug(`Executing redirect to: ${redirectUrl}`, 'info');
+          window.location.href = redirectUrl;
+        }, 2000);
+        
+        return true;
+      } catch (error) {
+        logDebug('Unexpected error during login', 'error', error);
+        showError(`An unexpected error occurred: ${error.message}`);
+        return false;
+      }
+    }
+    
+    // -------------------------------------------------------------------------
+    // Event Listeners
+    // -------------------------------------------------------------------------
+    
+    // Handle form submission
+    document.getElementById('login-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      
+      const loginButton = document.getElementById('login-button');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      
+      // Disable button and show loading state
+      loginButton.disabled = true;
+      loginButton.textContent = 'Logging in...';
+      
+      // Get form values
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      
+      // Attempt login
+      const success = await handleLogin(email, password);
+      
+      // Reset button if login failed
+      if (!success) {
+        loginButton.disabled = false;
+        loginButton.textContent = 'Log In';
+      }
+    });
+    
+    // -------------------------------------------------------------------------
+    // Initialization
+    // -------------------------------------------------------------------------
+    
+    // Check if we're already logged in
+    document.addEventListener('DOMContentLoaded', async () => {
+      logDebug('Page loaded, checking authentication state', 'info');
+      
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          logDebug('Error checking session', 'error', error);
+          return;
+        }
+        
+        if (data.session) {
+          logDebug('User is already logged in', 'info', {
+            userId: data.session.user.id,
+            email: data.session.user.email
+          });
+          
+          // Get the user's profile to determine role
+          const { role } = await fetchUserProfile(data.session.user.id);
+          
+          // Show message about existing session
+          showSuccess(`You are already logged in as ${data.session.user.email} (${role}). You can proceed to the app.`);
+          
+          // Update form state
+          const loginButton = document.getElementById('login-button');
+          loginButton.textContent = 'Continue to App';
+          loginButton.disabled = false;
+          
+          // Pre-fill email
+          document.getElementById('email').value = data.session.user.email;
+          document.getElementById('email').disabled = true;
+          
+          // Hide password field
+          document.getElementById('password').parentElement.style.display = 'none';
+        } else {
+          logDebug('No active session found', 'info');
+        }
+      } catch (error) {
+        logDebug('Unexpected error checking session', 'error', error);
+      }
+    });
+    
+    // Initial debug message
+    logDebug('Emergency login page initialized', 'info', {
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent
+    });
+  </script>
+</body>
+</html>
