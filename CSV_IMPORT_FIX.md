@@ -27,6 +27,21 @@ key_events, character_traits
 
 _No change is needed in the Admin UI; it already parsed the full CSV._
 
+### NEW ⚙️  Robust CSV Parser
+While investigating we also found the **Admin-panel CSV parser** was doing a naïve
+`split(',')`, so any cell that itself contained commas or line-breaks caused the
+entire row to “shift” – avatar URLs landed in the wrong column and images
+therefore failed to load.
+
+We introduced a dedicated utility **`src/utils/csvParser.js`** which now:
+
+• Respects quoted fields that contain commas  
+• Handles escaped quotes (`""`) inside quoted fields  
+• Preserves new-lines inside a quoted cell (multi-line prompts / questions)  
+
+`AdminPage.js` now imports `parseCSV()` from that helper, eliminating column
+shifts and restoring images/timeline data even for complex rows.
+
 ---
 
 ## 2 ▪ Column Reference & Field Mappings
@@ -84,6 +99,15 @@ Moses,"Prophet who led Israel out of Egypt","I am Moses, servant of the Lord.",o
 name,description,persona_prompt,opening_line,avatar_url,feature_image_url,is_visible,testament,bible_book,timeline_period,historical_context,geographic_location,key_scripture_references,theological_significance,relationships,study_questions
 Elijah,"Prophet of fire","I am Elijah...","As the Lord lives",https://img/ava.jpg,https://img/hero.jpg,true,old,"1 Kings","9th c. BCE","Served under Ahab","Israel, Mt Carmel","1 Ki 18:36-39","Prophetic courage","{""opponents"":[""Ahab"",""Jezebel""]}","How does faith fuel courage?\nWhy the still small voice?"
 ```
+
+### Complex Example (commas, quotes, new-lines)
+
+See **`test_comma_quotes.csv`** in the repo – it demonstrates:
+* Commas inside quoted cells (`"Abraham, Father of Nations"`)
+* Escaped quotes (`""If I perish, I perish""`)
+* Multi-line persona prompt cells
+
+Import this file to verify the new parser and ensure images/fields align.
 
 ---
 
