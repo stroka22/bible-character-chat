@@ -56,11 +56,13 @@ const Header = ({ simplified = false }) => {
                                         children: "Admin Panel"
                                     })
                                 ),
-                                _jsx(Link, {
-                                    to: "/conversations",
-                                    className: "text-white hover:text-yellow-300 font-medium px-2 py-1",
-                                    children: "My Chats"
-                                })
+                                user && (
+                                    _jsx(Link, {
+                                        to: "/conversations",
+                                        className: "text-white hover:text-yellow-300 font-medium px-2 py-1",
+                                        children: "My Conversations"
+                                    })
+                                )
                             ]
                         }),
                         
