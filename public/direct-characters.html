@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Early network interceptor to block placeholder domains -->
+  <script src="/intercept.js"></script>
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bible Character Selection - Direct Access</title>
+  <meta
+    name="description"
+    content="Direct access to Bible Character Chat selection interface, bypassing normal initialization."
+  />
+  <!-- Cinzel font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Global styles to match app */
+    body {
+      font-family: 'Cinzel', serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+      color: #e0e0e0;
+    }
+    
+    /* Direct access banner */
+    #direct-access-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: #dc2626;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+      font-weight: bold;
+      z-index: 9999;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Loading indicator */
+    .loading-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #facc15;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Error message */
+    .error-message {
+      background-color: rgba(220, 38, 38, 0.2);
+      border: 1px solid rgba(220, 38, 38, 0.5);
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px;
+      color: white;
+      text-align: left;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .error-message h2 {
+      color: #dc2626;
+      margin-top: 0;
+    }
+    
+    .error-message pre {
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      border-radius: 4px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+    
+    /* Diagnostic panel */
+    #diagnostic-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #e0e0e0;
+      max-width: 300px;
+      max-height: 200px;
+      overflow: auto;
+      z-index: 9998;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Root element with padding for banner */
+    #root {
+      padding-top: 40px; /* Space for the banner */
+      min-height: calc(100vh - 40px);
+    }
+    
+    /* Fallback content */
+    #fallback-content {
+      display: none;
+      max-width: 1200px;
+      margin: 60px auto 0;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    #fallback-content h1 {
+      font-size: 3.5rem;
+      font-weight: bold;
+      color: #facc15;
+      text-align: center;
+      margin-bottom: 20px;
+      text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+    }
+    
+    #fallback-content .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 25px;
+      padding: 20px 0;
+    }
+    
+    .character-card {
+      background-color: rgba(255, 255, 255, 0.08);
+      border-radius: 15px;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      cursor: pointer;
+    }
+    
+    .character-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .character-card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 15px;
+      border: 3px solid #facc15;
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+    }
+    
+    .character-card h3 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #facc15;
+      margin-bottom: 5px;
+    }
+    
+    .character-card p {
+      font-size: 0.9rem;
+      color: #c0c0c0;
+      line-height: 1.4;
+    }
+    
+    /* Control panel */
+    #control-panel {
+      position: fixed;
+      top: 50px;
+      left: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      padding: 15px;
+      z-index: 9997;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    #control-panel button {
+      background-color: rgba(250, 204, 21, 0.2);
+      border: 1px solid #facc15;
+      color: #facc15;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      margin-bottom: 8px;
+      width: 100%;
+      text-align: left;
+    }
+    
+    #control-panel button:hover {
+      background-color: rgba(250, 204, 21, 0.4);
+    }
+    
+    #control-panel button.danger {
+      background-color: rgba(220, 38, 38, 0.2);
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+    
+    #control-panel button.danger:hover {
+      background-color: rgba(220, 38, 38, 0.4);
+    }
+    
+    /* Navigation links */
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+      justify-content: center;
+    }
+    
+    .nav-links a {
+      display: inline-block;
+      background-color: rgba(250, 204, 21, 0.2);
+      border: 1px solid #facc15;
+      color: #facc15;
+      padding: 8px 15px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .nav-links a:hover {
+      background-color: #facc15;
+      color: #0a0a2a;
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <!-- Direct Access Banner -->
+  <div id="direct-access-banner">
+    DIRECT ACCESS MODE - BYPASSING NORMAL APP INITIALIZATION
+  </div>
+  
+  <!-- Root element for React to mount on -->
+  <div id="root">
+    <div class="loading-indicator">
+      <div class="loading-spinner"></div>
+      <p>Loading Bible Character Selection...</p>
+      <p><small>This page bypasses the normal app initialization flow</small></p>
+    </div>
+  </div>
+  
+  <!-- Diagnostic panel -->
+  <div id="diagnostic-panel">
+    <div><strong>Diagnostic Info:</strong></div>
+    <div id="diagnostic-log"></div>
+  </div>
+  
+  <!-- Control panel -->
+  <div id="control-panel">
+    <button id="toggle-diagnostic">Toggle Diagnostic Panel</button>
+    <button id="clear-storage">Clear Browser Storage</button>
+    <button id="reload-page">Reload Page</button>
+    <button id="show-fallback" class="danger">Show Fallback Content</button>
+  </div>
+  
+  <!-- Error container (hidden by default) -->
+  <div id="error-container" style="display: none;" class="error-message">
+    <h2>Error Loading Component</h2>
+    <p id="error-message">An error occurred while trying to load the component.</p>
+    <h3>Error Details:</h3>
+    <pre id="error-details"></pre>
+    <h3>Troubleshooting:</h3>
+    <ul>
+      <li>Check browser console for additional errors</li>
+      <li>Try clearing your browser cache</li>
+      <li>Ensure the development server is running</li>
+      <li><a href="/" style="color: #facc15;">Return to main app</a></li>
+      <li><a href="/standalone-test.html" style="color: #facc15;">Try standalone test page</a></li>
+      <li><a href="/characters.html" style="color: #facc15;">Try static characters page</a></li>
+    </ul>
+    
+    <div class="nav-links">
+      <a href="/standalone-test.html">Standalone Test</a>
+      <a href="/redirect-check.html">Redirect Check</a>
+      <a href="/characters.html">Characters HTML</a>
+      <a href="/new-entry.html">Diagnostic Tool</a>
+    </div>
+  </div>
+  
+  <!-- Fallback content (shown if React fails to load) -->
+  <div id="fallback-content">
+    <h1>Choose Your Biblical Guide</h1>
+    
+    <div class="nav-links">
+      <a href="/">Return to Main App</a>
+      <a href="/standalone-test.html">Standalone Test</a>
+      <a href="/redirect-check.html">Redirect Check</a>
+      <a href="/new-entry.html">Diagnostic Tool</a>
+    </div>
+    
+    <div class="character-grid">
+      <!-- Character cards -->
+      <div class="character-card">
+        <img src="https://via.placeholder.com/100?text=Jesus" alt="Jesus">
+        <h3>Jesus</h3>
+        <p>The central figure of Christianity, Son of God who taught through parables and performed miracles.</p>
+      </div>
+      <div class="character-card">
+        <img src="https://via.placeholder.com/100?text=Moses" alt="Moses">
+        <h3>Moses</h3>
+        <p>Leader who led the Israelites out of Egypt and received the Ten Commandments from God.</p>
+      </div>
+      <div class="character-card">
+        <img src="https://via.placeholder.com/100?text=David" alt="David">
+        <h3>David</h3>
+        <p>Second king of Israel, a shepherd, warrior, and psalmist who defeated Goliath.</p>
+      </div>
+      <div class="character-card">
+        <img src="https://via.placeholder.com/100?text=Mary" alt="Mary">
+        <h3>Mary</h3>
+        <p>The mother of Jesus, a humble and faithful woman chosen by God for a divine purpose.</p>
+      </div>
+      <div class="character-card">
+        <img src="https://via.placeholder.com/100?text=Paul" alt="Paul">
+        <h3>Paul</h3>
+        <p>Apostle to the Gentiles, author of many New Testament letters and missionary.</p>
+      </div>
+      <div class="character-card">
+        <img src="https://via.placeholder.com/100?text=Abraham" alt="Abraham">
+        <h3>Abraham</h3>
+        <p>Father of many nations, central figure in Judaism, Christianity, and Islam.</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Utility functions and diagnostic logging -->
+  <script>
+    // Diagnostic logging
+    const diagnosticLog = document.getElementById('diagnostic-log');
+    const diagnosticPanel = document.getElementById('diagnostic-panel');
+    
+    function log(message) {
+      console.log(`[DIRECT-ACCESS] ${message}`);
+      const logEntry = document.createElement('div');
+      logEntry.textContent = message;
+      diagnosticLog.appendChild(logEntry);
+      
+      // Scroll to bottom
+      diagnosticPanel.scrollTop = diagnosticPanel.scrollHeight;
+    }
+    
+    // Log initialization
+    log(`Page initialized at ${new Date().toISOString()}`);
+    log(`User Agent: ${navigator.userAgent}`);
+    
+    // Check for service workers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        log(`Service Workers found: ${registrations.length}`);
+        registrations.forEach(reg => {
+          log(`- Service Worker: ${reg.scope}`);
+        });
+      }).catch(err => {
+        log(`Error checking service workers: ${err}`);
+      });
+    } else {
+      log('Service Workers API not available');
+    }
+    
+    // Log localStorage and sessionStorage state
+    try {
+      log(`localStorage keys: ${Object.keys(localStorage).join(', ')}`);
+    } catch (e) {
+      log(`Error accessing localStorage: ${e.message}`);
+    }
+    
+    try {
+      log(`sessionStorage keys: ${Object.keys(sessionStorage).join(', ')}`);
+    } catch (e) {
+      log(`Error accessing sessionStorage: ${e.message}`);
+    }
+    
+    // Function to show error details
+    function showError(message, error) {
+      document.getElementById('error-container').style.display = 'block';
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-details').textContent = error ? (error.stack || error.toString()) : 'No details available';
+      log(`Error: ${message}`);
+      if (error) {
+        log(`Error details: ${error.message}`);
+      }
+    }
+    
+    // Function to clear all browser storage
+    function clearAllStorage() {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear cookies
+        document.cookie.split(';').forEach(function(c) {
+          document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+        });
+        
+        log('All storage cleared');
+        
+        if (confirm('Storage cleared. Reload page?')) {
+          window.location.reload();
+        }
+      } catch (err) {
+        log(`Error clearing storage: ${err.message}`);
+      }
+    }
+    
+    // Function to show fallback content
+    function showFallback() {
+      document.getElementById('root').style.display = 'none';
+      document.getElementById('fallback-content').style.display = 'block';
+      log('Showing fallback content');
+    }
+    
+    // Control panel event listeners
+    document.getElementById('toggle-diagnostic').addEventListener('click', function() {
+      diagnosticPanel.style.display = diagnosticPanel.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    document.getElementById('clear-storage').addEventListener('click', clearAllStorage);
+    
+    document.getElementById('reload-page').addEventListener('click', function() {
+      window.location.reload();
+    });
+    
+    document.getElementById('show-fallback').addEventListener('click', showFallback);
+    
+    // Set localStorage to bypass authentication
+    try {
+      localStorage.setItem('bypass_auth', 'true');
+      log('Set bypass_auth=true in localStorage');
+    } catch (e) {
+      log(`Failed to set bypass_auth: ${e.message}`);
+    }
+  </script>
+  
+  <!-- Direct component override script -->
+  <script type="module">
+    try {
+      log('Starting module imports');
+      
+      // Import React and ReactDOM from the Vite dependencies
+      import React from '/node_modules/.vite/deps/react.js';
+      import ReactDOM from '/node_modules/.vite/deps/react-dom.js';
+      import { createRoot } from '/node_modules/.vite/deps/react-dom_client.js';
+      
+      log('React core modules imported');
+      
+      // Import our component directly
+      import ScalableCharacterSelection from '/src/components/ScalableCharacterSelection.tsx';
+      
+      // Import providers to maintain context
+      import { AuthProvider } from '/src/contexts/AuthContext.tsx';
+      import { ChatProvider } from '/src/contexts/ChatContext.tsx';
+      
+      log('App components imported successfully');
+      
+      // Create a simplified App component that just renders our character selection
+      const DirectApp = () => {
+        log('Rendering DirectApp component');
+        return React.createElement(
+          'div',
+          { 
+            className: 'min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600',
+            style: { paddingTop: '40px' } // Space for the banner
+          },
+          React.createElement(ScalableCharacterSelection, null)
+        );
+      };
+      
+      // Wait for DOM to be fully loaded
+      window.addEventListener('DOMContentLoaded', () => {
+        log('DOM fully loaded, initializing React');
+        
+        try {
+          const rootElement = document.getElementById('root');
+          
+          // Create a React root and render our direct component
+          const root = createRoot(rootElement);
+          
+          root.render(
+            React.createElement(
+              React.StrictMode,
+              null,
+              React.createElement(
+                AuthProvider,
+                null,
+                React.createElement(
+                  ChatProvider,
+                  null,
+                  React.createElement(DirectApp, null)
+                )
+              )
+            )
+          );
+          
+          log('Component rendered successfully');
+        } catch (renderError) {
+          showError('Error rendering React component', renderError);
+          showFallback();
+        }
+      });
+    } catch (importError) {
+      showError('Error importing dependencies', importError);
+      showFallback();
+    }
+  </script>
+</body>
+</html>

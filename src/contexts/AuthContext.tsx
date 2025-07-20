@@ -27,6 +27,8 @@ interface AuthContextType {
   updateProfile: (data: { username?: string; website?: string; avatar_url?: string }) => Promise<void>;
   /** Manually re-query the user's profile (role) */
   refreshProfile: () => Promise<void>;
+  /** Force-refresh Supabase auth session & pull fresh profile */
+  refreshSession: () => Promise<void>;
 }
 
 // Create the context with a default value
@@ -299,11 +301,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setLoading(true);
       setError(null);
-      
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
-      
+
       if (error) {
         throw error;
       }
@@ -312,6 +314,47 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setError(error.message);
       } else {
         setError('Failed to send password reset email');
+      }
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ------------------------------------------------------------------
+   * Force refresh the Supabase session & profile
+   * ---------------------------------------------------------------- */
+  const refreshSession = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      dbg('refreshSession: Forcing session refresh via Supabase');
+      const { data, error } = await supabase.auth.refreshSession();
+
+      if (error) {
+        console.error('refreshSession: Supabase returned error:', error);
+        throw error;
+      }
+
+      // Update local state with new session
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+
+      // Pull fresh profile/role
+      if (data.session?.user) {
+        await fetchProfile(data.session.user.id);
+      } else {
+        setProfile(null);
+        setRole('unknown');
+      }
+
+      dbg('refreshSession: Session and profile successfully refreshed');
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Failed to refresh session');
       }
       throw error;
     } finally {
@@ -329,25 +372,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('No user logged in');
       }
       
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(() => {
-          // only pass columns that actually exist in the `profiles` table
-          const updates: Partial<Profile> & { id: string; updated_at: string } = {
-            id: user.id,
-            updated_at: new Date().toISOString(),
-          };
+      const updates: Partial<Profile> & { id: string; updated_at: string } = {
+        id: user.id,
+        updated_at: new Date().toISOString(),
+      };
 
-          if (data.username) {
-            updates.display_name = data.username;
-          }
+      if (data.username) {
+        updates.display_name = data.username;
+      }
 
-          if (data.avatar_url) {
-            updates.avatar_url = data.avatar_url;
-          }
+      if (data.avatar_url) {
+        updates.avatar_url = data.avatar_url;
+      }
 
-          return updates;
-        }());
+      const { error } = await supabase.from('profiles').upsert(updates);
       
       if (error) {
         throw error;
@@ -386,6 +424,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     updateProfile,
     refreshProfile: fetchProfile,
+    refreshSession,
   };
 
   // Provide the auth context to children components

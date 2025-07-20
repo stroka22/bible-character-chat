@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat - Complete App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ---- Root Variables ---- */
+        :root {
+            --primary-bg: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --gold: #facc15;
+            --gold-hover: #eab308;
+            --gold-glow: rgba(250, 204, 21, 0.5);
+            --text-light: #e0e0e0;
+            --text-dim: #c0c0c0;
+            --text-dimmer: #a0a0a0;
+            --border-light: rgba(255, 255, 255, 0.15);
+            --border-medium: rgba(255, 255, 255, 0.25);
+            --panel-bg: rgba(255, 255, 255, 0.08);
+            --panel-hover: rgba(255, 255, 255, 0.12);
+            --shadow-standard: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 12px 20px rgba(0, 0, 0, 0.3);
+            --radius-standard: 15px;
+            --radius-small: 8px;
+            --transition-standard: all 0.25s ease-in-out;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lora', serif;
+            --blue-light: #90cdf4;
+            --blue-medium: #63b3ed;
+            --red-light: #feb2b2;
+            --red-medium: #fc8181;
+            --green-light: #9ae6b4;
+            --green-medium: #68d391;
+        }
+
+        /* ---- Global Styles ---- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--primary-bg);
+            min-height: 100vh;
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: var(--gold);
+        }
+
+        a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition-standard);
+        }
+
+        a:hover {
+            color: var(--gold);
+        }
+
+        button {
+            font-family: var(--font-heading);
+            cursor: pointer;
+            transition: var(--transition-standard);
+        }
+
+        button:focus, a:focus, input:focus, select:focus {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        /* ---- App Container ---- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ---- Header ---- */
+        .main-header {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+            position: relative;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            height: 50px;
+            margin-right: 15px;
+        }
+
+        .logo-text {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            color: var(--gold);
+            text-shadow: 0 0 10px var(--gold-glow);
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 20px;
+        }
+
+        .main-nav a {
+            color: var(--text-light);
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            padding: 5px 10px;
+            border-radius: var(--radius-small);
+            transition: var(--transition-standard);
+        }
+
+        .main-nav a:hover, .main-nav a.active {
+            color: var(--gold);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .dropdown-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-toggle {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px;
+            border-radius: var(--radius-small);
+        }
+
+        .dropdown-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #1a1a4a;
+            min-width: 180px;
+            box-shadow: var(--shadow-standard);
+            border-radius: var(--radius-small);
+            border: 1px solid var(--border-light);
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: var(--text-light);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: var(--transition-standard);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .dropdown-content a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--gold);
+        }
+
+        .dropdown-menu:hover .dropdown-content {
+            display: block;
+        }
+
+        /* ---- Views ---- */
+        .view {
+            display: none;
+            width: 100%;
+            min-height: calc(100vh - 81px); /* Subtract header height */
+            padding: 40px 20px;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* ---- Container ---- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-standard);
+            padding: 30px;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+            position: relative;
+        }
+
+        /* ---- Page Header ---- */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: bold;
+            color: var(--gold);
+            text-shadow: 0 0 15px var(--gold-glow);
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-dim);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ---- Filters ---- */
+        .filters {
+            background-color: var(--panel-bg);
+            border-radius: var(--radius-standard);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--gold);
+            font-family: var(--font-heading);
+        }
+
+        .filter-group select,
+        .filter-group input[type="text"] {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-small);
+            padding: 8px 12px;
+            color: var(--text-light);
+            outline: none;
+            transition: var(--transition-standard);
+        }
+
+        .filter-group select:focus,
+        .filter-group input[type="text"]:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25);
+        }
+
+        .testament-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .testament-button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            transition: var(--transition-standard);
+            font-family: var(--font-heading);
+            font-weight: 600;
+        }
+
+        .testament-button:hover {
+            background-color: rgba(250, 204, 21, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .testament-button.active {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        /* ---- Active Filters ---- */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-standard);
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(250, 204, 21, 0.2);
+            color: var(--gold);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--gold);
+            transition: var(--transition-standard);
+        }
+
+        .filter-chip:hover {
+            background-color: rgba(250, 204, 21, 0.3);
+        }
+
+        .filter-chip .remove {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: var(--transition-standard);
+        }
+
+        .filter-chip .remove:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ---- Results Count ---- */
+        .results-count {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        /* ---- Character Grid ---- */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        /* ---- Character Card ---- */
+        .character-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-standard);
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+            transition: var(--transition-standard);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border-medium);
+        }
+
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gold);
+            margin: 15px 0 5px;
+            position: relative;
+        }
+
+        .character-card p {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .character-card .meta {
+            font-size: 0.8rem;
+            color: var(--text-dimmer);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* ---- Chat View ---- */
+        .chat-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.1);
+            transition: width 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .chat-main.panel-open {
+            width: calc(100% - 350px);
+        }
+
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .back-button {
+            background-color: rgba(250, 204, 21, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 6px 12px;
+            border-radius: var(--radius-small);
+            font-size: 0.9rem;
+            transition: var(--transition-standard);
+        }
+
+        .back-button:hover {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            transform: translateY(-2px);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-header-info {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid var(--gold);
+        }
+
+        .chat-header h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background-color: #4a5568;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .character-message {
+            background-color: #2d3748;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-area input {
+            flex-grow: 1;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: var(--text-light);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .chat-input-area input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.3);
+        }
+
+        .chat-input-area input::placeholder {
+            color: #a0aec0;
+        }
+
+        .chat-input-area button {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .chat-input-area button:hover {
+            background-color: var(--gold-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input-area button:active {
+            transform: translateY(0);
+        }
+
+        /* ---- Insights Panel ---- */
+        .insights-panel {
+            width: 350px;
+            background: linear-gradient(to bottom, #1a1a4a, #2a2a6a);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 30;
+        }
+
+        .insights-panel.open {
+            transform: translateX(0);
+        }
+
+        .insights-panel .portrait {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gold);
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        .insights-panel h3 {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .insights-panel section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.2s ease;
+        }
+
+        .insights-panel section:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .insights-panel section.collapsed .section-content {
+            display: none;
+        }
+
+        .insights-panel section h4 {
+            font-size: 1.2rem;
+            color: var(--blue-light);
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .insights-panel section h4:hover {
+            color: var(--blue-medium);
+        }
+
+        .insights-panel section h4::after {
+            content: '−';
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .insights-panel section.collapsed h4::after {
+            content: '+';
+        }
+
+        .insights-panel p, .insights-panel ul {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .insights-panel ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+
+        /* ---- Relationship Formatting ---- */
+        .relationship-group {
+            margin-bottom: 12px;
+        }
+
+        .relationship-group h5 {
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .relationship-chip {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            margin: 2px 4px 6px 0;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: var(--transition-standard);
+        }
+
+        .relationship-chip:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Action Buttons ---- */
+        .action-button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-button:hover {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .action-button.active {
+            background-color: var(--gold);
+            color: #0a0a2a;
+        }
+
+        /* ---- Close Button ---- */
+        .close-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(250, 204, 21, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-weight: bold;
+            line-height: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s ease;
+            z-index: 40;
+        }
+
+        .close-button:hover {
+            background: var(--gold);
+            color: #0a0a2a;
+            transform: rotate(90deg);
+        }
+
+        /* ---- Scripture Reference ---- */
+        .scripture-reference {
+            color: var(--blue-medium);
+            text-decoration: underline;
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            padding: 0 2px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+
+        .scripture-reference:hover {
+            background-color: rgba(99, 179, 237, 0.2);
+            text-decoration: none;
+        }
+
+        .scripture-popover {
+            position: absolute;
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            width: 300px;
+            max-width: 90vw;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            transform: translateX(-50%);
+            left: 50%;
+            bottom: calc(100% + 10px);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .scripture-reference:hover .scripture-popover {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scripture-popover::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+
+        .scripture-popover strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c5282;
+            font-size: 0.9rem;
+        }
+
+        .scripture-popover p {
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+
+        .scripture-popover .attribution {
+            font-size: 0.75rem;
+            color: #718096;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        /* ---- Admin Panel ---- */
+        .admin-panel {
+            display: flex;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+            border-radius: var(--radius-standard);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .admin-sidebar {
+            width: 250px;
+            background-color: rgba(0, 0, 0, 0.4);
+            border-right: 1px solid var(--border-light);
+            padding: 20px 0;
+        }
+
+        .admin-sidebar h3 {
+            padding: 0 20px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .admin-nav {
+            list-style: none;
+        }
+
+        .admin-nav li {
+            margin-bottom: 5px;
+        }
+
+        .admin-nav a {
+            display: block;
+            padding: 10px 20px;
+            color: var(--text-light);
+            transition: var(--transition-standard);
+            border-left: 3px solid transparent;
+        }
+
+        .admin-nav a:hover, .admin-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--gold);
+            border-left-color: var(--gold);
+        }
+
+        .admin-content {
+            flex-grow: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .admin-section {
+            margin-bottom: 30px;
+        }
+
+        .admin-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .admin-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-standard);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-light);
+        }
+
+        .admin-card h3 {
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .admin-form-group {
+            margin-bottom: 20px;
+        }
+
+        .admin-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .admin-form-group input,
+        .admin-form-group select,
+        .admin-form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-small);
+            color: var(--text-light);
+            font-family: var(--font-body);
+        }
+
+        .admin-form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .admin-form-group input:focus,
+        .admin-form-group select:focus,
+        .admin-form-group textarea:focus {
+            border-color: var(--gold);
+            outline: none;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-table th {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--gold);
+            font-weight: 600;
+            font-family: var(--font-heading);
+        }
+
+        .admin-table tr:hover td {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .admin-table .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .admin-table .actions button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition-standard);
+        }
+
+        .admin-table .actions button:hover {
+            color: var(--gold);
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-standard);
+            padding: 20px;
+            border: 1px solid var(--border-light);
+            text-align: center;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--gold);
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+
+        /* ---- Buttons ---- */
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: var(--radius-small);
+            font-weight: 600;
+            font-family: var(--font-heading);
+            cursor: pointer;
+            transition: var(--transition-standard);
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--gold-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Responsive Adjustments ---- */
+        @media (max-width: 768px) {
+            .view {
+                padding: 20px 15px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px;
+            }
+            
+            .filter-group {
+                width: 100%;
+                margin-bottom: 12px;
+            }
+            
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+                margin-bottom: 15px;
+            }
+
+            .insights-panel {
+                width: 100%;
+            }
+
+            .chat-main.panel-open {
+                width: 0;
+            }
+
+            .admin-panel {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+                padding: 15px;
+            }
+
+            .admin-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .main-header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .main-nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .user-controls {
+                margin-top: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px 10px;
+            }
+            
+            .character-grid {
+                grid-template-columns: 1fr;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+
+            .chat-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .chat-header-info {
+                margin-bottom: 10px;
+            }
+
+            .chat-header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+
+            .admin-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Header -->
+        <header class="main-header">
+            <div class="logo-container">
+                <img src="https://images.unsplash.com/photo-1504870712357-65ea720d6078?auto=format&fit=crop&w=50&h=50&q=80" alt="Logo" class="logo">
+                <span class="logo-text">Bible Character Chat</span>
+            </div>
+            
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="#" class="active" data-view="selection-view">Characters</a></li>
+                    <li><a href="#" data-view="chat-history-view">Chat History</a></li>
+                    <li><a href="#" data-view="admin-view">Admin</a></li>
+                </ul>
+            </nav>
+            
+            <div class="user-controls">
+                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=40&h=40&q=80" alt="User Avatar" class="user-avatar">
+                <div class="dropdown-menu">
+                    <button class="dropdown-toggle">
+                        <span class="user-name">John Doe</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="#">Profile</a>
+                        <a href="#">Account Settings</a>
+                        <a href="#">Sign Out</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Character Selection View -->
+        <div id="selection-view" class="view active">
+            <div class="container">
+                <div class="page-header">
+                    <h1>Choose Your Biblical Guide</h1>
+                    <p>Select a character from the Bible to start a conversation and gain insights into their life, teachings, and historical context.</p>
+                </div>
+                
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group" style="flex-grow: 1;">
+                        <label for="search">Search:</label>
+                        <input type="text" id="search" placeholder="Search characters...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Testament:</label>
+                        <div class="testament-buttons">
+                            <button class="testament-button active" data-value="all">All</button>
+                            <button class="testament-button" data-value="old">Old</button>
+                            <button class="testament-button" data-value="new">New</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="book">Book:</label>
+                        <select id="book">
+                            <option value="all">All Books</option>
+                            <option value="Genesis">Genesis</option>
+                            <option value="Exodus">Exodus</option>
+                            <option value="1 Samuel">1 Samuel</option>
+                            <option value="Isaiah">Isaiah</option>
+                            <option value="Ruth">Ruth</option>
+                            <option value="Matthew">Matthew</option>
+                            <option value="Luke">Luke</option>
+                            <option value="John">John</option>
+                            <option value="Acts">Acts</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="group">Group:</label>
+                        <select id="group">
+                            <option value="all">All Groups</option>
+                            <option value="Prophets">Prophets</option>
+                            <option value="Apostles">Apostles</option>
+                            <option value="Kings">Kings</option>
+                            <option value="Women">Women</option>
+                            <option value="Messiah">Messiah</option>
+                            <option value="Patriarchs">Patriarchs</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Active Filters -->
+                <div id="active-filters" class="active-filters">
+                    <span style="color: var(--text-dimmer);">No active filters</span>
+                </div>
+                
+                <!-- Results Count -->
+                <div class="results-count">
+                    Showing 8 characters
+                </div>
+                
+                <!-- Character Grid -->
+                <div id="character-grid" class="character-grid">
+                    <!-- Characters will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat View -->
+        <div id="chat-view" class="view">
+            <div class="chat-container">
+                <div id="chat-main" class="chat-main">
+                    <!-- Breadcrumb + Back button -->
+                    <div class="breadcrumb-nav">
+                        <div class="breadcrumb">
+                            <a href="#" class="breadcrumb-home">Home</a>
+                            <span>&gt;</span>
+                            <a href="#" class="breadcrumb-characters">Characters</a>
+                            <span>&gt;</span>
+                            <span id="breadcrumb-current" style="color: var(--gold); font-weight: 600;">Character</span>
+                        </div>
+                        <button id="back-button" class="back-button">Back to Characters</button>
+                    </div>
+                    
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <img id="chat-avatar" src="" alt="Character">
+                            <h2 id="chat-name">Chat with Character</h2>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button id="insights-toggle" class="action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                                Insights
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Messages will be added here by JavaScript -->
+                    </div>
+                    
+                    <div class="chat-input-area">
+                        <input type="text" id="message-input" placeholder="Type your message...">
+                        <button id="send-button">Send</button>
+                    </div>
+                </div>
+                
+                <!-- Insights Panel -->
+                <div id="insights-panel" class="insights-panel">
+                    <!-- Close (X) button -->
+                    <div id="close-insights" class="close-button">×</div>
+                    
+                    <img id="insights-avatar" class="portrait" src="" alt="Character Portrait">
+                    <h3 id="insights-title">Character Insights</h3>
+                    
+                    <section>
+                        <h4 class="collapsible">Historical Context</h4>
+                        <div class="section-content">
+                            <p><strong>Time Period:</strong> <span id="time-period"></span></p>
+                            <p><strong>Location:</strong> <span id="location"></span></p>
+                            <p id="context-text"></p>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h4 class="collapsible">Key Scripture References</h4>
+                        <div class="section-content">
+                            <ul id="scripture-list">
+                                <!-- Scripture references will be added here by JavaScript -->
+                            </ul>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h4 class="collapsible">Relationships</h4>
+                        <div id="relationships-content" class="section-content">
+                            <!-- Relationships will be added here by JavaScript -->
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h4 class="collapsible">Study Questions</h4>
+                        <div class="section-content">
+                            <ul id="study-questions">
+                                <!-- Study questions will be added here by JavaScript -->
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin View -->
+        <div id="admin-view" class="view">
+            <div class="container">
+                <div class="page-header">
+                    <h1>Administrator Dashboard</h1>
+                    <p>Manage characters, users, and application settings</p>
+                </div>
+                
+                <div class="admin-panel">
+                    <div class="admin-sidebar">
+                        <h3>Admin Menu</h3>
+                        <ul class="admin-nav">
+                            <li><a href="#" class="active" data-tab="dashboard">Dashboard</a></li>
+                            <li><a href="#" data-tab="characters">Characters</a></li>
+                            <li><a href="#" data-tab="users">Users</a></li>
+                            <li><a href="#" data-tab="settings">Settings</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="admin-content">
+                        <!-- Dashboard Tab -->
+                        <div id="dashboard-tab" class="admin-tab active">
+                            <div class="admin-section">
+                                <h2>Dashboard</h2>
+                                
+                                <div class="admin-stats">
+                                    <div class="stat-card">
+                                        <div class="stat-value">1,245</div>
+                                        <div class="stat-label">Total Conversations</div>
+                                    </div>
+                                    
+                                    <div class="stat-card">
+                                        <div class="stat-value">42</div>
+                                        <div class="stat-label">Characters</div>
+                                    </div>
+                                    
+                                    <div class="stat-card">
+                                        <div class="stat-value">387</div>
+                                        <div class="stat-label">Active Users</div>
+                                    </div>
+                                    
+                                    <div class="stat-card">
+                                        <div class="stat-value">24.5k</div>
+                                        <div class="stat-label">Messages Exchanged</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="admin-card">
+                                    <h3>Recent Activity</h3>
+                                    <table class="admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Character</th>
+                                                <th>Time</th>
+                                                <th>Messages</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>sarah@example.com</td>
+                                                <td>Moses</td>
+                                                <td>Today, 14:32</td>
+                                                <td>12</td>
+                                            </tr>
+                                            <tr>
+                                                <td>john@example.com</td>
+                                                <td>Jesus</td>
+                                                <td>Today, 12:15</td>
+                                                <td>8</td>
+                                            </tr>
+                                            <tr>
+                                                <td>mike@example.com</td>
+                                                <td>David</td>
+                                                <td>Today, 10:45</td>
+                                                <td>15</td>
+                                            </tr>
+                                            <tr>
+                                                <td>lisa@example.com</td>
+                                                <td>Ruth</td>
+                                                <td>Yesterday, 18:22</td>
+                                                <td>6</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Characters Tab -->
+                        <div id="characters-tab" class="admin-tab" style="display: none;">
+                            <div class="admin-section">
+                                <h2>Character Management</h2>
+                                
+                                <div class="admin-card">
+                                    <h3>Add New Character</h3>
+                                    <form id="add-character-form">
+                                        <div class="admin-form-group">
+                                            <label for="character-name">Name:</label>
+                                            <input type="text" id="character-name" placeholder="Character name">
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="character-description">Description:</label>
+                                            <textarea id="character-description" placeholder="Short description"></textarea>
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="character-testament">Testament:</label>
+                                            <select id="character-testament">
+                                                <option value="old">Old Testament</option>
+                                                <option value="new">New Testament</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="character-book">Book:</label>
+                                            <input type="text" id="character-book" placeholder="Primary book">
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="character-group">Group:</label>
+                                            <select id="character-group">
+                                                <option value="Prophets">Prophets</option>
+                                                <option value="Apostles">Apostles</option>
+                                                <option value="Kings">Kings</option>
+                                                <option value="Women">Women</option>
+                                                <option value="Messiah">Messiah</option>
+                                                <option value="Patriarchs">Patriarchs</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="character-image">Image URL:</label>
+                                            <input type="text" id="character-image" placeholder="Image URL">
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="character-opening">Opening Line:</label>
+                                            <textarea id="character-opening" placeholder="First message from character"></textarea>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">Add Character</button>
+                                    </form>
+                                </div>
+                                
+                                <div class="admin-card">
+                                    <h3>Existing Characters</h3>
+                                    <table class="admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Testament</th>
+                                                <th>Book</th>
+                                                <th>Group</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="character-table-body">
+                                            <!-- Character rows will be added here by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Users Tab -->
+                        <div id="users-tab" class="admin-tab" style="display: none;">
+                            <div class="admin-section">
+                                <h2>User Management</h2>
+                                
+                                <div class="admin-card">
+                                    <h3>User List</h3>
+                                    <table class="admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Email</th>
+                                                <th>Name</th>
+                                                <th>Role</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>john@example.com</td>
+                                                <td>John Doe</td>
+                                                <td>Admin</td>
+                                                <td>Active</td>
+                                                <td class="actions">
+                                                    <button>Edit</button>
+                                                    <button>Delete</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>sarah@example.com</td>
+                                                <td>Sarah Smith</td>
+                                                <td>User</td>
+                                                <td>Active</td>
+                                                <td class="actions">
+                                                    <button>Edit</button>
+                                                    <button>Delete</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>mike@example.com</td>
+                                                <td>Mike Johnson</td>
+                                                <td>User</td>
+                                                <td>Active</td>
+                                                <td class="actions">
+                                                    <button>Edit</button>
+                                                    <button>Delete</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>pastor@example.com</td>
+                                                <td>Pastor Williams</td>
+                                                <td>Pastor</td>
+                                                <td>Active</td>
+                                                <td class="actions">
+                                                    <button>Edit</button>
+                                                    <button>Delete</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Settings Tab -->
+                        <div id="settings-tab" class="admin-tab" style="display: none;">
+                            <div class="admin-section">
+                                <h2>Application Settings</h2>
+                                
+                                <div class="admin-card">
+                                    <h3>General Settings</h3>
+                                    <form id="general-settings-form">
+                                        <div class="admin-form-group">
+                                            <label for="app-name">Application Name:</label>
+                                            <input type="text" id="app-name" value="Bible Character Chat">
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="app-logo">Logo URL:</label>
+                                            <input type="text" id="app-logo" value="https://images.unsplash.com/photo-1504870712357-65ea720d6078?auto=format&fit=crop&w=50&h=50&q=80">
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="items-per-page">Items Per Page:</label>
+                                            <input type="number" id="items-per-page" value="12">
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                                    </form>
+                                </div>
+                                
+                                <div class="admin-card">
+                                    <h3>API Settings</h3>
+                                    <form id="api-settings-form">
+                                        <div class="admin-form-group">
+                                            <label for="openai-key">OpenAI API Key:</label>
+                                            <input type="password" id="openai-key" value="sk-•••••••••••••••••••••••••••••••••">
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="model-selection">AI Model:</label>
+                                            <select id="model-selection">
+                                                <option value="gpt-4">GPT-4</option>
+                                                <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo</option>
+                                                <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16k</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="admin-form-group">
+                                            <label for="temperature">Temperature:</label>
+                                            <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+                                            <span id="temperature-value">0.7</span>
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">Save API Settings</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bible Character Data
+        const characters = [
+            {
+                id: 1,
+                name: 'Jesus',
+                description: 'Central figure of Christianity who taught through parables and performed miracles.',
+                testament: 'new',
+                book: 'Matthew',
+                group: 'Messiah',
+                img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80',
+                context: 'Born in Bethlehem and raised in Nazareth, Jesus began his ministry at age 30. He selected twelve disciples, taught the Sermon on the Mount, and was crucified under Pontius Pilate.',
+                location: 'Bethlehem, Nazareth, Jerusalem, Galilee',
+                timePeriod: 'New Testament Era (1st Century AD)',
+                scriptures: [
+                    {
+                        reference: 'John 3:16',
+                        text: 'For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.'
+                    },
+                    {
+                        reference: 'Matthew 28:19-20',
+                        text: 'Go therefore and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, to the end of the age.'
+                    },
+                    {
+                        reference: 'John 14:6',
+                        text: 'Jesus said to him, "I am the way, and the truth, and the life. No one comes to the Father except through me."'
+                    }
+                ],
+                relationships: {
+                    "disciples": ["Peter", "James", "John", "Andrew", "Philip", "Bartholomew", "Matthew", "Thomas", "James (son of Alphaeus)", "Thaddaeus", "Simon the Zealot", "Judas Iscariot"],
+                    "family": ["Mary", "Joseph", "James", "Joses", "Simon", "Judas"],
+                    "followers": ["Mary Magdalene", "Martha", "Lazarus"]
+                },
+                studyQuestions: [
+                    "What does it mean to truly love your neighbor?",
+                    "How can one find peace in a troubled world?",
+                    "What is the most important commandment?"
+                ],
+                openingLine: "Peace be with you. What is on your heart today?"
+            },
+            {
+                id: 2,
+                name: 'Mary',
+                description: 'Mother of Jesus noted for her faith and obedience.',
+                testament: 'new',
+                book: 'Luke',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?auto=format&fit=crop&w=150&q=80',
+                context: 'A young woman from Nazareth chosen by God to bear Jesus. She was visited by the angel Gabriel and praised God through her Magnificat.',
+                location: 'Nazareth, Bethlehem, Egypt, Jerusalem',
+                timePeriod: 'New Testament Era (1st Century BC - 1st Century AD)',
+                scriptures: [
+                    {
+                        reference: 'Luke 1:38',
+                        text: '"I am the Lord\'s servant," Mary answered. "May your word to me be fulfilled." Then the angel left her.'
+                    },
+                    {
+                        reference: 'Luke 1:46-47',
+                        text: 'And Mary said: "My soul glorifies the Lord and my spirit rejoices in God my Savior."'
+                    }
+                ],
+                relationships: {
+                    "family": ["Jesus (son)", "Joseph (husband)", "Elizabeth (relative)"],
+                    "connections": ["Gabriel (angel)", "Shepherds", "Wise Men"]
+                },
+                studyQuestions: [
+                    "How does Mary's obedience demonstrate faith?",
+                    "What can we learn from Mary's response to God's call?",
+                    "How did Mary's life change after accepting God's plan?"
+                ],
+                openingLine: "Blessed are you who have come to speak with me. How may I share the wonders of God with you today?"
+            },
+            {
+                id: 3,
+                name: 'Peter',
+                description: 'Disciple of Jesus and leader in the early church.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles',
+                img: 'https://images.unsplash.com/photo-1508021397575-6e9ca999c0f3?auto=format&fit=crop&w=150&q=80',
+                context: 'Originally named Simon, he was a fisherman whom Jesus renamed Peter ("the rock"). Despite denying Jesus three times, he became a bold leader after Pentecost.',
+                location: 'Galilee, Jerusalem, Rome',
+                timePeriod: 'New Testament Era (1st Century AD)',
+                scriptures: [
+                    {
+                        reference: 'Matthew 16:18',
+                        text: 'And I tell you that you are Peter, and on this rock I will build my church, and the gates of Hades will not overcome it.'
+                    },
+                    {
+                        reference: '1 Peter 5:8-9',
+                        text: 'Be alert and of sober mind. Your enemy the devil prowls around like a roaring lion looking for someone to devour. Resist him, standing firm in the faith.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Andrew (brother)"],
+                    "disciples": ["James", "John", "Andrew", "Philip", "Bartholomew", "Matthew", "Thomas", "James (son of Alphaeus)", "Thaddaeus", "Simon the Zealot", "Judas Iscariot"],
+                    "mentors": ["Jesus"]
+                },
+                studyQuestions: [
+                    "How did Peter's failures prepare him for leadership?",
+                    "What can we learn from Peter's boldness after Pentecost?",
+                    "How did Peter's relationship with Jesus transform him?"
+                ],
+                openingLine: "Greetings in the name of our Lord Jesus Christ! What questions do you have about following the Way?"
+            },
+            {
+                id: 4,
+                name: 'Moses',
+                description: 'Led the Israelites out of Egypt and received the Ten Commandments.',
+                testament: 'old',
+                book: 'Exodus',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1566211886021-ec1a73a3a5f9?auto=format&fit=crop&w=150&q=80',
+                context: 'Born during Egyptian oppression, saved in a basket, raised in Pharaoh\'s household, and called by God through a burning bush. Led the Exodus and received the Law at Mount Sinai.',
+                location: 'Egypt, Midian, Wilderness, Mount Sinai',
+                timePeriod: 'Old Testament Era (circa 1500-1400 BC)',
+                scriptures: [
+                    {
+                        reference: 'Exodus 3:14',
+                        text: 'God said to Moses, "I AM WHO I AM. This is what you are to say to the Israelites: \'I AM has sent me to you.\'"'
+                    },
+                    {
+                        reference: 'Exodus 14:14',
+                        text: 'The LORD will fight for you; you need only to be still.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Amram (father)", "Jochebed (mother)", "Miriam (sister)", "Aaron (brother)", "Zipporah (wife)"],
+                    "mentors": ["Jethro"],
+                    "successors": ["Joshua"]
+                },
+                studyQuestions: [
+                    "How did Moses' upbringing prepare him for his role?",
+                    "What can we learn from Moses' encounters with God?",
+                    "How did Moses demonstrate leadership during difficult times?"
+                ],
+                openingLine: "Shalom. I have witnessed the power of the LORD firsthand. What would you like to know about God's deliverance?"
+            },
+            {
+                id: 5,
+                name: 'David',
+                description: 'Shepherd, psalmist and second king of Israel who defeated Goliath.',
+                testament: 'old',
+                book: '1 Samuel',
+                group: 'Kings',
+                img: 'https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=150&q=80',
+                context: 'The youngest son of Jesse who was anointed by Samuel. After defeating Goliath, he became king and established Jerusalem as Israel\'s capital. Wrote many Psalms.',
+                location: 'Bethlehem, Jerusalem, Wilderness',
+                timePeriod: 'Old Testament Era (circa 1000 BC)',
+                scriptures: [
+                    {
+                        reference: '1 Samuel 16:7',
+                        text: 'But the LORD said to Samuel, "Do not consider his appearance or his height, for I have rejected him. The LORD does not look at the things people look at. People look at the outward appearance, but the LORD looks at the heart."'
+                    },
+                    {
+                        reference: 'Psalm 23:1-3',
+                        text: 'The LORD is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Jesse (father)", "Solomon (son)", "Absalom (son)"],
+                    "friends": ["Jonathan", "Hushai"],
+                    "mentors": ["Samuel"],
+                    "enemies": ["Saul", "Goliath"]
+                },
+                studyQuestions: [
+                    "What made David a man after God's own heart?",
+                    "How did David handle failure and repentance?",
+                    "What can we learn from David's worship through the Psalms?"
+                ],
+                openingLine: "The Lord is my shepherd, I lack nothing. How can I, a man after God's own heart, assist you today?"
+            },
+            {
+                id: 6,
+                name: 'Abraham',
+                description: 'Patriarch chosen by God and father of many nations.',
+                testament: 'old',
+                book: 'Genesis',
+                group: 'Patriarchs',
+                img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
+                context: 'Originally named Abram from Ur of the Chaldeans. God called him to leave his homeland and promised to make him a great nation. Father of Isaac and ancestor of Jesus.',
+                location: 'Ur, Haran, Canaan, Egypt',
+                timePeriod: 'Old Testament Era (circa 2000-1800 BC)',
+                scriptures: [
+                    {
+                        reference: 'Genesis 12:2-3',
+                        text: '"I will make you into a great nation, and I will bless you; I will make your name great, and you will be a blessing. I will bless those who bless you, and whoever curses you I will curse; and all peoples on earth will be blessed through you."'
+                    },
+                    {
+                        reference: 'Genesis 15:6',
+                        text: 'Abram believed the LORD, and he credited it to him as righteousness.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Sarah (wife)", "Isaac (son)", "Ishmael (son)", "Lot (nephew)"],
+                    "descendants": ["Jacob", "Joseph", "David", "Jesus"]
+                },
+                studyQuestions: [
+                    "How did Abraham demonstrate faith through obedience?",
+                    "What can we learn from Abraham's journey of faith?",
+                    "How did God fulfill His promises to Abraham?"
+                ],
+                openingLine: "Peace be upon you. I am Abraham, who walked by faith into the unknown. What would you like to ask me?"
+            },
+            {
+                id: 7,
+                name: 'Ruth',
+                description: 'Moabite woman whose loyalty became exemplary.',
+                testament: 'old',
+                book: 'Ruth',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1516726817505-f5ed825624d8?auto=format&fit=crop&w=150&q=80',
+                context: 'A widow from Moab who chose to follow her mother-in-law Naomi to Bethlehem. She married Boaz and became the great-grandmother of King David, placing her in Jesus\' lineage.',
+                location: 'Moab, Bethlehem',
+                timePeriod: 'Old Testament Era (during the period of the Judges)',
+                scriptures: [
+                    {
+                        reference: 'Ruth 1:16-17',
+                        text: 'But Ruth replied, "Don\'t urge me to leave you or to turn back from you. Where you go I will go, and where you stay I will stay. Your people will be my people and your God my God. Where you die I will die, and there I will be buried. May the LORD deal with me, be it ever so severely, if even death separates you and me."'
+                    },
+                    {
+                        reference: 'Ruth 2:12',
+                        text: 'May the LORD repay you for what you have done. May you be richly rewarded by the LORD, the God of Israel, under whose wings you have come to take refuge.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Naomi (mother-in-law)", "Boaz (husband)"],
+                    "descendants": ["Obed", "Jesse", "David", "Jesus"]
+                },
+                studyQuestions: [
+                    "What can we learn from Ruth's loyalty and commitment?",
+                    "How did Ruth's faith in God develop throughout her story?",
+                    "What does Ruth's story teach us about God's providence?"
+                ],
+                openingLine: "Shalom. I am Ruth, once a stranger in a foreign land. What would you like to know about finding belonging in unexpected places?"
+            },
+            {
+                id: 8,
+                name: 'Paul',
+                description: 'Apostle to the Gentiles and prolific New Testament author.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles',
+                img: 'https://images.unsplash.com/photo-1504022462188-88f023db211c?auto=format&fit=crop&w=150&q=80',
+                context: 'Originally named Saul, he persecuted Christians until his dramatic conversion on the road to Damascus. He became a missionary who spread Christianity throughout the Roman Empire.',
+                location: 'Tarsus, Jerusalem, Mediterranean Region',
+                timePeriod: 'New Testament Era (1st Century AD)',
+                scriptures: [
+                    {
+                        reference: 'Romans 8:38-39',
+                        text: 'For I am convinced that neither death nor life, neither angels nor demons, neither the present nor the future, nor any powers, neither height nor depth, nor anything else in all creation, will be able to separate us from the love of God that is in Christ Jesus our Lord.'
+                    },
+                    {
+                        reference: 'Philippians 4:13',
+                        text: 'I can do all this through him who gives me strength.'
+                    }
+                ],
+                relationships: {
+                    "mentors": ["Gamaliel"],
+                    "companions": ["Barnabas", "Silas", "Timothy", "Luke"],
+                    "converts": ["Lydia", "Philippian Jailer", "Onesimus"]
+                },
+                studyQuestions: [
+                    "How did Paul's background prepare him for his ministry?",
+                    "What can we learn from Paul's perseverance through suffering?",
+                    "How did Paul balance grace and truth in his teachings?"
+                ],
+                openingLine: "Grace and peace to you from God our Father and the Lord Jesus Christ. What questions do you have about faith or the early church?"
+            }
+        ];
+
+        // State
+        let filters = {
+            search: '',
+            testament: 'all',
+            book: 'all',
+            group: 'all'
+        };
+        
+        let currentCharacter = null;
+        let currentView = 'selection-view';
+        let currentAdminTab = 'dashboard-tab';
+
+        // DOM Elements
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('DOM fully loaded, initializing app...');
+                
+                // Initialize views
+                initializeViews();
+                
+                // Initialize character grid
+                renderCharacters();
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Initialize admin panel
+                initializeAdminPanel();
+                
+                console.log('App initialized successfully');
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                alert('There was an error initializing the application. Please check the console for details.');
+            }
+        

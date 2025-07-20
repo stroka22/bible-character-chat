@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Characters</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            min-height: 100vh;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+        }
+        h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #facc15;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        .filter-section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        .filter-section label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #facc15;
+        }
+        .filter-section select,
+        .filter-section input[type="text"] {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            outline: none;
+        }
+        .filter-section button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .filter-section button.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(250, 204, 21, 0.2);
+            color: #facc15;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #facc15;
+        }
+        .filter-chip .remove {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+        .results-count {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #e0e0e0;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .view-toggle button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+        .character-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px 0;
+        }
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 15px;
+            border: 4px solid #facc15;
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.55);
+        }
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-bottom: 5px;
+        }
+        .character-card p {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+        .character-list-item {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .character-list-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-list-item img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 20px;
+            border: 3px solid #facc15;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.55);
+        }
+        .character-list-item .info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        .character-list-item h3 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-bottom: 5px;
+        }
+        .character-list-item p {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+        .character-list-item .meta {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .pagination button {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #e0e0e0;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .pagination button.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            border-color: #facc15;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .alpha-nav {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 10px 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .alpha-nav a {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+            font-size: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .alpha-nav a:hover,
+        .alpha-nav a.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .featured-character {
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .featured-character .avatar-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .featured-character .halo {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.5) 0%, rgba(250, 204, 21, 0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+        .featured-character img {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #facc15;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
+            z-index: 1;
+        }
+        .featured-character h2 {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #facc15;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+        }
+        .featured-character p {
+            max-width: 600px;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+        .featured-character button {
+            background-color: #facc15;
+            color: #0a0a2a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.4);
+        }
+        .featured-character button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(250, 204, 21, 0.6);
+        }
+        .upgrade-button {
+            display: block;
+            margin: 0 auto 30px;
+            background-color: #facc15;
+            color: #0a0a2a;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.4);
+            animation: pulse 2s infinite;
+        }
+        .upgrade-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(250, 204, 21, 0.6);
+            animation: none;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-group {
+                width: 100%;
+                margin-bottom: 12px;
+            }
+            .alpha-nav {
+                position: static;
+                transform: none;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-top: 20px;
+                width: 100%;
+            }
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Stand-alone banner -->
+    <div style="position:fixed;top:0;left:0;width:100%;padding:8px 0;text-align:center;font-weight:700;background:#dc2626;color:#fff;z-index:9999;box-shadow:0 2px 10px rgba(0,0,0,.4)">
+        STANDALONE DEMO&nbsp;–&nbsp;This page is not connected to the live database
+    </div>
+
+    <div class="container">
+        <h1>Choose Your Biblical Guide</h1>
+        
+        <!-- Featured Character -->
+        <div class="featured-character">
+            <div class="avatar-container">
+                <div class="halo"></div>
+                <img src="https://via.placeholder.com/120?text=Jesus" alt="Jesus">
+            </div>
+            <h2>Jesus</h2>
+            <p>The central figure of Christianity, Son of God who taught through parables and performed miracles.</p>
+            <button>Chat with Jesus 🙏</button>
+        </div>
+        
+        <!-- Premium upgrade button -->
+        <button class="upgrade-button">
+            🔓 Unlock all characters – Upgrade to Premium
+        </button>
+
+        <div class="filter-section">
+            <div class="filter-group" style="flex-grow: 1;">
+                <label for="search">Search:</label>
+                <input type="text" id="search" placeholder="Search characters...">
+            </div>
+
+            <div class="filter-group">
+                <label>Testament:</label>
+                <div style="display: flex; gap: 8px;">
+                    <button class="testament-filter active">All</button>
+                    <button class="testament-filter">Old</button>
+                    <button class="testament-filter">New</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="book">Book:</label>
+                <select id="book">
+                    <option value="all">All Books</option>
+                    <optgroup label="Old Testament">
+                        <option value="Genesis">Genesis</option>
+                        <option value="Exodus">Exodus</option>
+                        <option value="Psalms">Psalms</option>
+                        <option value="Isaiah">Isaiah</option>
+                    </optgroup>
+                    <optgroup label="New Testament">
+                        <option value="Matthew">Matthew</option>
+                        <option value="John">John</option>
+                        <option value="Acts">Acts</option>
+                        <option value="Revelation">Revelation</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="group">Group:</label>
+                <select id="group">
+                    <option value="all">All Groups</option>
+                    <option value="Prophets">Prophets</option>
+                    <option value="Apostles">Apostles</option>
+                    <option value="Kings">Kings</option>
+                    <option value="Women">Women of the Bible</option>
+                </select>
+            </div>
+
+            <div class="view-toggle">
+                <button id="gridViewBtn" class="active" title="Grid View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </button>
+                <button id="listViewBtn" title="List View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="active-filters">
+            <span style="color: #a0a0a0; margin-right: 8px;">Active Filters:</span>
+            <div class="filter-chip">
+                <span>Old Testament</span>
+                <span class="remove">×</span>
+            </div>
+            <div class="filter-chip">
+                <span>Prophets</span>
+                <span class="remove">×</span>
+            </div>
+        </div>
+
+        <div class="results-count">
+            Showing 10 of 50 characters
+        </div>
+
+        <div id="character-container">
+            <div id="character-grid" class="character-grid"></div>
+            <div id="character-list" class="character-list" style="display:none;"></div>
+        </div>
+
+        <div class="pagination">
+            <button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="alpha-nav">
+        <a class="active">All</a>
+        <a>A</a>
+        <a>B</a>
+        <a>C</a>
+        <a>D</a>
+        <a>E</a>
+        <a>F</a>
+        <a>G</a>
+        <a>H</a>
+        <a>I</a>
+        <a>J</a>
+        <a>K</a>
+        <a>L</a>
+        <a>M</a>
+        <a>N</a>
+        <a>O</a>
+        <a>P</a>
+        <a>Q</a>
+        <a>R</a>
+        <a>S</a>
+        <a>T</a>
+        <a>U</a>
+        <a>V</a>
+        <a>W</a>
+        <a>X</a>
+        <a>Y</a>
+        <a>Z</a>
+    </div>
+
+    <script>
+        /* ------------------------------------------------------------
+         * Dynamic Character Selection Demo (stand-alone)
+         * ---------------------------------------------------------- */
+        (() => {
+            /* ---------- DOM refs ---------- */
+            const gridEl         = document.getElementById('character-grid');
+            const listEl         = document.getElementById('character-list');
+            const resultCountEl  = document.querySelector('.results-count');
+            const activeFilterEl = document.querySelector('.active-filters');
+            const searchInput    = document.getElementById('search');
+            const testamentBtns  = [...document.querySelectorAll('.testament-filter')];
+            const bookSel        = document.getElementById('book');
+            const groupSel       = document.getElementById('group');
+            const gridBtn        = document.getElementById('gridViewBtn');
+            const listBtn        = document.getElementById('listViewBtn');
+            const alphaLinks     = [...document.querySelectorAll('.alpha-nav a')];
+            const paginationWrap = document.querySelector('.pagination');
+
+            /* ---------- Static demo data ---------- */
+            const characters = [
+                {name:'Jesus',description:'Central figure of Christianity who taught through parables and performed miracles.',testament:'new',book:'Matthew',group:'Messiah',img:'https://via.placeholder.com/150?text=Jesus'},
+                {name:'Mary',description:'Mother of Jesus noted for her faith and obedience.',testament:'new',book:'Luke',group:'Women',img:'https://via.placeholder.com/150?text=Mary'},
+                {name:'Peter',description:'Disciple of Jesus and leader in the early church.',testament:'new',book:'Acts',group:'Apostles',img:'https://via.placeholder.com/150?text=Peter'},
+                {name:'Paul',description:'Apostle to the Gentiles and prolific New-Testament author.',testament:'new',book:'Acts',group:'Apostles',img:'https://via.placeholder.com/150?text=Paul'},
+                {name:'John the Baptist',description:'Prophet who prepared the way for Jesus.',testament:'new',book:'John',group:'Prophets',img:'https://via.placeholder.com/150?text=JohnB'},
+                {name:'Moses',description:'Led the Israelites out of Egypt and received the Ten Commandments.',testament:'old',book:'Exodus',group:'Prophets',img:'https://via.placeholder.com/150?text=Moses'},
+                {name:'David',description:'Shepherd, psalmist and second king of Israel who defeated Goliath.',testament:'old',book:'1 Samuel',group:'Kings',img:'https://via.placeholder.com/150?text=David'},
+                {name:'Abraham',description:'Patriarch chosen by God and father of many nations.',testament:'old',book:'Genesis',group:'Patriarchs',img:'https://via.placeholder.com/150?text=Abraham'},
+                {name:'Isaiah',description:'Major prophet who foretold the coming Messiah.',testament:'old',book:'Isaiah',group:'Prophets',img:'https://via.placeholder.com/150?text=Isaiah'},
+                {name:'Esther',description:'Jewish queen who bravely saved her people.',testament:'old',book:'Esther',group:'Women',img:'https://via.placeholder.com/150?text=Esther'},
+                {name:'Ruth',description:'Moabite woman whose loyalty became exemplary.',testament:'old',book:'Ruth',group:'Women',img:'https://via.placeholder.com/150?text=Ruth'},
+                {name:'Samuel',description:'Prophet who anointed the first kings of Israel.',testament:'old',book:'1 Samuel',group:'Prophets',img:'https://via.placeholder.com/150?text=Samuel'},
+            ];
+
+            /* ---------- State ---------- */
+            const itemsPerPage = 9;
+            let   currentPage  = 1;
+            let   viewMode     = 'grid';
+            const filters = { search:'', testament:'all', book:'all', group:'all', letter:'All' };
+
+            /* ---------- Helpers ---------- */
+            const applyFilters = () => {
+                let data = [...characters];
+                if (filters.search) {
+                    const q = filters.search.toLowerCase();
+                    data = data.filter(c =>
+                        c.name.toLowerCase().includes(q) ||
+                        c.description.toLowerCase().includes(q)
+                    );
+                }
+                if (filters.testament !== 'all') data = data.filter(c => c.testament === filters.testament);
+                if (filters.book      !== 'all') data = data.filter(c => c.book      === filters.book);
+                if (filters.group     !== 'all') data = data.filter(c => c.group     === filters.group);
+                if (filters.letter    !== 'All') data = data.filter(c => c.name.startsWith(filters.letter));
+                return data;
+            };
+
+            const syncInputs = () => {
+                searchInput.value = filters.search;
+                testamentBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.toLowerCase() === (filters.testament === 'all' ? 'all' : filters.testament));
+                });
+                bookSel.value  = filters.book;
+                groupSel.value = filters.group;
+                alphaLinks.forEach(a => a.classList.toggle('active', a.textContent === filters.letter));
+                gridBtn.classList.toggle('active', viewMode === 'grid');
+                listBtn.classList.toggle('active', viewMode === 'list');
+            };
+
+            /* ---------- Rendering ---------- */
+            const renderActiveChips = () => {
+                activeFilterEl.querySelectorAll('.dynamic-chip').forEach(c => c.remove());
+                const add = (txt, key) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'filter-chip dynamic-chip';
+                    chip.innerHTML = `<span>${txt}</span><span class="remove">×</span>`;
+                    chip.querySelector('.remove').onclick = () => {
+                        filters[key] = key === 'search' ? '' : (key === 'letter' ? 'All' : 'all');
+                        currentPage = 1;
+                        syncInputs();
+                        render();
+                    };
+                    activeFilterEl.appendChild(chip);
+                };
+                if (filters.search)      add(`"${filters.search}"`, 'search');
+                if (filters.testament!=='all') add(filters.testament==='old'?'Old Testament':'New Testament', 'testament');
+                if (filters.book!=='all')  add(filters.book,  'book');
+                if (filters.group!=='all') add(filters.group, 'group');
+                if (filters.letter!=='All')add(`Starts with "${filters.letter}"`, 'letter');
+            };
+
+            const renderPagination = total => {
+                paginationWrap.innerHTML = '';
+                const btn = (label, disabled, cb) => {
+                    const b = document.createElement('button');
+                    b.innerHTML = label;
+                    if (disabled) b.disabled = true;
+                    b.onclick = cb;
+                    return b;
+                };
+                paginationWrap.appendChild(btn('«', currentPage===1, () => {currentPage--; render();}));
+                for (let i=1; i<=total; i++) {
+                    if (i>5 && total>6) { if (i===6){ const span=document.createElement('span');span.textContent='…';paginationWrap.appendChild(span);} continue; }
+                    const b = btn(i, false, () => {currentPage=i; render();});
+                    if (i===currentPage) b.classList.add('active');
+                    paginationWrap.appendChild(b);
+                }
+                paginationWrap.appendChild(btn('»', currentPage===total, () => {currentPage++; render();}));
+            };
+
+            const renderCharacters = data => {
+                gridEl.innerHTML = '';
+                listEl.innerHTML = '';
+                const target = viewMode === 'grid' ? gridEl : listEl;
+                data.forEach(c => {
+                    const el = document.createElement('div');
+                    el.className = viewMode==='grid'?'character-card':'character-list-item';
+                    if (viewMode==='grid') {
+                        el.innerHTML = `<img src="${c.img}" alt="${c.name}"><h3>${c.name}</h3><p>${c.description}</p>`;
+                    } else {
+                        el.innerHTML = `<img src="${c.img}" alt="${c.name}"><div class="info"><h3>${c.name}</h3><p>${c.description}</p><div class="meta">${c.testament==='old'?'Old Testament':'New Testament'} • ${c.book} • ${c.group}</div></div>`;
+                    }
+                    el.onclick = () => alert(`You selected ${c.name}. In a real app this would start a chat.`);
+                    target.appendChild(el);
+                });
+                gridEl.style.display = viewMode==='grid' ? 'grid' : 'none';
+                listEl.style.display = viewMode==='list' ? 'flex' : 'none';
+            };
+
+            const render = () => {
+                const filtered = applyFilters();
+                const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+                currentPage = Math.min(currentPage, totalPages);
+                const start = (currentPage-1)*itemsPerPage;
+                const pageItems = filtered.slice(start, start+itemsPerPage);
+
+                resultCountEl.textContent = `Showing ${pageItems.length} of ${filtered.length} characters`;
+                renderCharacters(pageItems);
+                renderPagination(totalPages);
+                renderActiveChips();
+            };
+
+            /* ---------- Event wiring ---------- */
+            gridBtn.onclick = () => { viewMode='grid'; syncInputs(); render(); };
+            listBtn.onclick = () => { viewMode='list'; syncInputs(); render(); };
+
+            searchInput.oninput = e => { filters.search = e.target.value.trim(); currentPage=1; render(); };
+            testamentBtns.forEach(btn => btn.onclick = () => { filters.testament = btn.textContent.toLowerCase(); currentPage=1; render(); });
+            bookSel.onchange  = () => { filters.book  = bookSel.value;  currentPage=1; render(); };
+            groupSel.onchange = () => { filters.group = groupSel.value; currentPage=1; render(); };
+            alphaLinks.forEach(a => a.onclick = () => { filters.letter = a.textContent; currentPage=1; render(); });
+
+            /* ---------- Kick-off ---------- */
+            syncInputs();
+            render();
+        })();
+    </script>
+</body>
+</html>

@@ -1,19 +1,66 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <!-- Early network interceptor to block placeholder domains -->
-    <script src="/intercept.js"></script>
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bible Character Chat</title>
-    <meta
-      name="description"
-      content="Chat with Bible characters, explore insights, and deepen your understanding of Scripture with Bible Character Chat."
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Bible Character Chat - Engage in meaningful conversations with biblical figures">
+  <link rel="icon" type="image/svg+xml" href="/vite.svg">
+  <title>Bible Character Chat</title>
+  
+  <!-- Google Fonts - Cinzel for biblical styling -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Base styles to ensure proper React mounting -->
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    #root {
+      height: 100%;
+      width: 100%;
+    }
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+      color: white;
+      flex-direction: column;
+    }
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #facc15;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+  
+  <!-- Prevent service worker issues -->
+  <script id="sw-cleanup" src="/service-worker-cleanup.js"></script>
+</head>
+<body>
+  <!-- React will mount here -->
+  <div id="root">
+    <!-- Fallback loading state while React loads -->
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <h2 style="font-family: 'Cinzel', serif; color: #facc15;">Loading Bible Character Chat...</h2>
+      <p>Preparing to connect you with biblical wisdom</p>
+    </div>
+  </div>
+  
+  <!-- React application entry point -->
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>

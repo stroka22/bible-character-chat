@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Standalone Bible Character Selection</title>
+    <!-- Tailwind for quick utility classes (development only) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            min-height: 100vh;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+        }
+        h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #facc15;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        .filter-section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        .filter-section label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #facc15;
+        }
+        .filter-section select,
+        .filter-section input[type="text"] {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            outline: none;
+        }
+        .filter-section button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .filter-section button.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(250, 204, 21, 0.2);
+            color: #facc15;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #facc15;
+        }
+        .filter-chip .remove {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+        .results-count {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #e0e0e0;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .view-toggle button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+        .character-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px 0;
+        }
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 15px;
+            border: 3px solid #facc15;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-bottom: 5px;
+        }
+        .character-card p {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+        .character-list-item {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .character-list-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-list-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 20px;
+            border: 2px solid #facc15;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .character-list-item .info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        .character-list-item h3 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-bottom: 5px;
+        }
+        .character-list-item p {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+        .character-list-item .meta {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .pagination button {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #e0e0e0;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .pagination button.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            border-color: #facc15;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .alpha-nav {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 10px 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .alpha-nav a {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+            font-size: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .alpha-nav a:hover,
+        .alpha-nav a.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #facc15;
+            color: #0a0a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-group {
+                width: 100%;
+                margin-bottom: 12px;
+            }
+            .alpha-nav {
+                position: static;
+                transform: none;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-top: 20px;
+                width: 100%;
+            }
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="notification">
+        Standalone Test •&nbsp;
+        <a href="/" class="underline font-semibold">Return to App</a> •&nbsp;
+        <a href="/direct-render-test.html" class="underline font-semibold">Direct Render</a>
+    </div>
+
+    <div class="container">
+        <h1>Choose Your Biblical Guide</h1>
+
+        <div class="filter-section">
+            <div class="filter-group" style="flex-grow: 1;">
+                <label for="search">Search:</label>
+                <input type="text" id="search" placeholder="Search characters...">
+            </div>
+
+            <div class="filter-group">
+                <label>Testament:</label>
+                <div style="display: flex; gap: 8px;">
+                    <button class="testament-filter active">All</button>
+                    <button class="testament-filter">Old</button>
+                    <button class="testament-filter">New</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="book">Book:</label>
+                <select id="book">
+                    <option value="all">All Books</option>
+                    <optgroup label="Old Testament">
+                        <option value="Genesis">Genesis</option>
+                        <option value="Exodus">Exodus</option>
+                        <option value="Psalms">Psalms</option>
+                        <option value="Isaiah">Isaiah</option>
+                    </optgroup>
+                    <optgroup label="New Testament">
+                        <option value="Matthew">Matthew</option>
+                        <option value="John">John</option>
+                        <option value="Acts">Acts</option>
+                        <option value="Revelation">Revelation</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="group">Group:</label>
+                <select id="group">
+                    <option value="all">All Groups</option>
+                    <option value="Prophets">Prophets</option>
+                    <option value="Apostles">Apostles</option>
+                    <option value="Kings">Kings</option>
+                    <option value="Women">Women of the Bible</option>
+                </select>
+            </div>
+
+            <div class="view-toggle">
+                <button id="gridViewBtn" class="active" title="Grid View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </button>
+                <button id="listViewBtn" title="List View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="active-filters">
+            <span style="color: #a0a0a0; margin-right: 8px;">Active Filters:</span>
+            <div class="filter-chip">
+                <span>Old Testament</span>
+                <span class="remove">×</span>
+            </div>
+            <div class="filter-chip">
+                <span>Prophets</span>
+                <span class="remove">×</span>
+            </div>
+        </div>
+
+        <div class="results-count">
+            Showing 10 of 50 characters
+        </div>
+
+        <div id="character-container">
+            <div id="character-grid" class="character-grid">
+                <!-- Character cards -->
+                <div class="character-card">
+                    <img src="https://via.placeholder.com/100?text=Jesus" alt="Jesus">
+                    <h3>Jesus</h3>
+                    <p>The central figure of Christianity, Son of God who taught through parables and performed miracles.</p>
+                </div>
+                <div class="character-card">
+                    <img src="https://via.placeholder.com/100?text=Moses" alt="Moses">
+                    <h3>Moses</h3>
+                    <p>Leader who led the Israelites out of Egypt and received the Ten Commandments from God.</p>
+                </div>
+                <div class="character-card">
+                    <img src="https://via.placeholder.com/100?text=David" alt="David">
+                    <h3>David</h3>
+                    <p>Second king of Israel, a shepherd, warrior, and psalmist who defeated Goliath.</p>
+                </div>
+                <div class="character-card">
+                    <img src="https://via.placeholder.com/100?text=Mary" alt="Mary">
+                    <h3>Mary</h3>
+                    <p>The mother of Jesus, a humble and faithful woman chosen by God for a divine purpose.</p>
+                </div>
+                <div class="character-card">
+                    <img src="https://via.placeholder.com/100?text=Paul" alt="Paul">
+                    <h3>Paul</h3>
+                    <p>Apostle to the Gentiles, author of many New Testament letters and missionary.</p>
+                </div>
+                <div class="character-card">
+                    <img src="https://via.placeholder.com/100?text=Abraham" alt="Abraham">
+                    <h3>Abraham</h3>
+                    <p>Father of many nations, central figure in Judaism, Christianity, and Islam.</p>
+                </div>
+            </div>
+            
+            <div id="character-list" class="character-list" style="display: none;">
+                <!-- Character list items -->
+                <div class="character-list-item">
+                    <img src="https://via.placeholder.com/60?text=J" alt="Jesus">
+                    <div class="info">
+                        <h3>Jesus</h3>
+                        <p>The central figure of Christianity, Son of God who taught through parables and performed miracles.</p>
+                        <div class="meta">New Testament • Matthew • Messiah</div>
+                    </div>
+                </div>
+                <div class="character-list-item">
+                    <img src="https://via.placeholder.com/60?text=M" alt="Moses">
+                    <div class="info">
+                        <h3>Moses</h3>
+                        <p>Leader who led the Israelites out of Egypt and received the Ten Commandments from God.</p>
+                        <div class="meta">Old Testament • Exodus • Prophets</div>
+                    </div>
+                </div>
+                <div class="character-list-item">
+                    <img src="https://via.placeholder.com/60?text=D" alt="David">
+                    <div class="info">
+                        <h3>David</h3>
+                        <p>Second king of Israel, a shepherd, warrior, and psalmist who defeated Goliath.</p>
+                        <div class="meta">Old Testament • 1 Samuel • Kings</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="alpha-nav">
+        <a class="active">All</a>
+        <a>A</a>
+        <a>B</a>
+        <a>C</a>
+        <a>D</a>
+        <a>E</a>
+        <a>F</a>
+        <a>G</a>
+        <a>H</a>
+        <a>I</a>
+        <a>J</a>
+        <a>K</a>
+        <a>L</a>
+        <a>M</a>
+        <a>N</a>
+        <a>O</a>
+        <a>P</a>
+        <a>Q</a>
+        <a>R</a>
+        <a>S</a>
+        <a>T</a>
+        <a>U</a>
+        <a>V</a>
+        <a>W</a>
+        <a>X</a>
+        <a>Y</a>
+        <a>Z</a>
+    </div>
+
+    <script>
+        // Simple view toggle functionality
+        document.getElementById('gridViewBtn').addEventListener('click', function() {
+            document.getElementById('character-grid').style.display = 'grid';
+            document.getElementById('character-list').style.display = 'none';
+            document.getElementById('gridViewBtn').classList.add('active');
+            document.getElementById('listViewBtn').classList.remove('active');
+        });
+
+        document.getElementById('listViewBtn').addEventListener('click', function() {
+            document.getElementById('character-grid').style.display = 'none';
+            document.getElementById('character-list').style.display = 'flex';
+            document.getElementById('gridViewBtn').classList.remove('active');
+            document.getElementById('listViewBtn').classList.add('active');
+        });
+
+        // Notification auto-hide
+        setTimeout(function() {
+            const notification = document.querySelector('.notification');
+            if (notification) {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s ease-out';
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

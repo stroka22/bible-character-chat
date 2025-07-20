@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Render Test - Bible Character Chat</title>
+    <!-- Tailwind for quick utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            min-height: 100vh;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #facc15;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        h2 {
+            font-size: 1.8rem;
+            color: #facc15;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(250, 204, 21, 0.3);
+            padding-bottom: 8px;
+        }
+        p {
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .highlight {
+            color: #facc15;
+            font-weight: bold;
+        }
+        .code {
+            font-family: monospace;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #a0e0ff;
+        }
+        .button {
+            display: inline-block;
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            text-decoration: none;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .button:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .button.primary {
+            background-color: #facc15;
+            color: #0a0a2a;
+        }
+        .button.primary:hover {
+            background-color: #e9bb13;
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.7);
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #facc15;
+            color: #0a0a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            font-weight: bold;
+        }
+        .steps {
+            list-style-type: decimal;
+            padding-left: 25px;
+            margin-bottom: 20px;
+        }
+        .steps li {
+            margin-bottom: 10px;
+            padding-left: 10px;
+        }
+        .mock-banner {
+            background-color: #dc2626;
+            color: white;
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .image-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 30px 0;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="notification">
+        Direct Render Test Page •&nbsp;
+        <a href="/" class="underline font-semibold">Return to App</a> •&nbsp;
+        <a href="/standalone-test.html" class="underline font-semibold">Standalone Test</a>
+    </div>
+
+    <div class="container">
+        <h1>Direct Render Test</h1>
+        
+        <div class="card">
+            <p>This page explains the <span class="highlight">direct rendering approach</span> we're using to troubleshoot the Bible Character Chat application. If you're seeing redirection issues or the wrong UI design, this information will help you understand our testing strategy.</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/" class="button primary">Main App</a>
+            <a href="/standalone-test.html" class="button">Standalone Test</a>
+            <button onclick="clearBrowserData()" class="button">Clear Browser Data</button>
+        </div>
+
+        <h2>What is Direct Rendering?</h2>
+        <p>The direct rendering approach bypasses all of the app's normal routing, authentication, and navigation systems to render the <span class="code">ScalableCharacterSelection</span> component directly. This helps us isolate UI issues from routing problems.</p>
+        
+        <p>We've modified the <span class="code">App.tsx</span> file to:</p>
+        <ul class="steps">
+            <li>Skip all React Router routes</li>
+            <li>Bypass authentication checks</li>
+            <li>Remove the header, navigation, and upgrade banner</li>
+            <li>Render the character selection component directly</li>
+        </ul>
+
+        <h2>How to Know It's Working</h2>
+        <p>When the direct rendering test is active, you should see:</p>
+        
+        <div class="card">
+            <ol class="steps">
+                <li>A prominent red banner in the top-right corner saying <span class="mock-banner">DIRECT RENDERING TEST</span></li>
+                <li>The new character selection UI with dark blue gradient background</li>
+                <li>No header, navigation tabs, or upgrade banner</li>
+                <li>The full-page character selection grid with filtering options</li>
+            </ol>
+        </div>
+
+        <div class="image-container">
+            <img src="https://via.placeholder.com/800x400?text=Direct+Rendering+Example" alt="Example of direct rendering test">
+            <p class="text-sm text-center mt-2 text-gray-400">Example of how the direct rendering test should appear</p>
+        </div>
+
+        <h2>Troubleshooting Steps</h2>
+        
+        <p>If you're still experiencing issues with the UI or redirects:</p>
+        
+        <div class="card">
+            <ol class="steps">
+                <li><span class="highlight">Clear browser cache and cookies:</span> In Chrome, press Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac) and select "All time" for the time range.</li>
+                <li><span class="highlight">Try a different browser:</span> Open the app in a browser you haven't used before.</li>
+                <li><span class="highlight">Use incognito/private mode:</span> This starts with a fresh session without cached data.</li>
+                <li><span class="highlight">Clear localStorage and sessionStorage:</span> Open your browser's developer console (F12) and run:
+                    <pre class="code block my-2 p-2">localStorage.clear();
+sessionStorage.clear();</pre>
+                </li>
+                <li><span class="highlight">Check for service workers:</span> In the developer console, run:
+                    <pre class="code block my-2 p-2">navigator.serviceWorker.getRegistrations().then(function(registrations) {
+  for(let registration of registrations) {
+    registration.unregister();
+  }
+});</pre>
+                </li>
+                <li><span class="highlight">Disable browser extensions:</span> Extensions might interfere with the app's behavior.</li>
+            </ol>
+        </div>
+
+        <h2>Technical Implementation</h2>
+        <p>The direct rendering test works by replacing the normal React Router setup in <span class="code">App.tsx</span> with a simplified render tree:</p>
+        
+        <pre class="code block my-3 p-3 overflow-auto">return (
+  &lt;ErrorBoundary&gt;
+    &lt;BrowserRouter&gt;
+      &lt;AuthProvider&gt;
+        &lt;ChatProvider&gt;
+          &lt;div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600"&gt;
+            {/* Red banner indicator */}
+            &lt;div className="fixed top-4 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded-md shadow-lg"&gt;
+              DIRECT RENDERING TEST
+            &lt;/div&gt;
+
+            {/* Direct component render */}
+            &lt;ScalableCharacterSelection /&gt;
+          &lt;/div&gt;
+        &lt;/ChatProvider&gt;
+      &lt;/AuthProvider&gt;
+    &lt;/BrowserRouter&gt;
+  &lt;/ErrorBoundary&gt;
+);</pre>
+
+        <div class="nav-links">
+            <a href="/" class="button primary">Try Main App</a>
+            <a href="/standalone-test.html" class="button">View Standalone Test</a>
+        </div>
+    </div>
+
+    <script>
+        // Function to clear browser data
+        function clearBrowserData() {
+            if (confirm("This will clear your localStorage and sessionStorage for this site. Continue?")) {
+                // Clear storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Try to unregister service workers
+                if (navigator.serviceWorker) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                        }
+                        alert("Browser data cleared! The page will now reload.");
+                        window.location.reload(true);
+                    }).catch(function() {
+                        alert("Storage cleared, but couldn't unregister service workers. The page will now reload.");
+                        window.location.reload(true);
+                    });
+                } else {
+                    alert("Storage cleared! The page will now reload.");
+                    window.location.reload(true);
+                }
+            }
+        }
+
+        // Notification auto-hide
+        setTimeout(function() {
+            const notification = document.querySelector('.notification');
+            if (notification) {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s ease-out';
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

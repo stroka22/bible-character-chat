@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Characters - Simple Interactive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ---- Root Variables ---- */
+        :root {
+            --primary-bg: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --gold: #facc15;
+            --gold-hover: #eab308;
+            --gold-glow: rgba(250, 204, 21, 0.5);
+            --text-light: #e0e0e0;
+            --text-dim: #c0c0c0;
+            --text-dimmer: #a0a0a0;
+            --border-light: rgba(255, 255, 255, 0.15);
+            --border-medium: rgba(255, 255, 255, 0.25);
+            --panel-bg: rgba(255, 255, 255, 0.08);
+            --panel-hover: rgba(255, 255, 255, 0.12);
+            --shadow-standard: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 12px 20px rgba(0, 0, 0, 0.3);
+            --radius-standard: 15px;
+            --radius-small: 8px;
+            --transition-standard: all 0.25s ease-in-out;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lora', serif;
+        }
+
+        /* ---- Global Styles ---- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--primary-bg);
+            min-height: 100vh;
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: var(--gold);
+        }
+
+        a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition-standard);
+        }
+
+        a:hover {
+            color: var(--gold);
+        }
+
+        button {
+            font-family: var(--font-heading);
+            cursor: pointer;
+            transition: var(--transition-standard);
+        }
+
+        /* ---- App Container ---- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* ---- Status Message ---- */
+        .status-message {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius-standard);
+            padding: 20px;
+            margin: 0 auto 20px;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .status-message h2 {
+            margin-bottom: 10px;
+            color: var(--gold);
+        }
+
+        .status-message p {
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+
+        /* ---- Views ---- */
+        .view {
+            display: none;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--panel-bg);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-standard);
+            padding: 30px;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* ---- Header ---- */
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: bold;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px var(--gold-glow);
+            line-height: 1.2;
+        }
+
+        /* ---- Character Grid ---- */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        /* ---- Character Card ---- */
+        .character-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-standard);
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+            transition: var(--transition-standard);
+            cursor: pointer;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border-medium);
+        }
+
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gold);
+            margin: 15px 0 5px;
+        }
+
+        .character-card p {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .character-card .meta {
+            font-size: 0.8rem;
+            color: var(--text-dimmer);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* ---- Chat View ---- */
+        .chat-container {
+            display: flex;
+            width: 100%;
+            height: 80vh;
+            min-height: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            transition: width 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .chat-main.panel-open {
+            width: calc(100% - 350px);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid var(--gold);
+        }
+
+        .chat-header h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background-color: #4a5568;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .character-message {
+            background-color: #2d3748;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-area input {
+            flex-grow: 1;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: var(--text-light);
+            outline: none;
+        }
+
+        .chat-input-area button {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: none;
+        }
+
+        .chat-input-area button:hover {
+            background-color: var(--gold-hover);
+            transform: translateY(-2px);
+        }
+
+        /* ---- Insights Panel ---- */
+        .insights-panel {
+            width: 350px;
+            background: linear-gradient(to bottom, #1a1a4a, #2a2a6a);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 30;
+        }
+
+        .insights-panel.open {
+            transform: translateX(0);
+        }
+
+        .insights-panel h3 {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .insights-panel section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .insights-panel section h4 {
+            font-size: 1.2rem;
+            color: #90cdf4;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+
+        .insights-panel p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        /* ---- Action Buttons ---- */
+        .action-button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            background-color: var(--gold);
+            color: #0a0a2a;
+        }
+
+        .back-button {
+            background-color: rgba(250, 204, 21, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 6px 12px;
+            border-radius: var(--radius-small);
+            font-size: 0.9rem;
+        }
+
+        .back-button:hover {
+            background-color: var(--gold);
+            color: #0a0a2a;
+        }
+
+        /* ---- Responsive Adjustments ---- */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 20px 15px;
+            }
+            
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+                margin-bottom: 15px;
+            }
+
+            .insights-panel {
+                width: 100%;
+            }
+
+            .chat-main.panel-open {
+                width: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .view {
+                padding: 15px 10px;
+            }
+            
+            .character-grid {
+                grid-template-columns: 1fr;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Status Message -->
+        <div class="status-message">
+            <h2>Simple Interactive Bible Character Chat</h2>
+            <p>This version combines reliable character display with basic chat functionality.</p>
+            <p id="status-text">Characters loaded successfully!</p>
+        </div>
+        
+        <!-- Character Selection View -->
+        <div id="selection-view" class="view active">
+            <h1>Choose Your Biblical Guide</h1>
+            
+            <!-- Character Grid -->
+            <div id="character-grid" class="character-grid">
+                <!-- Jesus -->
+                <div class="character-card" data-character="Jesus">
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80" alt="Jesus" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>Jesus</h3>
+                    <p>Central figure of Christianity who taught through parables and performed miracles.</p>
+                    <div class="meta">New Testament · Matthew</div>
+                </div>
+                
+                <!-- Mary -->
+                <div class="character-card" data-character="Mary">
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?auto=format&fit=crop&w=150&q=80" alt="Mary" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>Mary</h3>
+                    <p>Mother of Jesus noted for her faith and obedience.</p>
+                    <div class="meta">New Testament · Luke</div>
+                </div>
+                
+                <!-- Peter -->
+                <div class="character-card" data-character="Peter">
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="https://images.unsplash.com/photo-1508021397575-6e9ca999c0f3?auto=format&fit=crop&w=150&q=80" alt="Peter" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>Peter</h3>
+                    <p>Disciple of Jesus and leader in the early church.</p>
+                    <div class="meta">New Testament · Acts</div>
+                </div>
+                
+                <!-- Moses -->
+                <div class="character-card" data-character="Moses">
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="https://images.unsplash.com/photo-1566211886021-ec1a73a3a5f9?auto=format&fit=crop&w=150&q=80" alt="Moses" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>Moses</h3>
+                    <p>Led the Israelites out of Egypt and received the Ten Commandments.</p>
+                    <div class="meta">Old Testament · Exodus</div>
+                </div>
+                
+                <!-- David -->
+                <div class="character-card" data-character="David">
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=150&q=80" alt="David" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>David</h3>
+                    <p>Shepherd, psalmist and second king of Israel who defeated Goliath.</p>
+                    <div class="meta">Old Testament · 1 Samuel</div>
+                </div>
+                
+                <!-- Abraham -->
+                <div class="character-card" data-character="Abraham">
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80" alt="Abraham" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>Abraham</h3>
+                    <p>Patriarch chosen by God and father of many nations.</p>
+                    <div class="meta">Old Testament · Genesis</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat View -->
+        <div id="chat-view" class="view">
+            <div class="chat-container">
+                <div id="chat-main" class="chat-main">
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <img id="chat-avatar" src="" alt="Character">
+                            <h2 id="chat-name">Chat with Character</h2>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button id="back-button" class="back-button">Back to Characters</button>
+                            <button id="insights-toggle" class="action-button">Insights</button>
+                        </div>
+                    </div>
+                    
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Messages will be added here by JavaScript -->
+                    </div>
+                    
+                    <div class="chat-input-area">
+                        <input type="text" id="message-input" placeholder="Type your message...">
+                        <button id="send-button">Send</button>
+                    </div>
+                </div>
+                
+                <!-- Insights Panel -->
+                <div id="insights-panel" class="insights-panel">
+                    <h3 id="insights-title">Character Insights</h3>
+                    
+                    <section>
+                        <h4>About</h4>
+                        <p id="insights-about">Information about this character will appear here.</p>
+                    </section>
+                    
+                    <section>
+                        <h4>Historical Context</h4>
+                        <p id="insights-context">Historical context about this character will appear here.</p>
+                    </section>
+                    
+                    <section>
+                        <h4>Key Scriptures</h4>
+                        <p id="insights-scriptures">Key scripture references will appear here.</p>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Character Data (simplified)
+        const characters = {
+            "Jesus": {
+                name: "Jesus",
+                description: "Central figure of Christianity who taught through parables and performed miracles.",
+                img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80",
+                testament: "New Testament",
+                book: "Matthew",
+                about: "Jesus of Nazareth is the central figure of Christianity. Born in Bethlehem and raised in Nazareth, he began his ministry at around age 30, gathering disciples and teaching through parables.",
+                context: "Jesus lived during the time of Roman occupation of Judea. His ministry lasted about three years before he was crucified under Pontius Pilate. His followers believe he rose from the dead.",
+                scriptures: "John 3:16, Matthew 28:19-20, John 14:6",
+                openingLine: "Peace be with you. What is on your heart today?"
+            },
+            "Mary": {
+                name: "Mary",
+                description: "Mother of Jesus noted for her faith and obedience.",
+                img: "https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?auto=format&fit=crop&w=150&q=80",
+                testament: "New Testament",
+                book: "Luke",
+                about: "Mary was chosen by God to be the mother of Jesus. She was a young woman from Nazareth who showed remarkable faith and obedience to God's call.",
+                context: "Mary lived during the reign of Emperor Augustus. After being visited by the angel Gabriel, she conceived Jesus through the Holy Spirit and gave birth in Bethlehem.",
+                scriptures: "Luke 1:38, Luke 1:46-47",
+                openingLine: "Blessed are you who have come to speak with me. How may I share the wonders of God with you today?"
+            },
+            "Peter": {
+                name: "Peter",
+                description: "Disciple of Jesus and leader in the early church.",
+                img: "https://images.unsplash.com/photo-1508021397575-6e9ca999c0f3?auto=format&fit=crop&w=150&q=80",
+                testament: "New Testament",
+                book: "Acts",
+                about: "Peter, originally named Simon, was a fisherman whom Jesus renamed 'the Rock'. He became one of Jesus' closest disciples and later a leader in the early church.",
+                context: "After denying Jesus three times during his trial, Peter was restored and became a bold preacher at Pentecost. Tradition holds that he was later martyred in Rome.",
+                scriptures: "Matthew 16:18, 1 Peter 5:8-9",
+                openingLine: "Greetings in the name of our Lord Jesus Christ! What questions do you have about following the Way?"
+            },
+            "Moses": {
+                name: "Moses",
+                description: "Led the Israelites out of Egypt and received the Ten Commandments.",
+                img: "https://images.unsplash.com/photo-1566211886021-ec1a73a3a5f9?auto=format&fit=crop&w=150&q=80",
+                testament: "Old Testament",
+                book: "Exodus",
+                about: "Moses was born to Hebrew parents during a time when the Pharaoh had ordered all Hebrew boys to be killed. He was saved by being placed in a basket on the Nile River.",
+                context: "Raised in Pharaoh's household, Moses later fled to Midian. God called him through a burning bush to return to Egypt and lead the Israelites to freedom.",
+                scriptures: "Exodus 3:14, Exodus 14:14",
+                openingLine: "Shalom. I have witnessed the power of the LORD firsthand. What would you like to know about God's deliverance?"
+            },
+            "David": {
+                name: "David",
+                description: "Shepherd, psalmist and second king of Israel who defeated Goliath.",
+                img: "https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=150&q=80",
+                testament: "Old Testament",
+                book: "1 Samuel",
+                about: "David was the youngest son of Jesse who was anointed by Samuel to be king. Before becoming king, he served in King Saul's court and famously defeated the giant Goliath.",
+                context: "David established Jerusalem as Israel's capital and was promised by God that his dynasty would endure forever. He wrote many of the Psalms.",
+                scriptures: "1 Samuel 16:7, Psalm 23:1-3",
+                openingLine: "The Lord is my shepherd, I lack nothing. How can I, a man after God's own heart, assist you today?"
+            },
+            "Abraham": {
+                name: "Abraham",
+                description: "Patriarch chosen by God and father of many nations.",
+                img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80",
+                testament: "Old Testament",
+                book: "Genesis",
+                about: "Abraham, originally named Abram, was called by God to leave his homeland of Ur and journey to Canaan. God promised to make him the father of many nations.",
+                context: "Abraham's faith was tested when God asked him to sacrifice his son Isaac. His unwavering faith made him the spiritual father of Judaism, Christianity, and Islam.",
+                scriptures: "Genesis 12:2-3, Genesis 15:6",
+                openingLine: "Peace be upon you. I am Abraham, who walked by faith into the unknown. What would you like to ask me?"
+            }
+        };
+
+        // DOM Elements
+        const selectionView = document.getElementById('selection-view');
+        const chatView = document.getElementById('chat-view');
+        const characterCards = document.querySelectorAll('.character-card');
+        const statusText = document.getElementById('status-text');
+        
+        // Chat elements
+        const chatMain = document.getElementById('chat-main');
+        const chatAvatar = document.getElementById('chat-avatar');
+        const chatName = document.getElementById('chat-name');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const backButton = document.getElementById('back-button');
+        
+        // Insights elements
+        const insightsPanel = document.getElementById('insights-panel');
+        const insightsToggle = document.getElementById('insights-toggle');
+        const insightsTitle = document.getElementById('insights-title');
+        const insightsAbout = document.getElementById('insights-about');
+        const insightsContext = document.getElementById('insights-context');
+        const insightsScriptures = document.getElementById('insights-scriptures');
+
+        // Current character
+        let currentCharacter = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                console.log('DOM fully loaded, initializing app...');
+                setupEventListeners();
+                statusText.textContent = 'Ready! Click on a character to start chatting.';
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                statusText.textContent = 'Error initializing app. Please check console for details.';
+            }
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            try {
+                // Character cards
+                characterCards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        const characterName = card.getAttribute('data-character');
+                        if (characterName && characters[characterName]) {
+                            selectCharacter(characters[characterName]);
+                        } else {
+                            console.error('Character not found:', characterName);
+                        }
+                    });
+                });
+                
+                // Back button
+                backButton.addEventListener('click', () => {
+                    chatView.classList.remove('active');
+                    selectionView.classList.add('active');
+                    
+                    // Close insights panel if open
+                    insightsPanel.classList.remove('open');
+                    chatMain.classList.remove('panel-open');
+                });
+                
+                // Send button
+                sendButton.addEventListener('click', sendMessage);
+                
+                // Message input (enter key)
+                messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+                
+                // Insights toggle
+                insightsToggle.addEventListener('click', () => {
+                    insightsPanel.classList.toggle('open');
+                    chatMain.classList.toggle('panel-open');
+                });
+                
+                console.log('Event listeners set up successfully');
+            } catch (error) {
+                console.error('Error setting up event listeners:', error);
+                statusText.textContent = 'Error setting up interactions. Please refresh the page.';
+            }
+        }
+
+        // Select a character
+        function selectCharacter(character) {
+            try {
+                console.log('Selecting character:', character.name);
+                currentCharacter = character;
+                
+                // Update chat view
+                chatAvatar.src = character.img;
+                chatAvatar.alt = character.name;
+                chatName.textContent = `Chat with ${character.name}`;
+                
+                // Clear previous messages
+                chatMessages.innerHTML = '';
+                
+                // Add opening message
+                addMessage(character.openingLine || `Hello, I am ${character.name}. How can I help you?`, 'character');
+                
+                // Update insights panel
+                insightsTitle.textContent = `${character.name} Insights`;
+                insightsAbout.textContent = character.about || 'No information available.';
+                insightsContext.textContent = character.context || 'No historical context available.';
+                insightsScriptures.textContent = character.scriptures || 'No scripture references available.';
+                
+                // Show chat view
+                selectionView.classList.remove('active');
+                chatView.classList.add('active');
+                
+                console.log('Character selected successfully');
+            } catch (error) {
+                console.error('Error selecting character:', error);
+                statusText.textContent = 'Error loading character chat. Please try again.';
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, type) {
+            try {
+                const message = document.createElement('div');
+                message.className = `message-bubble ${type}-message`;
+                message.textContent = text;
+                chatMessages.appendChild(message);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch (error) {
+                console.error('Error adding message:', error);
+            }
+        }
+
+        // Send message
+        function sendMessage() {
+            try {
+                const text = messageInput.value.trim();
+                if (!text) return;
+                
+                console.log('Sending message:', text);
+                
+                // Add user message
+                addMessage(text, 'user');
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Simulate response after a short delay
+                setTimeout(() => {
+                    if (currentCharacter) {
+                        // Simple response based on character
+                        const responses = [
+                            `That's an interesting question. I would encourage you to reflect on this deeply.`,
+                            `In my time, we often pondered similar questions. The scriptures teach us that faith is a journey.`,
+                            `Remember that God's ways are not always our ways. Your question shows you are seeking truth.`,
+                            `I'm reminded of the importance of prayer and meditation on these matters.`
+                        ];
+                        
+                        const response = responses[Math.floor(Math.random() * responses.length)];
+                        addMessage(response, 'character');
+                    }
+                }, 1000);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage('Sorry, there was an error processing your message. Please try again.', 'character');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat - Complete Solution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles */
+        :root {
+            --blue-900: #1e3a8a;
+            --blue-800: #1e40af;
+            --blue-700: #1d4ed8;
+            --blue-600: #2563eb;
+            --blue-500: #3b82f6;
+            --blue-400: #60a5fa;
+            --blue-100: #dbeafe;
+            --blue-50: #eff6ff;
+            --yellow-400: #facc15;
+            --yellow-500: #eab308;
+            --yellow-600: #ca8a04;
+            --white: #ffffff;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --red-100: #fee2e2;
+            --red-500: #ef4444;
+            --red-700: #b91c1c;
+            --green-100: #dcfce7;
+            --green-500: #22c55e;
+            --green-700: #15803d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: linear-gradient(to bottom, var(--blue-900), var(--blue-700), var(--blue-600));
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Header Styles */
+        .app-header {
+            background-color: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .app-title {
+            color: var(--yellow-400);
+            font-size: 1.8rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+        }
+
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-button.active {
+            background-color: var(--yellow-400);
+            color: var(--blue-900);
+            border-color: var(--yellow-600);
+        }
+
+        .main-content {
+            padding-top: 5rem; /* Space for fixed header */
+            min-height: calc(100vh - 5rem);
+        }
+
+        /* Character Selection Styles */
+        .selection-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .selection-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--yellow-400);
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+
+        .filter-section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-section label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--yellow-400);
+        }
+
+        .filter-section select,
+        .filter-section input[type="text"] {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--white);
+            outline: none;
+        }
+
+        .filter-section button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid var(--yellow-400);
+            color: var(--yellow-400);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .filter-section button.active {
+            background-color: var(--yellow-400);
+            color: var(--blue-900);
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(250, 204, 21, 0.2);
+            color: var(--yellow-400);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--yellow-400);
+        }
+
+        .filter-chip .remove {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+
+        .results-count {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: var(--white);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .view-toggle button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        .character-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px 0;
+        }
+
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--yellow-400);
+            margin-bottom: 5px;
+        }
+
+        .character-card p {
+            font-size: 0.9rem;
+            color: var(--gray-200);
+            line-height: 1.4;
+        }
+
+        .character-list-item {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        .character-list-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .character-list-item .info {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .character-list-item h3 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--yellow-400);
+            margin-bottom: 5px;
+        }
+
+        .character-list-item p {
+            font-size: 0.9rem;
+            color: var(--gray-200);
+            line-height: 1.4;
+        }
+
+        .character-list-item .meta {
+            font-size: 0.8rem;
+            color: var(--gray-400);
+            margin-top: 5px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .pagination button {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: var(--white);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .pagination button.active {
+            background-color: var(--yellow-400);
+            color: var(--blue-900);
+            border-color: var(--yellow-400);
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        .alpha-nav {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 10px 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .alpha-nav a {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .alpha-nav a:hover,
+        .alpha-nav a.active {
+            background-color: var(--yellow-400);
+            color: var(--blue-900);
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        .featured-character {
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .featured-character .halo {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            right: -15px;
+            bottom: -15px;
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.5) 0%, rgba(250, 204, 21, 0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .featured-character h2 {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--yellow-400);
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(250, 204, 21, 0.4);
+        }
+
+        .featured-character p {
+            max-width: 600px;
+            color: var(--white);
+            margin-bottom: 20px;
+        }
+
+        .featured-character button {
+            background-color: var(--yellow-400);
+            color: var(--blue-900);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.4);
+        }
+
+        .featured-character button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(250, 204, 21, 0.6);
+        }
+
+        /* Chat Interface Styles */
+        .chat-container {
+            display: none; /* Hidden by default */
+            max-width: 1200px;
+            margin: 0 auto;
+            height: calc(100vh - 5rem);
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background-color: var(--white);
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--gray-200);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .back-button {
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            border: none;
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background-color: var(--gray-200);
+        }
+
+        .character-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .character-info h2 {
+            font-size: 1.5rem;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+
+        .character-info p {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .insights-button {
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            border: none;
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .insights-button:hover {
+            background-color: var(--gray-200);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background-color: var(--blue-50);
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 1.5rem;
+            max-width: 80%;
+        }
+
+        .message.user {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            margin: 0 0.75rem;
+        }
+
+        .message-content {
+            background-color: var(--white);
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .message.user .message-content {
+            background-color: var(--blue-500);
+            color: var(--white);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+            text-align: right;
+        }
+
+        .message.user .message-time {
+            color: var(--blue-200);
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            border-top: 1px solid var(--gray-200);
+            background-color: var(--white);
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 1.5rem;
+            outline: none;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .chat-input:focus {
+            border-color: var(--blue-500);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .send-button {
+            background-color: var(--blue-500);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-left: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .send-button:hover {
+            background-color: var(--blue-600);
+        }
+
+        .send-button:disabled {
+            background-color: var(--gray-300);
+            cursor: not-allowed;
+        }
+
+        /* Insights Panel */
+        .insights-panel {
+            position: fixed;
+            top: 5rem;
+            right: 0;
+            width: 400px;
+            height: calc(100vh - 5rem);
+            background-color: var(--white);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 90;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .insights-panel.active {
+            transform: translateX(0);
+        }
+
+        .insights-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-500);
+        }
+
+        .insights-close:hover {
+            color: var(--gray-700);
+        }
+
+        .insights-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .insights-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .insights-section h3 {
+            font-size: 1.2rem;
+            color: var(--blue-700);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--blue-100);
+        }
+
+        .scripture-reference {
+            display: inline-block;
+            background-color: var(--blue-100);
+            color: var(--blue-700);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin: 0.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .relationship-chip {
+            display: inline-block;
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            margin: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .study-question {
+            margin-bottom: 0.75rem;
+            padding-left: 1rem;
+            border-left: 3px solid var(--blue-200);
+            font-style: italic;
+            color: var(--gray-700);
+        }
+
+        /* View toggles */
+        .selection-view {
+            display: block;
+        }
+
+        .chat-view {
+            display: none;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .app-title {
+                font-size: 1.4rem;
+            }
+
+            .selection-container {
+                padding: 1rem;
+                border-radius: 10px;
+            }
+
+            .selection-title {
+                font-size: 2rem;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                width: 100%;
+                margin-bottom: 12px;
+            }
+
+            .alpha-nav {
+                position: static;
+                transform: none;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-top: 20px;
+                width: 100%;
+            }
+
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .insights-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- App Header -->
+    <header class="app-header">
+        <h1 class="app-title">Bible Character Chat</h1>
+        <div class="app-nav">
+            <button id="selectionViewBtn" class="nav-button active">Characters</button>
+            <button id="chatViewBtn" class="nav-button">Chat</button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Character Selection View -->
+        <div id="selectionView" class="selection-view">
+            <div class="selection-container">
+                <h1 class="selection-title">Choose Your Biblical Guide</h1>
+                
+                <!-- Featured Character -->
+                <div class="featured-character">
+                    <!-- Table-based circular image for featured character -->
+                    <div style="position: relative; margin-bottom: 15px;">
+                        <div class="halo"></div>
+                        <table style="border-collapse: collapse; margin: 0 auto; position: relative; z-index: 1;">
+                            <tr>
+                                <td style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 4px solid #facc15; box-shadow: 0 0 20px rgba(250, 204, 21, 0.6); padding: 0;">
+                                    <img src="https://via.placeholder.com/120?text=Jesus" alt="Jesus" style="width: 120px; height: 120px; display: block; object-fit: cover;">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <h2>Jesus</h2>
+                    <p>The central figure of Christianity, Son of God who taught through parables and performed miracles.</p>
+                    <button id="featuredCharacterBtn">Chat with Jesus 🙏</button>
+                </div>
+
+                <div class="filter-section">
+                    <div class="filter-group" style="flex-grow: 1;">
+                        <label for="search">Search:</label>
+                        <input type="text" id="search" placeholder="Search characters...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Testament:</label>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="testament-filter active">All</button>
+                            <button class="testament-filter">Old</button>
+                            <button class="testament-filter">New</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="book">Book:</label>
+                        <select id="book">
+                            <option value="all">All Books</option>
+                            <optgroup label="Old Testament">
+                                <option value="Genesis">Genesis</option>
+                                <option value="Exodus">Exodus</option>
+                                <option value="Psalms">Psalms</option>
+                                <option value="Isaiah">Isaiah</option>
+                            </optgroup>
+                            <optgroup label="New Testament">
+                                <option value="Matthew">Matthew</option>
+                                <option value="John">John</option>
+                                <option value="Acts">Acts</option>
+                                <option value="Revelation">Revelation</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="group">Group:</label>
+                        <select id="group">
+                            <option value="all">All Groups</option>
+                            <option value="Prophets">Prophets</option>
+                            <option value="Apostles">Apostles</option>
+                            <option value="Kings">Kings</option>
+                            <option value="Women">Women of the Bible</option>
+                        </select>
+                    </div>
+
+                    <div class="view-toggle">
+                        <button id="gridViewBtn" class="active" title="Grid View">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </button>
+                        <button id="listViewBtn" title="List View">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="active-filters">
+                    <span style="color: #a0a0a0; margin-right: 8px;">Active Filters:</span>
+                    <!-- Filter chips will be added here dynamically -->
+                </div>
+
+                <div class="results-count">
+                    <!-- Results count will be updated dynamically -->
+                </div>
+
+                <div id="character-container">
+                    <div id="character-grid" class="character-grid"></div>
+                    <div id="character-list" class="character-list" style="display:none;"></div>
+                </div>
+
+                <div class="pagination">
+                    <!-- Pagination will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat View -->
+        <div id="chatView" class="chat-view">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <button id="backToSelection" class="back-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        Back
+                    </button>
+                    <div class="character-info">
+                        <table style="border-collapse: collapse; margin-right: 1rem;">
+                            <tr>
+                                <td style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 2px solid #facc15; padding: 0;">
+                                    <img id="chatCharacterAvatar" src="https://via.placeholder.com/50?text=?" alt="Character" style="width: 50px; height: 50px; display: block; object-fit: cover;">
+                                </td>
+                            </tr>
+                        </table>
+                        <div>
+                            <h2 id="chatCharacterName">Character Name</h2>
+                            <p id="chatCharacterDescription">Character description will appear here</p>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <button id="toggleInsights" class="insights-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 16v-4M12 8h.01"/>
+                            </svg>
+                            Insights
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div id="chatMessages" class="chat-messages">
+                    <!-- Messages will be added here dynamically -->
+                    <div class="message-placeholder" style="text-align: center; color: var(--gray-500); padding: 2rem;">
+                        Start your conversation with <span id="placeholderName">this character</span>. Ask questions about their life, experiences, or seek their wisdom.
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
+                    <button id="sendMessage" class="send-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Panel -->
+        <div id="insightsPanel" class="insights-panel">
+            <button id="closeInsights" class="insights-close">&times;</button>
+            <div class="insights-header">
+                <h2 id="insightsCharacterName">Character Insights</h2>
+            </div>
+            <div class="insights-content">
+                <div class="insights-section">
+                    <h3>Historical Context</h3>
+                    <p id="insightsHistoricalContext">Loading historical context...</p>
+                </div>
+                <div class="insights-section">
+                    <h3>Scripture References</h3>
+                    <div id="insightsScriptures">
+                        <!-- Scripture references will be added here -->
+                    </div>
+                </div>
+                <div class="insights-section">
+                    <h3>Relationships</h3>
+                    <div id="insightsRelationships">
+                        <!-- Relationship chips will be added here -->
+                    </div>
+                </div>
+                <div class="insights-section">
+                    <h3>Study Questions</h3>
+                    <div id="insightsQuestions">
+                        <!-- Study questions will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alphabetical Navigation -->
+        <div class="alpha-nav">
+            <a class="active">All</a>
+            <a>A</a>
+            <a>B</a>
+            <a>C</a>
+            <a>D</a>
+            <a>E</a>
+            <a>F</a>
+            <a>G</a>
+            <a>H</a>
+            <a>I</a>
+            <a>J</a>
+            <a>K</a>
+            <a>L</a>
+            <a>M</a>
+            <a>N</a>
+            <a>O</a>
+            <a>P</a>
+            <a>Q</a>
+            <a>R</a>
+            <a>S</a>
+            <a>T</a>
+            <a>U</a>
+            <a>V</a>
+            <a>W</a>
+            <a>X</a>
+            <a>Y</a>
+            <a>Z</a>
+        </div>
+    </main>
+
+    <script>
+        /* ------------------------------------------------------------
+         * Bible Character Chat - Standalone Implementation
+         * Combines character selection and chat functionality
+         * ---------------------------------------------------------- */
+        (() => {
+            /* ---------- DOM References ---------- */
+            // Navigation
+            const selectionViewBtn = document.getElementById('selectionViewBtn');
+            const chatViewBtn = document.getElementById('chatViewBtn');
+            const selectionView = document.getElementById('selectionView');
+            const chatView = document.getElementById('chatView');
+            const backToSelection = document.getElementById('backToSelection');
+            const featuredCharacterBtn = document.getElementById('featuredCharacterBtn');
+
+            // Character Selection
+            const gridEl = document.getElementById('character-grid');
+            const listEl = document.getElementById('character-list');
+            const resultCountEl = document.querySelector('.results-count');
+            const activeFilterEl = document.querySelector('.active-filters');
+            const searchInput = document.getElementById('search');
+            const testamentBtns = [...document.querySelectorAll('.testament-filter')];
+            const bookSel = document.getElementById('book');
+            const groupSel = document.getElementById('group');
+            const gridBtn = document.getElementById('gridViewBtn');
+            const listBtn = document.getElementById('listViewBtn');
+            const alphaLinks = [...document.querySelectorAll('.alpha-nav a')];
+            const paginationWrap = document.querySelector('.pagination');
+
+            // Chat Interface
+            const chatCharacterName = document.getElementById('chatCharacterName');
+            const chatCharacterDescription = document.getElementById('chatCharacterDescription');
+            const chatCharacterAvatar = document.getElementById('chatCharacterAvatar');
+            const placeholderName = document.getElementById('placeholderName');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatInput = document.getElementById('chatInput');
+            const sendMessage = document.getElementById('sendMessage');
+
+            // Insights Panel
+            const toggleInsights = document.getElementById('toggleInsights');
+            const insightsPanel = document.getElementById('insightsPanel');
+            const closeInsights = document.getElementById('closeInsights');
+            const insightsCharacterName = document.getElementById('insightsCharacterName');
+            const insightsHistoricalContext = document.getElementById('insightsHistoricalContext');
+            const insightsScriptures = document.getElementById('insightsScriptures');
+            const insightsRelationships = document.getElementById('insightsRelationships');
+            const insightsQuestions = document.getElementById('insightsQuestions');
+
+            /* ---------- State ---------- */
+            // Character selection state
+            const itemsPerPage = 9;
+            let currentPage = 1;
+            let viewMode = 'grid';
+            const filters = { search: '', testament: 'all', book: 'all', group: 'all', letter: 'All' };
+
+            // Chat state
+            let selectedCharacter = null;
+            let chatHistory = [];
+
+            /* ---------- Sample Data ---------- */
+            // Bible characters data
+            const characters = [
+                {
+                    id: '1',
+                    name: 'Jesus',
+                    description: 'Central figure of Christianity who taught through parables and performed miracles.',
+                    testament: 'new',
+                    book: 'Matthew',
+                    group: 'Messiah',
+                    img: 'https://via.placeholder.com/150?text=Jesus',
+                    openingLine: 'Peace be with you. What would you like to know?',
+                    historicalContext: 'Jesus lived in first-century Judea under Roman occupation, during the reign of Emperor Tiberius and the governorship of Pontius Pilate.',
+                    scriptures: ['John 3:16', 'Matthew 5:1-12', 'Luke 15:11-32', 'Mark 1:9-11'],
+                    relationships: {
+                        'Disciples': ['Peter', 'John', 'James', 'Matthew', 'Thomas'],
+                        'Family': ['Mary', 'Joseph'],
+                        'Friends': ['Lazarus', 'Mary Magdalene', 'Martha']
+                    },
+                    studyQuestions: [
+                        'What does Jesus teach about loving your enemies?',
+                        'How do the parables reveal the nature of God\'s kingdom?',
+                        'What significance does the crucifixion have for believers today?'
+                    ]
+                },
+                {
+                    id: '2',
+                    name: 'Mary',
+                    description: 'Mother of Jesus noted for her faith and obedience.',
+                    testament: 'new',
+                    book: 'Luke',
+                    group: 'Women',
+                    img: 'https://via.placeholder.com/150?text=Mary',
+                    openingLine: 'My soul magnifies the Lord. How may I help you understand God\'s ways?',
+                    historicalContext: 'Mary lived in Nazareth, a small village in Galilee, during the time of Roman rule over Israel.',
+                    scriptures: ['Luke 1:26-38', 'Luke 1:46-55', 'John 19:25-27'],
+                    relationships: {
+                        'Family': ['Jesus', 'Joseph'],
+                        'Relatives': ['Elizabeth', 'Zechariah']
+                    },
+                    studyQuestions: [
+                        'What qualities made Mary chosen to be the mother of Jesus?',
+                        'How does Mary\'s Magnificat reveal her understanding of God?',
+                        'What can we learn from Mary\'s response to the angel Gabriel?'
+                    ]
+                },
+                {
+                    id: '3',
+                    name: 'Peter',
+                    description: 'Disciple of Jesus and leader in the early church.',
+                    testament: 'new',
+                    book: 'Acts',
+                    group: 'Apostles',
+                    img: 'https://via.placeholder.com/150?text=Peter',
+                    openingLine: 'Greetings in the name of our Lord Jesus Christ. What would you like to discuss?',
+                    historicalContext: 'Peter was a fisherman from Galilee who became one of Jesus\' closest disciples and later a leader in the early Christian church.',
+                    scriptures: ['Matthew 16:13-19', 'John 21:15-19', 'Acts 2:14-41'],
+                    relationships: {
+                        'Teacher': ['Jesus'],
+                        'Fellow Apostles': ['John', 'James', 'Andrew'],
+                        'Associates': ['Paul', 'Mark']
+                    },
+                    studyQuestions: [
+                        'How did Peter\'s failures prepare him for leadership?',
+                        'What transformation do we see in Peter after Pentecost?',
+                        'How does Peter\'s relationship with Jesus evolve throughout the Gospels?'
+                    ]
+                },
+                {
+                    id: '4',
+                    name: 'Paul',
+                    description: 'Apostle to the Gentiles and prolific New-Testament author.',
+                    testament: 'new',
+                    book: 'Acts',
+                    group: 'Apostles',
+                    img: 'https://via.placeholder.com/150?text=Paul',
+                    openingLine: 'Grace to you and peace from God our Father. What spiritual matters shall we explore today?',
+                    historicalContext: 'Paul was born Saul of Tarsus, a Roman citizen and strict Pharisee who persecuted Christians until his dramatic conversion on the road to Damascus.',
+                    scriptures: ['Acts 9:1-22', 'Romans 8:31-39', '1 Corinthians 13:1-13', 'Philippians 3:7-14'],
+                    relationships: {
+                        'Mentors': ['Gamaliel'],
+                        'Companions': ['Barnabas', 'Silas', 'Timothy', 'Luke'],
+                        'Converts': ['Lydia', 'Philippian Jailer']
+                    },
+                    studyQuestions: [
+                        'How did Paul\'s background prepare him for his ministry to the Gentiles?',
+                        'What is the central message of Paul\'s theology?',
+                        'How does Paul\'s understanding of grace transform our view of salvation?'
+                    ]
+                },
+                {
+                    id: '5',
+                    name: 'Moses',
+                    description: 'Led the Israelites out of Egypt and received the Ten Commandments.',
+                    testament: 'old',
+                    book: 'Exodus',
+                    group: 'Prophets',
+                    img: 'https://via.placeholder.com/150?text=Moses',
+                    openingLine: 'I have witnessed the power of the Lord. What would you like to know about God\'s deliverance?',
+                    historicalContext: 'Moses was born during Egyptian oppression of the Hebrews, raised in Pharaoh\'s household, and later led the Israelites out of slavery through the wilderness for 40 years.',
+                    scriptures: ['Exodus 3:1-14', 'Exodus 20:1-17', 'Numbers 12:3', 'Deuteronomy 34:10-12'],
+                    relationships: {
+                        'Family': ['Aaron', 'Miriam', 'Zipporah', 'Jethro'],
+                        'Opponents': ['Pharaoh'],
+                        'Successors': ['Joshua']
+                    },
+                    studyQuestions: [
+                        'How did Moses\' early life prepare him for leadership?',
+                        'What lessons can we learn from the wilderness wanderings?',
+                        'How does the Law given to Moses reveal God\'s character?'
+                    ]
+                },
+                {
+                    id: '6',
+                    name: 'David',
+                    description: 'Shepherd, psalmist and second king of Israel who defeated Goliath.',
+                    testament: 'old',
+                    book: '1 Samuel',
+                    group: 'Kings',
+                    img: 'https://via.placeholder.com/150?text=David',
+                    openingLine: 'The Lord is my shepherd. How may I share the wisdom God has given me?',
+                    historicalContext: 'David lived around 1000 BCE, rising from shepherd boy to king of Israel. He established Jerusalem as the capital and prepared for the building of the Temple.',
+                    scriptures: ['1 Samuel 16:1-13', '1 Samuel 17:32-51', '2 Samuel 7:8-16', 'Psalm 23'],
+                    relationships: {
+                        'Family': ['Jesse', 'Solomon', 'Absalom'],
+                        'Friends': ['Jonathan'],
+                        'Mentors': ['Samuel'],
+                        'Rivals': ['Saul', 'Goliath']
+                    },
+                    studyQuestions: [
+                        'What qualities made David a man after God\'s own heart?',
+                        'How did David respond to failure and sin in his life?',
+                        'What do David\'s psalms teach us about worship and prayer?'
+                    ]
+                },
+                {
+                    id: '7',
+                    name: 'Abraham',
+                    description: 'Patriarch chosen by God and father of many nations.',
+                    testament: 'old',
+                    book: 'Genesis',
+                    group: 'Patriarchs',
+                    img: 'https://via.placeholder.com/150?text=Abraham',
+                    openingLine: 'Greetings. I have walked with God through many trials and blessings. What would you like to know?',
+                    historicalContext: 'Abraham lived around 2000 BCE in Mesopotamia before migrating to Canaan in response to God\'s call. He is revered as the father of faith in Judaism, Christianity, and Islam.',
+                    scriptures: ['Genesis 12:1-3', 'Genesis 15:1-6', 'Genesis 22:1-18', 'Hebrews 11:8-19'],
+                    relationships: {
+                        'Family': ['Sarah', 'Isaac', 'Ishmael', 'Lot'],
+                        'Servants': ['Eliezer', 'Hagar']
+                    },
+                    studyQuestions: [
+                        'How does Abraham\'s journey of faith develop throughout Genesis?',
+                        'What does Abraham\'s willingness to sacrifice Isaac reveal about faith?',
+                        'How does God\'s covenant with Abraham affect all nations?'
+                    ]
+                },
+                {
+                    id: '8',
+                    name: 'Esther',
+                    description: 'Jewish queen who bravely saved her people.',
+                    testament: 'old',
+                    book: 'Esther',
+                    group: 'Women',
+                    img: 'https://via.placeholder.com/150?text=Esther',
+                    openingLine: 'Perhaps you have come to your position for such a time as this. How may I help you?',
+                    historicalContext: 'Esther lived during the Persian Empire under King Xerxes (Ahasuerus), around 480-465 BCE, when many Jews remained in exile rather than returning to Jerusalem.',
+                    scriptures: ['Esther 2:5-18', 'Esther 4:13-16', 'Esther 7:1-10'],
+                    relationships: {
+                        'Family': ['Mordecai'],
+                        'Husband': ['King Xerxes'],
+                        'Enemies': ['Haman']
+                    },
+                    studyQuestions: [
+                        'How does Esther demonstrate courage in the face of danger?',
+                        'What role does providence play in the book of Esther?',
+                        'How does Esther\'s story relate to standing up against injustice today?'
+                    ]
+                },
+                {
+                    id: '9',
+                    name: 'John the Baptist',
+                    description: 'Prophet who prepared the way for Jesus.',
+                    testament: 'new',
+                    book: 'John',
+                    group: 'Prophets',
+                    img: 'https://via.placeholder.com/150?text=JohnB',
+                    openingLine: 'Repent, for the kingdom of heaven is at hand! What do you seek?',
+                    historicalContext: 'John the Baptist ministered in the wilderness of Judea during the reign of Herod Antipas, shortly before Jesus began his public ministry.',
+                    scriptures: ['Matthew 3:1-12', 'Mark 1:1-8', 'Luke 3:1-20', 'John 1:19-34'],
+                    relationships: {
+                        'Family': ['Zechariah', 'Elizabeth'],
+                        'Cousin': ['Jesus'],
+                        'Opponents': ['Herod Antipas', 'Herodias']
+                    },
+                    studyQuestions: [
+                        'What was the significance of John\'s baptism?',
+                        'How did John fulfill his role as the forerunner of the Messiah?',
+                        'What can we learn from John\'s humility in pointing to Jesus?'
+                    ]
+                },
+                {
+                    id: '10',
+                    name: 'Ruth',
+                    description: 'Moabite woman whose loyalty became exemplary.',
+                    testament: 'old',
+                    book: 'Ruth',
+                    group: 'Women',
+                    img: 'https://via.placeholder.com/150?text=Ruth',
+                    openingLine: 'Your people will be my people, and your God my God. How may I share my story with you?',
+                    historicalContext: 'Ruth lived during the time of the judges, a period of instability and moral decline in Israel\'s history, approximately 1100 BCE.',
+                    scriptures: ['Ruth 1:16-17', 'Ruth 2:8-12', 'Ruth 4:13-17'],
+                    relationships: {
+                        'Family': ['Naomi', 'Boaz', 'Obed'],
+                        'Ancestors': ['King David', 'Jesus']
+                    },
+                    studyQuestions: [
+                        'What does Ruth\'s loyalty to Naomi teach us about commitment?',
+                        'How does Ruth\'s story illustrate God\'s providence?',
+                        'What significance does Ruth have in the lineage of Jesus?'
+                    ]
+                },
+                {
+                    id: '11',
+                    name: 'Isaiah',
+                    description: 'Major prophet who foretold the coming Messiah.',
+                    testament: 'old',
+                    book: 'Isaiah',
+                    group: 'Prophets',
+                    img: 'https://via.placeholder.com/150?text=Isaiah',
+                    openingLine: 'Holy, holy, holy is the Lord of hosts; the whole earth is full of His glory! What prophecy do you wish to understand?',
+                    historicalContext: 'Isaiah prophesied in Jerusalem during the reigns of several kings of Judah (Uzziah, Jotham, Ahaz, and Hezekiah), from about 740 to 700 BCE.',
+                    scriptures: ['Isaiah 6:1-8', 'Isaiah 9:6-7', 'Isaiah 53:1-12', 'Isaiah 61:1-3'],
+                    relationships: {
+                        'Kings': ['Uzziah', 'Jotham', 'Ahaz', 'Hezekiah'],
+                        'Contemporaries': ['Micah']
+                    },
+                    studyQuestions: [
+                        'How do Isaiah\'s prophecies about the Messiah find fulfillment in Jesus?',
+                        'What does Isaiah teach about God\'s holiness and judgment?',
+                        'How does Isaiah\'s vision of the future kingdom inspire hope?'
+                    ]
+                },
+                {
+                    id: '12',
+                    name: 'Samuel',
+                    description: 'Prophet who anointed the first kings of Israel.',
+                    testament: 'old',
+                    book: '1 Samuel',
+                    group: 'Prophets',
+                    img: 'https://via.placeholder.com/150?text=Samuel',
+                    openingLine: 'Speak, Lord, for your servant is listening. What would you like to know about hearing God\'s voice?',
+                    historicalContext: 'Samuel lived during the transition from the period of judges to the monarchy in Israel, around 1100-1000 BCE.',
+                    scriptures: ['1 Samuel 3:1-21', '1 Samuel 7:3-17', '1 Samuel 16:1-13'],
+                    relationships: {
+                        'Family': ['Hannah', 'Elkanah'],
+                        'Mentor': ['Eli'],
+                        'Kings': ['Saul', 'David']
+                    },
+                    studyQuestions: [
+                        'How did Samuel\'s early experiences in the tabernacle shape his ministry?',
+                        'What can we learn from Samuel about leadership transition?',
+                        'How did Samuel balance his roles as prophet, priest, and judge?'
+                    ]
+                }
+            ];
+
+            /* ---------- Helper Functions ---------- */
+            // Filter characters based on current filters
+            const applyFilters = () => {
+                let data = [...characters];
+                if (filters.search) {
+                    const q = filters.search.toLowerCase();
+                    data = data.filter(c =>
+                        c.name.toLowerCase().includes(q) ||
+                        c.description.toLowerCase().includes(q)
+                    );
+                }
+                if (filters.testament !== 'all') data = data.filter(c => c.testament === filters.testament);
+                if (filters.book !== 'all') data = data.filter(c => c.book === filters.book);
+                if (filters.group !== 'all') data = data.filter(c => c.group === filters.group);
+                if (filters.letter !== 'All') data = data.filter(c => c.name.startsWith(filters.letter));
+                return data;
+            };
+
+            // Sync UI with filter state
+            const syncInputs = () => {
+                searchInput.value = filters.search;
+                testamentBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.toLowerCase() === (filters.testament === 'all' ? 'all' : filters.testament));
+                });
+                bookSel.value = filters.book;
+                groupSel.value = filters.group;
+                alphaLinks.forEach(a => a.classList.toggle('active', a.textContent === filters.letter));
+                gridBtn.classList.toggle('active', viewMode === 'grid');
+                listBtn.classList.toggle('active', viewMode === 'list');
+            };
+
+            // Format timestamp for chat messages
+            const formatTime = () => {
+                const now = new Date();
+                return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            };
+
+            // Generate AI response based on character and user input
+            const generateResponse = (character, userMessage) => {
+                // In a real implementation, this would call an AI API like OpenAI
+                // For this standalone demo, we'll use simple canned responses
+                const responses = [
+                    `As ${character.name}, I would say that faith is the foundation of our relationship with God.`,
+                    `In my time, we faced many challenges, but God's guidance was always present.`,
+                    `The scriptures teach us that love and compassion are at the heart of God's message.`,
+                    `I would encourage you to reflect on God's faithfulness throughout history.`,
+                    `Prayer was essential in my journey. I would spend much time in communion with God.`,
+                    `The wisdom of God often comes to us in unexpected ways and through unexpected people.`,
+                    `Remember that God's timing is perfect, even when we don't understand His ways.`,
+                    `My experiences taught me that true strength comes from humility before God.`,
+                    `In the kingdom of God, the first shall be last and the last shall be first.`,
+                    `The greatest commandment is to love the Lord your God with all your heart, soul, and mind.`
+                ];
+                
+                // Simple logic to try to match the response to the question
+                let response = '';
+                const lowerMessage = userMessage.toLowerCase();
+                
+                if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('greetings')) {
+                    response = character.openingLine;
+                } else if (lowerMessage.includes('who are you') || lowerMessage.includes('tell me about yourself')) {
+                    response = `I am ${character.name}. ${character.description}`;
+                } else if (lowerMessage.includes('family') || lowerMessage.includes('related') || lowerMessage.includes('relatives')) {
+                    const family = character.relationships?.Family || character.relationships?.family || [];
+                    response = family.length > 0 
+                        ? `My family includes ${family.join(', ')}.` 
+                        : `The scriptures don't provide much detail about my family.`;
+                } else if (lowerMessage.includes('scripture') || lowerMessage.includes('bible') || lowerMessage.includes('verse')) {
+                    const scripture = character.scriptures?.[Math.floor(Math.random() * character.scriptures.length)];
+                    response = scripture 
+                        ? `I would point you to ${scripture}, which has great significance.` 
+                        : `The scriptures contain many important teachings about my life and ministry.`;
+                } else {
+                    // Random response if no specific pattern is matched
+                    response = responses[Math.floor(Math.random() * responses.length)];
+                }
+                
+                return response;
+            };
+
+            /* ---------- View Management ---------- */
+            // Switch between character selection and chat views
+            const showSelectionView = () => {
+                selectionView.style.display = 'block';
+                chatView.style.display = 'none';
+                selectionViewBtn.classList.add('active');
+                chatViewBtn.classList.remove('active');
+            };
+
+            const showChatView = () => {
+                selectionView.style.display = 'none';
+                chatView.style.display = 'block';
+                selectionViewBtn.classList.remove('active');
+                chatViewBtn.classList.add('active');
+            };
+
+            // Toggle insights panel
+            const toggleInsightsPanel = () => {
+                insightsPanel.classList.toggle('active');
+            };
+
+            /* ---------- Character Selection Rendering ---------- */
+            // Render active filter chips
+            const renderActiveChips = () => {
+                // Clear existing dynamic chips
+                document.querySelectorAll('.dynamic-chip').forEach(c => c.remove());
+                
+                // Add new chips for active filters
+                const add = (txt, key) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'filter-chip dynamic-chip';
+                    chip.innerHTML = `<span>${txt}</span><span class="remove">×</span>`;
+                    chip.querySelector('.remove').onclick = () => {
+                        filters[key] = key === 'search' ? '' : (key === 'letter' ? 'All' : 'all');
+                        currentPage = 1;
+                        syncInputs();
+                        render();
+                    };
+                    activeFilterEl.appendChild(chip);
+                };
+                
+                if (filters.search) add(`"${filters.search}"`, 'search');
+                if (filters.testament !== 'all') add(filters.testament === 'old' ? 'Old Testament' : 'New Testament', 'testament');
+                if (filters.book !== 'all') add(filters.book, 'book');
+                if (filters.group !== 'all') add(filters.group, 'group');
+                if (filters.letter !== 'All') add(`Starts with "${filters.letter}"`, 'letter');
+            };
+
+            // Render pagination controls
+            const renderPagination = total => {
+                paginationWrap.innerHTML = '';
+                
+                // Helper to create pagination buttons
+                const btn = (label, disabled, cb) => {
+                    const b = document.createElement('button');
+                    b.innerHTML = label;
+                    if (disabled) b.disabled = true;
+                    b.onclick = cb;
+                    return b;
+                };
+                
+                // Previous button
+                paginationWrap.appendChild(btn('«', currentPage === 1, () => { currentPage--; render(); }));
+                
+                // Page numbers
+                for (let i = 1; i <= total; i++) {
+                    if (i > 5 && total > 6) {
+                        if (i === 6) {
+                            const span = document.createElement('span');
+                            span.textContent = '…';
+                            paginationWrap.appendChild(span);
+                        }
+                        continue;
+                    }
+                    
+                    const b = btn(i, false, () => { currentPage = i; render(); });
+                    if (i === currentPage) b.classList.add('active');
+                    paginationWrap.appendChild(b);
+                }
+                
+                // Next button
+                paginationWrap.appendChild(btn('»', currentPage === total, () => { currentPage++; render(); }));
+            };
+
+            // Render character cards/list items
+            const renderCharacters = data => {
+                gridEl.innerHTML = '';
+                listEl.innerHTML = '';
+                const target = viewMode === 'grid' ? gridEl : listEl;
+                
+                data.forEach(c => {
+                    const el = document.createElement('div');
+                    el.className = viewMode === 'grid' ? 'character-card' : 'character-list-item';
+                    
+                    if (viewMode === 'grid') {
+                        // Table-based circular image for grid view
+                        el.innerHTML = `
+                            <table style="border-collapse: collapse; margin: 0 auto 15px;">
+                                <tr>
+                                    <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 4px solid #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.55); padding: 0;">
+                                        <img src="${c.img}" alt="${c.name}" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                                    </td>
+                                </tr>
+                            </table>
+                            <h3>${c.name}</h3>
+                            <p>${c.description}</p>
+                        `;
+                    } else {
+                        // Table-based circular image for list view
+                        el.innerHTML = `
+                            <table style="border-collapse: collapse; margin-right: 20px;">
+                                <tr>
+                                    <td style="width: 90px; height: 90px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; box-shadow: 0 0 12px rgba(250, 204, 21, 0.55); padding: 0;">
+                                        <img src="${c.img}" alt="${c.name}" style="width: 90px; height: 90px; display: block; object-fit: cover;">
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="info">
+                                <h3>${c.name}</h3>
+                                <p>${c.description}</p>
+                                <div class="meta">${c.testament === 'old' ? 'Old Testament' : 'New Testament'} • ${c.book} • ${c.group}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Add click handler to select character and switch to chat view
+                    el.onclick = () => selectCharacter(c);
+                    
+                    target.appendChild(el);
+                });
+                
+                gridEl.style.display = viewMode === 'grid' ? 'grid' : 'none';
+                listEl.style.display = viewMode === 'list' ? 'flex' : 'none';
+            };
+
+            // Main render function for character selection
+            const render = () => {
+                const filtered = applyFilters();
+                const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+                currentPage = Math.min(currentPage, totalPages);
+                const start = (currentPage - 1) * itemsPerPage;
+                const pageItems = filtered.slice(start, start + itemsPerPage);
+
+                resultCountEl.textContent = `Showing ${pageItems.length} of ${filtered.length} characters`;
+                renderCharacters(pageItems);
+                renderPagination(totalPages);
+                renderActiveChips();
+            };
+
+            /* ---------- Chat Interface Functions ---------- */
+            // Select a character and switch to chat view
+            const selectCharacter = (character) => {
+                selectedCharacter = character;
+                
+                // Update chat interface with character info
+                chatCharacterName.textContent = character.name;
+                chatCharacterDescription.textContent = character.description;
+                chatCharacterAvatar.src = character.img;
+                chatCharacterAvatar.alt = character.name;
+                placeholderName.textContent = character.name;
+                
+                // Update insights panel
+                insightsCharacterName.textContent = `${character.name} - Insights`;
+                insightsHistoricalContext.textContent = character.historicalContext || 'No historical context available.';
+                
+                // Render scripture references
+                insightsScriptures.innerHTML = '';
+                if (character.scriptures && character.scriptures.length > 0) {
+                    character.scriptures.forEach(scripture => {
+                        const el = document.createElement('span');
+                        el.className = 'scripture-reference';
+                        el.textContent = scripture;
+                        el.title = 'Click to view this passage';
+                        el.onclick = () => window.open(`https://www.biblegateway.com/passage/?search=${encodeURIComponent(scripture)}&version=NIV`, '_blank');
+                        insightsScriptures.appendChild(el);
+                    });
+                } else {
+                    insightsScriptures.textContent = 'No scripture references available.';
+                }
+                
+                // Render relationships
+                insightsRelationships.innerHTML = '';
+                if (character.relationships) {
+                    Object.entries(character.relationships).forEach(([group, members]) => {
+                        const groupEl = document.createElement('div');
+                        groupEl.innerHTML = `<strong>${group}:</strong> `;
+                        
+                        members.forEach((member, i) => {
+                            const chip = document.createElement('span');
+                            chip.className = 'relationship-chip';
+                            chip.textContent = member;
+                            groupEl.appendChild(chip);
+                        });
+                        
+                        insightsRelationships.appendChild(groupEl);
+                        insightsRelationships.appendChild(document.createElement('br'));
+                    });
+                } else {
+                    insightsRelationships.textContent = 'No relationship information available.';
+                }
+                
+                // Render study questions
+                insightsQuestions.innerHTML = '';
+                if (character.studyQuestions && character.studyQuestions.length > 0) {
+                    character.studyQuestions.forEach(question => {
+                        const el = document.createElement('div');
+                        el.className = 'study-question';
+                        el.textContent = question;
+                        insightsQuestions.appendChild(el);
+                    });
+                } else {
+                    insightsQuestions.textContent = 'No study questions available.';
+                }
+                
+                // Clear existing messages and add opening line if available
+                chatMessages.innerHTML = '';
+                if (character.openingLine) {
+                    addMessage(character.openingLine, 'assistant');
+                } else {
+                    // Add placeholder if no opening line
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'message-placeholder';
+                    placeholder.style.textAlign = 'center';
+                    placeholder.style.color = 'var(--gray-500)';
+                    placeholder.style.padding = '2rem';
+                    placeholder.textContent = `Start your conversation with ${character.name}. Ask questions about their life, experiences, or seek their wisdom.`;
+                    chatMessages.appendChild(placeholder);
+                }
+                
+                // Reset chat history
+                chatHistory = character.openingLine 
+                    ? [{ role: 'assistant', content: character.openingLine }] 
+                    : [];
+                
+                // Switch to chat view
+                showChatView();
+            };
+
+            // Add a message to the chat interface
+            const addMessage = (content, role) => {
+                // Create message element
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${role}`;
+                
+                // Add avatar for character messages
+                if (role === 'assistant') {
+                    messageEl.innerHTML = `
+                        <div class="message-avatar">
+                            <table style="border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid #facc15; padding: 0;">
+                                        <img src="${selectedCharacter.img}" alt="${selectedCharacter.name}" style="width: 40px; height: 40px; display: block; object-fit: cover;">
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                // Add message content
+                const contentEl = document.createElement('div');
+                contentEl.className = 'message-content';
+                contentEl.textContent = content;
+                
+                // Add timestamp
+                const timeEl = document.createElement('div');
+                timeEl.className = 'message-time';
+                timeEl.textContent = formatTime();
+                
+                contentEl.appendChild(timeEl);
+                messageEl.appendChild(contentEl);
+                
+                // Add to chat container
+                chatMessages.appendChild(messageEl);
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+                // Add to chat history
+                chatHistory.push({ role, content });
+            };
+
+            // Send a message
+            const sendUserMessage = () => {
+                const content = chatInput.value.trim();
+                if (!content) return;
+                
+                // Clear input
+                chatInput.value = '';
+                
+                // Add user message
+                addMessage(content, 'user');
+                
+                // Generate response after a short delay
+                setTimeout(() => {
+                    const response = generateResponse(selectedCharacter, content);
+                    addMessage(response, 'assistant');
+                }, 1000);
+            };
+
+            /* ---------- Event Handlers ---------- */
+            // Navigation events
+            selectionViewBtn.addEventListener('click', showSelectionView);
+            chatViewBtn.addEventListener('click', () => {
+                if (selectedCharacter) {
+                    showChatView();
+                } else {
+                    alert('Please select a character first');
+                }
+            });
+            backToSelection.addEventListener('click', showSelectionView);
+            
+            // Featured character button
+            featuredCharacterBtn.addEventListener('click', () => {
+                // Find Jesus in the characters array
+                const jesus = characters.find(c => c.name === 'Jesus');
+                if (jesus) {
+                    selectCharacter(jesus);
+                }
+            });
+            
+            // Character selection filters
+            searchInput.addEventListener('input', e => {
+                filters.search = e.target.value.trim();
+                currentPage = 1;
+                render();
+            });
+            
+            testamentBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filters.testament = btn.textContent.toLowerCase();
+                    currentPage = 1;
+                    render();
+                });
+            });
+            
+            bookSel.addEventListener('change', () => {
+                filters.book = bookSel.value;
+                currentPage = 1;
+                render();
+            });
+            
+            groupSel.addEventListener('change', () => {
+                filters.group = groupSel.value;
+                currentPage = 1;
+                render();
+            });
+            
+            alphaLinks.forEach(a => {
+                a.addEventListener('click', () => {
+                    filters.letter = a.textContent;
+                    currentPage = 1;
+                    render();
+                });
+            });
+            
+            // View toggle
+            gridBtn.addEventListener('click', () => {
+                viewMode = 'grid';
+                render();
+            });
+            
+            listBtn.addEventListener('click', () => {
+                viewMode = 'list';
+                render();
+            });
+            
+            // Chat events
+            chatInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') {
+                    sendUserMessage();
+                }
+            });
+            
+            sendMessage.addEventListener('click', sendUserMessage);
+            
+            // Insights panel events
+            toggleInsights.addEventListener('click', toggleInsightsPanel);
+            closeInsights.addEventListener('click', toggleInsightsPanel);
+
+            /* ---------- Initialization ---------- */
+            // Start with character selection view
+            showSelectionView();
+            
+            // Initialize character grid
+            syncInputs();
+            render();
+            
+            console.log('Bible Character Chat - Standalone Edition initialized');
+        })();
+    </script>
+</body>
+</html>
