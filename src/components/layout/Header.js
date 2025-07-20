@@ -44,11 +44,6 @@ const Header = ({ simplified = false }) => {
                                     className: "text-white hover:text-yellow-300 font-medium px-2 py-1",
                                     children: "Home"
                                 }),
-                                _jsx(Link, {
-                                    to: "/pricing",
-                                    className: "text-white hover:text-yellow-300 font-medium px-2 py-1",
-                                    children: "Pricing"
-                                }),
                                 isAdmin && (
                                     _jsx(Link, {
                                         to: "/admin",
