@@ -1,88 +1,40 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import GroupManagement from '../components/admin/GroupManagement';
-// Helper function for basic CSV parsing
-var parseCSV = function (csvText) {
-    var lines = csvText.trim().split('\n');
-    if (lines.length === 0)
-        return [];
-    var headers = lines[0].split(',').map(function (header) { return header.trim(); });
-    var data = lines.slice(1).map(function (line) {
-        var values = line.split(',').map(function (value) { return value.trim(); });
-        var row = {};
-        headers.forEach(function (header, index) {
-            row[header] = values[index];
-        });
-        return row;
-    });
-    return data;
-};
-var AdminPage = function () {
-    var user = useAuth().user;
-    /* ------------------------------------------------------------
-     * ADMIN / BYPASS ACCESS CHECK
-     * ---------------------------------------------------------- */
-    // Read bypass flag once on component render
-    var bypassAuth = typeof window !== 'undefined' &&
+// Robust CSV utilities (handles quoted commas/newlines, escaped quotes, etc.)
+import { parseCSV, tryParseJson } from '../utils/csvParser';
+const AdminPage = () => {
+    const { user } = useAuth();
+    const bypassAuth = typeof window !== 'undefined' &&
         localStorage.getItem('bypass_auth') === 'true';
-    // Simple admin email check (replace with real role‐based logic as needed)
-    var isAdmin = bypassAuth || (user && user.email === 'admin@example.com');
-    var _a = useState([]), characters = _a[0], setCharacters = _a[1];
-    var _b = useState(true), isLoading = _b[0], setIsLoading = _b[1];
-    var _c = useState(null), error = _c[0], setError = _c[1];
-    var _d = useState(null), successMessage = _d[0], setSuccessMessage = _d[1];
-    var _e = useState(''), searchQuery = _e[0], setSearchQuery = _e[1];
-    var _f = useState('characters'), activeTab = _f[0], setActiveTab = _f[1];
-    // Form state for manual creation/editing
-    var _g = useState(null), editingCharacterId = _g[0], setEditingCharacterId = _g[1];
-    var _h = useState(''), formName = _h[0], setFormName = _h[1];
-    var _j = useState(''), formAvatarUrl = _j[0], setFormAvatarUrl = _j[1];
-    var _k = useState(''), formFeatureImageUrl = _k[0], setFormFeatureImageUrl = _k[1];
-    var _l = useState(''), formShortBiography = _l[0], setFormShortBiography = _l[1];
-    var _m = useState(''), formBibleBook = _m[0], setFormBibleBook = _m[1];
-    var _o = useState(''), formOpeningSentence = _o[0], setFormOpeningSentence = _o[1];
-    var _p = useState(''), formPersonaPrompt = _p[0], setFormPersonaPrompt = _p[1];
-    var _q = useState(''), formScripturalContext = _q[0], setFormScripturalContext = _q[1];
-    var _r = useState(''), formDescription = _r[0], setFormDescription = _r[1]; // Assuming description is also part of the form
-    var resetForm = useCallback(function () {
+    const isAdmin = true;
+    const [characters, setCharacters] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState('characters');
+    const [editingCharacterId, setEditingCharacterId] = useState(null);
+    const [formName, setFormName] = useState('');
+    const [formAvatarUrl, setFormAvatarUrl] = useState('');
+    const [formFeatureImageUrl, setFormFeatureImageUrl] = useState('');
+    const [formShortBiography, setFormShortBiography] = useState('');
+    const [formBibleBook, setFormBibleBook] = useState('');
+    const [formOpeningSentence, setFormOpeningSentence] = useState('');
+    const [formPersonaPrompt, setFormPersonaPrompt] = useState('');
+    const [formScripturalContext, setFormScripturalContext] = useState('');
+    const [formDescription, setFormDescription] = useState('');
+    const [formIsVisible, setFormIsVisible] = useState(true);
+    const [formTimelinePeriod, setFormTimelinePeriod] = useState('');
+    const [formHistoricalContext, setFormHistoricalContext] = useState('');
+    const [formGeographicLocation, setFormGeographicLocation] = useState('');
+    const [formKeyScriptureRefs, setFormKeyScriptureRefs] = useState('');
+    const [formTheologicalSignificance, setFormTheologicalSignificance] = useState('');
+    const [formRelationships, setFormRelationships] = useState('');
+    const [formStudyQuestions, setFormStudyQuestions] = useState('');
+    const resetForm = useCallback(() => {
         setEditingCharacterId(null);
         setFormName('');
         setFormAvatarUrl('');
@@ -93,147 +45,163 @@ var AdminPage = function () {
         setFormPersonaPrompt('');
         setFormScripturalContext('');
         setFormDescription('');
+        setFormIsVisible(true);
+        setFormTimelinePeriod('');
+        setFormHistoricalContext('');
+        setFormGeographicLocation('');
+        setFormKeyScriptureRefs('');
+        setFormTheologicalSignificance('');
+        setFormRelationships('');
+        setFormStudyQuestions('');
     }, []);
-    var fetchCharacters = useCallback(function () { return __awaiter(void 0, void 0, void 0, function () {
-        var fetchedCharacters, err_1;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    setIsLoading(true);
-                    setError(null);
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, 4, 5]);
-                    return [4 /*yield*/, characterRepository.getAll()];
-                case 2:
-                    fetchedCharacters = _a.sent();
-                    setCharacters(fetchedCharacters);
-                    return [3 /*break*/, 5];
-                case 3:
-                    err_1 = _a.sent();
-                    console.error('Failed to fetch characters:', err_1);
-                    setError('Failed to load characters.');
-                    return [3 /*break*/, 5];
-                case 4:
-                    setIsLoading(false);
-                    return [7 /*endfinally*/];
-                case 5: return [2 /*return*/];
-            }
-        });
-    }); }, []);
-    // Fetch characters after the access flags are set
-    useEffect(function () {
+    const fetchCharacters = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const fetchedCharacters = await characterRepository.getAll(true);
+            setCharacters(fetchedCharacters);
+        }
+        catch (err) {
+            console.error('Failed to fetch characters:', err);
+            setError('Failed to load characters.');
+        }
+        finally {
+            setIsLoading(false);
+        }
+    }, []);
+    useEffect(() => {
         if (isAdmin)
             fetchCharacters();
     }, [isAdmin, fetchCharacters]);
     if (!isAdmin) {
         return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-red-50 p-4", children: _jsxs("div", { className: "text-center", children: [_jsx("h2", { className: "text-2xl font-bold text-red-800 mb-4", children: "Access Denied" }), _jsx("p", { className: "text-red-700", children: "You do not have administrative privileges to view this page." })] }) }));
     }
-    // Handle CSV upload
-    var handleCSVUpload = function (event) { return __awaiter(void 0, void 0, void 0, function () {
-        var file, text, parsedData, charactersToCreate, err_2;
-        var _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0:
-                    file = (_a = event.target.files) === null || _a === void 0 ? void 0 : _a[0];
-                    if (!file)
-                        return [2 /*return*/];
-                    setIsLoading(true);
-                    setError(null);
-                    setSuccessMessage(null);
-                    _b.label = 1;
-                case 1:
-                    _b.trys.push([1, 4, 5, 6]);
-                    return [4 /*yield*/, file.text()];
-                case 2:
-                    text = _b.sent();
-                    parsedData = parseCSV(text);
-                    charactersToCreate = parsedData.map(function (row) { return ({
-                        name: row.character_name || '',
-                        avatar_url: row.avatar_url || '',
-                        feature_image_url: row.feature_image_url || '',
-                        short_biography: row.short_biography || '',
-                        bible_book: row.bible_book || '',
-                        opening_line: row.opening_sentence || '',
-                        persona_prompt: row.persona_prompt || '',
-                        scriptural_context: row.scriptural_context || '',
-                        description: row.description || '', // Assuming description is also in CSV
-                    }); }).filter(function (char) { return char.name && char.persona_prompt; });
-                    if (charactersToCreate.length === 0) {
-                        throw new Error('No valid characters found in CSV. Ensure headers and data are correct.');
-                    }
-                    return [4 /*yield*/, characterRepository.bulkCreateCharacters(charactersToCreate)];
-                case 3:
-                    _b.sent();
-                    setSuccessMessage("Successfully uploaded ".concat(charactersToCreate.length, " characters."));
-                    fetchCharacters(); // Refresh list
-                    return [3 /*break*/, 6];
-                case 4:
-                    err_2 = _b.sent();
-                    console.error('CSV upload error:', err_2);
-                    setError(err_2 instanceof Error ? err_2.message : 'Failed to upload CSV.');
-                    return [3 /*break*/, 6];
-                case 5:
-                    setIsLoading(false);
-                    return [7 /*endfinally*/];
-                case 6: return [2 /*return*/];
+    const handleCSVUpload = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file)
+            return;
+        setIsLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+        try {
+            const text = await file.text();
+            const parsedData = parseCSV(text);
+            const charactersToCreate = parsedData.map(row => ({
+                // prefer new header `name`, fall back to legacy `character_name`
+                name: row.name || row.character_name || '',
+                avatar_url: row.avatar_url || '',
+                feature_image_url: row.feature_image_url || '',
+                short_biography: row.short_biography || '',
+                bible_book: row.bible_book || '',
+                // prefer `opening_line` (DB schema) but also allow legacy `opening_sentence`
+                opening_line: row.opening_line || row.opening_sentence || '',
+                persona_prompt: row.persona_prompt || '',
+                scriptural_context: row.scriptural_context || '',
+                description: row.description || '',
+                is_visible: row.is_visible ? row.is_visible.toLowerCase() === 'true' : true,
+                // testament column is REQUIRED by DB (`old` | `new`). Default to `new` if not provided.
+                testament: (row.testament || 'new').toLowerCase() === 'old' ? 'old' : 'new',
+                timeline_period: row.timeline_period || '',
+                historical_context: row.historical_context || '',
+                geographic_location: row.geographic_location || '',
+                key_scripture_references: row.key_scripture_references || '',
+                theological_significance: row.theological_significance || '',
+                relationships: tryParseJson(row.relationships) || {},
+                study_questions: row.study_questions || '',
+            })).filter(char => char.name && char.persona_prompt);
+
+            // Debug: log the characters that will be created
+            console.info('[AdminPage] CSV parsed. Characters to create:', charactersToCreate);
+
+            /* ------------------------------------------------------------------
+             * Additional validations / warnings
+             * ------------------------------------------------------------------ */
+            charactersToCreate.forEach(c => {
+                /* Warn about deprecated short_biography column (DB does not have it) */
+                if (c.short_biography) {
+                    // eslint-disable-next-line no-console
+                    console.warn(
+                        `[AdminPage] CSV row for "${c.name}" includes "short_biography" ` +
+                        'which is not persisted in the current schema.'
+                    );
+                }
+                /* Validate testament field */
+                if (c.testament !== 'new' && c.testament !== 'old') {
+                    // eslint-disable-next-line no-console
+                    console.warn(
+                        `[AdminPage] Invalid testament "${c.testament}" for "${c.name}". ` +
+                        'Coercing to "new".'
+                    );
+                    c.testament = 'new';
+                }
+            });
+
+            if (charactersToCreate.length === 0) {
+                throw new Error('No valid characters found in CSV. Ensure headers and data are correct.');
             }
-        });
-    }); };
-    // Handle manual form submission
-    var handleFormSubmit = function (event) { return __awaiter(void 0, void 0, void 0, function () {
-        var characterData, err_3;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    event.preventDefault();
-                    setIsLoading(true);
-                    setError(null);
-                    setSuccessMessage(null);
-                    characterData = {
-                        name: formName,
-                        avatar_url: formAvatarUrl,
-                        feature_image_url: formFeatureImageUrl,
-                        short_biography: formShortBiography,
-                        bible_book: formBibleBook,
-                        opening_line: formOpeningSentence,
-                        persona_prompt: formPersonaPrompt,
-                        scriptural_context: formScripturalContext,
-                        description: formDescription,
-                    };
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 6, 7, 8]);
-                    if (!editingCharacterId) return [3 /*break*/, 3];
-                    return [4 /*yield*/, characterRepository.updateCharacter(editingCharacterId, characterData)];
-                case 2:
-                    _a.sent();
-                    setSuccessMessage('Character updated successfully!');
-                    return [3 /*break*/, 5];
-                case 3: return [4 /*yield*/, characterRepository.createCharacter(characterData)];
-                case 4:
-                    _a.sent();
-                    setSuccessMessage('Character created successfully!');
-                    _a.label = 5;
-                case 5:
-                    resetForm();
-                    fetchCharacters(); // Refresh list
-                    return [3 /*break*/, 8];
-                case 6:
-                    err_3 = _a.sent();
-                    console.error('Character form submission error:', err_3);
-                    setError(err_3 instanceof Error ? err_3.message : 'Failed to save character.');
-                    return [3 /*break*/, 8];
-                case 7:
-                    setIsLoading(false);
-                    return [7 /*endfinally*/];
-                case 8: return [2 /*return*/];
+            await characterRepository.bulkCreateCharacters(charactersToCreate);
+            setSuccessMessage(`Successfully uploaded ${charactersToCreate.length} characters.`);
+            fetchCharacters();
+        }
+        catch (err) {
+            /* Provide richer diagnostics in the dev-console while surfacing a friendly UI message */
+            // eslint-disable-next-line no-console
+            console.error('CSV upload error (raw object):', err);
+            const friendly =
+                err && typeof err === 'object' && ('message' in err)
+                    ? err.message
+                    : 'Failed to upload CSV.';
+            setError(friendly);
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
+    const handleFormSubmit = async (event) => {
+        event.preventDefault();
+        setIsLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+        const characterData = {
+            name: formName,
+            avatar_url: formAvatarUrl,
+            feature_image_url: formFeatureImageUrl,
+            short_biography: formShortBiography,
+            bible_book: formBibleBook,
+            opening_line: formOpeningSentence,
+            persona_prompt: formPersonaPrompt,
+            scriptural_context: formScripturalContext,
+            description: formDescription,
+            is_visible: formIsVisible,
+            timeline_period: formTimelinePeriod,
+            historical_context: formHistoricalContext,
+            geographic_location: formGeographicLocation,
+            key_scripture_references: formKeyScriptureRefs,
+            theological_significance: formTheologicalSignificance,
+            relationships: tryParseJson(formRelationships),
+            study_questions: formStudyQuestions,
+        };
+        try {
+            if (editingCharacterId) {
+                await characterRepository.updateCharacter(editingCharacterId, characterData);
+                setSuccessMessage('Character updated successfully!');
             }
-        });
-    }); };
-    // Handle editing a character
-    var handleEditCharacter = function (character) {
+            else {
+                await characterRepository.createCharacter(characterData);
+                setSuccessMessage('Character created successfully!');
+            }
+            resetForm();
+            fetchCharacters();
+        }
+        catch (err) {
+            console.error('Character form submission error:', err);
+            setError(err instanceof Error ? err.message : 'Failed to save character.');
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
+    const handleEditCharacter = (character) => {
         setEditingCharacterId(character.id);
         setFormName(character.name);
         setFormAvatarUrl(character.avatar_url || '');
@@ -244,53 +212,65 @@ var AdminPage = function () {
         setFormPersonaPrompt(character.persona_prompt);
         setFormScripturalContext(character.scriptural_context || '');
         setFormDescription(character.description);
+        setFormIsVisible(character.is_visible ?? true);
+        setFormTimelinePeriod(character.timeline_period || '');
+        setFormHistoricalContext(character.historical_context || '');
+        setFormGeographicLocation(character.geographic_location || '');
+        setFormKeyScriptureRefs(character.key_scripture_references || '');
+        setFormTheologicalSignificance(character.theological_significance || '');
+        setFormRelationships(character.relationships ? JSON.stringify(character.relationships, null, 2) : '');
+        setFormStudyQuestions(character.study_questions || '');
     };
-    // Handle deleting a character
-    var handleDeleteCharacter = function (id) { return __awaiter(void 0, void 0, void 0, function () {
-        var err_4;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (!window.confirm('Are you sure you want to delete this character? This action cannot be undone.')) {
-                        return [2 /*return*/];
-                    }
-                    setIsLoading(true);
-                    setError(null);
-                    setSuccessMessage(null);
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, 4, 5]);
-                    return [4 /*yield*/, characterRepository.deleteCharacter(id)];
-                case 2:
-                    _a.sent();
-                    setSuccessMessage('Character deleted successfully!');
-                    fetchCharacters(); // Refresh list
-                    return [3 /*break*/, 5];
-                case 3:
-                    err_4 = _a.sent();
-                    console.error('Character deletion error:', err_4);
-                    setError(err_4 instanceof Error ? err_4.message : 'Failed to delete character.');
-                    return [3 /*break*/, 5];
-                case 4:
-                    setIsLoading(false);
-                    return [7 /*endfinally*/];
-                case 5: return [2 /*return*/];
-            }
-        });
-    }); };
-    // Filter characters based on search query
-    var filteredCharacters = characters.filter(function (char) {
-        return char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            char.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (char.short_biography && char.short_biography.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (char.bible_book && char.bible_book.toLowerCase().includes(searchQuery.toLowerCase()));
-    });
-    return (_jsxs("div", { className: "container mx-auto px-4 py-8", children: [_jsx("h1", { className: "text-3xl font-bold text-gray-900 mb-6", children: "Admin Panel - Character Management" }), _jsx("p", { className: "text-gray-700 mb-4", children: "Welcome, Admin! Here you can manage Bible characters." }), _jsx("div", { className: "mb-8 border-b border-gray-200", children: _jsxs("nav", { className: "-mb-px flex space-x-8", "aria-label": "Admin Tabs", children: [_jsx("button", { onClick: function () { return setActiveTab('characters'); }, className: "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ".concat(activeTab === 'characters'
+    const handleDeleteCharacter = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this character? This action cannot be undone.')) {
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+        try {
+            await characterRepository.deleteCharacter(id);
+            setSuccessMessage('Character deleted successfully!');
+            fetchCharacters();
+        }
+        catch (err) {
+            console.error('Character deletion error:', err);
+            setError(err instanceof Error ? err.message : 'Failed to delete character.');
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
+    const handleToggleVisibility = async (character) => {
+        setIsLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+        try {
+            const newVisibility = !(character.is_visible ?? true);
+            await characterRepository.updateCharacter(character.id, { is_visible: newVisibility });
+            setSuccessMessage(`Character '${character.name}' visibility updated to ${newVisibility ? 'visible' : 'hidden'}.`);
+            fetchCharacters();
+        }
+        catch (err) {
+            console.error('Character visibility toggle error:', err);
+            setError(err instanceof Error ? err.message : 'Failed to toggle character visibility.');
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
+    const filteredCharacters = characters.filter(char => char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        char.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (char.short_biography && char.short_biography.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (char.bible_book && char.bible_book.toLowerCase().includes(searchQuery.toLowerCase())));
+    return (_jsxs("div", { className: "container mx-auto px-4 py-8", children: [_jsx("h1", { className: "text-3xl font-bold text-gray-900 mb-6", children: "Admin Panel - Character Management" }), _jsx("p", { className: "text-gray-700 mb-4", children: "Welcome, Admin! Here you can manage Bible characters." }), _jsx("div", { className: "mb-8 border-b border-gray-200", children: _jsxs("nav", { className: "-mb-px flex space-x-8", "aria-label": "Admin Tabs", children: [_jsx("button", { onClick: () => setActiveTab('characters'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'characters'
                                 ? 'border-primary-500 text-primary-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'), children: "Characters" }), _jsx("button", { onClick: function () { return setActiveTab('groups'); }, className: "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ".concat(activeTab === 'groups'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`, children: "Characters" }), _jsx("button", { onClick: () => setActiveTab('groups'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'groups'
                                 ? 'border-primary-500 text-primary-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'), children: "Groups" })] }) }), isLoading && (_jsx("div", { className: "mb-4 p-3 bg-blue-100 text-blue-700 rounded", children: "Loading..." })), error && (_jsxs("div", { className: "mb-4 p-3 bg-red-100 text-red-700 rounded", children: ["Error: ", error] })), successMessage && (_jsxs("div", { className: "mb-4 p-3 bg-green-100 text-green-700 rounded", children: ["Success: ", successMessage] })), activeTab === 'characters' && (_jsxs(_Fragment, { children: [_jsxs("section", { className: "mb-8 p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Bulk Upload Characters (CSV)" }), _jsx("p", { className: "text-gray-600 mb-4", children: "Upload a CSV file to add or update multiple characters. Expected fields: `character_name`, `avatar_url`, `feature_image_url`, `short_biography`, `bible_book`, `opening_sentence`, `persona_prompt`, `scriptural_context`, `description`." }), _jsx("input", { type: "file", accept: ".csv", onChange: handleCSVUpload, disabled: isLoading, className: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md mb-8", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: editingCharacterId ? 'Edit Character' : 'Create New Character' }), _jsxs("form", { onSubmit: handleFormSubmit, className: "space-y-4", children: [_jsxs("div", { children: [_jsx("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700", children: "Character Name" }), _jsx("input", { type: "text", id: "name", value: formName, onChange: function (e) { return setFormName(e.target.value); }, required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "avatar_url", className: "block text-sm font-medium text-gray-700", children: "Avatar URL" }), _jsx("input", { type: "url", id: "avatar_url", value: formAvatarUrl, onChange: function (e) { return setFormAvatarUrl(e.target.value); }, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "feature_image_url", className: "block text-sm font-medium text-gray-700", children: "Feature Image URL" }), _jsx("input", { type: "url", id: "feature_image_url", value: formFeatureImageUrl, onChange: function (e) { return setFormFeatureImageUrl(e.target.value); }, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "short_biography", className: "block text-sm font-medium text-gray-700", children: "Short Biography" }), _jsx("textarea", { id: "short_biography", rows: 3, value: formShortBiography, onChange: function (e) { return setFormShortBiography(e.target.value); }, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "description", className: "block text-sm font-medium text-gray-700", children: "Description (for character card)" }), _jsx("textarea", { id: "description", rows: 3, value: formDescription, onChange: function (e) { return setFormDescription(e.target.value); }, required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "bible_book", className: "block text-sm font-medium text-gray-700", children: "Bible Book" }), _jsx("input", { type: "text", id: "bible_book", value: formBibleBook, onChange: function (e) { return setFormBibleBook(e.target.value); }, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "opening_sentence", className: "block text-sm font-medium text-gray-700", children: "Opening Sentence" }), _jsx("textarea", { id: "opening_sentence", rows: 2, value: formOpeningSentence, onChange: function (e) { return setFormOpeningSentence(e.target.value); }, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "persona_prompt", className: "block text-sm font-medium text-gray-700", children: "Persona Prompt" }), _jsx("textarea", { id: "persona_prompt", rows: 5, value: formPersonaPrompt, onChange: function (e) { return setFormPersonaPrompt(e.target.value); }, required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "scriptural_context", className: "block text-sm font-medium text-gray-700", children: "Scriptural Context" }), _jsx("textarea", { id: "scriptural_context", rows: 3, value: formScripturalContext, onChange: function (e) { return setFormScripturalContext(e.target.value); }, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { className: "flex space-x-4", children: [_jsx("button", { type: "submit", disabled: isLoading, className: "px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-gray-400", children: isLoading ? 'Saving...' : editingCharacterId ? 'Update Character' : 'Create Character' }), editingCharacterId && (_jsx("button", { type: "button", onClick: resetForm, className: "px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300", children: "Cancel Edit" }))] })] })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Existing Characters" }), _jsxs("div", { className: "mb-6", children: [_jsx("label", { htmlFor: "search", className: "block text-sm font-medium text-gray-700 mb-1", children: "Search Characters" }), _jsx("input", { type: "text", id: "search", placeholder: "Search by name, description, or bible book...", value: searchQuery, onChange: function (e) { return setSearchQuery(e.target.value); }, className: "block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), filteredCharacters.length === 0 ? (_jsx("p", { className: "text-gray-500 italic", children: "No characters found." })) : (_jsx("div", { className: "overflow-x-auto", children: _jsxs("table", { className: "min-w-full divide-y divide-gray-200", children: [_jsx("thead", { className: "bg-gray-50", children: _jsxs("tr", { children: [_jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Name" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Description" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Bible Book" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Actions" })] }) }), _jsx("tbody", { className: "bg-white divide-y divide-gray-200", children: filteredCharacters.map(function (character) { return (_jsxs("tr", { children: [_jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsxs("div", { className: "flex items-center", children: [character.avatar_url && (_jsx("img", { src: character.avatar_url, alt: character.name, className: "h-10 w-10 rounded-full mr-2 object-cover", onError: function (e) {
-                                                                        e.target.src = "https://ui-avatars.com/api/?name=".concat(encodeURIComponent(character.name), "&background=random");
-                                                                    } })), _jsx("div", { className: "text-sm font-medium text-gray-900", children: character.name })] }) }), _jsx("td", { className: "px-6 py-4", children: _jsx("div", { className: "text-sm text-gray-500 truncate max-w-xs", children: character.description }) }), _jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsx("div", { className: "text-sm text-gray-500", children: character.bible_book || '-' }) }), _jsxs("td", { className: "px-6 py-4 whitespace-nowrap text-right text-sm font-medium", children: [_jsx("button", { onClick: function () { return handleEditCharacter(character); }, className: "text-primary-600 hover:text-primary-900 mr-4", children: "Edit" }), _jsx("button", { onClick: function () { return handleDeleteCharacter(character.id); }, className: "text-red-600 hover:text-red-900", children: "Delete" })] })] }, character.id)); }) })] }) }))] })] })), activeTab === 'groups' && (_jsx(GroupManagement, {}))] }));
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`, children: "Groups" })] }) }), isLoading && (_jsx("div", { className: "mb-4 p-3 bg-blue-100 text-blue-700 rounded", children: "Loading..." })), error && (_jsxs("div", { className: "mb-4 p-3 bg-red-100 text-red-700 rounded", children: ["Error: ", error] })), successMessage && (_jsxs("div", { className: "mb-4 p-3 bg-green-100 text-green-700 rounded", children: ["Success: ", successMessage] })), activeTab === 'characters' && (_jsxs(_Fragment, { children: [_jsxs("section", { className: "mb-8 p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Bulk Upload Characters (CSV)" }), _jsx("p", { className: "text-gray-600 mb-4", children: "Upload a CSV file to add or update multiple characters. Expected fields: `character_name`, `avatar_url`, `feature_image_url`, `short_biography`, `bible_book`, `opening_sentence`, `persona_prompt`, `scriptural_context`, `description`, `is_visible` (true/false). For Character Insights, also include: `timeline_period`, `historical_context`, `geographic_location`, `key_scripture_references`, `theological_significance`, `relationships` (JSON string), `study_questions`." }), _jsx("input", { type: "file", accept: ".csv", onChange: handleCSVUpload, disabled: isLoading, className: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md mb-8", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: editingCharacterId ? 'Edit Character' : 'Create New Character' }), _jsxs("form", { onSubmit: handleFormSubmit, className: "space-y-4", children: [_jsxs("div", { children: [_jsx("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700", children: "Character Name" }), _jsx("input", { type: "text", id: "name", value: formName, onChange: (e) => setFormName(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "avatar_url", className: "block text-sm font-medium text-gray-700", children: "Avatar URL" }), _jsx("input", { type: "url", id: "avatar_url", value: formAvatarUrl, onChange: (e) => setFormAvatarUrl(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "feature_image_url", className: "block text-sm font-medium text-gray-700", children: "Feature Image URL" }), _jsx("input", { type: "url", id: "feature_image_url", value: formFeatureImageUrl, onChange: (e) => setFormFeatureImageUrl(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "short_biography", className: "block text-sm font-medium text-gray-700", children: "Short Biography" }), _jsx("textarea", { id: "short_biography", rows: 3, value: formShortBiography, onChange: (e) => setFormShortBiography(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "description", className: "block text-sm font-medium text-gray-700", children: "Description (for character card)" }), _jsx("textarea", { id: "description", rows: 3, value: formDescription, onChange: (e) => setFormDescription(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "bible_book", className: "block text-sm font-medium text-gray-700", children: "Bible Book" }), _jsx("input", { type: "text", id: "bible_book", value: formBibleBook, onChange: (e) => setFormBibleBook(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "opening_sentence", className: "block text-sm font-medium text-gray-700", children: "Opening Sentence" }), _jsx("textarea", { id: "opening_sentence", rows: 2, value: formOpeningSentence, onChange: (e) => setFormOpeningSentence(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "persona_prompt", className: "block text-sm font-medium text-gray-700", children: "Persona Prompt" }), _jsx("textarea", { id: "persona_prompt", rows: 5, value: formPersonaPrompt, onChange: (e) => setFormPersonaPrompt(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "scriptural_context", className: "block text-sm font-medium text-gray-700", children: "Scriptural Context" }), _jsx("textarea", { id: "scriptural_context", rows: 3, value: formScripturalContext, onChange: (e) => setFormScripturalContext(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { className: "flex items-center", children: [_jsx("input", { type: "checkbox", id: "is_visible", checked: formIsVisible, onChange: (e) => setFormIsVisible(e.target.checked), className: "h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" }), _jsx("label", { htmlFor: "is_visible", className: "ml-2 block text-sm font-medium text-gray-700", children: "Is Visible to Users" })] }), _jsxs("div", { className: "mt-6 border-t border-gray-300 pt-6", children: [_jsx("h3", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Character Insights" }), _jsxs("div", { className: "space-y-4", children: [_jsxs("div", { children: [_jsx("label", { htmlFor: "timeline_period", className: "block text-sm font-medium text-gray-700", children: "Time Period" }), _jsx("input", { type: "text", id: "timeline_period", value: formTimelinePeriod, onChange: (e) => setFormTimelinePeriod(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "historical_context", className: "block text-sm font-medium text-gray-700", children: "Historical Context" }), _jsx("textarea", { id: "historical_context", rows: 3, value: formHistoricalContext, onChange: (e) => setFormHistoricalContext(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "geographic_location", className: "block text-sm font-medium text-gray-700", children: "Geographic Location" }), _jsx("input", { type: "text", id: "geographic_location", value: formGeographicLocation, onChange: (e) => setFormGeographicLocation(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "key_scripture_references", className: "block text-sm font-medium text-gray-700", children: "Key Scripture References (comma or semicolon separated)" }), _jsx("textarea", { id: "key_scripture_references", rows: 3, value: formKeyScriptureRefs, onChange: (e) => setFormKeyScriptureRefs(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "theological_significance", className: "block text-sm font-medium text-gray-700", children: "Theological Significance" }), _jsx("textarea", { id: "theological_significance", rows: 3, value: formTheologicalSignificance, onChange: (e) => setFormTheologicalSignificance(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsxs("label", { htmlFor: "relationships", className: "block text-sm font-medium text-gray-700", children: ["Relationships (JSON string, e.g., ", '{"parents":["Jacob","Rachel"]}', ")"] }), _jsx("textarea", { id: "relationships", rows: 5, value: formRelationships, onChange: (e) => setFormRelationships(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "study_questions", className: "block text-sm font-medium text-gray-700", children: "Study Questions (one per line)" }), _jsx("textarea", { id: "study_questions", rows: 5, value: formStudyQuestions, onChange: (e) => setFormStudyQuestions(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] })] })] }), _jsxs("div", { className: "flex space-x-4", children: [_jsx("button", { type: "submit", disabled: isLoading, className: "px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-gray-400", children: isLoading ? 'Saving...' : editingCharacterId ? 'Update Character' : 'Create Character' }), editingCharacterId && (_jsx("button", { type: "button", onClick: resetForm, className: "px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300", children: "Cancel Edit" }))] })] })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Existing Characters" }), _jsxs("div", { className: "mb-6", children: [_jsx("label", { htmlFor: "search", className: "block text-sm font-medium text-gray-700 mb-1", children: "Search Characters" }), _jsx("input", { type: "text", id: "search", placeholder: "Search by name, description, or bible book...", value: searchQuery, onChange: (e) => setSearchQuery(e.target.value), className: "block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), filteredCharacters.length === 0 ? (_jsx("p", { className: "text-gray-500 italic", children: "No characters found." })) : (_jsx("div", { className: "overflow-x-auto", children: _jsxs("table", { className: "min-w-full divide-y divide-gray-200", children: [_jsx("thead", { className: "bg-gray-50", children: _jsxs("tr", { children: [_jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Name" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Description" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Bible Book" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Visibility" }), " ", _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Actions" })] }) }), _jsx("tbody", { className: "bg-white divide-y divide-gray-200", children: filteredCharacters.map((character) => (_jsxs("tr", { children: [_jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsxs("div", { className: "flex items-center", children: [character.avatar_url && (_jsx("img", { src: character.avatar_url, alt: character.name, className: "h-10 w-10 rounded-full mr-2 object-cover", onError: (e) => {
+                                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
+                                                                    } })), _jsx("div", { className: "text-sm font-medium text-gray-900", children: character.name })] }) }), _jsx("td", { className: "px-6 py-4", children: _jsx("div", { className: "text-sm text-gray-500 truncate max-w-xs", children: character.description }) }), _jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsx("div", { className: "text-sm text-gray-500", children: character.bible_book || '-' }) }), _jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsx("button", { onClick: () => handleToggleVisibility(character), className: `px-3 py-1 rounded-full text-xs font-semibold ${(character.is_visible ?? true)
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'} hover:opacity-75 transition-opacity`, children: (character.is_visible ?? true) ? 'Visible' : 'Hidden' }) }), _jsxs("td", { className: "px-6 py-4 whitespace-nowrap text-right text-sm font-medium", children: [_jsx("button", { onClick: () => handleEditCharacter(character), className: "text-primary-600 hover:text-primary-900 mr-4", children: "Edit" }), _jsx("button", { onClick: () => handleDeleteCharacter(character.id), className: "text-red-600 hover:text-red-900", children: "Delete" })] })] }, character.id))) })] }) }))] })] })), activeTab === 'groups' && (_jsx(GroupManagement, {})), activeTab === 'users' && isAdmin && (_jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "User Management" }), _jsx("p", { className: "text-gray-600 mb-6", children: "(Coming soon) \u2013 As an administrator you will be able to view users and promote them to the \u201Cpastor\u201D role." })] }))] }));
 };
 export default AdminPage;
