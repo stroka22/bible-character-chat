@@ -1,318 +1,353 @@
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 import { supabase } from '../services/supabase';
-/**
- * Repository for interacting with Bible character data in Supabase
- */
-export var characterRepository = {
-    /**
-     * Fetch all available Bible characters
-     * @returns Promise resolving to an array of Character objects
-     */
-    getAll: function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, data, error, error_1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .select('*')
-                                .order('name')];
-                    case 1:
-                        _a = _b.sent(), data = _a.data, error = _a.error;
-                        if (error) {
-                            throw error;
-                        }
-                        return [2 /*return*/, data];
-                    case 2:
-                        error_1 = _b.sent();
-                        console.error('Failed to fetch characters:', error_1);
-                        throw new Error('Failed to fetch characters. Please try again later.');
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
+// Local fallback when Supabase is unavailable
+import { mockCharacterData } from '../data/mockCharacters';
+import { getSafeAvatarUrl } from '../utils/imageUtils';
+export const characterRepository = {
+    sanitizeCharacter(character) {
+        if (!character)
+            return character;
+        const sanitized = { ...character };
+        if (sanitized.avatar_url) {
+            sanitized.avatar_url = getSafeAvatarUrl(sanitized.name, sanitized.avatar_url);
+        }
+        if (sanitized.feature_image_url) {
+            sanitized.feature_image_url = getSafeAvatarUrl(sanitized.name, sanitized.feature_image_url);
+        }
+        return sanitized;
     },
-    /**
-     * Fetch a specific Bible character by ID
-     * @param id - The unique identifier of the character
-     * @returns Promise resolving to a Character object or null if not found
-     */
-    getById: function (id) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, data, error, error_2;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .select('*')
-                                .eq('id', id)
-                                .single()];
-                    case 1:
-                        _a = _b.sent(), data = _a.data, error = _a.error;
-                        if (error) {
-                            if (error.code === 'PGRST116') {
-                                // PGRST116 is the error code for "no rows returned"
-                                return [2 /*return*/, null];
-                            }
-                            throw error;
-                        }
-                        return [2 /*return*/, data];
-                    case 2:
-                        error_2 = _b.sent();
-                        console.error("Failed to fetch character with ID ".concat(id, ":"), error_2);
-                        throw new Error('Failed to fetch character. Please try again later.');
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
+    sanitizeCharacters(characters) {
+        return characters.map(char => this.sanitizeCharacter(char));
     },
-    /**
-     * Fetch a specific Bible character by name
-     * @param name - The name of the character
-     * @returns Promise resolving to a Character object or null if not found
-     */
-    getByName: function (name) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, data, error, error_3;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .select('*')
-                                .ilike('name', name)
-                                .single()];
-                    case 1:
-                        _a = _b.sent(), data = _a.data, error = _a.error;
-                        if (error) {
-                            if (error.code === 'PGRST116') {
-                                // PGRST116 is the error code for "no rows returned"
-                                return [2 /*return*/, null];
-                            }
-                            throw error;
-                        }
-                        return [2 /*return*/, data];
-                    case 2:
-                        error_3 = _b.sent();
-                        console.error("Failed to fetch character with name ".concat(name, ":"), error_3);
-                        throw new Error('Failed to fetch character. Please try again later.');
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
+    async getAll(isAdmin = false) {
+        try {
+            // Build query conditionally instead of using the (non-existent) .modify helper
+            let query = supabase.from('characters').select('*');
+            // NOTE: We now always return every record regardless of `is_visible`.
+            // The `is_visible` flag can still be used elsewhere (e.g., UI badges),
+            // but it no longer hides characters from non-admin users.
+            const { data, error } = await query.order('name');
+            if (error) {
+                throw error;
+            }
+            return this.sanitizeCharacters(data);
+        }
+        catch (error) {
+            console.error('Failed to fetch characters from Supabase. Falling back to mock data...', error);
+            try {
+                const data = await mockCharacterData.getAll();
+                return this.sanitizeCharacters(data);
+            }
+            catch (mockErr) {
+                console.error('Fallback to mock data failed:', mockErr);
+                throw new Error('Failed to fetch characters. Please try again later.');
+            }
+        }
     },
-    /**
-     * Search for Bible characters by name
-     * @param query - The search query
-     * @returns Promise resolving to an array of Character objects
-     */
-    search: function (query) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, data, error, error_4;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .select('*')
-                                .ilike('name', "%".concat(query, "%"))
-                                .order('name')];
-                    case 1:
-                        _a = _b.sent(), data = _a.data, error = _a.error;
-                        if (error) {
-                            throw error;
-                        }
-                        return [2 /*return*/, data];
-                    case 2:
-                        error_4 = _b.sent();
-                        console.error("Failed to search characters with query ".concat(query, ":"), error_4);
-                        throw new Error('Failed to search characters. Please try again later.');
-                    case 3: return [2 /*return*/];
+    async getById(id) {
+        try {
+            const { data, error } = await supabase
+                .from('characters')
+                .select('*')
+                .eq('id', id)
+                .single();
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    return null;
                 }
-            });
-        });
+                throw error;
+            }
+            return this.sanitizeCharacter(data);
+        }
+        catch (error) {
+            console.error(`Failed to fetch character with ID ${id} from Supabase. Falling back to mock data...`, error);
+            try {
+                const data = await mockCharacterData.getById(id);
+                return this.sanitizeCharacter(data);
+            }
+            catch (mockErr) {
+                console.error('Fallback to mock data failed:', mockErr);
+                throw new Error('Failed to fetch character. Please try again later.');
+            }
+        }
     },
-    /**
-     * Create a new Bible character
-     * @param character - Data for the new character (excluding id/created_at/updated_at)
-     * @returns Promise resolving to the newly-created Character object
-     */
-    createCharacter: function (character) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, data, error, error_5;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .insert(character)
-                                .select('*')
-                                .single()];
-                    case 1:
-                        _a = _b.sent(), data = _a.data, error = _a.error;
-                        if (error) {
-                            throw error;
-                        }
-                        return [2 /*return*/, data];
-                    case 2:
-                        error_5 = _b.sent();
-                        console.error('Failed to create character:', error_5);
-                        throw new Error('Failed to create character. Please try again later.');
-                    case 3: return [2 /*return*/];
+    async getByName(name) {
+        try {
+            const { data, error } = await supabase
+                .from('characters')
+                .select('*')
+                .ilike('name', name)
+                .single();
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    return null;
                 }
-            });
-        });
+                throw error;
+            }
+            return this.sanitizeCharacter(data);
+        }
+        catch (error) {
+            console.error(`Failed to fetch character with name ${name} from Supabase. Falling back to mock data...`, error);
+            try {
+                const data = await mockCharacterData.getByName(name);
+                return this.sanitizeCharacter(data);
+            }
+            catch (mockErr) {
+                console.error('Fallback to mock data failed:', mockErr);
+                throw new Error('Failed to fetch character. Please try again later.');
+            }
+        }
     },
-    /**
-     * Update an existing character
-     * @param id - Character ID
-     * @param updates - Partial character fields to update
-     * @returns Promise resolving to the updated Character object
-     */
-    updateCharacter: function (id, updates) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, data, error, error_6;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _b.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .update(__assign(__assign({}, updates), { updated_at: new Date().toISOString() }))
-                                .eq('id', id)
-                                .select('*')
-                                .single()];
-                    case 1:
-                        _a = _b.sent(), data = _a.data, error = _a.error;
-                        if (error) {
-                            throw error;
-                        }
-                        return [2 /*return*/, data];
-                    case 2:
-                        error_6 = _b.sent();
-                        console.error("Failed to update character ".concat(id, ":"), error_6);
-                        throw new Error('Failed to update character. Please try again later.');
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
+    async search(query, isAdmin = false) {
+        try {
+            let q = supabase
+                .from('characters')
+                .select('*')
+                .ilike('name', `%${query}%`);
+            if (!isAdmin) {
+                q = q.or('is_visible.is.null,is_visible.eq.true');
+            }
+            const { data, error } = await q.order('name');
+            if (error) {
+                throw error;
+            }
+            return this.sanitizeCharacters(data);
+        }
+        catch (error) {
+            console.error(`Failed to search characters with query "${query}" from Supabase. Falling back to mock data...`, error);
+            try {
+                const data = await mockCharacterData.search(query);
+                return this.sanitizeCharacters(data);
+            }
+            catch (mockErr) {
+                console.error('Fallback to mock data failed:', mockErr);
+                throw new Error('Failed to search characters. Please try again later.');
+            }
+        }
     },
-    /**
-     * Delete a character by ID
-     * @param id - Character ID
-     */
-    deleteCharacter: function (id) {
-        return __awaiter(this, void 0, void 0, function () {
-            var error, error_7;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .delete()
-                                .eq('id', id)];
-                    case 1:
-                        error = (_a.sent()).error;
-                        if (error) {
-                            throw error;
-                        }
-                        return [3 /*break*/, 3];
-                    case 2:
-                        error_7 = _a.sent();
-                        console.error("Failed to delete character ".concat(id, ":"), error_7);
-                        throw new Error('Failed to delete character. Please try again later.');
-                    case 3: return [2 /*return*/];
-                }
-            });
-        });
+    async createCharacter(character) {
+        try {
+            const sanitizedCharacter = {
+                ...character,
+                avatar_url: character.avatar_url ?
+                    getSafeAvatarUrl(character.name, character.avatar_url) :
+                    character.avatar_url,
+                feature_image_url: character.feature_image_url ?
+                    getSafeAvatarUrl(character.name, character.feature_image_url) :
+                    character.feature_image_url
+            };
+            const { data, error } = await supabase
+                .from('characters')
+                .insert(sanitizedCharacter)
+                .select('*')
+                .single();
+            if (error) {
+                throw error;
+            }
+            return this.sanitizeCharacter(data);
+        }
+        catch (error) {
+            console.error('Failed to create character:', error);
+            throw new Error('Failed to create character. Please try again later.');
+        }
     },
-    /**
-     * Bulk create characters (e.g., via CSV upload)
-     * @param characters - Array of character objects (same shape as createCharacter input)
-     * @returns Promise resolving to the array of created Character objects
-     */
-    bulkCreateCharacters: function (characters) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _a, data, error, error_8;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (characters.length === 0)
-                            return [2 /*return*/, []];
-                        _b.label = 1;
-                    case 1:
-                        _b.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, supabase
-                                .from('characters')
-                                .insert(characters)
-                                .select('*')];
-                    case 2:
-                        _a = _b.sent(), data = _a.data, error = _a.error;
-                        if (error) {
-                            throw error;
-                        }
-                        return [2 /*return*/, data];
-                    case 3:
-                        error_8 = _b.sent();
-                        console.error('Failed to bulk create characters:', error_8);
-                        throw new Error('Failed to bulk create characters. Please try again later.');
-                    case 4: return [2 /*return*/];
+    async updateCharacter(id, updates) {
+        try {
+            const sanitizedUpdates = { ...updates };
+            if (updates.avatar_url && updates.name) {
+                sanitizedUpdates.avatar_url = getSafeAvatarUrl(updates.name, updates.avatar_url);
+            }
+            if (updates.feature_image_url && updates.name) {
+                sanitizedUpdates.feature_image_url = getSafeAvatarUrl(updates.name, updates.feature_image_url);
+            }
+            const { data, error } = await supabase
+                .from('characters')
+                .update({ ...sanitizedUpdates, updated_at: new Date().toISOString() })
+                .eq('id', id)
+                .select('*')
+                .single();
+            if (error) {
+                throw error;
+            }
+            return this.sanitizeCharacter(data);
+        }
+        catch (error) {
+            console.error(`Failed to update character ${id}:`, error);
+            throw new Error('Failed to update character. Please try again later.');
+        }
+    },
+    async deleteCharacter(id) {
+        try {
+            const { error } = await supabase
+                .from('characters')
+                .delete()
+                .eq('id', id);
+            if (error) {
+                throw error;
+            }
+        }
+        catch (error) {
+            console.error(`Failed to delete character ${id}:`, error);
+            throw new Error('Failed to delete character. Please try again later.');
+        }
+    },
+    async bulkCreateCharacters(characters) {
+        if (characters.length === 0)
+            return [];
+        try {
+            // Helper – ensure relationships is always a plain object or null
+            const ensureJsonObject = (value) => {
+                if (value === undefined || value === null || value === '') {
+                    return null;
                 }
+                if (typeof value === 'object') {
+                    return value;
+                }
+                try {
+                    return JSON.parse(value);
+                }
+                catch (e) {
+                    console.warn('[characterRepository.bulkCreateCharacters] Failed to parse relationships JSON – defaulting to null.', {
+                        relationships: value,
+                        error: e
+                    });
+                    return null;
+                }
+            };
+
+            // Filter function to keep only known fields that exist in the database schema
+            const filterKnownFields = (char) => {
+                // List of known fields that exist in the database
+                const knownFields = [
+                    'name',
+                    'description',
+                    'persona_prompt',
+                    'testament',            // new | old
+                    'is_visible',
+                    'avatar_url',
+                    'feature_image_url',
+                    'opening_line',
+                    'bible_book',
+                    'relationships',
+                    // --- Character Insights fields (additions) ---
+                    'timeline_period',
+                    'historical_context',
+                    'geographic_location',
+                    'key_scripture_references',
+                    'theological_significance',
+                    'study_questions',
+                    'scriptural_context',
+                    // v2 extended / array-json fields (safe to ignore if absent)
+                    'key_events',
+                    'character_traits',
+                    'updated_at'
+                ];
+                
+                // Create a new object with only the known fields
+                const filtered = {};
+                knownFields.forEach(field => {
+                    if (field in char) {
+                        filtered[field] = char[field];
+                    }
+                });
+                
+                return filtered;
+            };
+
+            const sanitizedCharacters = characters.map(char => {
+                // First apply standard sanitization (avatar URLs, etc.)
+                const sanitized = {
+                    ...char,
+                    avatar_url: char.avatar_url
+                        ? getSafeAvatarUrl(char.name, char.avatar_url)
+                        : char.avatar_url,
+                    feature_image_url: char.feature_image_url
+                        ? getSafeAvatarUrl(char.name, char.feature_image_url)
+                        : char.feature_image_url,
+                    relationships: ensureJsonObject(char.relationships)
+                };
+                
+                // Then filter to keep only known fields
+                return filterKnownFields(sanitized);
             });
-        });
+
+            // Log sanitized characters for debugging
+            console.info('[bulkCreateCharacters] Sanitized characters:', 
+                sanitizedCharacters.map(c => ({ 
+                    name: c.name, 
+                    fields: Object.keys(c).join(',')
+                }))
+            );
+
+            // 1) Check which characters already exist (by unique name)
+            const names = sanitizedCharacters.map(c => c.name);
+            const { data: existing, error: lookupErr } = await supabase
+                .from('characters')
+                .select('id,name')
+                .in('name', names);
+            if (lookupErr) throw lookupErr;
+
+            const existingMap = new Map((existing ?? []).map(row => [row.name, row.id]));
+
+            const toInsert = [];
+            const toUpdate = [];
+            for (const char of sanitizedCharacters) {
+                const existingId = existingMap.get(char.name);
+                if (existingId) {
+                    toUpdate.push({ id: existingId, ...char });
+                }
+                else {
+                    toInsert.push(char);
+                }
+            }
+
+            console.info('[bulkCreateCharacters] toInsert:', toInsert.length, '| toUpdate:', toUpdate.length);
+
+            const results = [];
+
+            /* INSERT NEW ---------------------------------------------------- */
+            if (toInsert.length) {
+                for (const char of toInsert) {
+                    try {
+                        const { data: inserted, error: insertErr } = await supabase
+                            .from('characters')
+                            .insert(char)
+                            .select('*')
+                            .single();
+                        if (insertErr) {
+                            console.error(`[bulkCreateCharacters] insert error for ${char.name}`, insertErr);
+                            throw insertErr;
+                        }
+                        results.push(inserted);
+                    }
+                    catch (indivErr) {
+                        // Re-throw after logging so caller knows the whole bulk op failed
+                        throw indivErr;
+                    }
+                }
+            }
+
+            /* UPDATE EXISTING ------------------------------------------------ */
+            for (const char of toUpdate) {
+                // remove id from update payload to avoid immutable-column error
+                const { id, ...updates } = char;
+                const { data: updated, error: updErr } = await supabase
+                    .from('characters')
+                    .update({ ...updates, updated_at: new Date().toISOString() })
+                    .eq('id', id)
+                    .select('*')
+                    .single();
+                if (updErr) {
+                    console.error(`[bulkCreateCharacters] update error for ${char.name}`, updErr);
+                    throw updErr;
+                }
+                results.push(updated);
+            }
+
+            return this.sanitizeCharacters(results);
+        }
+        catch (error) {
+            console.error('Failed to bulk create characters:', error);
+            throw new Error('Failed to bulk create characters. Please try again later.');
+        }
     }
 };
