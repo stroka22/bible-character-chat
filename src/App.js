@@ -3,12 +3,14 @@ import React, { useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ChatProvider } from './contexts/ChatContext';
+import { ConversationProvider } from './contexts/ConversationContext';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import PricingPage from './pages/PricingPage';
 import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage';
+import ChatInterfaceWithConversations from './components/chat/ChatInterfaceWithConversations';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/layout/Header';
 
@@ -65,7 +67,13 @@ function App() {
      * screens/guards in development.  Any "skip" logic should be handled
      * inside consumer components rather than removing the context.
      * ------------------------------------------------------------------ */
-    const Providers = ({ children }) => (_jsx(AuthProvider, { children: _jsx(ChatProvider, { children: children }) }));
+    const Providers = ({ children }) => (
+        _jsx(AuthProvider, {
+            children: _jsx(ConversationProvider, {
+                children: _jsx(ChatProvider, { children })
+            })
+        })
+    );
 
     const DebugBanner = () => {
         const loc = useLocation();
@@ -95,6 +103,11 @@ function App() {
         _jsx(Route, { path: "/pricing", element: _jsx(PricingPage, {}) }),
         _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         
+        // Chat & Shared conversation routes (public access)
+        _jsx(Route, { path: "/chat", element: _jsx(ChatInterfaceWithConversations, {}) }),
+        _jsx(Route, { path: "/chat/:conversationId", element: _jsx(ChatInterfaceWithConversations, {}) }),
+        _jsx(Route, { path: "/shared/:shareCode", element: _jsx(ChatInterfaceWithConversations, { isSharedView: true }) }),
+
         // Protected routes
         _jsx(Route, { element: _jsx(ProtectedRoute, { redirectPath: "/login" }), children: [
             _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
