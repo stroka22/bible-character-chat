@@ -17,6 +17,8 @@ const AdminPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('characters');
     const [editingCharacterId, setEditingCharacterId] = useState(null);
+    // New state for selected characters
+    const [selectedCharacters, setSelectedCharacters] = useState([]);
     const [formName, setFormName] = useState('');
     const [formAvatarUrl, setFormAvatarUrl] = useState('');
     const [formFeatureImageUrl, setFormFeatureImageUrl] = useState('');
@@ -60,6 +62,8 @@ const AdminPage = () => {
         try {
             const fetchedCharacters = await characterRepository.getAll(true);
             setCharacters(fetchedCharacters);
+            // Clear selected characters when fetching new data
+            setSelectedCharacters([]);
         }
         catch (err) {
             console.error('Failed to fetch characters:', err);
@@ -76,6 +80,138 @@ const AdminPage = () => {
     if (!isAdmin) {
         return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-red-50 p-4", children: _jsxs("div", { className: "text-center", children: [_jsx("h2", { className: "text-2xl font-bold text-red-800 mb-4", children: "Access Denied" }), _jsx("p", { className: "text-red-700", children: "You do not have administrative privileges to view this page." })] }) }));
     }
+    // Function to handle select all checkbox
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            // Select all filtered characters
+            setSelectedCharacters(filteredCharacters.map(char => char.id));
+        } else {
+            // Deselect all
+            setSelectedCharacters([]);
+        }
+    };
+
+    // Function to handle individual character selection
+    const handleSelectCharacter = (id) => {
+        setSelectedCharacters(prev => {
+            if (prev.includes(id)) {
+                return prev.filter(charId => charId !== id);
+            } else {
+                return [...prev, id];
+            }
+        });
+    };
+
+    // Function to delete selected characters
+    const handleDeleteSelected = async () => {
+        if (selectedCharacters.length === 0) {
+            return;
+        }
+
+        if (!window.confirm(`Are you sure you want to delete ${selectedCharacters.length} character(s)? This action cannot be undone.`)) {
+            return;
+        }
+
+        setIsLoading(true);
+        setError(null);
+        setSuccessMessage(null);
+
+        try {
+            // Delete each selected character
+            for (const id of selectedCharacters) {
+                await characterRepository.deleteCharacter(id);
+            }
+            
+            setSuccessMessage(`Successfully deleted ${selectedCharacters.length} character(s).`);
+            setSelectedCharacters([]);
+            fetchCharacters();
+        } catch (err) {
+            console.error('Bulk character deletion error:', err);
+            setError(err instanceof Error ? err.message : 'Failed to delete selected characters.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Function to export characters to CSV
+    const exportCharactersToCSV = () => {
+        // Define CSV columns in the order we want them
+        const columns = [
+            'name',
+            'description',
+            'persona_prompt',
+            'opening_line',
+            'avatar_url',
+            'feature_image_url',
+            'is_visible',
+            'testament',
+            'bible_book',
+            'timeline_period',
+            'historical_context',
+            'geographic_location',
+            'key_scripture_references',
+            'theological_significance',
+            'relationships',
+            'study_questions',
+            'scriptural_context'
+        ];
+
+        // Helper function to escape CSV values
+        const escapeCSV = (value) => {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            
+            // Convert objects (like relationships) to JSON strings
+            if (typeof value === 'object') {
+                value = JSON.stringify(value);
+            }
+            
+            // Convert to string
+            const stringValue = String(value);
+            
+            // Check if we need to escape this value
+            const needsEscaping = stringValue.includes('"') || 
+                                 stringValue.includes(',') || 
+                                 stringValue.includes('\n') ||
+                                 stringValue.includes('\r');
+            
+            if (needsEscaping) {
+                // Double up any quotes and wrap in quotes
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+            
+            return stringValue;
+        };
+
+        // Create header row
+        let csv = columns.join(',') + '\n';
+        
+        // Add data rows
+        for (const character of characters) {
+            const row = columns.map(column => escapeCSV(character[column]));
+            csv += row.join(',') + '\n';
+        }
+        
+        // Create download link
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        // Generate filename with current date
+        const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        link.setAttribute('href', url);
+        link.setAttribute('download', `bible-characters-export-${date}.csv`);
+        
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     const handleCSVUpload = async (event) => {
         const file = event.target.files?.[0];
         if (!file)
@@ -279,7 +415,32 @@ const AdminPage = () => {
                                 ? 'border-primary-500 text-primary-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`, children: "Characters" }), _jsx("button", { onClick: () => setActiveTab('groups'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'groups'
                                 ? 'border-primary-500 text-primary-600'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`, children: "Groups" })] }) }), isLoading && (_jsx("div", { className: "mb-4 p-3 bg-blue-100 text-blue-700 rounded", children: "Loading..." })), error && (_jsxs("div", { className: "mb-4 p-3 bg-red-100 text-red-700 rounded", children: ["Error: ", error] })), successMessage && (_jsxs("div", { className: "mb-4 p-3 bg-green-100 text-green-700 rounded", children: ["Success: ", successMessage] })), activeTab === 'characters' && (_jsxs(_Fragment, { children: [_jsxs("section", { className: "mb-8 p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Bulk Upload Characters (CSV)" }), _jsx("p", { className: "text-gray-600 mb-4", children: "Upload a CSV file to add or update multiple characters. Expected fields: `character_name`, `avatar_url`, `feature_image_url`, `short_biography`, `bible_book`, `opening_sentence`, `persona_prompt`, `scriptural_context`, `description`, `is_visible` (true/false). For Character Insights, also include: `timeline_period`, `historical_context`, `geographic_location`, `key_scripture_references`, `theological_significance`, `relationships` (JSON string), `study_questions`." }), _jsx("input", { type: "file", accept: ".csv", onChange: handleCSVUpload, disabled: isLoading, className: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md mb-8", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: editingCharacterId ? 'Edit Character' : 'Create New Character' }), _jsxs("form", { onSubmit: handleFormSubmit, className: "space-y-4", children: [_jsxs("div", { children: [_jsx("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700", children: "Character Name" }), _jsx("input", { type: "text", id: "name", value: formName, onChange: (e) => setFormName(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "avatar_url", className: "block text-sm font-medium text-gray-700", children: "Avatar URL" }), _jsx("input", { type: "url", id: "avatar_url", value: formAvatarUrl, onChange: (e) => setFormAvatarUrl(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "feature_image_url", className: "block text-sm font-medium text-gray-700", children: "Feature Image URL" }), _jsx("input", { type: "url", id: "feature_image_url", value: formFeatureImageUrl, onChange: (e) => setFormFeatureImageUrl(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "short_biography", className: "block text-sm font-medium text-gray-700", children: "Short Biography" }), _jsx("textarea", { id: "short_biography", rows: 3, value: formShortBiography, onChange: (e) => setFormShortBiography(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "description", className: "block text-sm font-medium text-gray-700", children: "Description (for character card)" }), _jsx("textarea", { id: "description", rows: 3, value: formDescription, onChange: (e) => setFormDescription(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "bible_book", className: "block text-sm font-medium text-gray-700", children: "Bible Book" }), _jsx("input", { type: "text", id: "bible_book", value: formBibleBook, onChange: (e) => setFormBibleBook(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "opening_sentence", className: "block text-sm font-medium text-gray-700", children: "Opening Sentence" }), _jsx("textarea", { id: "opening_sentence", rows: 2, value: formOpeningSentence, onChange: (e) => setFormOpeningSentence(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "persona_prompt", className: "block text-sm font-medium text-gray-700", children: "Persona Prompt" }), _jsx("textarea", { id: "persona_prompt", rows: 5, value: formPersonaPrompt, onChange: (e) => setFormPersonaPrompt(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "scriptural_context", className: "block text-sm font-medium text-gray-700", children: "Scriptural Context" }), _jsx("textarea", { id: "scriptural_context", rows: 3, value: formScripturalContext, onChange: (e) => setFormScripturalContext(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { className: "flex items-center", children: [_jsx("input", { type: "checkbox", id: "is_visible", checked: formIsVisible, onChange: (e) => setFormIsVisible(e.target.checked), className: "h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" }), _jsx("label", { htmlFor: "is_visible", className: "ml-2 block text-sm font-medium text-gray-700", children: "Is Visible to Users" })] }), _jsxs("div", { className: "mt-6 border-t border-gray-300 pt-6", children: [_jsx("h3", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Character Insights" }), _jsxs("div", { className: "space-y-4", children: [_jsxs("div", { children: [_jsx("label", { htmlFor: "timeline_period", className: "block text-sm font-medium text-gray-700", children: "Time Period" }), _jsx("input", { type: "text", id: "timeline_period", value: formTimelinePeriod, onChange: (e) => setFormTimelinePeriod(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "historical_context", className: "block text-sm font-medium text-gray-700", children: "Historical Context" }), _jsx("textarea", { id: "historical_context", rows: 3, value: formHistoricalContext, onChange: (e) => setFormHistoricalContext(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "geographic_location", className: "block text-sm font-medium text-gray-700", children: "Geographic Location" }), _jsx("input", { type: "text", id: "geographic_location", value: formGeographicLocation, onChange: (e) => setFormGeographicLocation(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "key_scripture_references", className: "block text-sm font-medium text-gray-700", children: "Key Scripture References (comma or semicolon separated)" }), _jsx("textarea", { id: "key_scripture_references", rows: 3, value: formKeyScriptureRefs, onChange: (e) => setFormKeyScriptureRefs(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "theological_significance", className: "block text-sm font-medium text-gray-700", children: "Theological Significance" }), _jsx("textarea", { id: "theological_significance", rows: 3, value: formTheologicalSignificance, onChange: (e) => setFormTheologicalSignificance(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsxs("label", { htmlFor: "relationships", className: "block text-sm font-medium text-gray-700", children: ["Relationships (JSON string, e.g., ", '{"parents":["Jacob","Rachel"]}', ")"] }), _jsx("textarea", { id: "relationships", rows: 5, value: formRelationships, onChange: (e) => setFormRelationships(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "study_questions", className: "block text-sm font-medium text-gray-700", children: "Study Questions (one per line)" }), _jsx("textarea", { id: "study_questions", rows: 5, value: formStudyQuestions, onChange: (e) => setFormStudyQuestions(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] })] })] }), _jsxs("div", { className: "flex space-x-4", children: [_jsx("button", { type: "submit", disabled: isLoading, className: "px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-gray-400", children: isLoading ? 'Saving...' : editingCharacterId ? 'Update Character' : 'Create Character' }), editingCharacterId && (_jsx("button", { type: "button", onClick: resetForm, className: "px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300", children: "Cancel Edit" }))] })] })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Existing Characters" }), _jsxs("div", { className: "mb-6", children: [_jsx("label", { htmlFor: "search", className: "block text-sm font-medium text-gray-700 mb-1", children: "Search Characters" }), _jsx("input", { type: "text", id: "search", placeholder: "Search by name, description, or bible book...", value: searchQuery, onChange: (e) => setSearchQuery(e.target.value), className: "block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), filteredCharacters.length === 0 ? (_jsx("p", { className: "text-gray-500 italic", children: "No characters found." })) : (_jsx("div", { className: "overflow-x-auto", children: _jsxs("table", { className: "min-w-full divide-y divide-gray-200", children: [_jsx("thead", { className: "bg-gray-50", children: _jsxs("tr", { children: [_jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Name" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Description" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Bible Book" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Visibility" }), " ", _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Actions" })] }) }), _jsx("tbody", { className: "bg-white divide-y divide-gray-200", children: filteredCharacters.map((character) => (_jsxs("tr", { children: [_jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsxs("div", { className: "flex items-center", children: [character.avatar_url && (_jsx("img", { src: character.avatar_url, alt: character.name, className: "h-10 w-10 rounded-full mr-2 object-cover", onError: (e) => {
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`, children: "Groups" })] }) }), isLoading && (_jsx("div", { className: "mb-4 p-3 bg-blue-100 text-blue-700 rounded", children: "Loading..." })), error && (_jsxs("div", { className: "mb-4 p-3 bg-red-100 text-red-700 rounded", children: ["Error: ", error] })), successMessage && (_jsxs("div", { className: "mb-4 p-3 bg-green-100 text-green-700 rounded", children: ["Success: ", successMessage] })), activeTab === 'characters' && (_jsxs(_Fragment, { children: [_jsxs("section", { className: "mb-8 p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Bulk Upload Characters (CSV)" }), _jsx("p", { className: "text-gray-600 mb-4", children: "Upload a CSV file to add or update multiple characters. Expected fields: `character_name`, `avatar_url`, `feature_image_url`, `short_biography`, `bible_book`, `opening_sentence`, `persona_prompt`, `scriptural_context`, `description`, `is_visible` (true/false). For Character Insights, also include: `timeline_period`, `historical_context`, `geographic_location`, `key_scripture_references`, `theological_significance`, `relationships` (JSON string), `study_questions`." }), _jsx("input", { type: "file", accept: ".csv", onChange: handleCSVUpload, disabled: isLoading, className: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md mb-8", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: editingCharacterId ? 'Edit Character' : 'Create New Character' }), _jsxs("form", { onSubmit: handleFormSubmit, className: "space-y-4", children: [_jsxs("div", { children: [_jsx("label", { htmlFor: "name", className: "block text-sm font-medium text-gray-700", children: "Character Name" }), _jsx("input", { type: "text", id: "name", value: formName, onChange: (e) => setFormName(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "avatar_url", className: "block text-sm font-medium text-gray-700", children: "Avatar URL" }), _jsx("input", { type: "url", id: "avatar_url", value: formAvatarUrl, onChange: (e) => setFormAvatarUrl(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "feature_image_url", className: "block text-sm font-medium text-gray-700", children: "Feature Image URL" }), _jsx("input", { type: "url", id: "feature_image_url", value: formFeatureImageUrl, onChange: (e) => setFormFeatureImageUrl(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "short_biography", className: "block text-sm font-medium text-gray-700", children: "Short Biography" }), _jsx("textarea", { id: "short_biography", rows: 3, value: formShortBiography, onChange: (e) => setFormShortBiography(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "description", className: "block text-sm font-medium text-gray-700", children: "Description (for character card)" }), _jsx("textarea", { id: "description", rows: 3, value: formDescription, onChange: (e) => setFormDescription(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "bible_book", className: "block text-sm font-medium text-gray-700", children: "Bible Book" }), _jsx("input", { type: "text", id: "bible_book", value: formBibleBook, onChange: (e) => setFormBibleBook(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "opening_sentence", className: "block text-sm font-medium text-gray-700", children: "Opening Sentence" }), _jsx("textarea", { id: "opening_sentence", rows: 2, value: formOpeningSentence, onChange: (e) => setFormOpeningSentence(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "persona_prompt", className: "block text-sm font-medium text-gray-700", children: "Persona Prompt" }), _jsx("textarea", { id: "persona_prompt", rows: 5, value: formPersonaPrompt, onChange: (e) => setFormPersonaPrompt(e.target.value), required: true, className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "scriptural_context", className: "block text-sm font-medium text-gray-700", children: "Scriptural Context" }), _jsx("textarea", { id: "scriptural_context", rows: 3, value: formScripturalContext, onChange: (e) => setFormScripturalContext(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { className: "flex items-center", children: [_jsx("input", { type: "checkbox", id: "is_visible", checked: formIsVisible, onChange: (e) => setFormIsVisible(e.target.checked), className: "h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" }), _jsx("label", { htmlFor: "is_visible", className: "ml-2 block text-sm font-medium text-gray-700", children: "Is Visible to Users" })] }), _jsxs("div", { className: "mt-6 border-t border-gray-300 pt-6", children: [_jsx("h3", { className: "text-xl font-semibold text-gray-800 mb-4", children: "Character Insights" }), _jsxs("div", { className: "space-y-4", children: [_jsxs("div", { children: [_jsx("label", { htmlFor: "timeline_period", className: "block text-sm font-medium text-gray-700", children: "Time Period" }), _jsx("input", { type: "text", id: "timeline_period", value: formTimelinePeriod, onChange: (e) => setFormTimelinePeriod(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "historical_context", className: "block text-sm font-medium text-gray-700", children: "Historical Context" }), _jsx("textarea", { id: "historical_context", rows: 3, value: formHistoricalContext, onChange: (e) => setFormHistoricalContext(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "geographic_location", className: "block text-sm font-medium text-gray-700", children: "Geographic Location" }), _jsx("input", { type: "text", id: "geographic_location", value: formGeographicLocation, onChange: (e) => setFormGeographicLocation(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "key_scripture_references", className: "block text-sm font-medium text-gray-700", children: "Key Scripture References (comma or semicolon separated)" }), _jsx("textarea", { id: "key_scripture_references", rows: 3, value: formKeyScriptureRefs, onChange: (e) => setFormKeyScriptureRefs(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "theological_significance", className: "block text-sm font-medium text-gray-700", children: "Theological Significance" }), _jsx("textarea", { id: "theological_significance", rows: 3, value: formTheologicalSignificance, onChange: (e) => setFormTheologicalSignificance(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsxs("label", { htmlFor: "relationships", className: "block text-sm font-medium text-gray-700", children: ["Relationships (JSON string, e.g., ", '{"parents":["Jacob","Rachel"]}', ")"] }), _jsx("textarea", { id: "relationships", rows: 5, value: formRelationships, onChange: (e) => setFormRelationships(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { children: [_jsx("label", { htmlFor: "study_questions", className: "block text-sm font-medium text-gray-700", children: "Study Questions (one per line)" }), _jsx("textarea", { id: "study_questions", rows: 5, value: formStudyQuestions, onChange: (e) => setFormStudyQuestions(e.target.value), className: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] })] })] }), _jsxs("div", { className: "flex space-x-4", children: [_jsx("button", { type: "submit", disabled: isLoading, className: "px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:bg-gray-400", children: isLoading ? 'Saving...' : editingCharacterId ? 'Update Character' : 'Create Character' }), editingCharacterId && (_jsx("button", { type: "button", onClick: resetForm, className: "px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300", children: "Cancel Edit" }))] })] })] }), _jsxs("section", { className: "p-6 bg-white rounded-lg shadow-md", children: [_jsx("h2", { className: "text-2xl font-semibold text-gray-800 mb-4", children: "Existing Characters" }), _jsxs("div", { className: "mb-6 flex flex-wrap items-center justify-between gap-4", children: [_jsxs("div", { className: "flex-1", children: [_jsx("label", { htmlFor: "search", className: "block text-sm font-medium text-gray-700 mb-1", children: "Search Characters" }), _jsx("input", { type: "text", id: "search", placeholder: "Search by name, description, or bible book...", value: searchQuery, onChange: (e) => setSearchQuery(e.target.value), className: "block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500" })] }), _jsxs("div", { className: "flex space-x-2 mt-6", children: [_jsx("button", { 
+                                    onClick: exportCharactersToCSV, 
+                                    className: "px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center", 
+                                    title: "Export all characters to CSV file",
+                                    disabled: characters.length === 0,
+                                    children: "Export to CSV"
+                                }), _jsx("button", { 
+                                    onClick: handleDeleteSelected, 
+                                    className: `px-4 py-2 ${selectedCharacters.length > 0 ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'} text-white rounded-md flex items-center`, 
+                                    disabled: selectedCharacters.length === 0 || isLoading,
+                                    children: `Delete Selected (${selectedCharacters.length})`
+                                })] })] }), filteredCharacters.length === 0 ? (_jsx("p", { className: "text-gray-500 italic", children: "No characters found." })) : (_jsx("div", { className: "overflow-x-auto", children: _jsxs("table", { className: "min-w-full divide-y divide-gray-200", children: [_jsx("thead", { className: "bg-gray-50", children: _jsxs("tr", { children: [_jsx("th", { scope: "col", className: "px-3 py-3 text-left", children: _jsxs("div", { className: "flex items-center", children: [_jsx("input", { 
+                                                    type: "checkbox", 
+                                                    checked: filteredCharacters.length > 0 && selectedCharacters.length === filteredCharacters.length,
+                                                    onChange: handleSelectAll,
+                                                    className: "h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                                }), _jsx("span", { className: "ml-2 text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Select" })] }) }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Name" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Description" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Bible Book" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Visibility" }), _jsx("th", { scope: "col", className: "px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider", children: "Actions" })] }) }), _jsx("tbody", { className: "bg-white divide-y divide-gray-200", children: filteredCharacters.map((character) => (_jsxs("tr", { 
+                                        className: selectedCharacters.includes(character.id) ? "bg-blue-50" : "",
+                                        children: [
+                                        _jsx("td", { className: "px-3 py-4", children: _jsx("input", { 
+                                            type: "checkbox", 
+                                            checked: selectedCharacters.includes(character.id),
+                                            onChange: () => handleSelectCharacter(character.id),
+                                            className: "h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                        }) }),
+                                        _jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsxs("div", { className: "flex items-center", children: [character.avatar_url && (_jsx("img", { src: character.avatar_url, alt: character.name, className: "h-10 w-10 rounded-full mr-2 object-cover", onError: (e) => {
                                                                         e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
                                                                     } })), _jsx("div", { className: "text-sm font-medium text-gray-900", children: character.name })] }) }), _jsx("td", { className: "px-6 py-4", children: _jsx("div", { className: "text-sm text-gray-500 truncate max-w-xs", children: character.description }) }), _jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsx("div", { className: "text-sm text-gray-500", children: character.bible_book || '-' }) }), _jsx("td", { className: "px-6 py-4 whitespace-nowrap", children: _jsx("button", { onClick: () => handleToggleVisibility(character), className: `px-3 py-1 rounded-full text-xs font-semibold ${(character.is_visible ?? true)
                                                                 ? 'bg-green-100 text-green-800'
