@@ -9,6 +9,15 @@ import { useChat } from '../contexts/ChatContext';
 import CharacterCard from './CharacterCard';
 
 // Define Bible books for filtering
+
+// ---------------------------------------------------------------------------
+// DEBUG LOGGING – helps verify that this file is actually being executed.
+// These messages are deliberately loud and unique to make them easy to spot
+// in the browser console.
+// ---------------------------------------------------------------------------
+// eslint-disable-next-line no-console
+console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
+
 const BIBLE_BOOKS = {
   oldTestament: [
     'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy',
@@ -28,186 +37,439 @@ const BIBLE_BOOKS = {
   ]
 };
 
-// Bible book imagery mapping
-const BOOK_IMAGERY = {
-  Genesis: 'https://images.unsplash.com/photo-1501493870936-9c2e41625521?auto=format&fit=crop&q=80&w=400',
-  Exodus: 'https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?auto=format&fit=crop&q=80&w=400',
-  Psalms: 'https://images.unsplash.com/photo-1519475889208-0968e5438f7d?auto=format&fit=crop&q=80&w=400',
-  Isaiah: 'https://images.unsplash.com/photo-1507692049790-de58290a4334?auto=format&fit=crop&q=80&w=400',
-  Matthew: 'https://images.unsplash.com/photo-1563841930606-67e2bce48b78?auto=format&fit=crop&q=80&w=400',
-  John: 'https://images.unsplash.com/photo-1602526429747-ac387a91d43b?auto=format&fit=crop&q=80&w=400',
-  Revelation: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=400',
-};
-
-// Group imagery mapping
-const GROUP_IMAGERY = {
-  Prophets: 'https://images.unsplash.com/photo-1470859624578-4bb64151d9c1?auto=format&fit=crop&q=80&w=400',
-  Apostles: 'https://images.unsplash.com/photo-1508896694512-1eade558679c?auto=format&fit=crop&q=80&w=400',
-  Kings: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400',
-  Disciples: 'https://images.unsplash.com/photo-1544198365-f5d60b6d8190?auto=format&fit=crop&q=80&w=400',
-  Women: 'https://images.unsplash.com/photo-1565505146646-c02f3676d491?auto=format&fit=crop&q=80&w=400',
-};
-
-// Flat list of Bible books in canonical order
-/*
- * NOTE:
- * The canonical book list isn't currently used in this component.  Leaving the
- * spread lines outside of a comment block caused the TypeScript parser to throw
- * a "Declaration or statement expected" error.  We wrap the entire declaration
- * in a block-comment so it can be re-enabled later without breaking the build.
- *
- * Example usage if needed:
- * const ALL_BOOKS: string[] = [
- *   ...BIBLE_BOOKS.oldTestament,
- *   ...BIBLE_BOOKS.newTestament,
- * ];
- */
-
-// Helper to detect testament from book name
-function getTestament(book: string): 'old' | 'new' | 'unknown' {
-  if (BIBLE_BOOKS.oldTestament.includes(book)) return 'old';
-  if (BIBLE_BOOKS.newTestament.includes(book)) return 'new';
-  return 'unknown';
-}
-
-// Helper to get book image
-function getBookImage(book: string): string {
-  return BOOK_IMAGERY[book as keyof typeof BOOK_IMAGERY] || 
-    'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&q=80&w=400';
-}
-
-// Helper to get group image
-function getGroupImage(group: string): string {
-  return GROUP_IMAGERY[group as keyof typeof GROUP_IMAGERY] || 
-    'https://images.unsplash.com/photo-1517021897933-0e0319cfbc28?auto=format&fit=crop&q=80&w=400';
-}
-
-// Define navigation levels
-type NavigationLevel = 'testaments' | 'groups' | 'books' | 'characters';
-
-// Animation variants for page transitions
-const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
-};
-
-// Card animation variants
-const cardVariants = {
-  initial: { opacity: 0, scale: 0.9 },
-  animate: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
-  hover: { scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" },
-  tap: { scale: 0.98 }
-};
+// View modes: grid or list
+type ViewMode = 'grid' | 'list';
+type TestamentFilter = 'all' | 'old' | 'new';
 
 const ScalableCharacterSelection: React.FC = () => {
+  // eslint-disable-next-line no-console
+  console.log('⚡ ScalableCharacterSelection RENDER START ⚡');
+  // State for characters, loading, and errors
   const [characters, setCharacters] = useState<Character[]>([]);
-  const [groups, setGroups] = useState<CharacterGroup[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeTestament, setActiveTestament] = useState<'all' | 'old' | 'new'>('all');
-  const [activeGroup, setActiveGroup] = useState<CharacterGroup | null>(null);
-  const [activeBook, setActiveBook] = useState<string | null>(null);
-  const [navigationLevel, setNavigationLevel] = useState<NavigationLevel>('testaments'); // Start at top level
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [testament, setTestament] = useState<TestamentFilter>('all');
+  const [bookFilter, setBookFilter] = useState<string>('all');
+  const [groupFilter, setGroupFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentLetter, setCurrentLetter] = useState<string>('all');
+  const [groups, setGroups] = useState<CharacterGroup[]>([]);
+  const [activeFilters, setActiveFilters] = useState<{type: string, value: string}[]>([]);
   const [featuredCharacter, setFeaturedCharacter] = useState<Character | null>(null);
-
+  /** When user clicks a card we show a quick “loading” overlay until ChatContext
+   * finishes selecting the character.  This prevents a confusing pause where
+   * nothing appears to happen, especially on slower connections. */
+  const [isSelecting, setIsSelecting] = useState(false);
+  
+  // Pagination settings
+  const itemsPerPage = 20;
+  
+  // Get the chat context
   const { selectCharacter, character: selectedCharacter } = useChat();
 
-  // Fetch all characters and groups on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const fetchedCharacters = await characterRepository.getAll();
-        setCharacters(fetchedCharacters);
-        
-        // Set a featured character (Jesus if available)
-        const jesus = fetchedCharacters.find(c => c.name.toLowerCase().includes('jesus'));
-        setFeaturedCharacter(jesus || (fetchedCharacters.length > 0 ? fetchedCharacters[0] : null));
-        
-        const fetchedGroups = await groupRepository.getAllGroups();
-        setGroups(fetchedGroups);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-        setError('Failed to load data. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
+  // Fetch characters on component mount
+  const fetchCharacters = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await characterRepository.getAll();
+      setCharacters(data);
+      
+      // Set a featured character (Jesus if available)
+      const jesus = data.find(c => c.name.toLowerCase().includes('jesus'));
+      setFeaturedCharacter(jesus || (data.length > 0 ? data[0] : null));
+    } catch (err) {
+      console.error('Failed to fetch characters:', err);
+      setError('Failed to load Bible characters. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Filtered characters based on current navigation/filters
-  const filteredCharacters = useMemo(() => {
-    let currentChars = characters;
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('🪄 ScalableCharacterSelection useEffect (mount) fired');
+    fetchCharacters();
+  }, [fetchCharacters]);
 
-    // Apply testament filter
-    if (activeTestament !== 'all') {
-      currentChars = currentChars.filter(char => {
-        const charBook = char.bible_book || ''; // Assuming bible_book is available
-        return getTestament(charBook) === activeTestament;
+  // Fetch groups for filtering
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('📚 ScalableCharacterSelection fetching groups list');
+    (async () => {
+      try {
+        const all = await groupRepository.getAllGroups();
+        setGroups(all);
+      } catch (e) {
+        console.error('Failed to fetch character groups:', e);
+      }
+    })();
+  }, []);
+
+  // Handle character selection
+  const handleSelectCharacter = useCallback(
+    async (characterId: string) => {
+      try {
+        setIsSelecting(true);
+        await selectCharacter(characterId);
+      } catch (err) {
+        console.error('Error selecting character:', err);
+        setError('Failed to select character. Please try again.');
+      } finally {
+        setIsSelecting(false);
+      }
+    },
+    [selectCharacter],
+  );
+
+  // Update active filters when filters change
+  useEffect(() => {
+    const newFilters = [];
+    
+    if (testament !== 'all') {
+      newFilters.push({
+        type: 'testament',
+        value: testament === 'old' ? 'Old Testament' : 'New Testament'
       });
     }
-
-    // Apply group filter
-    if (activeGroup) {
-      // This would ideally use character_group_mappings from DB
-      // For now, a simple filter based on description containing group name
-      currentChars = currentChars.filter(char =>
-        char.description?.toLowerCase().includes(activeGroup.name.toLowerCase())
-      );
+    
+    if (bookFilter !== 'all') {
+      newFilters.push({
+        type: 'book',
+        value: bookFilter
+      });
     }
-
-    // Apply book filter
-    if (activeBook) {
-      currentChars = currentChars.filter(char =>
-        char.bible_book?.toLowerCase().includes(activeBook.toLowerCase())
-      );
+    
+    if (groupFilter !== 'all') {
+      newFilters.push({
+        type: 'group',
+        value: groupFilter
+      });
     }
+    
+    if (searchQuery) {
+      newFilters.push({
+        type: 'search',
+        value: `"${searchQuery}"`
+      });
+    }
+    
+    if (currentLetter !== 'all') {
+      newFilters.push({
+        type: 'letter',
+        value: `Starting with "${currentLetter}"`
+      });
+    }
+    
+    setActiveFilters(newFilters);
+  }, [testament, bookFilter, groupFilter, searchQuery, currentLetter]);
 
-    // Apply search query
+  // Remove a specific filter
+  const removeFilter = (type: string) => {
+    switch(type) {
+      case 'testament':
+        setTestament('all');
+        break;
+      case 'book':
+        setBookFilter('all');
+        break;
+      case 'group':
+        setGroupFilter('all');
+        break;
+      case 'search':
+        setSearchQuery('');
+        break;
+      case 'letter':
+        setCurrentLetter('all');
+        break;
+    }
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Filter characters based on all criteria
+  const filteredCharacters = useMemo(() => {
+    let result = [...characters];
+    
+    // Search filter
     if (searchQuery.trim()) {
-      currentChars = currentChars.filter(char =>
-        `${char.name} ${char.description} ${char.short_biography || ''}`.toLowerCase().includes(searchQuery.toLowerCase())
+      result = result.filter((c) =>
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.description || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    return currentChars;
-  }, [characters, activeTestament, activeGroup, activeBook, searchQuery]);
-
-  const handleSelectCharacter = useCallback(async (characterId: string) => {
-    try {
-      await selectCharacter(characterId);
-      // Reset filters/navigation after character selection
-      setActiveTestament('all');
-      setActiveGroup(null);
-      setActiveBook(null);
-      setSearchQuery('');
-      setNavigationLevel('testaments');
-    } catch (err) {
-      console.error('Error selecting character:', err);
-      setError('Failed to select character. Please try again.');
+    
+    // Testament filter
+    if (testament !== 'all') {
+      result = result.filter((c) => {
+        const textToSearch = `${c.description || ''} ${c.bible_book || ''} ${c.scriptural_context || ''}`.toLowerCase();
+        return testament === 'old'
+          ? /(genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|chronicles|ezra|nehemiah|esther|job|psalms|proverbs|ecclesiastes|song of solomon|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi|old testament)/i.test(textToSearch)
+          : /(matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|john|jude|revelation|new testament)/i.test(textToSearch);
+      });
     }
-  }, [selectCharacter]);
+    
+    // Book filter
+    if (bookFilter !== 'all') {
+      result = result.filter((c) => {
+        const textToSearch = `${c.description || ''} ${c.bible_book || ''} ${c.scriptural_context || ''}`.toLowerCase();
+        return textToSearch.includes(bookFilter.toLowerCase());
+      });
+    }
+    
+    // Group filter
+    if (groupFilter !== 'all') {
+      result = result.filter((c) => {
+        const textToSearch = `${c.description || ''}`.toLowerCase();
+        return textToSearch.includes(groupFilter.toLowerCase());
+      });
+    }
+    
+    // Alphabetical filter
+    if (currentLetter !== 'all') {
+      result = result.filter(c => 
+        c.name.toUpperCase().startsWith(currentLetter)
+      );
+    }
+    
+    // Sort alphabetically by default
+    result.sort((a, b) => a.name.localeCompare(b.name));
+    
+    return result;
+  }, [characters, searchQuery, testament, bookFilter, groupFilter, currentLetter]);
 
-  const renderCharacterCard = useCallback((index: number) => {
-    const character = filteredCharacters[index];
+  // Paginate the filtered results
+  const paginatedCharacters = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredCharacters.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredCharacters, currentPage, itemsPerPage]);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredCharacters.length / itemsPerPage);
+
+  // Render character card or list item
+  const renderCharacterItem = useCallback((index: number) => {
+    const character = paginatedCharacters[index];
+    if (viewMode === 'grid') {
+      return (
+        <div className="p-2" key={character.id}>
+          <CharacterCard
+            character={character}
+            onSelect={handleSelectCharacter}
+            isSelected={selectedCharacter?.id === character.id}
+          />
+        </div>
+      );
+    } else {
+      return (
+        <div 
+          key={character.id}
+          className={`
+            flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15
+            transition-all duration-300 hover:bg-white/15 cursor-pointer
+            ${selectedCharacter?.id === character.id ? 'border-yellow-400 ring-2 ring-yellow-400/30' : ''}
+          `}
+          onClick={() => handleSelectCharacter(character.id)}
+        >
+          {/* Perfect-circle avatar (table-based for reliability) */}
+          <table className="border-collapse m-0 p-0">
+            <tbody>
+              <tr>
+                <td
+                  className={`
+                    w-16 h-16 rounded-full overflow-hidden p-0
+                    ${selectedCharacter?.id === character.id ? 'border-2 border-yellow-400' : 'border-2 border-white/30'}
+                    bg-blue-50
+                  `}
+                >
+                  <img
+                    src={
+                      character.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`
+                    }
+                    alt={character.name}
+                    className="w-16 h-16 object-cover block"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-yellow-400" style={{ fontFamily: 'Cinzel, serif' }}>{character.name}</h3>
+            <p className="text-white/80 line-clamp-2">{character.description}</p>
+            <div className="text-xs text-white/50 mt-1">
+              {character.bible_book && `${character.bible_book} • `}
+              {testament === 'old' ? 'Old Testament' : testament === 'new' ? 'New Testament' : ''}
+            </div>
+          </div>
+          <button
+            className={`
+              px-4 py-2 rounded-lg text-sm font-medium
+              ${selectedCharacter?.id === character.id 
+                ? 'bg-yellow-400 text-blue-900' 
+                : 'bg-white/10 text-white hover:bg-white/20'}
+            `}
+          >
+            {selectedCharacter?.id === character.id ? 'Continue' : 'Chat'}
+          </button>
+        </div>
+      );
+    }
+  }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter]);
+
+  // Generate pagination controls
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    const pages = [];
+    
+    // Previous button
+    pages.push(
+      <button 
+        key="prev" 
+        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+        disabled={currentPage === 1}
+        className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Previous page"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    );
+    
+    // First page
+    if (startPage > 1) {
+      pages.push(
+        <button 
+          key="1" 
+          onClick={() => setCurrentPage(1)}
+          className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/10 text-white hover:bg-white/20"
+        >
+          1
+        </button>
+      );
+      
+      // Ellipsis if needed
+      if (startPage > 2) {
+        pages.push(
+          <span key="ellipsis1" className="w-10 h-10 flex items-center justify-center text-white">...</span>
+        );
+      }
+    }
+    
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button 
+          key={i} 
+          onClick={() => setCurrentPage(i)}
+          className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+            currentPage === i 
+              ? 'bg-yellow-400 text-blue-900 font-bold' 
+              : 'bg-white/10 text-white hover:bg-white/20'
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+    
+    // Ellipsis if needed
+    if (endPage < totalPages - 1) {
+      pages.push(
+        <span key="ellipsis2" className="w-10 h-10 flex items-center justify-center text-white">...</span>
+      );
+    }
+    
+    // Last page
+    if (endPage < totalPages) {
+      pages.push(
+        <button 
+          key={totalPages} 
+          onClick={() => setCurrentPage(totalPages)}
+          className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/10 text-white hover:bg-white/20"
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    
+    // Next button
+    pages.push(
+      <button 
+        key="next" 
+        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+        disabled={currentPage === totalPages}
+        className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Next page"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        </svg>
+      </button>
+    );
+    
     return (
-      <div className="p-2" key={character.id}>
-        <CharacterCard
-          character={character}
-          onSelect={handleSelectCharacter}
-          isSelected={selectedCharacter?.id === character.id}
-        />
+      <div className="flex items-center justify-center gap-2 mt-8">
+        {pages}
       </div>
     );
-  }, [filteredCharacters, handleSelectCharacter, selectedCharacter]);
+  };
 
+  // Generate alphabetical navigation
+  const renderAlphaNav = () => {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    
+    return (
+      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 bg-white/5 backdrop-blur-sm rounded-full py-4 px-2 hidden lg:flex flex-col gap-1 border border-white/10">
+        <button
+          onClick={() => {
+            setCurrentLetter('all');
+            setCurrentPage(1);
+          }}
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+            currentLetter === 'all' 
+              ? 'bg-yellow-400 text-blue-900 font-bold' 
+              : 'text-white hover:bg-white/10'
+          }`}
+        >
+          All
+        </button>
+        
+        {letters.map(letter => (
+          <button
+            key={letter}
+            onClick={() => {
+              setCurrentLetter(letter);
+              setCurrentPage(1);
+            }}
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+              currentLetter === letter 
+                ? 'bg-yellow-400 text-blue-900 font-bold' 
+                : 'text-white hover:bg-white/10'
+            }`}
+          >
+            {letter}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Render loading state with divine light spinner
   if (isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-blue-900 via-blue-600 to-blue-400">
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]">
         <div className="text-center">
           <div className="relative mb-6">
             <div className="absolute inset-0 rounded-full bg-yellow-300 blur-xl opacity-30 animate-pulse"></div>
@@ -222,9 +484,10 @@ const ScalableCharacterSelection: React.FC = () => {
     );
   }
 
+  // Render error state
   if (error) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-blue-900 via-blue-600 to-blue-400">
+      <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]">
         <div className="max-w-md rounded-lg bg-white bg-opacity-90 p-8 text-center shadow-2xl">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -242,583 +505,294 @@ const ScalableCharacterSelection: React.FC = () => {
     );
   }
 
-  const renderContent = () => {
-    switch (navigationLevel) {
-      case 'testaments':
-        return (
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={pageVariants}
-          >
-            <motion.div
-              className="relative overflow-hidden rounded-xl shadow-xl cursor-pointer transition-all duration-300 group h-80"
-              variants={cardVariants}
-              whileHover="hover"
-              whileTap="tap"
-              onClick={() => {
-                setActiveTestament('old');
-                setNavigationLevel('books');
-              }}
-            >
-              {/* Background Image with Overlay */}
-              <div className="absolute inset-0 bg-black">
-                <img 
-                  src="https://images.unsplash.com/photo-1518066000714-cdcd82538122?auto=format&fit=crop&w=800&q=80" 
-                  alt="Old Testament"
-                  className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
-              </div>
-              
-              {/* Divine Light Effect */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-300 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-8 text-white">
-                {/* Icon */}
-                <div className="mb-4 text-yellow-300 text-5xl">📜</div>
-                
-                <h3 className="text-3xl font-bold mb-2 text-yellow-300" style={{ fontFamily: 'Cinzel, serif' }}>Old Testament</h3>
-                <div className="h-1 w-24 bg-yellow-300 rounded-full mb-4 group-hover:w-32 transition-all duration-300"></div>
-                <p className="text-white/90 text-lg mb-6 max-w-xs">Explore characters from Genesis to Malachi, from creation to the prophets.</p>
-                
-                <div className="inline-flex items-center text-yellow-300 group-hover:translate-x-2 transition-transform">
-                  <span className="mr-2">Explore</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="relative overflow-hidden rounded-xl shadow-xl cursor-pointer transition-all duration-300 group h-80"
-              variants={cardVariants}
-              whileHover="hover"
-              whileTap="tap"
-              onClick={() => {
-                setActiveTestament('new');
-                setNavigationLevel('books');
-              }}
-            >
-              {/* Background Image with Overlay */}
-              <div className="absolute inset-0 bg-black">
-                <img 
-                  src="https://images.unsplash.com/photo-1528659860103-419421711585?auto=format&fit=crop&w=800&q=80" 
-                  alt="New Testament"
-                  className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
-              </div>
-              
-              {/* Divine Light Effect */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-300 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-8 text-white">
-                {/* Icon */}
-                <div className="mb-4 text-yellow-300 text-5xl">🕊️</div>
-                
-                <h3 className="text-3xl font-bold mb-2 text-yellow-300" style={{ fontFamily: 'Cinzel, serif' }}>New Testament</h3>
-                <div className="h-1 w-24 bg-yellow-300 rounded-full mb-4 group-hover:w-32 transition-all duration-300"></div>
-                <p className="text-white/90 text-lg mb-6 max-w-xs">Discover figures from Matthew to Revelation, from Jesus to his apostles.</p>
-                
-                <div className="inline-flex items-center text-yellow-300 group-hover:translate-x-2 transition-transform">
-                  <span className="mr-2">Explore</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="relative overflow-hidden rounded-xl shadow-xl cursor-pointer transition-all duration-300 group h-80 md:col-span-2"
-              variants={cardVariants}
-              whileHover="hover"
-              whileTap="tap"
-              onClick={() => setNavigationLevel('groups')}
-            >
-              {/* Background Image with Overlay */}
-              <div className="absolute inset-0 bg-black">
-                <img 
-                  src="https://images.unsplash.com/photo-1447023029226-ef8f6b52e3ea?auto=format&fit=crop&w=1200&q=80" 
-                  alt="Browse by Group"
-                  className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
-              </div>
-              
-              {/* Divine Light Effect */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-300 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-              
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end p-8 text-white">
-                {/* Icon */}
-                <div className="mb-4 text-yellow-300 text-5xl">👥</div>
-                
-                <h3 className="text-3xl font-bold mb-2 text-yellow-300" style={{ fontFamily: 'Cinzel, serif' }}>Browse by Group</h3>
-                <div className="h-1 w-24 bg-yellow-300 rounded-full mb-4 group-hover:w-32 transition-all duration-300"></div>
-                <p className="text-white/90 text-lg mb-6 max-w-lg">Find characters organized by roles like Prophets, Apostles, Kings, and other biblical groups.</p>
-                
-                <div className="inline-flex items-center text-yellow-300 group-hover:translate-x-2 transition-transform">
-                  <span className="mr-2">Explore Groups</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        );
-      case 'groups':
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={pageVariants}
-          >
-            <button
-              onClick={() => setNavigationLevel('testaments')}
-              className="text-blue-100 hover:text-yellow-300 transition-colors flex items-center font-semibold"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-              Back to Testaments
-            </button>
-            
-            <div className="relative text-center mb-12">
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-12 bg-yellow-300 blur-xl opacity-30 rounded-full"></div>
-              <h2 className="text-4xl font-bold text-yellow-300 relative" style={{ fontFamily: 'Cinzel, serif' }}>
-                Biblical Character Groups
-              </h2>
-              <p className="text-blue-100 mt-2 max-w-2xl mx-auto">Select a group to discover characters with similar roles and stories</p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <AnimatePresence>
-                {groups.map(group => (
-                  <motion.div
-                    key={group.id}
-                    className="relative overflow-hidden rounded-xl shadow-xl cursor-pointer transition-all duration-300 group h-64"
-                    variants={cardVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    whileHover="hover"
-                    whileTap="tap"
-                    onClick={() => {
-                      setActiveGroup(group);
-                      setNavigationLevel('characters');
-                    }}
-                  >
-                    {/* Background Image with Overlay */}
-                    <div className="absolute inset-0 bg-black">
-                      <img 
-                        src={getGroupImage(group.name)} 
-                        alt={group.name}
-                        className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
-                    </div>
-                    
-                    {/* Divine Light Effect */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-300 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                    
-                    {/* Content */}
-                    <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-                      <h3 className="text-2xl font-bold mb-2 text-yellow-300" style={{ fontFamily: 'Cinzel, serif' }}>{group.name}</h3>
-                      <div className="h-0.5 w-16 bg-yellow-300 rounded-full mb-3 group-hover:w-24 transition-all duration-300"></div>
-                      <p className="text-white/90 text-sm mb-4 line-clamp-2">{group.description || `Characters from the ${group.name} group.`}</p>
-                      
-                      <div className="inline-flex items-center text-yellow-300 text-sm group-hover:translate-x-2 transition-transform">
-                        <span className="mr-2">View Characters</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        );
-      case 'books':
-        const booksToDisplay = activeTestament === 'old' ? BIBLE_BOOKS.oldTestament : BIBLE_BOOKS.newTestament;
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={pageVariants}
-          >
-            <button
-              onClick={() => setNavigationLevel('testaments')}
-              className="text-blue-100 hover:text-yellow-300 transition-colors flex items-center font-semibold"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-              Back to Testaments
-            </button>
-            
-            <div className="relative text-center mb-12">
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-12 bg-yellow-300 blur-xl opacity-30 rounded-full"></div>
-              <h2 className="text-4xl font-bold text-yellow-300 relative" style={{ fontFamily: 'Cinzel, serif' }}>
-                {activeTestament === 'old' ? 'Old Testament Books' : 'New Testament Books'}
-              </h2>
-              <p className="text-blue-100 mt-2 max-w-2xl mx-auto">Select a book to discover its characters</p>
-            </div>
-            
-            {/* --- BOOK LIST -------------------------------------------------- */}
-            {/* Limit height & add scroll so long lists don't overflow viewport */}
-            <div
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4
-                         max-h-[60vh] overflow-y-auto pr-1"
-            >
-              <AnimatePresence>
-                {booksToDisplay.map(book => (
-                  <motion.div
-                    key={book}
-                    className="relative overflow-hidden rounded-xl shadow-xl cursor-pointer transition-all duration-300 group h-48"
-                    variants={cardVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    whileHover="hover"
-                    whileTap="tap"
-                    onClick={() => {
-                      setActiveBook(book);
-                      setNavigationLevel('characters');
-                    }}
-                  >
-                    {/* Background Image with Overlay */}
-                    <div className="absolute inset-0 bg-black">
-                      <img 
-                        src={getBookImage(book)} 
-                        alt={book}
-                        className="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent"></div>
-                    </div>
-                    
-                    {/* Divine Light Effect */}
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-300 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                    
-                    {/* Content */}
-                    <div className="absolute inset-0 flex flex-col justify-center items-center p-4 text-white">
-                      {/* Scroll icon */}
-                      <div className="text-yellow-300 text-2xl mb-2 opacity-80">📜</div>
-                      
-                      <h3 className="text-xl font-bold mb-1 text-yellow-300 text-center" style={{ fontFamily: 'Cinzel, serif' }}>{book}</h3>
-                      <div className="h-0.5 w-12 bg-yellow-300 rounded-full group-hover:w-16 transition-all duration-300"></div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        );
-      case 'characters':
-        return (
-          <motion.div 
-            className="space-y-8"
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            variants={pageVariants}
-          >
-            <button
-              onClick={() => {
-                if (activeGroup) {
-                  setNavigationLevel('groups');
-                  setActiveGroup(null);
-                } else if (activeBook) {
-                  setNavigationLevel('books');
-                  setActiveBook(null);
-                } else {
-                  setNavigationLevel('testaments');
-                }
-              }}
-              className="text-blue-100 hover:text-yellow-300 transition-colors flex items-center font-semibold"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-              Back to {activeGroup ? 'Groups' : activeBook ? 'Books' : 'Testaments'}
-            </button>
-            
-            <div className="relative flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-yellow-300" style={{ fontFamily: 'Cinzel, serif' }}>
-                  {activeGroup 
-                    ? `${activeGroup.name} Characters` 
-                    : activeBook 
-                      ? `Characters from ${activeBook}` 
-                      : 'All Characters'}
-                </h2>
-                <div className="h-0.5 w-24 bg-yellow-300 rounded-full mt-2"></div>
-              </div>
-              <div className="text-white text-sm bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full">
-                {filteredCharacters.length} character{filteredCharacters.length !== 1 ? 's' : ''} found
-              </div>
-            </div>
-            
-            {/* Premium upgrade button above search */}
-            <div className="mb-6 flex justify-center">
-              <button
-                onClick={() => (window.location.href = '/pricing.html')}
-                className="animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200"
-              >
-                🔓 Unlock all 50+ characters with Premium
-              </button>
-            </div>
-            
-            {/* Search bar with divine glow */}
-            <div className="relative mb-8 max-w-md mx-auto">
-              <div className="absolute -inset-1 bg-gradient-to-r from-yellow-300/30 via-blue-400/20 to-yellow-300/30 rounded-full blur-md"></div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search characters..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-full border-2 border-white/30 bg-white/20 py-3 pl-12 pr-4 text-white placeholder-blue-100 focus:border-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-300/50 backdrop-blur-sm"
-                />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="absolute left-4 top-3.5 h-5 w-5 text-yellow-300"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            
-            {/* Virtualized character grid with enhanced styling */}
-            <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-yellow-50/20 via-white/10 to-yellow-100/20 rounded-3xl backdrop-blur-sm"></div>
-              <div className="absolute -inset-1 bg-gradient-to-r from-yellow-300/20 via-white/5 to-yellow-300/20 rounded-xl"></div>
-              
-              <div className="relative bg-gradient-to-br from-yellow-50/20 via-white/10 to-yellow-100/20 backdrop-blur-sm rounded-xl p-6 shadow-xl">
-                {filteredCharacters.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="relative w-20 h-20 mx-auto mb-6">
-                      <div className="absolute inset-0 bg-yellow-300 rounded-full blur-xl opacity-20"></div>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-yellow-300 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <p className="text-2xl text-white mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
-                      No characters found
-                    </p>
-                    <p className="text-blue-100 mb-6 max-w-md mx-auto">
-                      We couldn't find any characters matching your criteria. Try adjusting your search or filters.
-                    </p>
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="text-yellow-300 hover:text-yellow-400 font-medium border border-yellow-300/50 hover:border-yellow-300 rounded-full px-6 py-2 transition-colors"
-                    >
-                      Clear search
-                    </button>
-                  </div>
-                ) : (
-                  <div style={{ height: '600px' }}>
-                    <VirtuosoGrid
-                      totalCount={filteredCharacters.length}
-                      overscan={200}
-                      listClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-                      itemClassName="character-card-container"
-                      itemContent={index => renderCharacterCard(index)}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        );
-      default:
-        return null;
-    }
-  };
-
-  /* use transparent container so global gradient shows */
   return (
-    <>
-      <div className="relative pb-12">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-yellow-200 via-transparent to-transparent opacity-30"></div>
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6">
+      {/* Alphabetical navigation */}
+      {renderAlphaNav()}
+      
+      <div className="max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-center text-yellow-400 mb-8 tracking-tight drop-shadow-lg" style={{ fontFamily: 'Cinzel, serif' }}>
+          Choose Your Biblical Guide
+        </h1>
         
-        {/* Cloud elements */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-24 bg-white rounded-full blur-3xl opacity-20 animate-float"></div>
-        <div className="absolute top-1/3 right-1/4 w-80 h-32 bg-white rounded-full blur-3xl opacity-15 animate-float-delayed"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-72 h-28 bg-white rounded-full blur-3xl opacity-10 animate-float-slow"></div>
-      </div>
-
-      <div className="relative container mx-auto px-6 pt-8">
-        {/* Brand header with divine glow */}
-        <header className="mb-10 text-center relative">
-          <div className="absolute inset-0 mx-auto w-64 h-12 bg-yellow-300 blur-xl opacity-30 rounded-full"></div>
-          <h1 className="text-5xl font-extrabold text-white tracking-tight drop-shadow-lg relative" style={{ fontFamily: 'Cinzel, serif' }}>
-            Ask<span className="text-yellow-300">Jesus</span>AI
-          </h1>
-          <p className="mt-2 text-blue-100 text-lg font-light">Choose a biblical voice to guide your journey</p>
-        </header>
-
-        {/* Premium upgrade button at the top */}
-        <div className="mb-8 flex justify-center">
-              <button
-                onClick={() => (window.location.href = '/pricing.html')}
-            className="animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200"
-          >
-            🔓 Upgrade to Premium &nbsp;–&nbsp; Unlock All 50+ Bible Characters
-          </button>
-        </div>
-
-        {/* Featured Character (when at top level) */}
-        {navigationLevel === 'testaments' && featuredCharacter && (
-          <div className="mb-16 flex flex-col items-center">
-            <div className="relative mb-6">
+        {/* Featured Character Section */}
+        {featuredCharacter && (
+          <div className="mb-12 flex flex-col items-center">
+            <div className="relative mb-4">
               {/* Halo effect */}
-              <div className="absolute -inset-4 rounded-full bg-yellow-300 blur-xl opacity-30 animate-pulse"></div>
+              <div className="absolute -inset-4 rounded-full bg-yellow-300 blur-xl opacity-30"></div>
               
-              {/* Circular avatar */}
-              <div className="relative h-32 w-32 rounded-full overflow-hidden border-4 border-yellow-300 shadow-xl">
-                <img 
-                  src={featuredCharacter.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`}
-                  alt={featuredCharacter.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
+              {/* Circular avatar using table-based approach for perfect circle */}
+              <table className="border-collapse m-0 p-0 relative z-0">
+                <tbody>
+                  <tr>
+                    <td
+                      className="w-32 h-32 rounded-full overflow-hidden p-0 border-4 border-yellow-300 shadow-xl bg-blue-50"
+                    >
+                      <img
+                        src={
+                          featuredCharacter.avatar_url ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            featuredCharacter.name,
+                          )}&background=random`
+                        }
+                        alt={featuredCharacter.name}
+                        className="w-32 h-32 object-cover block"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
             
             <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Cinzel, serif' }}>{featuredCharacter.name}</h2>
             <p className="text-blue-100 max-w-md text-center mb-4">{featuredCharacter.description}</p>
             
-            <motion.button
+            <button
               onClick={() => handleSelectCharacter(featuredCharacter.id)}
-              className="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg"
-              whileHover={{ scale: 1.05, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
-              whileTap={{ scale: 0.98 }}
+              className="bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105 active:scale-95"
             >
               Chat with {featuredCharacter.name} 🙏
-            </motion.button>
+            </button>
             
             <p className="mt-6 text-blue-100 text-sm">Or select another character below</p>
           </div>
         )}
-
-        {/* Breadcrumb navigation with enhanced styling */}
-        {navigationLevel !== 'testaments' && (
-          <div className="mb-8 flex items-center text-sm text-blue-100 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 shadow-md">
+        
+        {/* Premium upgrade button */}
+        <div className="mb-8 flex justify-center">
           <button
             onClick={() => (window.location.href = '/pricing.html')}
-              className="hover:text-yellow-300 transition-colors flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Home
-            </button>
-
-            {/* Premium breadcrumb button */}
-            <button
-              onClick={() => (window.location.href = '/pricing.html')}
-              className="ml-3 flex items-center rounded-full bg-yellow-400 px-3 py-1 font-semibold text-blue-900 shadow hover:bg-yellow-300 transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 mr-1"
-                viewBox="0 0 24 24"
-                fill="currentColor"
+            className="animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200"
+          >
+            🔓 Unlock all characters &nbsp;–&nbsp; Upgrade to Premium
+          </button>
+        </div>
+        
+        {/* Filter section */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            {/* Search */}
+            <div className="w-full md:flex-1">
+              <input
+                type="text"
+                placeholder="Search characters..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+              />
+            </div>
+            
+            {/* Testament filter */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setTestament('all');
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 rounded-full ${
+                  testament === 'all' 
+                    ? 'bg-yellow-400 text-blue-900 font-bold' 
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M12 1.5a4.5 4.5 0 00-4.5 4.5v1.05A3.001 3.001 0 006 10.5v9a3 3 0 003 3h6a3 3 0 003-3v-9a3.001 3.001 0 00-1.5-2.625V6A4.5 4.5 0 0012 1.5zM9 6a3 3 0 016 0v1.5H9V6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Premium
+                All
+              </button>
+              <button
+                onClick={() => {
+                  setTestament('old');
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 rounded-full ${
+                  testament === 'old' 
+                    ? 'bg-yellow-400 text-blue-900 font-bold' 
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                Old
+              </button>
+              <button
+                onClick={() => {
+                  setTestament('new');
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 rounded-full ${
+                  testament === 'new' 
+                    ? 'bg-yellow-400 text-blue-900 font-bold' 
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                New
+              </button>
+            </div>
+            
+            {/* Book filter */}
+            <div className="w-full md:w-auto">
+              <select
+                value={bookFilter}
+                onChange={(e) => {
+                  setBookFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+              >
+                <option value="all">All Books</option>
+                <optgroup label="Old Testament">
+                  {BIBLE_BOOKS.oldTestament.map(book => (
+                    <option key={book} value={book}>{book}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="New Testament">
+                  {BIBLE_BOOKS.newTestament.map(book => (
+                    <option key={book} value={book}>{book}</option>
+                  ))}
+                </optgroup>
+              </select>
+            </div>
+            
+            {/* Group filter */}
+            <div className="w-full md:w-auto">
+              <select
+                value={groupFilter}
+                onChange={(e) => {
+                  setGroupFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+              >
+                <option value="all">All Groups</option>
+                <option value="Prophets">Prophets</option>
+                <option value="Apostles">Apostles</option>
+                <option value="Kings">Kings</option>
+                <option value="Women">Women of the Bible</option>
+                {groups.map(group => (
+                  <option key={group.id} value={group.name}>{group.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* View toggle */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  viewMode === 'grid' 
+                    ? 'bg-yellow-400 text-blue-900' 
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+                aria-label="Grid view"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  viewMode === 'list' 
+                    ? 'bg-yellow-400 text-blue-900' 
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+                aria-label="List view"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Active filters */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-6 bg-white/5 p-3 rounded-lg">
+            <span className="text-white/70 text-sm">Active Filters:</span>
+            {activeFilters.map((filter, index) => (
+              <div 
+                key={index} 
+                className="flex items-center gap-1 bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full border border-yellow-400/50"
+              >
+                <span>{filter.value}</span>
+                <button 
+                  onClick={() => removeFilter(filter.type)}
+                  className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button 
+              onClick={() => {
+                setTestament('all');
+                setBookFilter('all');
+                setGroupFilter('all');
+                setSearchQuery('');
+                setCurrentLetter('all');
+                setCurrentPage(1);
+              }}
+              className="text-sm text-blue-300 hover:text-blue-200 ml-auto"
+            >
+              Clear All
             </button>
-            
-            {navigationLevel === 'groups' && (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mx-2 text-yellow-300/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                <span className="text-yellow-300">Character Groups</span>
-              </>
-            )}
-            
-            {navigationLevel === 'books' && (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mx-2 text-yellow-300/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                <span className="text-yellow-300">{activeTestament === 'old' ? 'Old Testament' : 'New Testament'} Books</span>
-              </>
-            )}
-            
-            {navigationLevel === 'characters' && (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mx-2 text-yellow-300/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-                
-                {activeGroup && (
-                  <>
-                    <button 
-                      onClick={() => {
-                        setNavigationLevel('groups');
-                        setActiveGroup(null);
-                      }}
-                      className="hover:text-yellow-300 transition-colors"
-                    >
-                      Character Groups
-                    </button>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mx-2 text-yellow-300/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span className="text-yellow-300">{activeGroup.name}</span>
-                  </>
-                )}
-                
-                {activeBook && (
-                  <>
-                    <button 
-                      onClick={() => {
-                        setNavigationLevel('books');
-                        setActiveBook(null);
-                      }}
-                      className="hover:text-yellow-300 transition-colors"
-                    >
-                      {activeTestament === 'old' ? 'Old Testament' : 'New Testament'} Books
-                    </button>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mx-2 text-yellow-300/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span className="text-yellow-300">{activeBook}</span>
-                  </>
-                )}
-              </>
+          </div>
+        )}
+        
+        {/* Results count */}
+        <div className="text-center text-white/80 mb-6">
+          Showing {paginatedCharacters.length} of {filteredCharacters.length} characters
+        </div>
+        
+        {/* No results message */}
+        {filteredCharacters.length === 0 && (
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-8 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-white/50 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <p className="text-xl text-white mb-4">No characters found matching your criteria.</p>
+            <button
+              onClick={() => {
+                setTestament('all');
+                setBookFilter('all');
+                setGroupFilter('all');
+                setSearchQuery('');
+                setCurrentLetter('all');
+                setCurrentPage(1);
+              }}
+              className="text-yellow-400 hover:text-yellow-300 font-medium"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
+        
+        {/* Character grid/list view */}
+        {filteredCharacters.length > 0 && (
+          <div className="relative bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+            {viewMode === 'grid' ? (
+              <div style={{ height: '600px' }}>
+                <VirtuosoGrid
+                  totalCount={paginatedCharacters.length}
+                  overscan={200}
+                  listClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                  itemClassName="character-card-container"
+                  itemContent={index => renderCharacterItem(index)}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {paginatedCharacters.map((_, index) => renderCharacterItem(index))}
+              </div>
             )}
           </div>
         )}
-
-        {/* Main content based on navigation level with AnimatePresence for transitions */}
-        <AnimatePresence mode="wait">
-          {renderContent()}
-        </AnimatePresence>
+        
+        {/* Pagination */}
+        {renderPagination()}
       </div>
-
+      
       {/* Visual indicator that this scalable selector is active */}
       <span
         className="fixed bottom-3 left-3 z-50 rounded-full bg-amber-400/90 px-3 py-1 text-xs font-semibold text-blue-900 shadow-lg select-none"
@@ -826,7 +800,7 @@ const ScalableCharacterSelection: React.FC = () => {
       >
         Scalable&nbsp;UI
       </span>
-    </>
+    </div>
   );
 };
 

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat - Direct Checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #0ea5e9;
+            --color-primary-dark: #0284c7;
+            --color-secondary: #8b5cf6;
+            --color-secondary-dark: #7c3aed;
+            --color-yellow: #fcd34d;
+            --color-yellow-dark: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: white;
+            background: linear-gradient(to bottom, #1e3a8a, #1e40af, #3b82f6);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--color-yellow);
+        }
+        
+        h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--color-yellow);
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .plans {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        @media (min-width: 640px) {
+            .plans {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .plan-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .plan-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        
+        .plan-price {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--color-yellow);
+        }
+        
+        .plan-period {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        
+        .plan-features {
+            list-style-type: none;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        
+        .plan-features li {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .plan-features li::before {
+            content: "✓";
+            color: var(--color-yellow);
+            margin-right: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .button {
+            display: inline-block;
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+        
+        .button:hover {
+            background-color: var(--color-primary-dark);
+        }
+        
+        .button.secondary {
+            background-color: var(--color-secondary);
+        }
+        
+        .button.secondary:hover {
+            background-color: var(--color-secondary-dark);
+        }
+        
+        .button.home {
+            background-color: rgba(255, 255, 255, 0.2);
+            margin-top: 1rem;
+        }
+        
+        .button.home:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+        
+        .status.error {
+            background-color: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+        }
+        
+        .status.success {
+            background-color: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1.5rem;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--color-yellow);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.75rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .config {
+            margin-top: 2rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .config-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--color-yellow);
+        }
+        
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .config-item span:first-child {
+            font-weight: 600;
+        }
+        
+        .config-item span:last-child {
+            opacity: 0.8;
+            word-break: break-all;
+        }
+        
+        .logs {
+            margin-top: 1.5rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Character Chat</h1>
+        <p>Choose a subscription plan to unlock the full spiritual experience</p>
+        
+        <div class="plans">
+            <!-- Monthly Plan -->
+            <div class="plan-card">
+                <div class="plan-title">Premium Monthly</div>
+                <div class="plan-price">$9.97<span class="plan-period">/month</span></div>
+                <ul class="plan-features">
+                    <li>Full character library (50+ characters)</li>
+                    <li>Unlimited conversation length</li>
+                    <li>All denominations</li>
+                    <li>Multi-language support</li>
+                </ul>
+                <button id="monthlyBtn" class="button">Subscribe Monthly</button>
+            </div>
+            
+            <!-- Yearly Plan -->
+            <div class="plan-card">
+                <div class="plan-title">Premium Yearly</div>
+                <div class="plan-price">$97.97<span class="plan-period">/year</span></div>
+                <ul class="plan-features">
+                    <li>All monthly features</li>
+                    <li>Save 17% compared to monthly</li>
+                    <li>Priority support</li>
+                    <li>Early access to new characters</li>
+                </ul>
+                <button id="yearlyBtn" class="button secondary">Subscribe Yearly</button>
+            </div>
+        </div>
+        
+        <a href="/" class="button home">Return to Home</a>
+        
+        <div id="status" class="status"></div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <span>Processing your request...</span>
+        </div>
+        
+        <div class="config">
+            <div class="config-title">Configuration</div>
+            <div class="config-item">
+                <span>Monthly Price ID:</span>
+                <span id="monthlyPriceId">price_1Rg4GcLh8PbWqwwD6RY18DBw</span>
+            </div>
+            <div class="config-item">
+                <span>Yearly Price ID:</span>
+                <span id="yearlyPriceId">price_1Rg4dqLh8PbWqwwDQB5bW2Uc</span>
+            </div>
+            <div class="config-item">
+                <span>Edge Function URL:</span>
+                <span id="edgeFunctionUrl">https://your-project.functions.supabase.co/create-checkout-session</span>
+            </div>
+        </div>
+        
+        <div id="logs" class="logs"></div>
+    </div>
+    
+    <script>
+        // Configuration
+        const STRIPE_PUBLIC_KEY = 'pk_live_51MqzqFLh8PbWqwwDEwlw3osHAv2A5p4Y5vv20CuAFdYHkBAs8v8GRjwZQbh0brGAB6HrrQukDMGBMCVZJRc95DRa00Bk6eGp8F';
+        const MONTHLY_PRICE_ID = document.getElementById('monthlyPriceId').textContent;
+        const YEARLY_PRICE_ID = document.getElementById('yearlyPriceId').textContent;
+        const EDGE_FUNCTION_URL = document.getElementById('edgeFunctionUrl').textContent;
+        
+        // Elements
+        const monthlyBtn = document.getElementById('monthlyBtn');
+        const yearlyBtn = document.getElementById('yearlyBtn');
+        const statusDiv = document.getElementById('status');
+        const loadingDiv = document.getElementById('loading');
+        const logsDiv = document.getElementById('logs');
+        
+        // Initialize Stripe
+        let stripe;
+        try {
+            stripe = Stripe(STRIPE_PUBLIC_KEY);
+            log('Stripe initialized successfully');
+        } catch (error) {
+            log(`Error initializing Stripe: ${error.message}`, 'error');
+            showStatus(`Failed to initialize Stripe: ${error.message}`, 'error');
+        }
+        
+        // Logging function
+        function log(message, type = 'info') {
+            const now = new Date();
+            const timestamp = now.toTimeString().split(' ')[0];
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            if (type === 'error') {
+                logEntry.style.color = '#ef4444';
+            } else if (type === 'success') {
+                logEntry.style.color = '#10b981';
+            }
+            
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        // Show status message
+        function showStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            statusDiv.className = 'status';
+            if (type === 'error') {
+                statusDiv.classList.add('error');
+            } else if (type === 'success') {
+                statusDiv.classList.add('success');
+            }
+        }
+        
+        // Show/hide loading indicator
+        function setLoading(isLoading) {
+            loadingDiv.style.display = isLoading ? 'flex' : 'none';
+            monthlyBtn.disabled = isLoading;
+            yearlyBtn.disabled = isLoading;
+        }
+        
+        // Handle checkout with Edge Function
+        async function handleCheckout(priceId, planType) {
+            setLoading(true);
+            showStatus(`Initiating ${planType} subscription checkout...`);
+            log(`Starting ${planType} checkout with price ID: ${priceId}`);
+            
+            try {
+                // Option 1: Use Edge Function to create checkout session
+                log(`Calling Edge Function at: ${EDGE_FUNCTION_URL}`);
+                
+                const response = await fetch(EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        priceId: priceId,
+                        successUrl: `${window.location.origin}/conversations?checkout=success`,
+                        cancelUrl: `${window.location.origin}/pricing?checkout=canceled`,
+                        customerEmail: null, // Optional: Add email if available
+                        metadata: {
+                            source: 'direct_checkout_page'
+                        }
+                    }),
+                });
+                
+                if (!response.ok) {
+                    let errorMessage = `HTTP error ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        // If parsing fails, use the status text
+                        errorMessage = response.statusText || errorMessage;
+                    }
+                    throw new Error(`Failed to create checkout session: ${errorMessage}`);
+                }
+                
+                const session = await response.json();
+                log(`Checkout session created successfully: ${session.id}`, 'success');
+                
+                if (!session.url) {
+                    throw new Error('Checkout session URL is missing');
+                }
+                
+                log(`Redirecting to Stripe checkout: ${session.url}`, 'success');
+                showStatus('Redirecting to Stripe checkout...', 'success');
+                
+                // Redirect to Stripe Checkout
+                window.location.href = session.url;
+                
+            } catch (error) {
+                log(`Error during checkout: ${error.message}`, 'error');
+                showStatus(`Checkout failed: ${error.message}`, 'error');
+                setLoading(false);
+                
+                // Fallback to direct URL if Edge Function fails
+                if (error.message.includes('Failed to fetch') || error.message.includes('Network error')) {
+                    log('Edge Function failed, trying direct Stripe URL fallback...', 'info');
+                    
+                    try {
+                        // Direct URL approach - only for testing/fallback
+                        log('Redirecting directly to Stripe checkout page...');
+                        window.location.href = `https://checkout.stripe.com/pay/${priceId}`;
+                    } catch (fallbackError) {
+                        log(`Fallback also failed: ${fallbackError.message}`, 'error');
+                    }
+                }
+            }
+        }
+        
+        // Event listeners
+        monthlyBtn.addEventListener('click', () => {
+            handleCheckout(MONTHLY_PRICE_ID, 'monthly');
+        });
+        
+        yearlyBtn.addEventListener('click', () => {
+            handleCheckout(YEARLY_PRICE_ID, 'yearly');
+        });
+        
+        // Initial log
+        log('Checkout page loaded');
+        log(`Current URL: ${window.location.href}`);
+        log('Click a subscription button to begin checkout');
+    </script>
+</body>
+</html>

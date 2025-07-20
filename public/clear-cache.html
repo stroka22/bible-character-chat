@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cache Clearing Utility - Bible Character Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            min-height: 100vh;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #facc15;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        h2 {
+            font-size: 1.8rem;
+            color: #facc15;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(250, 204, 21, 0.3);
+            padding-bottom: 8px;
+        }
+        .section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        button {
+            background-color: #facc15;
+            color: #0a0a2a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background-color: #eab308;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(250, 204, 21, 0.4);
+        }
+        button.danger {
+            background-color: #dc2626;
+            color: white;
+        }
+        button.danger:hover {
+            background-color: #b91c1c;
+            box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
+        }
+        button.success {
+            background-color: #10b981;
+            color: white;
+        }
+        button.success:hover {
+            background-color: #059669;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+        }
+        .start-fresh {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .link {
+            display: block;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            color: #facc15;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        .status.success {
+            background-color: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #10b981;
+            display: block;
+        }
+        .status.error {
+            background-color: rgba(220, 38, 38, 0.2);
+            border: 1px solid rgba(220, 38, 38, 0.4);
+            color: #ef4444;
+            display: block;
+        }
+        .browser-instructions {
+            margin-top: 20px;
+        }
+        .browser-instructions details {
+            margin-bottom: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .browser-instructions summary {
+            cursor: pointer;
+            padding: 10px;
+            font-weight: bold;
+        }
+        .browser-instructions ul {
+            margin-top: 10px;
+            padding-left: 25px;
+        }
+        .browser-instructions li {
+            margin-bottom: 8px;
+        }
+        code {
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .diagnostic {
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .diagnostic-item {
+            margin-bottom: 5px;
+            display: flex;
+        }
+        .diagnostic-label {
+            width: 180px;
+            color: #facc15;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Character Chat - Cache Clearing Utility</h1>
+        
+        <div class="section">
+            <h2>Quick Actions</h2>
+            <button id="clearLocalStorage">Clear localStorage</button>
+            <button id="clearSessionStorage">Clear sessionStorage</button>
+            <button id="clearCookies">Clear Cookies</button>
+            <button id="unregisterSW" class="danger">Unregister Service Workers</button>
+            
+            <div id="status" class="status"></div>
+            
+            <button id="startFresh" class="start-fresh success">
+                🧹 START FRESH - Clear Everything & Reload App
+            </button>
+        </div>
+        
+        <div class="section">
+            <h2>Test Links (with cache busting)</h2>
+            <div class="links">
+                <a href="/" class="link" id="mainAppLink">Main App</a>
+                <a href="/component-test.html" class="link" id="componentTestLink">Component Test</a>
+                <a href="/bible-characters.html" class="link" id="charactersLink">Characters Page</a>
+                <a href="/circle-test.html" class="link" id="circleTestLink">Circle Test</a>
+                <a href="/emergency-app.html" class="link" id="emergencyLink">Emergency App</a>
+                <a href="/standalone-test.html" class="link" id="standaloneLink">Standalone Test</a>
+                <a href="/redirect-check.html" class="link" id="redirectCheckLink">Redirect Check</a>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Browser Cache Clearing Instructions</h2>
+            <p>If you're still experiencing issues, try clearing your browser cache manually:</p>
+            
+            <div class="browser-instructions">
+                <details>
+                    <summary>Chrome</summary>
+                    <ul>
+                        <li>Press <code>Ctrl+Shift+Delete</code> (Windows/Linux) or <code>Cmd+Shift+Delete</code> (Mac)</li>
+                        <li>Set time range to "All time"</li>
+                        <li>Check "Cookies and site data" and "Cached images and files"</li>
+                        <li>Click "Clear data"</li>
+                        <li>Restart Chrome</li>
+                    </ul>
+                </details>
+                
+                <details>
+                    <summary>Firefox</summary>
+                    <ul>
+                        <li>Press <code>Ctrl+Shift+Delete</code> (Windows/Linux) or <code>Cmd+Shift+Delete</code> (Mac)</li>
+                        <li>Set time range to "Everything"</li>
+                        <li>Check "Cookies" and "Cache"</li>
+                        <li>Click "Clear Now"</li>
+                        <li>Restart Firefox</li>
+                    </ul>
+                </details>
+                
+                <details>
+                    <summary>Safari</summary>
+                    <ul>
+                        <li>Go to Safari menu > Preferences > Advanced</li>
+                        <li>Enable "Show Develop menu in menu bar"</li>
+                        <li>Go to Develop menu > Empty Caches</li>
+                        <li>Go to Safari menu > Clear History</li>
+                        <li>Choose "all history" and click "Clear History"</li>
+                        <li>Restart Safari</li>
+                    </ul>
+                </details>
+                
+                <details>
+                    <summary>Edge</summary>
+                    <ul>
+                        <li>Press <code>Ctrl+Shift+Delete</code></li>
+                        <li>Set time range to "All time"</li>
+                        <li>Check "Cookies and other site data" and "Cached images and files"</li>
+                        <li>Click "Clear now"</li>
+                        <li>Restart Edge</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Environment Diagnostics</h2>
+            <div class="diagnostic">
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">User Agent:</div>
+                    <div id="userAgent"></div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">localStorage Available:</div>
+                    <div id="localStorageAvailable"></div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">localStorage Items:</div>
+                    <div id="localStorageCount"></div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">sessionStorage Items:</div>
+                    <div id="sessionStorageCount"></div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">Cookies:</div>
+                    <div id="cookiesInfo"></div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">Service Worker:</div>
+                    <div id="serviceWorkerInfo"></div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">Cache API Available:</div>
+                    <div id="cacheApiAvailable"></div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-label">IndexedDB Available:</div>
+                    <div id="indexedDBAvailable"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add timestamp to all links for cache busting
+        function addCacheBustingParams() {
+            const timestamp = Date.now();
+            document.querySelectorAll('.link').forEach(link => {
+                const url = new URL(link.href);
+                url.searchParams.set('_cb', timestamp);
+                link.href = url.toString();
+            });
+        }
+        
+        // Clear localStorage
+        document.getElementById('clearLocalStorage').addEventListener('click', () => {
+            try {
+                localStorage.clear();
+                updateDiagnostics();
+                showStatus('localStorage cleared successfully!', 'success');
+            } catch (e) {
+                showStatus('Error clearing localStorage: ' + e.message, 'error');
+            }
+        });
+        
+        // Clear sessionStorage
+        document.getElementById('clearSessionStorage').addEventListener('click', () => {
+            try {
+                sessionStorage.clear();
+                updateDiagnostics();
+                showStatus('sessionStorage cleared successfully!', 'success');
+            } catch (e) {
+                showStatus('Error clearing sessionStorage: ' + e.message, 'error');
+            }
+        });
+        
+        // Clear cookies
+        document.getElementById('clearCookies').addEventListener('click', () => {
+            try {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i];
+                    const eqPos = cookie.indexOf('=');
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                }
+                updateDiagnostics();
+                showStatus('Cookies cleared successfully!', 'success');
+            } catch (e) {
+                showStatus('Error clearing cookies: ' + e.message, 'error');
+            }
+        });
+        
+        // Unregister service workers
+        document.getElementById('unregisterSW').addEventListener('click', async () => {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    if (registrations.length === 0) {
+                        showStatus('No service workers found to unregister.', 'success');
+                        return;
+                    }
+                    
+                    let unregisteredCount = 0;
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        unregisteredCount++;
+                    }
+                    
+                    updateDiagnostics();
+                    showStatus(`Successfully unregistered ${unregisteredCount} service worker(s)!`, 'success');
+                } catch (e) {
+                    showStatus('Error unregistering service workers: ' + e.message, 'error');
+                }
+            } else {
+                showStatus('Service Worker API not available in this browser.', 'error');
+            }
+        });
+        
+        // Start fresh - clear everything and reload
+        document.getElementById('startFresh').addEventListener('click', async () => {
+            try {
+                // Clear all storage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Clear cookies
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i];
+                    const eqPos = cookie.indexOf('=');
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                }
+                
+                // Unregister service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                    }
+                }
+                
+                // Clear caches if Cache API is available
+                if ('caches' in window) {
+                    try {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(
+                            cacheNames.map(cacheName => caches.delete(cacheName))
+                        );
+                    } catch (e) {
+                        console.error('Error clearing Cache API:', e);
+                    }
+                }
+                
+                showStatus('All data cleared! Redirecting to main app...', 'success');
+                
+                // Redirect to main app with cache busting
+                setTimeout(() => {
+                    window.location.href = '/?_fresh=' + Date.now();
+                }, 1500);
+                
+            } catch (e) {
+                showStatus('Error during cleanup: ' + e.message, 'error');
+            }
+        });
+        
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        // Update diagnostics information
+        function updateDiagnostics() {
+            // User agent
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            
+            // localStorage
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                document.getElementById('localStorageAvailable').textContent = 'Yes';
+                document.getElementById('localStorageCount').textContent = Object.keys(localStorage).length;
+            } catch (e) {
+                document.getElementById('localStorageAvailable').textContent = 'No - ' + e.message;
+                document.getElementById('localStorageCount').textContent = 'N/A';
+            }
+            
+            // sessionStorage
+            try {
+                document.getElementById('sessionStorageCount').textContent = Object.keys(sessionStorage).length;
+            } catch (e) {
+                document.getElementById('sessionStorageCount').textContent = 'Error: ' + e.message;
+            }
+            
+            // Cookies
+            document.getElementById('cookiesInfo').textContent = document.cookie ? document.cookie.split(';').length : '0';
+            
+            // Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    document.getElementById('serviceWorkerInfo').textContent = 
+                        registrations.length > 0 ? `${registrations.length} registered` : 'None registered';
+                }).catch(err => {
+                    document.getElementById('serviceWorkerInfo').textContent = 'Error: ' + err.message;
+                });
+            } else {
+                document.getElementById('serviceWorkerInfo').textContent = 'Not supported';
+            }
+            
+            // Cache API
+            document.getElementById('cacheApiAvailable').textContent = 'caches' in window ? 'Yes' : 'No';
+            
+            // IndexedDB
+            document.getElementById('indexedDBAvailable').textContent = 'indexedDB' in window ? 'Yes' : 'No';
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            addCacheBustingParams();
+            updateDiagnostics();
+        });
+    </script>
+</body>
+</html>

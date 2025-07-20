@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Supabase Anon Key</title>
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #0f172a;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #334155;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #2563eb; /* blue-600 */
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #1d4ed8; /* blue-700 */
+        }
+        .command-output {
+            background-color: #f0f4f8; /* slate-100 */
+            border: 1px solid #cbd5e1; /* slate-300 */
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 25px;
+            text-align: left;
+            overflow-x: auto;
+        }
+        .command-output pre {
+            margin: 0;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #334155;
+            white-space: pre-wrap; /* Ensures long lines wrap */
+            word-break: break-all; /* Breaks words if necessary */
+        }
+        .warning {
+            background-color: #fffbeb; /* yellow-100 */
+            color: #b45309; /* amber-700 */
+            border: 1px solid #fcd34d; /* amber-300 */
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Update Supabase Anon Key</h1>
+        <p>Paste your Supabase "anon public" key below. This will generate a command to update your <code>direct-admin.html</code> file.</p>
+        
+        <label for="anonKey">Your Supabase Anon Key:</label>
+        <textarea id="anonKey" placeholder="Paste your Supabase anon key here (e.g., eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...)"></textarea>
+        
+        <button id="generateCommandBtn">Generate Update Command</button>
+        
+        <div id="output" class="command-output" style="display: none;">
+            <p><strong>Copy and run this command in your terminal:</strong></p>
+            <pre id="commandText"></pre>
+            <div class="warning">
+                <strong>Note:</strong> The <code>-i ''</code> part is for macOS. If you are on Linux, use <code>-i</code> without the empty string (e.g., <code>sed -i "s|...|..."</code>).
+            </div>
+            <p style="margin-top: 15px;">After running the command, refresh your <code>direct-admin.html</code> page (<code>http://localhost:5173/direct-admin.html</code>) and click "Check Supabase Connection".</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generateCommandBtn').addEventListener('click', () => {
+            const anonKey = document.getElementById('anonKey').value.trim();
+            const commandTextElement = document.getElementById('commandText');
+            const outputDiv = document.getElementById('output');
+
+            if (anonKey) {
+                // Escape single quotes in the key if any, though unlikely for base64
+                const escapedKey = anonKey.replace(/'/g, "'\\''");
+                const command = `cd bible-character-chat && sed -i '' "s|const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';|const SUPABASE_ANON_KEY = '${escapedKey}';|" public/direct-admin.html`;
+                commandTextElement.textContent = command;
+                outputDiv.style.display = 'block';
+            } else {
+                commandTextElement.textContent = 'Please paste your Supabase Anon Key.';
+                outputDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

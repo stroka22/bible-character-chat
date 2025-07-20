@@ -151,8 +151,8 @@ async function testCSVImport() {
   
   try {
     // Step 1: Read the CSV file
-    console.log(`${colors.cyan}Reading test_fix_import.csv file...${colors.reset}`);
-    const csvPath = path.join(__dirname, 'test_fix_import.csv');
+    console.log(`${colors.cyan}Reading corrected_test_import.csv file...${colors.reset}`);
+    const csvPath = path.join(__dirname, 'corrected_test_import.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf8');
     console.log(`${colors.green}✅ CSV file read successfully${colors.reset}`);
     

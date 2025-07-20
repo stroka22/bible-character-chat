@@ -4,7 +4,16 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, loading, error, isAdmin, isPastor, refreshProfile } = useAuth();
+  // Added resetPassword from AuthContext so we can invoke it directly
+  const {
+    signIn,
+    resetPassword,
+    loading,
+    error,
+    isAdmin,
+    isPastor,
+    refreshProfile,
+  } = useAuth();
   const location = useLocation();
   
   // Form state
@@ -67,7 +76,8 @@ const LoginPage: React.FC = () => {
     }
     
     try {
-      await useAuth().resetPassword(resetEmail);
+      // Use the resetPassword function already destructured from useAuth
+      await resetPassword(resetEmail);
       setResetSuccess(true);
     } catch (err) {
       console.error('Password reset error:', err);
@@ -76,6 +86,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
+    <>
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-900 via-blue-600 to-blue-400 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl">
         <div>
@@ -236,6 +247,7 @@ const LoginPage: React.FC = () => {
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 text-xs text-white/70 pointer-events-none select-none">
       path: {location.pathname}
     </div>
+    </>
   );
 };
 

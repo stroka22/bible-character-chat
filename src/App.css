@@ -1,8 +1,18 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  /* 
+   * Layout adjustment
+   * -----------------
+   * The original styles here constrained the entire app to a
+   * centered, fixed-width column, which caused the Header (and
+   * other full-width components) to appear cramped or mis-aligned.
+   *
+   * We now let #root fill the viewport naturally so that
+   * flex / grid layouts inside pages can control their own
+   * spacing.  Padding and text-alignment should be handled by the
+   * individual components instead of a global rule.
+   */
+  width: 100%;
+  min-height: 100%;
 }
 
 .logo {

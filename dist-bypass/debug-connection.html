@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Chat Debug Connection</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        h1 {
+            color: #1a365d;
+            border-bottom: 2px solid #4299e1;
+            padding-bottom: 10px;
+        }
+        .debug-section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .debug-info {
+            background-color: #f0f4f8;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4299e1;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .button:hover {
+            background-color: #2b6cb0;
+        }
+        .button.primary {
+            background-color: #f6ad55;
+            color: #1a365d;
+            font-size: 18px;
+            padding: 15px 30px;
+        }
+        .button.primary:hover {
+            background-color: #ed8936;
+        }
+        .warning {
+            background-color: #fed7d7;
+            border-left: 4px solid #f56565;
+            padding: 10px 15px;
+            margin: 15px 0;
+            color: #c53030;
+        }
+        .success {
+            background-color: #c6f6d5;
+            border-left: 4px solid #48bb78;
+            padding: 10px 15px;
+            margin: 15px 0;
+            color: #2f855a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        table, th, td {
+            border: 1px solid #e2e8f0;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #edf2f7;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bible Character Chat - Debug Connection</h1>
+    
+    <div class="debug-section">
+        <h2>🔗 Direct Navigation Links</h2>
+        <p>These links bypass React routing and should work regardless of application state:</p>
+        
+        <div class="button-container">
+            <a href="/pricing" class="button primary">VIEW PRICING PAGE</a>
+            <a href="/" class="button">Home Page</a>
+            <a href="/direct-bypass.html" class="button">Auth Bypass</a>
+            <a href="/test-login" class="button">Test Login</a>
+        </div>
+        
+        <div class="success">
+            <strong>The pricing page link above will take you directly to the pricing information.</strong> 
+            This bypasses any potential issues with headers or navigation components.
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🧪 Environment Information</h2>
+        <div class="debug-info" id="debug-info">Loading environment info...</div>
+    </div>
+
+    <div class="debug-section">
+        <h2>💰 Pricing Information</h2>
+        <table>
+            <tr>
+                <th>Plan</th>
+                <th>Price</th>
+                <th>Features</th>
+            </tr>
+            <tr>
+                <td>Free</td>
+                <td>$0/month</td>
+                <td>
+                    <ul>
+                        <li>Limited character selection</li>
+                        <li>5 messages per conversation</li>
+                        <li>Basic denominations only</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td>Premium Monthly</td>
+                <td>$9.97/month</td>
+                <td>
+                    <ul>
+                        <li>Full character library (50+ characters)</li>
+                        <li>Unlimited conversation length</li>
+                        <li>All denominations and theological perspectives</li>
+                        <li>Multi-language support</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <td>Premium Yearly</td>
+                <td>$97.97/year</td>
+                <td>Same as monthly with 17% savings</td>
+            </tr>
+        </table>
+        
+        <div class="button-container">
+            <a href="/pricing" class="button primary">UPGRADE NOW</a>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🔍 Troubleshooting</h2>
+        <p>If you're having trouble accessing the pricing page through the normal navigation:</p>
+        <ol>
+            <li>Try clearing your browser cache</li>
+            <li>Use the direct links provided above</li>
+            <li>Check if you're logged in (some features require authentication)</li>
+            <li>Try the auth bypass link if you're having login issues</li>
+        </ol>
+        
+        <div class="warning">
+            <strong>Note:</strong> This debug page is intended for development and troubleshooting purposes only.
+        </div>
+    </div>
+
+    <script>
+        // Display environment information
+        function showDebugInfo() {
+            const debugInfoElement = document.getElementById('debug-info');
+            const info = {
+                "Current URL": window.location.href,
+                "Base URL": window.location.origin,
+                "User Agent": navigator.userAgent,
+                "Timestamp": new Date().toISOString(),
+                "Local Storage": Object.keys(localStorage).join(', ') || 'None',
+                "Cookies Enabled": navigator.cookieEnabled,
+                "Window Size": `${window.innerWidth}x${window.innerHeight}`,
+            };
+            
+            let infoHtml = '';
+            for (const [key, value] of Object.entries(info)) {
+                infoHtml += `<div><strong>${key}:</strong> ${value}</div>`;
+            }
+            
+            debugInfoElement.innerHTML = infoHtml;
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', showDebugInfo);
+    </script>
+</body>
+</html>

@@ -359,6 +359,10 @@ export function ChatProvider({ children }: ChatProviderProps) {
           const stored = JSON.parse(localStorage.getItem('savedChats') || '[]');
           stored.push({
             id: `local-${Date.now()}`,
+            // NOTE: We deliberately keep the property name `character_name`
+            // in localStorage for backward-compatibility with previously
+            // saved anonymous chats. It is a client-side key only and not
+            // tied to the database schema.
             character_name: character?.name,
             conversation_title: title,
             // Persist full message data so we can perfectly restore later

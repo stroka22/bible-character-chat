@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat - Integration Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue-900: #1e3a8a;
+            --blue-800: #1e40af;
+            --blue-700: #1d4ed8;
+            --blue-600: #2563eb;
+            --blue-500: #3b82f6;
+            --blue-100: #dbeafe;
+            --blue-50: #eff6ff;
+            --yellow-400: #facc15;
+            --yellow-500: #eab308;
+            --yellow-600: #ca8a04;
+            --white: #ffffff;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --red-100: #fee2e2;
+            --red-500: #ef4444;
+            --red-700: #b91c1c;
+            --green-100: #dcfce7;
+            --green-500: #22c55e;
+            --green-700: #15803d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: linear-gradient(to bottom, var(--blue-900), var(--blue-700), var(--blue-600));
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--blue-900);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--yellow-400);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--yellow-400);
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin-top: 1.5rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        ul, ol {
+            margin-bottom: 1.5rem;
+            margin-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--yellow-500);
+            color: var(--blue-900);
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: var(--yellow-600);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-large {
+            font-size: 1.3rem;
+            padding: 1rem 2rem;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .mb-4 {
+            margin-bottom: 1.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-info {
+            background-color: var(--blue-100);
+            border-left: 4px solid var(--blue-500);
+        }
+
+        .alert-warning {
+            background-color: var(--red-100);
+            border-left: 4px solid var(--red-500);
+        }
+
+        .alert-success {
+            background-color: var(--green-100);
+            border-left: 4px solid var(--green-500);
+        }
+
+        .step {
+            display: flex;
+            margin-bottom: 1.5rem;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            background-color: var(--blue-700);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .troubleshooting-item {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 1.5rem;
+        }
+
+        .troubleshooting-item:last-child {
+            border-bottom: none;
+        }
+
+        .code {
+            font-family: monospace;
+            background-color: var(--gray-100);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Character Chat Integration Test</h1>
+
+        <div class="card">
+            <div class="center mb-4" style="display:flex;flex-direction:column;gap:0.75rem;">
+                <!-- Full auth flow -->
+                <a href="http://localhost:3000" class="btn btn-large">Launch React App (Login Required)</a>
+                <!-- Bypass auth for quick testing -->
+                <a href="http://localhost:3000/?skipAuth=1" class="btn btn-large" style="background-color:var(--green-500);color:var(--white);">
+                    Launch React App (Skip Login)
+                </a>
+            </div>
+
+            <p style="text-align:center;margin-top:0.5rem;">
+                The first link starts the normal authentication flow.<br>
+                If you only want to test character selection &amp; chat <em>without</em> signing in,
+                use <strong>“Skip&nbsp;Login”</strong>.
+            </p>
+
+            <div class="alert alert-warning">
+                <strong>Redirect loop?</strong><br>
+                If your browser keeps sending you to the old static&nbsp;demo, it’s likely
+                because a cached service-worker is still intercepting requests.<br>
+                Our dedicated server on <code>localhost:3000</code> injects a clean-up
+                script that unregisters these workers automatically. Simply open one of
+                the links above in a fresh tab &mdash; the page should reload once and
+                land on the new React interface.
+            </div>
+            
+            <div class="alert alert-info">
+                <strong>Note:</strong> Make sure the React app is running. If it's not, open a terminal and run <span class="code">./launch-react-app.sh</span> from the project root directory.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>How to Test Chat Functionality</h2>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Launch the React App</h3>
+                    <p>Click one of the buttons above to open the React application.</p>
+                    <ul>
+                        <li><strong>Login&nbsp;Required:</strong> Standard flow – you will see the login page first.</li>
+                        <li><strong>Skip&nbsp;Login:</strong> Appends <code>?skipAuth=1</code> so you go straight to character selection.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Select a Character</h3>
+                    <p>Browse through the available Bible characters and click on any character card. You can use the filters at the top to narrow down your selection:</p>
+                    <ul>
+                        <li>Filter by testament (Old or New)</li>
+                        <li>Filter by Bible book</li>
+                        <li>Filter by character group</li>
+                        <li>Search by name or description</li>
+                        <li>Use alphabetical navigation on the right side</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Start a Conversation</h3>
+                    <p>Once you select a character, the interface should transition to the chat view. You'll see:</p>
+                    <ul>
+                        <li>The character's name and avatar at the top</li>
+                        <li>An empty chat area (or an opening message from the character)</li>
+                        <li>A text input field at the bottom to type your messages</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Send Messages</h3>
+                    <p>Type a message in the input field and press Enter or click the send button. The character should respond based on their biblical persona.</p>
+                    <div class="alert alert-info">
+                        <strong>Example questions to try:</strong>
+                        <ul>
+                            <li>"Tell me about your life"</li>
+                            <li>"What was your greatest challenge?"</li>
+                            <li>"How did you encounter God?"</li>
+                            <li>"What wisdom would you share with people today?"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>Explore Character Insights</h3>
+                    <p>Click the "Insights" button in the top-right corner of the chat interface to open the insights panel. This panel contains:</p>
+                    <ul>
+                        <li>Historical context about the character</li>
+                        <li>Scripture references with hover popups</li>
+                        <li>Relationships to other biblical figures</li>
+                        <li>Study questions for deeper reflection</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h3>Return to Character Selection</h3>
+                    <p>To chat with a different character, click the "Back" button in the top-left corner of the chat interface. This will return you to the character selection screen.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Troubleshooting</h2>
+            
+            <div class="troubleshooting-item">
+                <h3>Character Selection Not Working</h3>
+                <p><strong>Symptom:</strong> Clicking on a character card doesn't do anything or shows an error.</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Check the browser console (F12) for any error messages</li>
+                    <li>Verify that the ChatContext is properly initialized by looking for "ScalableCharacterSelection MODULE LOADED!" in the console</li>
+                    <li>Try refreshing the page and selecting a character again</li>
+                    <li>If using a direct URL (like http://localhost:5175?direct=1), try removing the query parameters</li>
+                </ul>
+            </div>
+            
+            <div class="troubleshooting-item">
+                <h3>Chat Interface Not Appearing</h3>
+                <p><strong>Symptom:</strong> After selecting a character, you still see the character selection screen.</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Check if HomePage.tsx is being used in App.tsx instead of directly rendering ScalableCharacterSelection</li>
+                    <li>Verify that the character selection handler is correctly calling the selectCharacter function from ChatContext</li>
+                    <li>Try adding <span class="code">?direct=1</span> to the URL to bypass routing</li>
+                </ul>
+            </div>
+            
+            <div class="troubleshooting-item">
+                <h3>Character Not Responding</h3>
+                <p><strong>Symptom:</strong> You can send messages, but the character doesn't respond.</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Check if you have a valid OpenAI API key in your .env file</li>
+                    <li>Look for API errors in the browser console</li>
+                    <li>Verify that the openai.ts service is properly configured</li>
+                    <li>If using a placeholder API key, you'll see a message like "(Character is silent because no OpenAI API key is configured.)"</li>
+                </ul>
+            </div>
+            
+            <div class="troubleshooting-item">
+                <h3>Blank Screen or Redirects</h3>
+                <p><strong>Symptom:</strong> The app shows a blank white screen or keeps redirecting.</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Use the launch-react-app.sh script to properly start the application</li>
+                    <li>Check if service-worker-cleanup.js is properly removing old service workers</li>
+                    <li>Clear your browser cache and cookies</li>
+                    <li>Try using a different browser or incognito mode</li>
+                    <li>If all else fails, use the standalone server with <span class="code">node server.mjs</span> and visit http://localhost:3000</li>
+                </ul>
+            </div>
+            
+            <div class="troubleshooting-item">
+                <h3>Circular Images Appear Oval</h3>
+                <p><strong>Symptom:</strong> Character avatars appear oval-shaped instead of perfectly circular.</p>
+                <p><strong>Solutions:</strong></p>
+                <ul>
+                    <li>Verify that the table-based circular image approach is being used in CharacterCard.tsx</li>
+                    <li>Ensure the image dimensions are explicitly set to the same width and height (e.g., 150x150px)</li>
+                    <li>Check if any CSS is overriding the aspect ratio or border-radius properties</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Additional Resources</h2>
+            <ul>
+                <li><a href="bible-characters.html">Standalone Character Selection</a> - A reliable fallback if the React app has issues</li>
+                <li><a href="complete-app.html">Complete Standalone App</a> - Full functionality without React dependencies</li>
+                <li><a href="clear-cache.html">Cache Clearing Utility</a> - Use this to clear browser caches if experiencing issues</li>
+                <li><a href="service-worker-remover.html">Service Worker Remover</a> - Manually remove service workers causing redirects</li>
+            </ul>
+            
+            <div class="alert alert-success mt-4">
+                <strong>Need more help?</strong> Check the <span class="code">FIXED-README.md</span> file in the project root for comprehensive documentation.
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Bible Character Chat &copy; 2025 | Fixed Edition</p>
+    </footer>
+</body>
+</html>
