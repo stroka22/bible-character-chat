@@ -85,7 +85,13 @@ const AdminPage = () => {
         setSuccessMessage(null);
         try {
             const text = await file.text();
+            // ---- DEBUG START -------------------------------------------------
+            console.groupCollapsed(
+                `%c[AdminPage] handleCSVUpload – START (${file.name})`,
+                'color: #2563eb; font-weight:bold;'
+            );
             const parsedData = parseCSV(text);
+            console.debug('[AdminPage] Raw parsed rows:', parsedData);
             const charactersToCreate = parsedData.map(row => ({
                 // prefer new header `name`, fall back to legacy `character_name`
                 name: row.name || row.character_name || '',
@@ -111,7 +117,10 @@ const AdminPage = () => {
             })).filter(char => char.name && char.persona_prompt);
 
             // Debug: log the characters that will be created
-            console.info('[AdminPage] CSV parsed. Characters to create:', charactersToCreate);
+            console.debug(
+                `[AdminPage] Prepared ${charactersToCreate.length} character object(s):`,
+                charactersToCreate
+            );
 
             /* ------------------------------------------------------------------
              * Additional validations / warnings
@@ -139,9 +148,12 @@ const AdminPage = () => {
             if (charactersToCreate.length === 0) {
                 throw new Error('No valid characters found in CSV. Ensure headers and data are correct.');
             }
-            await characterRepository.bulkCreateCharacters(charactersToCreate);
+            console.debug('[AdminPage] Calling bulkCreateCharacters…');
+            const created = await characterRepository.bulkCreateCharacters(charactersToCreate);
+            console.debug('[AdminPage] bulkCreateCharacters result:', created);
             setSuccessMessage(`Successfully uploaded ${charactersToCreate.length} characters.`);
             fetchCharacters();
+            console.groupEnd(); // DEBUG group END
         }
         catch (err) {
             /* Provide richer diagnostics in the dev-console while surfacing a friendly UI message */
