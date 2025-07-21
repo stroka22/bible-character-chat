@@ -2,7 +2,8 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import React, { useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ChatProvider } from './contexts/ChatContext';
+// Use the mock chat provider (local, no real Supabase writes)
+import { ChatProvider } from './contexts/MockChatContext.jsx';
 import { ConversationProvider } from './contexts/ConversationContext.jsx';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
