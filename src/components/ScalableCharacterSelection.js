@@ -78,19 +78,31 @@ const ScalableCharacterSelection = () => {
     }, []);
     /**
      * Handle when a user chooses a character card.
-     * We receive the `characterId`, locate the full character
-     * object from local state, and pass that object to
-     * `selectCharacter` so downstream consumers have the
-     * complete data they expect.
+     * Depending on the caller we may receive either:
+     *   1) the full character object   – when `CharacterCard` calls
+     *   2) a character ID (string/number) – when the list view button calls
+     *
+     * Support both forms to avoid mismatches that lead to the
+     * “Character not found” error.
      */
     const handleSelectCharacter = useCallback(
-        async (characterId) => {
+        async (characterIdOrObject) => {
             try {
                 setIsSelecting(true);
 
-                // Locate full character object.
-                const characterObj = characters.find((c) => c.id === characterId);
+                // Determine if we already have the full object or just an ID
+                let characterObj =
+                    typeof characterIdOrObject === 'object'
+                        ? characterIdOrObject
+                        : characters.find((c) => `${c.id}` === `${characterIdOrObject}`);
+
                 if (!characterObj) {
+                    console.error(
+                        'Character not found for ID:',
+                        characterIdOrObject,
+                        '\nAvailable IDs:',
+                        characters.map((c) => c.id)
+                    );
                     throw new Error('Character not found');
                 }
 
