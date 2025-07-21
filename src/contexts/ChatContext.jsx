@@ -39,7 +39,7 @@ const CHARACTER_RESPONSES = {
     "Standing at the foot of the cross was my darkest hour, yet God's plan was still unfolding.",
     "My soul magnifies the Lord, for He has done great things for me and for all who fear Him.",
     "Being chosen by God doesn't mean an easy path, but it does mean a meaningful one."
-  ]
+  ],
   // --- Added characters for richer demo responses ------------------------
   abraham: [
     "As the father of many nations, I had to learn to walk by faith, not by sight.",
