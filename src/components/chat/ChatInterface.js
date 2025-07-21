@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
-import { useChat } from '../../contexts/MockChatContext.jsx';
+import { useChat } from '../../contexts/ChatContext.jsx';
 import { Link } from 'react-router-dom';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';

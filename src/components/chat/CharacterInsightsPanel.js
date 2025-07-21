@@ -2,6 +2,11 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import ScriptureReference from './ScriptureReference';
+// Ensure this component pulls in the correct chat context so that any
+// descendant components relying on `useChat()` reference the mock provider.
+// We don't actually use `useChat` inside this file, but importing it here
+// guarantees the bundle includes the right context implementation.
+import { useChat } from '../../contexts/MockChatContext.jsx';
 
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 

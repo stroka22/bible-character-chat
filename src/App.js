@@ -3,7 +3,10 @@ import React, { useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Use the mock chat provider (local, no real Supabase writes)
-import { ChatProvider } from './contexts/MockChatContext.jsx';
+// Switch to the unified ChatContext implementation so *all* components
+// (including any legacy ones still importing from `../contexts/ChatContext`)
+// receive the same provider instance.
+import { ChatProvider } from './contexts/ChatContext.jsx';
 import { ConversationProvider } from './contexts/ConversationContext.jsx';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
