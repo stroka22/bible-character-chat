@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultra Simple Bible Character Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ---- Root Variables ---- */
+        :root {
+            --primary-bg: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --gold: #facc15;
+            --gold-hover: #eab308;
+            --text-light: #e0e0e0;
+            --text-dim: #c0c0c0;
+            --text-dimmer: #a0a0a0;
+            --border-light: rgba(255, 255, 255, 0.15);
+            --border-medium: rgba(255, 255, 255, 0.25);
+            --shadow-standard: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 12px 20px rgba(0, 0, 0, 0.3);
+            --radius-standard: 15px;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lora', serif;
+        }
+
+        /* ---- Global Styles ---- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--primary-bg);
+            min-height: 100vh;
+            color: var(--text-light);
+            margin: 0;
+            padding: 30px 20px;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        button {
+            cursor: pointer;
+            font-family: var(--font-heading);
+        }
+
+        /* ---- Container ---- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-standard);
+            padding: 30px;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+        }
+
+        /* ---- Header ---- */
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+
+        /* ---- Status Message ---- */
+        .status-message {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius-standard);
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* ---- Views ---- */
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* ---- Filters ---- */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-standard);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            margin-bottom: 5px;
+            color: var(--gold);
+            font-weight: bold;
+            font-family: var(--font-heading);
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+        }
+
+        .testament-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .testament-button {
+            padding: 8px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: var(--text-light);
+        }
+
+        .testament-button.active {
+            background-color: var(--gold);
+            color: #0a0a2a;
+        }
+
+        /* ---- Active Filters ---- */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-standard);
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(250, 204, 21, 0.2);
+            color: var(--gold);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--gold);
+        }
+
+        .filter-chip .remove {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+        }
+
+        .filter-chip .remove:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ---- Character Grid ---- */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        /* ---- Character Card ---- */
+        .character-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-standard);
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+            transition: all 0.25s ease-in-out;
+            cursor: pointer;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border-medium);
+        }
+
+        .character-card h3 {
+            font-size: 1.5rem;
+            margin: 15px 0 5px;
+        }
+
+        .character-card p {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .character-card .meta {
+            font-size: 0.8rem;
+            color: var(--text-dimmer);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* ---- Chat View ---- */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-standard) var(--radius-standard) 0 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .chat-header img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 2px solid var(--gold);
+            object-fit: cover;
+        }
+
+        .chat-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .back-button {
+            margin-left: auto;
+            padding: 8px 15px;
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background-color: var(--gold);
+            color: #0a0a2a;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            line-height: 1.5;
+        }
+
+        .message.character {
+            align-self: flex-start;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 0;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background-color: rgba(250, 204, 21, 0.2);
+            border-bottom-right-radius: 0;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        .chat-input button {
+            padding: 12px 20px;
+            background-color: var(--gold);
+            color: #0a0a2a;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .chat-input button:hover {
+            background-color: var(--gold-hover);
+        }
+
+        /* ---- Responsive Adjustments ---- */
+        @media (max-width: 768px) {
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .character-grid {
+                grid-template-columns: 1fr;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+
+            .chat-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .chat-header img {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .back-button {
+                margin: 10px 0 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Character Chat</h1>
+        
+        <div class="status-message">
+            <p><strong>Ultra Simple Version</strong></p>
+            <p>This simplified version ensures all characters display correctly with working filters and chat functionality.</p>
+            <p id="status-text">Loading characters...</p>
+        </div>
+        
+        <!-- Character Selection View -->
+        <div id="selection-view" class="view active">
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-group" style="flex-grow: 1;">
+                    <label for="search">Search:</label>
+                    <input type="text" id="search" placeholder="Search characters...">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Testament:</label>
+                    <div class="testament-buttons">
+                        <button class="testament-button active" data-value="all">All</button>
+                        <button class="testament-button" data-value="old">Old</button>
+                        <button class="testament-button" data-value="new">New</button>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="book">Book:</label>
+                    <select id="book">
+                        <option value="all">All Books</option>
+                        <option value="Genesis">Genesis</option>
+                        <option value="Exodus">Exodus</option>
+                        <option value="1 Samuel">1 Samuel</option>
+                        <option value="Isaiah">Isaiah</option>
+                        <option value="Ruth">Ruth</option>
+                        <option value="Matthew">Matthew</option>
+                        <option value="Luke">Luke</option>
+                        <option value="John">John</option>
+                        <option value="Acts">Acts</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="group">Group:</label>
+                    <select id="group">
+                        <option value="all">All Groups</option>
+                        <option value="Prophets">Prophets</option>
+                        <option value="Apostles">Apostles</option>
+                        <option value="Kings">Kings</option>
+                        <option value="Women">Women</option>
+                        <option value="Messiah">Messiah</option>
+                        <option value="Patriarchs">Patriarchs</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Active Filters -->
+            <div id="active-filters" class="active-filters">
+                <span style="color: var(--text-dimmer);">No active filters</span>
+            </div>
+            
+            <!-- Character Grid -->
+            <div id="character-grid" class="character-grid">
+                <!-- Characters will be added here by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Chat View -->
+        <div id="chat-view" class="view">
+            <div class="chat-header">
+                <img id="chat-avatar" src="" alt="Character">
+                <h2 id="chat-name">Chat with Character</h2>
+                <button id="back-button" class="back-button">Back to Characters</button>
+            </div>
+            
+            <div id="chat-messages" class="chat-messages">
+                <!-- Messages will be added here by JavaScript -->
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Type your message...">
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bible Character Data
+        const characters = [
+            {
+                name: 'Jesus',
+                description: 'Central figure of Christianity who taught through parables and performed miracles.',
+                testament: 'new',
+                book: 'Matthew',
+                group: 'Messiah',
+                img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Peace be with you. What is on your heart today?"
+            },
+            {
+                name: 'Mary',
+                description: 'Mother of Jesus noted for her faith and obedience.',
+                testament: 'new',
+                book: 'Luke',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Blessed are you who have come to speak with me. How may I share the wonders of God with you today?"
+            },
+            {
+                name: 'Peter',
+                description: 'Disciple of Jesus and leader in the early church.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles',
+                img: 'https://images.unsplash.com/photo-1508021397575-6e9ca999c0f3?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Greetings in the name of our Lord Jesus Christ! What questions do you have about following the Way?"
+            },
+            {
+                name: 'Paul',
+                description: 'Apostle to the Gentiles and prolific New-Testament author.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles',
+                img: 'https://images.unsplash.com/photo-1504022462188-88f023db211c?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Grace and peace to you from God our Father and the Lord Jesus Christ. How may I help strengthen your faith today?"
+            },
+            {
+                name: 'John the Baptist',
+                description: 'Prophet who prepared the way for Jesus.',
+                testament: 'new',
+                book: 'John',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1541707423647-0742c9d3e3a0?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Repent, for the kingdom of heaven is at hand! What brings you to these wilderness waters?"
+            },
+            {
+                name: 'Moses',
+                description: 'Led the Israelites out of Egypt and received the Ten Commandments.',
+                testament: 'old',
+                book: 'Exodus',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1566211886021-ec1a73a3a5f9?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Shalom. I have witnessed the power of the LORD firsthand. What would you like to know about God's deliverance?"
+            },
+            {
+                name: 'David',
+                description: 'Shepherd, psalmist and second king of Israel who defeated Goliath.',
+                testament: 'old',
+                book: '1 Samuel',
+                group: 'Kings',
+                img: 'https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=150&q=80',
+                openingLine: "The Lord is my shepherd, I lack nothing. How can I, a man after God's own heart, assist you today?"
+            },
+            {
+                name: 'Abraham',
+                description: 'Patriarch chosen by God and father of many nations.',
+                testament: 'old',
+                book: 'Genesis',
+                group: 'Patriarchs',
+                img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Peace be upon you. I am Abraham, who walked by faith into the unknown. What would you like to ask me?"
+            },
+            {
+                name: 'Isaiah',
+                description: 'Major prophet who foretold the coming Messiah.',
+                testament: 'old',
+                book: 'Isaiah',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1504870712357-65ea720d6078?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Holy, holy, holy is the LORD Almighty; the whole earth is full of his glory. What vision from the LORD do you seek?"
+            },
+            {
+                name: 'Ruth',
+                description: 'Moabite woman whose loyalty became exemplary.',
+                testament: 'old',
+                book: 'Ruth',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1516726817505-f5ed825624d8?auto=format&fit=crop&w=150&q=80',
+                openingLine: "Shalom. I am Ruth, once a stranger in a foreign land. What would you like to know about finding belonging in unexpected places?"
+            }
+        ];
+
+        // DOM Elements
+        const selectionView = document.getElementById('selection-view');
+        const chatView = document.getElementById('chat-view');
+        const characterGrid = document.getElementById('character-grid');
+        const activeFilters = document.getElementById('active-filters');
+        const statusText = document.getElementById('status-text');
+        const searchInput = document.getElementById('search');
+        const bookSelect = document.getElementById('book');
+        const groupSelect = document.getElementById('group');
+        const testamentButtons = document.querySelectorAll('.testament-button');
+        const chatAvatar = document.getElementById('chat-avatar');
+        const chatName = document.getElementById('chat-name');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const backButton = document.getElementById('back-button');
+
+        // State
+        let filters = {
+            search: '',
+            testament: 'all',
+            book: 'all',
+            group: 'all'
+        };
+        
+        let currentCharacter = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCharacters();
+            setupEventListeners();
+        });
+
+        // Filter characters
+        function filterCharacters() {
+            let filtered = [...characters];
+            
+            if (filters.search) {
+                const query = filters.search.toLowerCase();
+                filtered = filtered.filter(c => 
+                    c.name.toLowerCase().includes(query) || 
+                    c.description.toLowerCase().includes(query)
+                );
+            }
+            
+            if (filters.testament !== 'all') {
+                filtered = filtered.filter(c => c.testament === filters.testament);
+            }
+            
+            if (filters.book !== 'all') {
+                filtered = filtered.filter(c => c.book === filters.book);
+            }
+            
+            if (filters.group !== 'all') {
+                filtered = filtered.filter(c => c.group === filters.group);
+            }
+            
+            return filtered;
+        }
+
+        // Render characters
+        function renderCharacters() {
+            const filtered = filterCharacters();
+            characterGrid.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                statusText.textContent = 'No characters match your filters.';
+                return;
+            }
+            
+            statusText.textContent = `Showing ${filtered.length} of ${characters.length} characters`;
+            
+            filtered.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.setAttribute('data-name', character.name);
+                
+                // Table-based circular image
+                card.innerHTML = `
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="${character.img}" alt="${character.name}" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>${character.name}</h3>
+                    <p>${character.description}</p>
+                    <div class="meta">${character.testament === 'old' ? 'Old Testament' : 'New Testament'} · ${character.book}</div>
+                `;
+                
+                // Add click event
+                card.addEventListener('click', () => {
+                    selectCharacter(character);
+                });
+                
+                characterGrid.appendChild(card);
+            });
+        }
+
+        // Render active filters
+        function renderActiveFilters() {
+            activeFilters.innerHTML = '';
+            
+            let hasActiveFilters = false;
+            
+            // Helper function to add filter chip
+            function addFilterChip(text, key, value) {
+                hasActiveFilters = true;
+                const chip = document.createElement('div');
+                chip.className = 'filter-chip';
+                chip.innerHTML = `<span>${text}</span><span class="remove">×</span>`;
+                
+                // Add click event to remove button
+                const removeBtn = chip.querySelector('.remove');
+                removeBtn.addEventListener('click', () => {
+                    if (key === 'search') {
+                        filters.search = '';
+                        searchInput.value = '';
+                    } else if (key === 'testament') {
+                        filters.testament = 'all';
+                        testamentButtons.forEach(btn => {
+                            btn.classList.toggle('active', btn.getAttribute('data-value') === 'all');
+                        });
+                    } else if (key === 'book') {
+                        filters.book = 'all';
+                        bookSelect.value = 'all';
+                    } else if (key === 'group') {
+                        filters.group = 'all';
+                        groupSelect.value = 'all';
+                    }
+                    
+                    renderActiveFilters();
+                    renderCharacters();
+                });
+                
+                activeFilters.appendChild(chip);
+            }
+            
+            // Add chips for each active filter
+            if (filters.search) {
+                addFilterChip(`"${filters.search}"`, 'search');
+            }
+            
+            if (filters.testament !== 'all') {
+                const testamentText = filters.testament === 'old' ? 'Old Testament' : 'New Testament';
+                addFilterChip(testamentText, 'testament');
+            }
+            
+            if (filters.book !== 'all') {
+                addFilterChip(`Book: ${filters.book}`, 'book');
+            }
+            
+            if (filters.group !== 'all') {
+                addFilterChip(`Group: ${filters.group}`, 'group');
+            }
+            
+            // If no active filters
+            if (!hasActiveFilters) {
+                const noFilters = document.createElement('span');
+                noFilters.style.color = 'var(--text-dimmer)';
+                noFilters.textContent = 'No active filters';
+                activeFilters.appendChild(noFilters);
+            }
+        }
+
+        // Select a character
+        function selectCharacter(character) {
+            currentCharacter = character;
+            
+            // Update chat view
+            chatAvatar.src = character.img;
+            chatAvatar.alt = character.name;
+            chatName.textContent = `Chat with ${character.name}`;
+            
+            // Clear previous messages
+            chatMessages.innerHTML = '';
+            
+            // Add opening message
+            addMessage(character.openingLine || `Hello, I am ${character.name}. How can I help you?`, 'character');
+            
+            // Show chat view
+            selectionView.classList.remove('active');
+            chatView.classList.add('active');
+        }
+
+        // Add message to chat
+        function addMessage(text, type) {
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Get simulated response
+        function getSimulatedResponse(message) {
+            const responses = [
+                `That's an interesting question about faith. I would encourage you to reflect on this deeply.`,
+                `In my time, we often pondered similar questions. The scriptures teach us that love and compassion are at the heart of all understanding.`,
+                `Remember that faith is a journey, not a destination. Your question shows you are on that path.`,
+                `I'm reminded of a teaching that says, "Seek and you will find." Your curiosity about these matters is a blessing.`
+            ];
+            
+            // Add character-specific responses
+            if (currentCharacter) {
+                if (currentCharacter.name === 'Jesus') {
+                    responses.push(`Truly I tell you, the kingdom of heaven is like a mustard seed. Those who have ears, let them hear.`);
+                } else if (currentCharacter.name === 'Moses') {
+                    responses.push(`As the LORD commanded me in the wilderness, I tell you that obedience to God's law brings blessing.`);
+                } else if (currentCharacter.name === 'David') {
+                    responses.push(`As I wrote in the Psalms, "The LORD is my shepherd, I lack nothing." Trust in Him regarding your question.`);
+                }
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search input
+            searchInput.addEventListener('input', () => {
+                filters.search = searchInput.value.trim();
+                renderActiveFilters();
+                renderCharacters();
+            });
+            
+            // Testament buttons
+            testamentButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const value = btn.getAttribute('data-value');
+                    filters.testament = value;
+                    
+                    // Update active state
+                    testamentButtons.forEach(b => {
+                        b.classList.toggle('active', b === btn);
+                    });
+                    
+                    renderActiveFilters();
+                    renderCharacters();
+                });
+            });
+            
+            // Book select
+            bookSelect.addEventListener('change', () => {
+                filters.book = bookSelect.value;
+                renderActiveFilters();
+                renderCharacters();
+            });
+            
+            // Group select
+            groupSelect.addEventListener('change', () => {
+                filters.group = groupSelect.value;
+                renderActiveFilters();
+                renderCharacters();
+            });
+            
+            // Back button
+            backButton.addEventListener('click', () => {
+                chatView.classList.remove('active');
+                selectionView.classList.add('active');
+            });
+            
+            // Send button
+            sendButton.addEventListener('click', sendMessage);
+            
+            // Message input (enter key)
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        // Send message
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            // Add user message
+            addMessage(text, 'user');
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Simulate response after a short delay
+            setTimeout(() => {
+                const response = getSimulatedResponse(text);
+                addMessage(response, 'character');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

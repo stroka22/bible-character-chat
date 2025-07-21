@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat - Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .debug-section {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .character-card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            display: inline-block;
+            width: 200px;
+            vertical-align: top;
+        }
+        .character-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid gold;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+        .status-error {
+            color: red;
+            font-weight: bold;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bible Character Chat - Debug Page</h1>
+    
+    <div class="debug-section">
+        <h2>Character Data Status</h2>
+        <div id="data-status">Checking...</div>
+        <button id="load-default-data">Load Default Character Data</button>
+        <button id="check-data">Check Character Data</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>DOM Elements Check</h2>
+        <div id="dom-status">Checking DOM elements...</div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Direct Character Rendering</h2>
+        <p>This section will attempt to render characters directly without complex UI:</p>
+        <div id="direct-characters"></div>
+        <button id="render-direct">Render Characters Directly</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>Raw Character Data</h2>
+        <pre id="raw-data">Loading...</pre>
+    </div>
+
+    <script>
+        // Default character data in case the external data isn't loading
+        const defaultCharacters = [
+            {
+                id: '1',
+                name: 'Jesus',
+                description: 'Central figure of Christianity who taught through parables and performed miracles.',
+                testament: 'new',
+                book: 'Matthew',
+                group: 'Messiah',
+                img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '2',
+                name: 'Mary',
+                description: 'Mother of Jesus noted for her faith and obedience.',
+                testament: 'new',
+                book: 'Luke',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1591059683048-9a6208e91d2c?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '3',
+                name: 'Moses',
+                description: 'Led the Israelites out of Egypt and received the Ten Commandments.',
+                testament: 'old',
+                book: 'Exodus',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1566193232556-d3fd467e1712?auto=format&fit=crop&w=150&q=80'
+            }
+        ];
+
+        // DOM Elements
+        const dataStatusEl = document.getElementById('data-status');
+        const domStatusEl = document.getElementById('dom-status');
+        const rawDataEl = document.getElementById('raw-data');
+        const directCharactersEl = document.getElementById('direct-characters');
+        const loadDefaultDataBtn = document.getElementById('load-default-data');
+        const checkDataBtn = document.getElementById('check-data');
+        const renderDirectBtn = document.getElementById('render-direct');
+
+        // Check if window.characters exists
+        function checkCharacterData() {
+            console.log('Checking character data...');
+            
+            if (window.characters && Array.isArray(window.characters) && window.characters.length > 0) {
+                dataStatusEl.innerHTML = `<span class="status-ok">SUCCESS: Found ${window.characters.length} characters in window.characters</span>`;
+                rawDataEl.textContent = JSON.stringify(window.characters, null, 2);
+            } else {
+                dataStatusEl.innerHTML = `<span class="status-error">ERROR: window.characters is not available or empty</span>`;
+                rawDataEl.textContent = "window.characters is not available or empty";
+            }
+        }
+
+        // Load default character data
+        function loadDefaultData() {
+            console.log('Loading default character data...');
+            window.characters = defaultCharacters;
+            dataStatusEl.innerHTML = `<span class="status-ok">Loaded ${defaultCharacters.length} default characters</span>`;
+            rawDataEl.textContent = JSON.stringify(defaultCharacters, null, 2);
+        }
+
+        // Check DOM elements
+        function checkDOMElements() {
+            console.log('Checking DOM elements...');
+            
+            const elementsToCheck = [
+                { id: 'character-grid', description: 'Grid container for character cards' },
+                { id: 'character-list', description: 'List container for character items' },
+                { id: 'selectionView', description: 'Character selection view container' },
+                { id: 'chatView', description: 'Chat view container' }
+            ];
+            
+            let html = '<ul>';
+            
+            elementsToCheck.forEach(element => {
+                const el = document.getElementById(element.id);
+                if (el) {
+                    html += `<li><span class="status-ok">FOUND:</span> ${element.id} (${element.description})</li>`;
+                } else {
+                    html += `<li><span class="status-error">MISSING:</span> ${element.id} (${element.description})</li>`;
+                }
+            });
+            
+            html += '</ul>';
+            domStatusEl.innerHTML = html;
+        }
+
+        // Render characters directly
+        function renderCharactersDirect() {
+            console.log('Rendering characters directly...');
+            
+            directCharactersEl.innerHTML = '';
+            
+            const characters = window.characters || defaultCharacters;
+            
+            characters.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                
+                card.innerHTML = `
+                    <img src="${character.img}" alt="${character.name}">
+                    <h3>${character.name}</h3>
+                    <p>${character.description}</p>
+                    <p><small>${character.testament} testament, ${character.book}</small></p>
+                `;
+                
+                directCharactersEl.appendChild(card);
+            });
+        }
+
+        // Event listeners
+        loadDefaultDataBtn.addEventListener('click', loadDefaultData);
+        checkDataBtn.addEventListener('click', checkCharacterData);
+        renderDirectBtn.addEventListener('click', renderCharactersDirect);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM fully loaded');
+            checkDOMElements();
+            
+            // Try to load character-fix.js
+            const script = document.createElement('script');
+            script.src = 'character-fix.js';
+            
+            script.onload = function() {
+                console.log('character-fix.js loaded successfully');
+                setTimeout(checkCharacterData, 500); // Check after a delay to allow initialization
+            };
+            
+            script.onerror = function() {
+                console.error('Failed to load character-fix.js');
+                dataStatusEl.innerHTML = `<span class="status-error">ERROR: Failed to load character-fix.js</span>`;
+                loadDefaultData(); // Load default data if script fails
+            };
+            
+            document.body.appendChild(script);
+        });
+    </script>
+</body>
+</html>

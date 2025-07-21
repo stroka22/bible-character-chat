@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Bible Character Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ---- Root Variables ---- */
+        :root {
+            --primary-bg: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --gold: #facc15;
+            --gold-hover: #eab308;
+            --gold-glow: rgba(250, 204, 21, 0.5);
+            --text-light: #e0e0e0;
+            --text-dim: #c0c0c0;
+            --text-dimmer: #a0a0a0;
+            --border-light: rgba(255, 255, 255, 0.15);
+            --border-medium: rgba(255, 255, 255, 0.25);
+            --panel-bg: rgba(255, 255, 255, 0.08);
+            --panel-hover: rgba(255, 255, 255, 0.12);
+            --shadow-standard: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 12px 20px rgba(0, 0, 0, 0.3);
+            --radius-standard: 15px;
+            --radius-small: 8px;
+            --transition-standard: all 0.25s ease-in-out;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lora', serif;
+            --blue-light: #90cdf4;
+            --blue-medium: #63b3ed;
+        }
+
+        /* ---- Global Styles ---- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--primary-bg);
+            min-height: 100vh;
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: var(--gold);
+        }
+
+        a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: var(--transition-standard);
+        }
+
+        a:hover {
+            color: var(--gold);
+        }
+
+        button {
+            font-family: var(--font-heading);
+            cursor: pointer;
+            transition: var(--transition-standard);
+        }
+
+        button:focus, a:focus, input:focus, select:focus {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+
+        /* ---- App Container ---- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ---- Status Message ---- */
+        .status-message {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius-standard);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .status-message h2 {
+            margin-bottom: 10px;
+            color: var(--gold);
+        }
+
+        .status-message p {
+            margin-bottom: 10px;
+            color: var(--text-light);
+        }
+
+        /* ---- Views ---- */
+        .view {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* ---- Container ---- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-standard);
+            padding: 30px;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+            position: relative;
+        }
+
+        /* ---- Header ---- */
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: bold;
+            color: var(--gold);
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px var(--gold-glow);
+            line-height: 1.2;
+        }
+
+        /* ---- Filters ---- */
+        .filters {
+            background-color: var(--panel-bg);
+            border-radius: var(--radius-standard);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-light);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--gold);
+            font-family: var(--font-heading);
+        }
+
+        .filter-group select,
+        .filter-group input[type="text"] {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-small);
+            padding: 8px 12px;
+            color: var(--text-light);
+            outline: none;
+            transition: var(--transition-standard);
+        }
+
+        .filter-group select:focus,
+        .filter-group input[type="text"]:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.25);
+        }
+
+        .testament-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .testament-button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            transition: var(--transition-standard);
+            font-family: var(--font-heading);
+            font-weight: 600;
+        }
+
+        .testament-button:hover {
+            background-color: rgba(250, 204, 21, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .testament-button.active {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+
+        /* ---- Active Filters ---- */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-standard);
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(250, 204, 21, 0.2);
+            color: var(--gold);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--gold);
+            transition: var(--transition-standard);
+        }
+
+        .filter-chip:hover {
+            background-color: rgba(250, 204, 21, 0.3);
+        }
+
+        .filter-chip .remove {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: var(--transition-standard);
+        }
+
+        .filter-chip .remove:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ---- Results Count ---- */
+        .results-count {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        /* ---- Character Grid ---- */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        /* ---- Character Card ---- */
+        .character-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-standard);
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+            transition: var(--transition-standard);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border-medium);
+        }
+
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gold);
+            margin: 15px 0 5px;
+            position: relative;
+        }
+
+        .character-card p {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .character-card .meta {
+            font-size: 0.8rem;
+            color: var(--text-dimmer);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* ---- Chat View ---- */
+        .chat-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .chat-main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.1);
+            transition: width 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .chat-main.panel-open {
+            width: calc(100% - 350px);
+        }
+
+        .breadcrumb-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .back-button {
+            background-color: rgba(250, 204, 21, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 6px 12px;
+            border-radius: var(--radius-small);
+            font-size: 0.9rem;
+            transition: var(--transition-standard);
+        }
+
+        .back-button:hover {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            transform: translateY(-2px);
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .chat-header-info {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-header img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 15px;
+            border: 2px solid var(--gold);
+        }
+
+        .chat-header h2 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--gold);
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            line-height: 1.5;
+        }
+
+        .user-message {
+            background-color: #4a5568;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .character-message {
+            background-color: #2d3748;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 15px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input-area input {
+            flex-grow: 1;
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: var(--text-light);
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .chat-input-area input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.3);
+        }
+
+        .chat-input-area input::placeholder {
+            color: #a0aec0;
+        }
+
+        .chat-input-area button {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .chat-input-area button:hover {
+            background-color: var(--gold-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-input-area button:active {
+            transform: translateY(0);
+        }
+
+        /* ---- Insights Panel ---- */
+        .insights-panel {
+            width: 350px;
+            background: linear-gradient(to bottom, #1a1a4a, #2a2a6a);
+            border-left: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 30;
+        }
+
+        .insights-panel.open {
+            transform: translateX(0);
+        }
+
+        .insights-panel .portrait {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gold);
+            margin: 0 auto 15px;
+            display: block;
+        }
+
+        .insights-panel h3 {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .insights-panel section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background-color 0.2s ease;
+        }
+
+        .insights-panel section:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .insights-panel section.collapsed .section-content {
+            display: none;
+        }
+
+        .insights-panel section h4 {
+            font-size: 1.2rem;
+            color: var(--blue-light);
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .insights-panel section h4:hover {
+            color: var(--blue-medium);
+        }
+
+        .insights-panel section h4::after {
+            content: '−';
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .insights-panel section.collapsed h4::after {
+            content: '+';
+        }
+
+        .insights-panel p, .insights-panel ul {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .insights-panel ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+
+        /* ---- Relationship Formatting ---- */
+        .relationship-group {
+            margin-bottom: 12px;
+        }
+
+        .relationship-group h5 {
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .relationship-chip {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            margin: 2px 4px 6px 0;
+            white-space: nowrap;
+        }
+
+        /* ---- Action Buttons ---- */
+        .action-button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-button:hover {
+            background-color: var(--gold);
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .action-button.active {
+            background-color: var(--gold);
+            color: #0a0a2a;
+        }
+
+        /* ---- Close Button ---- */
+        .close-button {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(250, 204, 21, 0.15);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-weight: bold;
+            line-height: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .2s ease;
+            z-index: 40;
+        }
+
+        .close-button:hover {
+            background: var(--gold);
+            color: #0a0a2a;
+            transform: rotate(90deg);
+        }
+
+        /* ---- Scripture Reference ---- */
+        .scripture-reference {
+            color: var(--blue-medium);
+            text-decoration: underline;
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            padding: 0 2px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+
+        .scripture-reference:hover {
+            background-color: rgba(99, 179, 237, 0.2);
+            text-decoration: none;
+        }
+
+        .scripture-popover {
+            position: absolute;
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            width: 300px;
+            max-width: 90vw;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            transform: translateX(-50%);
+            left: 50%;
+            bottom: calc(100% + 10px);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .scripture-reference:hover .scripture-popover {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scripture-popover::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -10px;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: #fff transparent transparent transparent;
+        }
+
+        .scripture-popover strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #2c5282;
+            font-size: 0.9rem;
+        }
+
+        .scripture-popover p {
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+
+        .scripture-popover .attribution {
+            font-size: 0.75rem;
+            color: #718096;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        /* ---- Responsive Adjustments ---- */
+        @media (max-width: 768px) {
+            .view {
+                padding: 20px 15px;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 15px;
+            }
+            
+            .filter-group {
+                width: 100%;
+                margin-bottom: 12px;
+            }
+            
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+                margin-bottom: 15px;
+            }
+
+            .insights-panel {
+                width: 100%;
+            }
+
+            .chat-main.panel-open {
+                width: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px 10px;
+            }
+            
+            .character-grid {
+                grid-template-columns: 1fr;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+
+            .chat-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .chat-header-info {
+                margin-bottom: 10px;
+            }
+
+            .chat-header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Status Message -->
+        <div class="status-message">
+            <h2>Enhanced Bible Character Chat</h2>
+            <p>This enhanced version includes all chat features:</p>
+            <ul>
+                <li>Insights panel with character information</li>
+                <li>Collapsible sections in the insights panel</li>
+                <li>Relationship section with relationship chips</li>
+                <li>Scripture references with hover popups</li>
+                <li>Study questions</li>
+            </ul>
+            <p id="status-text">Loading characters...</p>
+        </div>
+        
+        <!-- Character Selection View -->
+        <div id="selection-view" class="view active">
+            <div class="container">
+                <h1>Choose Your Biblical Guide</h1>
+                
+                <!-- Filters -->
+                <div class="filters">
+                    <div class="filter-group" style="flex-grow: 1;">
+                        <label for="search">Search:</label>
+                        <input type="text" id="search" placeholder="Search characters...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Testament:</label>
+                        <div class="testament-buttons">
+                            <button class="testament-button active" data-value="all">All</button>
+                            <button class="testament-button" data-value="old">Old</button>
+                            <button class="testament-button" data-value="new">New</button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="book">Book:</label>
+                        <select id="book">
+                            <option value="all">All Books</option>
+                            <option value="Genesis">Genesis</option>
+                            <option value="Exodus">Exodus</option>
+                            <option value="1 Samuel">1 Samuel</option>
+                            <option value="Isaiah">Isaiah</option>
+                            <option value="Ruth">Ruth</option>
+                            <option value="Matthew">Matthew</option>
+                            <option value="Luke">Luke</option>
+                            <option value="John">John</option>
+                            <option value="Acts">Acts</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="group">Group:</label>
+                        <select id="group">
+                            <option value="all">All Groups</option>
+                            <option value="Prophets">Prophets</option>
+                            <option value="Apostles">Apostles</option>
+                            <option value="Kings">Kings</option>
+                            <option value="Women">Women</option>
+                            <option value="Messiah">Messiah</option>
+                            <option value="Patriarchs">Patriarchs</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Active Filters -->
+                <div id="active-filters" class="active-filters">
+                    <span style="color: var(--text-dimmer);">No active filters</span>
+                </div>
+                
+                <!-- Character Grid -->
+                <div id="character-grid" class="character-grid">
+                    <!-- Characters will be added here by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat View -->
+        <div id="chat-view" class="view">
+            <div class="chat-container">
+                <div id="chat-main" class="chat-main">
+                    <!-- Breadcrumb + Back button -->
+                    <div class="breadcrumb-nav">
+                        <div class="breadcrumb">
+                            <a href="#" class="breadcrumb-home">Home</a>
+                            <span>&gt;</span>
+                            <a href="#" class="breadcrumb-characters">Characters</a>
+                            <span>&gt;</span>
+                            <span id="breadcrumb-current" style="color: var(--gold); font-weight: 600;">Jesus</span>
+                        </div>
+                        <button id="back-button" class="back-button">Back to Characters</button>
+                    </div>
+                    
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <img id="chat-avatar" src="" alt="Character">
+                            <h2 id="chat-name">Chat with Character</h2>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button id="insights-toggle" class="action-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                                Insights
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Messages will be added here by JavaScript -->
+                    </div>
+                    
+                    <div class="chat-input-area">
+                        <input type="text" id="message-input" placeholder="Type your message...">
+                        <button id="send-button">Send</button>
+                    </div>
+                </div>
+                
+                <!-- Insights Panel -->
+                <div id="insights-panel" class="insights-panel">
+                    <!-- Close (X) button -->
+                    <div id="close-insights" class="close-button">×</div>
+                    
+                    <img id="insights-avatar" class="portrait" src="" alt="Character Portrait">
+                    <h3>Character Insights</h3>
+                    
+                    <section>
+                        <h4 class="collapsible">Historical Context</h4>
+                        <div class="section-content">
+                            <p><strong>Time Period:</strong> <span id="time-period">New Testament Era</span></p>
+                            <p><strong>Location:</strong> <span id="location">Bethlehem, Nazareth, Jerusalem, Galilee</span></p>
+                            <p id="context-text">Born in Bethlehem, lived in Nazareth, ministered throughout Galilee and Judea under Roman rule. A time of significant religious and political tension between Jewish traditions and Roman occupation.</p>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h4 class="collapsible">Key Scripture References</h4>
+                        <div class="section-content">
+                            <ul id="scripture-list">
+                                <!-- Scripture references will be added here by JavaScript -->
+                            </ul>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h4 class="collapsible">Relationships</h4>
+                        <div id="relationships-content" class="section-content">
+                            <!-- Relationships will be added here by JavaScript -->
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h4 class="collapsible">Study Questions</h4>
+                        <div class="section-content">
+                            <ul id="study-questions">
+                                <!-- Study questions will be added here by JavaScript -->
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Bible Character Data
+        const characters = [
+            {
+                name: 'Jesus',
+                description: 'Central figure of Christianity who taught through parables and performed miracles.',
+                testament: 'new',
+                book: 'Matthew',
+                group: 'Messiah',
+                img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80',
+                context: 'Born in Bethlehem and raised in Nazareth, Jesus began his ministry at age 30. He selected twelve disciples, taught the Sermon on the Mount, and was crucified under Pontius Pilate.',
+                location: 'Bethlehem, Nazareth, Jerusalem, Galilee',
+                timePeriod: 'New Testament Era (1st Century AD)',
+                scriptures: [
+                    {
+                        reference: 'John 3:16',
+                        text: 'For God so loved the world, that he gave his only Son, that whoever believes in him should not perish but have eternal life.'
+                    },
+                    {
+                        reference: 'Matthew 28:19-20',
+                        text: 'Go therefore and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, to the end of the age.'
+                    },
+                    {
+                        reference: 'John 14:6',
+                        text: 'Jesus said to him, "I am the way, and the truth, and the life. No one comes to the Father except through me."'
+                    }
+                ],
+                relationships: {
+                    "disciples": ["Peter", "James", "John", "Andrew", "Philip", "Bartholomew", "Matthew", "Thomas", "James (son of Alphaeus)", "Thaddaeus", "Simon the Zealot", "Judas Iscariot"],
+                    "family": ["Mary", "Joseph", "James", "Joses", "Simon", "Judas"],
+                    "followers": ["Mary Magdalene", "Martha", "Lazarus"]
+                },
+                studyQuestions: [
+                    "What does it mean to truly love your neighbor?",
+                    "How can one find peace in a troubled world?",
+                    "What is the most important commandment?"
+                ],
+                openingLine: "Peace be with you. What is on your heart today?"
+            },
+            {
+                name: 'Mary',
+                description: 'Mother of Jesus noted for her faith and obedience.',
+                testament: 'new',
+                book: 'Luke',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?auto=format&fit=crop&w=150&q=80',
+                context: 'A young woman from Nazareth chosen by God to bear Jesus. She was visited by the angel Gabriel and praised God through her Magnificat.',
+                location: 'Nazareth, Bethlehem, Egypt, Jerusalem',
+                timePeriod: 'New Testament Era (1st Century BC - 1st Century AD)',
+                scriptures: [
+                    {
+                        reference: 'Luke 1:38',
+                        text: '"I am the Lord\'s servant," Mary answered. "May your word to me be fulfilled." Then the angel left her.'
+                    },
+                    {
+                        reference: 'Luke 1:46-47',
+                        text: 'And Mary said: "My soul glorifies the Lord and my spirit rejoices in God my Savior."'
+                    }
+                ],
+                relationships: {
+                    "family": ["Jesus (son)", "Joseph (husband)", "Elizabeth (relative)"],
+                    "connections": ["Gabriel (angel)", "Shepherds", "Wise Men"]
+                },
+                studyQuestions: [
+                    "How does Mary's obedience demonstrate faith?",
+                    "What can we learn from Mary's response to God's call?",
+                    "How did Mary's life change after accepting God's plan?"
+                ],
+                openingLine: "Blessed are you who have come to speak with me. How may I share the wonders of God with you today?"
+            },
+            {
+                name: 'Peter',
+                description: 'Disciple of Jesus and leader in the early church.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles',
+                img: 'https://images.unsplash.com/photo-1508021397575-6e9ca999c0f3?auto=format&fit=crop&w=150&q=80',
+                context: 'Originally named Simon, he was a fisherman whom Jesus renamed Peter ("the rock"). Despite denying Jesus three times, he became a bold leader after Pentecost.',
+                location: 'Galilee, Jerusalem, Rome',
+                timePeriod: 'New Testament Era (1st Century AD)',
+                scriptures: [
+                    {
+                        reference: 'Matthew 16:18',
+                        text: 'And I tell you that you are Peter, and on this rock I will build my church, and the gates of Hades will not overcome it.'
+                    },
+                    {
+                        reference: '1 Peter 5:8-9',
+                        text: 'Be alert and of sober mind. Your enemy the devil prowls around like a roaring lion looking for someone to devour. Resist him, standing firm in the faith.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Andrew (brother)"],
+                    "disciples": ["James", "John", "Andrew", "Philip", "Bartholomew", "Matthew", "Thomas", "James (son of Alphaeus)", "Thaddaeus", "Simon the Zealot", "Judas Iscariot"],
+                    "mentors": ["Jesus"]
+                },
+                studyQuestions: [
+                    "How did Peter's failures prepare him for leadership?",
+                    "What can we learn from Peter's boldness after Pentecost?",
+                    "How did Peter's relationship with Jesus transform him?"
+                ],
+                openingLine: "Greetings in the name of our Lord Jesus Christ! What questions do you have about following the Way?"
+            },
+            {
+                name: 'Moses',
+                description: 'Led the Israelites out of Egypt and received the Ten Commandments.',
+                testament: 'old',
+                book: 'Exodus',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1566211886021-ec1a73a3a5f9?auto=format&fit=crop&w=150&q=80',
+                context: 'Born during Egyptian oppression, saved in a basket, raised in Pharaoh\'s household, and called by God through a burning bush. Led the Exodus and received the Law at Mount Sinai.',
+                location: 'Egypt, Midian, Wilderness, Mount Sinai',
+                timePeriod: 'Old Testament Era (circa 1500-1400 BC)',
+                scriptures: [
+                    {
+                        reference: 'Exodus 3:14',
+                        text: 'God said to Moses, "I AM WHO I AM. This is what you are to say to the Israelites: \'I AM has sent me to you.\'"'
+                    },
+                    {
+                        reference: 'Exodus 14:14',
+                        text: 'The LORD will fight for you; you need only to be still.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Amram (father)", "Jochebed (mother)", "Miriam (sister)", "Aaron (brother)", "Zipporah (wife)"],
+                    "mentors": ["Jethro"],
+                    "successors": ["Joshua"]
+                },
+                studyQuestions: [
+                    "How did Moses' upbringing prepare him for his role?",
+                    "What can we learn from Moses' encounters with God?",
+                    "How did Moses demonstrate leadership during difficult times?"
+                ],
+                openingLine: "Shalom. I have witnessed the power of the LORD firsthand. What would you like to know about God's deliverance?"
+            },
+            {
+                name: 'David',
+                description: 'Shepherd, psalmist and second king of Israel who defeated Goliath.',
+                testament: 'old',
+                book: '1 Samuel',
+                group: 'Kings',
+                img: 'https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=150&q=80',
+                context: 'The youngest son of Jesse who was anointed by Samuel. After defeating Goliath, he became king and established Jerusalem as Israel\'s capital. Wrote many Psalms.',
+                location: 'Bethlehem, Jerusalem, Wilderness',
+                timePeriod: 'Old Testament Era (circa 1000 BC)',
+                scriptures: [
+                    {
+                        reference: '1 Samuel 16:7',
+                        text: 'But the LORD said to Samuel, "Do not consider his appearance or his height, for I have rejected him. The LORD does not look at the things people look at. People look at the outward appearance, but the LORD looks at the heart."'
+                    },
+                    {
+                        reference: 'Psalm 23:1-3',
+                        text: 'The LORD is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Jesse (father)", "Solomon (son)", "Absalom (son)"],
+                    "friends": ["Jonathan", "Hushai"],
+                    "mentors": ["Samuel"],
+                    "enemies": ["Saul", "Goliath"]
+                },
+                studyQuestions: [
+                    "What made David a man after God's own heart?",
+                    "How did David handle failure and repentance?",
+                    "What can we learn from David's worship through the Psalms?"
+                ],
+                openingLine: "The Lord is my shepherd, I lack nothing. How can I, a man after God's own heart, assist you today?"
+            },
+            {
+                name: 'Abraham',
+                description: 'Patriarch chosen by God and father of many nations.',
+                testament: 'old',
+                book: 'Genesis',
+                group: 'Patriarchs',
+                img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80',
+                context: 'Originally named Abram from Ur of the Chaldeans. God called him to leave his homeland and promised to make him a great nation. Father of Isaac and ancestor of Jesus.',
+                location: 'Ur, Haran, Canaan, Egypt',
+                timePeriod: 'Old Testament Era (circa 2000-1800 BC)',
+                scriptures: [
+                    {
+                        reference: 'Genesis 12:2-3',
+                        text: '"I will make you into a great nation, and I will bless you; I will make your name great, and you will be a blessing. I will bless those who bless you, and whoever curses you I will curse; and all peoples on earth will be blessed through you."'
+                    },
+                    {
+                        reference: 'Genesis 15:6',
+                        text: 'Abram believed the LORD, and he credited it to him as righteousness.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Sarah (wife)", "Isaac (son)", "Ishmael (son)", "Lot (nephew)"],
+                    "descendants": ["Jacob", "Joseph", "David", "Jesus"]
+                },
+                studyQuestions: [
+                    "How did Abraham demonstrate faith through obedience?",
+                    "What can we learn from Abraham's journey of faith?",
+                    "How did God fulfill His promises to Abraham?"
+                ],
+                openingLine: "Peace be upon you. I am Abraham, who walked by faith into the unknown. What would you like to ask me?"
+            },
+            {
+                name: 'Isaiah',
+                description: 'Major prophet who foretold the coming Messiah.',
+                testament: 'old',
+                book: 'Isaiah',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1504870712357-65ea720d6078?auto=format&fit=crop&w=150&q=80',
+                context: 'Prophesied during the reigns of Uzziah, Jotham, Ahaz, and Hezekiah. Known for messianic prophecies and the vision of God\'s holiness in the temple.',
+                location: 'Jerusalem, Judah',
+                timePeriod: 'Old Testament Era (8th century BC)',
+                scriptures: [
+                    {
+                        reference: 'Isaiah 6:3',
+                        text: 'And they were calling to one another: "Holy, holy, holy is the LORD Almighty; the whole earth is full of his glory."'
+                    },
+                    {
+                        reference: 'Isaiah 53:5',
+                        text: 'But he was pierced for our transgressions, he was crushed for our iniquities; the punishment that brought us peace was on him, and by his wounds we are healed.'
+                    }
+                ],
+                relationships: {
+                    "contemporaries": ["King Uzziah", "King Jotham", "King Ahaz", "King Hezekiah"],
+                    "prophetic subjects": ["Messiah", "Suffering Servant"]
+                },
+                studyQuestions: [
+                    "How did Isaiah's vision of God's holiness impact his ministry?",
+                    "What do Isaiah's prophecies reveal about the coming Messiah?",
+                    "How did Isaiah balance messages of judgment and hope?"
+                ],
+                openingLine: "Holy, holy, holy is the LORD Almighty; the whole earth is full of his glory. What vision from the LORD do you seek?"
+            },
+            {
+                name: 'Ruth',
+                description: 'Moabite woman whose loyalty became exemplary.',
+                testament: 'old',
+                book: 'Ruth',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1516726817505-f5ed825624d8?auto=format&fit=crop&w=150&q=80',
+                context: 'A widow from Moab who chose to follow her mother-in-law Naomi to Bethlehem. She married Boaz and became the great-grandmother of King David, placing her in Jesus\' lineage.',
+                location: 'Moab, Bethlehem',
+                timePeriod: 'Old Testament Era (during the period of the Judges)',
+                scriptures: [
+                    {
+                        reference: 'Ruth 1:16-17',
+                        text: 'But Ruth replied, "Don\'t urge me to leave you or to turn back from you. Where you go I will go, and where you stay I will stay. Your people will be my people and your God my God. Where you die I will die, and there I will be buried. May the LORD deal with me, be it ever so severely, if even death separates you and me."'
+                    },
+                    {
+                        reference: 'Ruth 2:12',
+                        text: 'May the LORD repay you for what you have done. May you be richly rewarded by the LORD, the God of Israel, under whose wings you have come to take refuge.'
+                    }
+                ],
+                relationships: {
+                    "family": ["Naomi (mother-in-law)", "Boaz (husband)"],
+                    "descendants": ["Obed", "Jesse", "David", "Jesus"]
+                },
+                studyQuestions: [
+                    "What can we learn from Ruth's loyalty and commitment?",
+                    "How did Ruth's faith in God develop throughout her story?",
+                    "What does Ruth's story teach us about God's providence?"
+                ],
+                openingLine: "Shalom. I am Ruth, once a stranger in a foreign land. What would you like to know about finding belonging in unexpected places?"
+            }
+        ];
+
+        // DOM Elements
+        const selectionView = document.getElementById('selection-view');
+        const chatView = document.getElementById('chat-view');
+        const characterGrid = document.getElementById('character-grid');
+        const activeFilters = document.getElementById('active-filters');
+        const statusText = document.getElementById('status-text');
+        const searchInput = document.getElementById('search');
+        const bookSelect = document.getElementById('book');
+        const groupSelect = document.getElementById('group');
+        const testamentButtons = document.querySelectorAll('.testament-button');
+        
+        // Chat elements
+        const chatMain = document.getElementById('chat-main');
+        const chatAvatar = document.getElementById('chat-avatar');
+        const chatName = document.getElementById('chat-name');
+        const breadcrumbCurrent = document.getElementById('breadcrumb-current');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const backButton = document.getElementById('back-button');
+        
+        // Insights elements
+        const insightsPanel = document.getElementById('insights-panel');
+        const insightsToggle = document.getElementById('insights-toggle');
+        const closeInsights = document.getElementById('close-insights');
+        const insightsAvatar = document.getElementById('insights-avatar');
+        const timePeriod = document.getElementById('time-period');
+        const location = document.getElementById('location');
+        const contextText = document.getElementById('context-text');
+        const scriptureList = document.getElementById('scripture-list');
+        const relationshipsContent = document.getElementById('relationships-content');
+        const studyQuestions = document.getElementById('study-questions');
+        const collapsibleSections = document.querySelectorAll('.insights-panel section');
+
+        // State
+        let filters = {
+            search: '',
+            testament: 'all',
+            book: 'all',
+            group: 'all'
+        };
+        
+        let currentCharacter = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCharacters();
+            setupEventListeners();
+        });
+
+        // Filter characters
+        function filterCharacters() {
+            let filtered = [...characters];
+            
+            if (filters.search) {
+                const query = filters.search.toLowerCase();
+                filtered = filtered.filter(c => 
+                    c.name.toLowerCase().includes(query) || 
+                    c.description.toLowerCase().includes(query)
+                );
+            }
+            
+            if (filters.testament !== 'all') {
+                filtered = filtered.filter(c => c.testament === filters.testament);
+            }
+            
+            if (filters.book !== 'all') {
+                filtered = filtered.filter(c => c.book === filters.book);
+            }
+            
+            if (filters.group !== 'all') {
+                filtered = filtered.filter(c => c.group === filters.group);
+            }
+            
+            return filtered;
+        }
+
+        // Render characters
+        function renderCharacters() {
+            const filtered = filterCharacters();
+            characterGrid.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                statusText.textContent = 'No characters match your filters.';
+                return;
+            }
+            
+            statusText.textContent = `Showing ${filtered.length} of ${characters.length} characters`;
+            
+            filtered.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.setAttribute('data-name', character.name);
+                
+                // Table-based circular image
+                card.innerHTML = `
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="${character.img}" alt="${character.name}" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>${character.name}</h3>
+                    <p>${character.description}</p>
+                    <div class="meta">${character.testament === 'old' ? 'Old Testament' : 'New Testament'} · ${character.book}</div>
+                `;
+                
+                // Add click event
+                card.addEventListener('click', () => {
+                    selectCharacter(character);
+                });
+                
+                characterGrid.appendChild(card);
+            });
+        }
+
+        // Render active filters
+        function renderActiveFilters() {
+            activeFilters.innerHTML = '';
+            
+            let hasActiveFilters = false;
+            
+            // Helper function to add filter chip
+            function addFilterChip(text, key, value) {
+                hasActiveFilters = true;
+                const chip = document.createElement('div');
+                chip.className = 'filter-chip';
+                chip.innerHTML = `<span>${text}</span><span class="remove">×</span>`;
+                
+                // Add click event to remove button
+                const removeBtn = chip.querySelector('.remove');
+                removeBtn.addEventListener('click', () => {
+                    if (key === 'search') {
+                        filters.search = '';
+                        searchInput.value = '';
+                    } else if (key === 'testament') {
+                        filters.testament = 'all';
+                        testamentButtons.forEach(btn => {
+                            btn.classList.toggle('active', btn.getAttribute('data-value') === 'all');
+                        });
+                    } else if (key === 'book') {
+                        filters.book = 'all';
+                        bookSelect.value = 'all';
+                    } else if (key === 'group') {
+                        filters.group = 'all';
+                        groupSelect.value = 'all';
+                    }
+                    
+                    renderActiveFilters();
+                    renderCharacters();
+                });
+                
+                activeFilters.appendChild(chip);
+            }
+            
+            // Add chips for each active filter
+            if (filters.search) {
+                addFilterChip(`"${filters.search}"`, 'search');
+            }
+            
+            if (filters.testament !== 'all') {
+                const testamentText = filters.testament === 'old' ? 'Old Testament' : 'New Testament';
+                addFilterChip(testamentText, 'testament');
+            }
+            
+            if (filters.book !== 'all') {
+                addFilterChip(`Book: ${filters.book}`, 'book');
+            }
+            
+            if (filters.group !== 'all') {
+                addFilterChip(`Group: ${filters.group}`, 'group');
+            }
+            
+            // If no active filters
+            if (!hasActiveFilters) {
+                const noFilters = document.createElement('span');
+                noFilters.style.color = 'var(--text-dimmer)';
+                noFilters.textContent = 'No active filters';
+                activeFilters.appendChild(noFilters);
+            }
+        }
+
+        // Select a character
+        function selectCharacter(character) {
+            currentCharacter = character;
+            
+            // Update chat view
+            chatAvatar.src = character.img;
+            chatAvatar.alt = character.name;
+            chatName.textContent = `Chat with ${character.name}`;
+            breadcrumbCurrent.textContent = character.name;
+            
+            // Clear previous messages
+            chatMessages.innerHTML = '';
+            
+            // Add opening message
+            addMessage(character.openingLine || `Hello, I am ${character.name}. How can I help you?`, 'character');
+            
+            // Update insights panel
+            updateInsightsPanel(character);
+            
+            // Show chat view
+            selectionView.classList.remove('active');
+            chatView.classList.add('active');
+        }
+
+        // Update insights panel
+        function updateInsightsPanel(character) {
+            // Update avatar
+            insightsAvatar.src = character.img;
+            insightsAvatar.alt = character.name;
+            
+            // Update context information
+            timePeriod.textContent = character.timePeriod || '';
+            location.textContent = character.location || '';
+            contextText.textContent = character.context || '';
+            
+            // Update scripture references
+            scriptureList.innerHTML = '';
+            if (character.scriptures && character.scriptures.length > 0) {
+                character.scriptures.forEach(scripture => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <span class="scripture-reference" data-reference="${scripture.reference}">
+                            ${scripture.reference}
+                            <div class="scripture-popover">
+                                <strong>${scripture.reference}</strong>
+                                <p>${scripture.text}</p>
+                                <div class="attribution">ESV® Text Edition: 2016</div>
+                            </div>
+                        </span>
+                    `;
+                    scriptureList.appendChild(li);
+                });
+            } else {
+                scriptureList.innerHTML = '<li>No scripture references available.</li>';
+            }
+            
+            // Update relationships
+            relationshipsContent.innerHTML = '';
+            if (character.relationships) {
+                Object.keys(character.relationships).forEach(group => {
+                    const relationshipGroup = document.createElement('div');
+                    relationshipGroup.className = 'relationship-group';
+                    
+                    const groupTitle = document.createElement('h5');
+                    groupTitle.textContent = group.charAt(0).toUpperCase() + group.slice(1);
+                    relationshipGroup.appendChild(groupTitle);
+                    
+                    character.relationships[group].forEach(relation => {
+                        const chip = document.createElement('span');
+                        chip.className = 'relationship-chip';
+                        chip.textContent = relation;
+                        relationshipGroup.appendChild(chip);
+                    });
+                    
+                    relationshipsContent.appendChild(relationshipGroup);
+                });
+            } else {
+                relationshipsContent.innerHTML = '<p>No relationship information available.</p>';
+            }
+            
+            // Update study questions
+            studyQuestions.innerHTML = '';
+            if (character.studyQuestions && character.studyQuestions.length > 0) {
+                character.studyQuestions.forEach(question => {
+                    const li = document.createElement('li');
+                    li.textContent = question;
+                    studyQuestions.appendChild(li);
+                });
+            } else {
+                studyQuestions.innerHTML = '<li>No study questions available.</li>';
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, type) {
+            const message = document.createElement('div');
+            message.className = `message-bubble ${type}-message`;
+            message.textContent = text;
+            chatMessages.appendChild(message);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Get simulated response
+        function getSimulatedResponse(message) {
+            const responses = [
+                `That's an interesting question about faith. I would encourage you to reflect on this deeply.`,
+                `In my time, we often pondered similar questions. The scriptures teach us that love and compassion are at the heart of all understanding.`,
+                `Remember that faith is a journey, not a destination. Your question shows you are on that path.`,
+                `I'm reminded of a teaching that says, "Seek and you will find." Your curiosity about these matters is a blessing.`
+            ];
+            
+            // Add character-specific responses
+            if (currentCharacter) {
+                if (currentCharacter.name === 'Jesus') {
+                    responses.push(`Truly I tell you, the kingdom of heaven is like a mustard seed. Those who have ears, let them hear.`);
+                } else if (currentCharacter.name === 'Moses') {
+                    responses.push(`As the LORD commanded me in the wilderness, I tell you that obedience to God's law brings blessing.`);
+                } else if (currentCharacter.name === 'David') {
+                    responses.push(`As I wrote in the Psalms, "The LORD is my shepherd, I lack nothing." Trust in Him regarding your question.`);
+                }
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search input
+            searchInput.addEventListener('input', () => {
+                filters.search = searchInput.value.trim();
+                renderActiveFilters();
+                renderCharacters();
+            });
+            
+            // Testament buttons
+            testamentButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const value = btn.getAttribute('data-value');
+                    filters.testament = value;
+                    
+                    // Update active state
+                    testamentButtons.forEach(b => {
+                        b.classList.toggle('active', b === btn);
+                    });
+                    
+                    renderActiveFilters();
+                    renderCharacters();
+                });
+            });
+            
+            // Book select
+            bookSelect.addEventListener('change', () => {
+                filters.book = bookSelect.value;
+                renderActiveFilters();
+                renderCharacters();
+            });
+            
+            // Group select
+            groupSelect.addEventListener('change', () => {
+                filters.group = groupSelect.value;
+                renderActiveFilters();
+                renderCharacters();
+            });
+            
+            // Back button
+            backButton.addEventListener('click', () => {
+                chatView.classList.remove('active');
+                selectionView.classList.add('active');
+                
+                // Close insights panel if open
+                insightsPanel.classList.remove('open');
+                chatMain.classList.remove('panel-open');
+            });
+            
+            // Send button
+            sendButton.addEventListener('click', sendMessage);
+            
+            // Message input (enter key)
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // Insights toggle
+            insightsToggle.addEventListener('click', () => {
+                insightsPanel.classList.toggle('open');
+                chatMain.classList.toggle('panel-open');
+            });
+            
+            // Close insights button
+            closeInsights.addEventListener('click', () => {
+                insightsPanel.classList.remove('open');
+                chatMain.classList.remove('panel-open');
+            });
+            
+            // Collapsible sections
+            collapsibleSections.forEach(section => {
+                const heading = section.querySelector('h4');
+                heading.addEventListener('click', () => {
+                    section.classList.toggle('collapsed');
+                });
+            });
+        }
+
+        // Send message
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+            
+            // Add user message
+            addMessage(text, 'user');
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Simulate response after a short delay
+            setTimeout(() => {
+                const response = getSimulatedResponse(text);
+                addMessage(response, 'character');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

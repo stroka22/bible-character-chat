@@ -45,22 +45,8 @@ const HomePage: React.FC = () => {
         </div>
       ) : (
         /* Selector view – mt-32 matches chat view spacing */
-        <div className="relative flex h-screen w-full justify-center items-center mt-32">
-          {/* Glass-morphism wrapper so selector content floats nicely
-              on top of the heavenly gradient */}
-          <div className="w-full max-w-3xl p-4 rounded-xl bg-white/10 backdrop-blur-md shadow-xl">
-            {/* --- Upgrade CTA ------------------------------------------------ */}
-            <div className="mb-6 flex justify-center">
-              <button
-                onClick={() => (window.location.href = '/pricing.html')}
-                className="animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200"
-              >
-                🔓 Unlock all characters &nbsp;–&nbsp; Upgrade
-              </button>
-            </div>
-
-            <ScalableCharacterSelection />
-          </div>
+        <div className="relative w-full mt-32">
+          <ScalableCharacterSelection />
         </div>
       )}
 

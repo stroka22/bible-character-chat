@@ -1,0 +1,2 @@
+name,description,persona_prompt,testament,is_visible
+Test Character,A minimal test character with only required fields,I am a test character created to diagnose database connectivity issues,new,true

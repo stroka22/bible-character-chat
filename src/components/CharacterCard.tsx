@@ -83,33 +83,45 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       </button>
 
       {/* Avatar with divine light frame */}
-      <div className="relative h-40 w-full sm:h-32 sm:w-24 flex-shrink-0 overflow-hidden">
+      <div className="relative w-[150px] h-[150px] flex-shrink-0">
         {/* Divine light gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent pointer-events-none z-10"></div>
-        
-        {/* Golden border for selected avatar */}
-        <div className={`absolute inset-0 pointer-events-none border-2 ${isSelected ? 'border-yellow-400' : 'border-white/40'}`}></div>
-        
-        <img
-          src={avatarUrl}
-          alt={character.name}
-          className="h-full w-full object-cover bg-blue-50" // Lighter background for avatar
-          onError={(e) => {
-            (e.target as HTMLImageElement).src =
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                character.name,
-              )}&background=random`;
-          }}
-        />
-        
+        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent pointer-events-none z-10 rounded-full"></div>
+
+        {/* Table-based circular image */}
+        <table className="border-collapse m-0 p-0 w-[150px] h-[150px] relative z-0">
+          <tbody>
+            <tr>
+              <td
+                className={`
+                  w-[150px] h-[150px] rounded-full overflow-hidden p-0
+                  ${isSelected ? 'border-4 border-yellow-400' : 'border-2 border-white/40'}
+                  shadow-md bg-blue-50
+                `}
+              >
+                <img
+                  src={avatarUrl}
+                  alt={character.name}
+                  className="w-[150px] h-[150px] object-cover block"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        character.name,
+                      )}&background=random`;
+                  }}
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
         {/* Decorative corner element - now golden */}
-        <div className="absolute top-0 right-0 w-8 h-8 opacity-70 z-10">
+        <div className="absolute top-0 right-0 w-8 h-8 opacity-70 z-10 pointer-events-none">
           <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            <path d="M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z" fill="#FFD700"/> {/* Golden color */}
+            <path d="M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z" fill="#FFD700"/>
           </svg>
         </div>
-        
-        {/* Bible book tag with improved styling */}
+
+        {/* Bible book tag */}
         {bibleBook && (
           <div className="absolute bottom-1 left-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded z-10 backdrop-blur-sm">
             {bibleBook}

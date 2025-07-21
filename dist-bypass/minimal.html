@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Characters - Minimal Version</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* Basic Styles */
+        body {
+            font-family: 'Lora', serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 30px 20px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cinzel', serif;
+            color: #facc15;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+
+        .status-message {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid #facc15;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Character Grid */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        /* Character Card */
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.25s ease-in-out;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .character-card h3 {
+            font-size: 1.5rem;
+            margin: 15px 0 5px;
+        }
+
+        .character-card p {
+            font-size: 0.95rem;
+            color: #c0c0c0;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .character-card .meta {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .character-grid {
+                grid-template-columns: 1fr;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Characters</h1>
+        
+        <div class="status-message">
+            <p><strong>Minimal Display Version</strong></p>
+            <p>This is a simplified version that displays all characters with no JavaScript.</p>
+        </div>
+        
+        <div class="character-grid">
+            <!-- Jesus -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80" alt="Jesus" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Jesus</h3>
+                <p>Central figure of Christianity who taught through parables and performed miracles.</p>
+                <div class="meta">New Testament · Matthew</div>
+            </div>
+            
+            <!-- Mary -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?auto=format&fit=crop&w=150&q=80" alt="Mary" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Mary</h3>
+                <p>Mother of Jesus noted for her faith and obedience.</p>
+                <div class="meta">New Testament · Luke</div>
+            </div>
+            
+            <!-- Peter -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1508021397575-6e9ca999c0f3?auto=format&fit=crop&w=150&q=80" alt="Peter" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Peter</h3>
+                <p>Disciple of Jesus and leader in the early church.</p>
+                <div class="meta">New Testament · Acts</div>
+            </div>
+            
+            <!-- Paul -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1504022462188-88f023db211c?auto=format&fit=crop&w=150&q=80" alt="Paul" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Paul</h3>
+                <p>Apostle to the Gentiles and prolific New-Testament author.</p>
+                <div class="meta">New Testament · Acts</div>
+            </div>
+            
+            <!-- John the Baptist -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1541707423647-0742c9d3e3a0?auto=format&fit=crop&w=150&q=80" alt="John the Baptist" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>John the Baptist</h3>
+                <p>Prophet who prepared the way for Jesus.</p>
+                <div class="meta">New Testament · John</div>
+            </div>
+            
+            <!-- Moses -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1566211886021-ec1a73a3a5f9?auto=format&fit=crop&w=150&q=80" alt="Moses" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Moses</h3>
+                <p>Led the Israelites out of Egypt and received the Ten Commandments.</p>
+                <div class="meta">Old Testament · Exodus</div>
+            </div>
+            
+            <!-- David -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=150&q=80" alt="David" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>David</h3>
+                <p>Shepherd, psalmist and second king of Israel who defeated Goliath.</p>
+                <div class="meta">Old Testament · 1 Samuel</div>
+            </div>
+            
+            <!-- Abraham -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80" alt="Abraham" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Abraham</h3>
+                <p>Patriarch chosen by God and father of many nations.</p>
+                <div class="meta">Old Testament · Genesis</div>
+            </div>
+            
+            <!-- Isaiah -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1504870712357-65ea720d6078?auto=format&fit=crop&w=150&q=80" alt="Isaiah" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Isaiah</h3>
+                <p>Major prophet who foretold the coming Messiah.</p>
+                <div class="meta">Old Testament · Isaiah</div>
+            </div>
+            
+            <!-- Esther -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=150&q=80" alt="Esther" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Esther</h3>
+                <p>Jewish queen who bravely saved her people.</p>
+                <div class="meta">Old Testament · Esther</div>
+            </div>
+            
+            <!-- Ruth -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1516726817505-f5ed825624d8?auto=format&fit=crop&w=150&q=80" alt="Ruth" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Ruth</h3>
+                <p>Moabite woman whose loyalty became exemplary.</p>
+                <div class="meta">Old Testament · Ruth</div>
+            </div>
+            
+            <!-- Samuel -->
+            <div class="character-card">
+                <table style="border-collapse: collapse; margin: 0 auto;">
+                    <tr>
+                        <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                            <img src="https://images.unsplash.com/photo-1517486808906-6ca8b3f8e1c1?auto=format&fit=crop&w=150&q=80" alt="Samuel" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                        </td>
+                    </tr>
+                </table>
+                <h3>Samuel</h3>
+                <p>Prophet who anointed the first kings of Israel.</p>
+                <div class="meta">Old Testament · 1 Samuel</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

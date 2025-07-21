@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bible Character Chat - Environment Setup</title>
+  <style>
+    body {
+      font-family: -apple-system, system-ui, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333;
+    }
+    pre {
+      background: #f4f4f4;
+      border-left: 3px solid #3498db;
+      padding: 15px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: Consolas, Monaco, 'Andale Mono', monospace;
+    }
+    .step {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    .note {
+      background: #ffffcc;
+      padding: 10px;
+      border-left: 4px solid #ffcc00;
+    }
+    .success {
+      background: #e7f7e3;
+      padding: 10px;
+      border-left: 4px solid #27ae60;
+    }
+    .warning {
+      background: #fdedec;
+      padding: 10px;
+      border-left: 4px solid #e74c3c;
+    }
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bible Character Chat - Environment Setup</h1>
+  
+  <p>Follow these steps to fix the "Something went wrong" error by properly configuring your environment variables.</p>
+  
+  <div class="step">
+    <h2>Step 1: Create/Edit the .env file</h2>
+    <p>Create a file named <code>.env</code> in the root directory of your project with the following content:</p>
+    
+    <pre><code># Bible Character Chat - Environment Variables
+
+# OpenAI API Configuration (required for chat functionality)
+VITE_OPENAI_API_KEY=sk_your_openai_api_key_here
+
+# Stripe Configuration (required for subscription features)
+VITE_STRIPE_PUBLIC_KEY=pk_test_your_stripe_publishable_key_here
+VITE_STRIPE_PRICE_MONTHLY=price_your_monthly_price_id_here
+VITE_STRIPE_PRICE_YEARLY=price_your_yearly_price_id_here
+
+# Supabase Configuration (optional but recommended)
+VITE_SUPABASE_PROJECT_REF=your_project_ref_here
+VITE_SUPABASE_EDGE_FUNCTION_URL=https://your_project_ref.functions.supabase.co/create-checkout-session
+
+# Optional: Enable verbose logging (true/false)
+VITE_DEBUG_MODE=true
+</code></pre>
+
+    <div class="note">
+      <p><strong>Important:</strong> Replace the placeholder values with your actual API keys and IDs.</p>
+      <p>For OpenAI, get your API key from <a href="https://platform.openai.com/account/api-keys" target="_blank">https://platform.openai.com/account/api-keys</a></p>
+      <p>For Stripe, get your publishable key from <a href="https://dashboard.stripe.com/apikeys" target="_blank">https://dashboard.stripe.com/apikeys</a></p>
+    </div>
+    
+    <div class="warning">
+      <p><strong>Security Warning:</strong> For Stripe, always use a <strong>publishable key</strong> (starts with <code>pk_test_</code> or <code>pk_live_</code>), never a secret key (starts with <code>sk_</code>).</p>
+    </div>
+  </div>
+  
+  <div class="step">
+    <h2>Step 2: Stop any running servers</h2>
+    <p>Run this command to stop any servers running on the common ports:</p>
+    
+    <pre><code>lsof -ti:5173,5174,5175,5179,5180 | xargs kill -9</code></pre>
+  </div>
+  
+  <div class="step">
+    <h2>Step 3: Clean build artifacts</h2>
+    <p>Remove old build files to ensure a clean build:</p>
+    
+    <pre><code>rm -rf dist
+rm -rf node_modules/.vite</code></pre>
+  </div>
+  
+  <div class="step">
+    <h2>Step 4: Rebuild the application</h2>
+    <p>Build the application with the new environment variables:</p>
+    
+    <pre><code>npm run build</code></pre>
+  </div>
+  
+  <div class="step">
+    <h2>Step 5: Start the server</h2>
+    <p>Start the server to serve the application:</p>
+    
+    <pre><code>npx http-server dist -p 5179</code></pre>
+  </div>
+  
+  <div class="success">
+    <p><strong>Success!</strong> After following these steps, your application should work correctly without the "Something went wrong" error.</p>
+  </div>
+  
+  <h2>Still having issues?</h2>
+  <p>If you're still experiencing problems, try these additional troubleshooting steps:</p>
+  
+  <ol>
+    <li>Check that your API keys are valid and active</li>
+    <li>Clear your browser cache using our <a href="/clear-cache.html">Cache Cleaner tool</a></li>
+    <li>Try a different browser or an incognito/private window</li>
+    <li>Ensure the service files are using the correct export format (ESM exports)</li>
+  </ol>
+  
+  <p><a href="/">← Back to Diagnostic Tools</a></p>
+</body>
+</html>

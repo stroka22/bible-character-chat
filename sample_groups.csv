@@ -1,0 +1,11 @@
+group_name,description,time_period,is_visible
+Torah Figures,"Characters from the first five books of the Bible, including patriarchs, leaders of the Exodus, and those who received God's law.","1800-1200 BCE",true
+Kings and Rulers,"Monarchs, judges, and political leaders who governed Israel and Judah throughout biblical history.","1050-586 BCE",true
+New Testament Women,"Women who played significant roles in the Gospels and early church, demonstrating faith and discipleship.","1-100 CE",true
+Apostles and Disciples,"The twelve disciples of Jesus and other apostles who spread Christianity throughout the Roman world.","30-100 CE",true
+Historical Books Heroes,"Notable figures from the historical books (Joshua, Judges, Ruth, Samuel, Kings, Chronicles, Ezra, Nehemiah, Esther).","1200-400 BCE",true
+Prophets,"Those who received and proclaimed God's messages, including major and minor prophets.","850-400 BCE",true
+Wisdom Literature Figures,"Characters associated with wisdom literature including Psalms, Proverbs, Ecclesiastes, and Job.","1000-200 BCE",true
+Gospel Characters,"People who interacted with Jesus during his earthly ministry as recorded in Matthew, Mark, Luke, and John.","1-33 CE",true
+Early Church Leaders,"Individuals who guided and shaped the early Christian church after Jesus' ascension.","33-100 CE",true
+Old Testament Families,"Family groups and clans that feature prominently in the Old Testament narratives.","1800-400 BCE",true

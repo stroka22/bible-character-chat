@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat - Diagnostic Page</title>
+    
+    <!-- Cinzel font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            color: #e0e0e0;
+        }
+        
+        #diagnostic-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #dc2626;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+            font-weight: bold;
+            z-index: 9999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .container {
+            padding: 70px 20px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1, h2, h3 {
+            color: #facc15;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(250, 204, 21, 0.3);
+            padding-bottom: 8px;
+        }
+        
+        .panel {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .info-item.storage {
+            background-color: rgba(139, 92, 246, 0.2);
+            border-left: 4px solid #8b5cf6;
+        }
+        
+        .info-item.browser {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .info-item.worker {
+            background-color: rgba(236, 72, 153, 0.2);
+            border-left: 4px solid #ec4899;
+        }
+        
+        .info-item.network {
+            background-color: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid #10b981;
+        }
+        
+        .info-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        
+        button.danger {
+            background-color: rgba(220, 38, 38, 0.2);
+            border: 1px solid #dc2626;
+            color: #dc2626;
+        }
+        
+        button.danger:hover {
+            background-color: #dc2626;
+            color: white;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+        
+        .highlight {
+            color: #facc15;
+            font-weight: bold;
+        }
+        
+        .timestamp {
+            color: #a0a0a0;
+            font-size: 0.8em;
+        }
+        
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        .nav-links a {
+            display: inline-block;
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .nav-links a:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        table th {
+            color: #facc15;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-indicator.active {
+            background-color: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+        
+        .status-indicator.inactive {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <!-- Diagnostic Banner -->
+    <div id="diagnostic-banner">
+        DIAGNOSTIC PAGE - BIBLE CHARACTER CHAT
+    </div>
+    
+    <div class="container">
+        <h1>Bible Character Chat Diagnostic Tool</h1>
+        
+        <div class="panel">
+            <h2>Browser Environment</h2>
+            <table id="browser-info">
+                <tr>
+                    <th>User Agent:</th>
+                    <td id="user-agent"></td>
+                </tr>
+                <tr>
+                    <th>Current URL:</th>
+                    <td id="current-url"></td>
+                </tr>
+                <tr>
+                    <th>Referrer:</th>
+                    <td id="referrer"></td>
+                </tr>
+                <tr>
+                    <th>Page Load Time:</th>
+                    <td id="load-time"></td>
+                </tr>
+                <tr>
+                    <th>Service Workers:</th>
+                    <td id="service-workers">Checking...</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/" target="_blank">Main App</a>
+            <a href="/standalone-test.html" target="_blank">Standalone Test</a>
+            <a href="/redirect-check.html" target="_blank">Redirect Check</a>
+            <a href="/characters.html" target="_blank">Characters HTML</a>
+        </div>
+        
+        <div class="panel">
+            <h2>Storage Information</h2>
+            <div class="info-container" id="storage-info">
+                <div class="info-item storage">Checking storage...</div>
+            </div>
+            <div class="button-group">
+                <button id="check-storage">Refresh Storage Info</button>
+                <button id="clear-local-storage">Clear localStorage</button>
+                <button id="clear-session-storage">Clear sessionStorage</button>
+                <button id="clear-cookies">Clear Cookies</button>
+                <button id="clear-all-storage" class="danger">Clear ALL Storage</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Service Worker Information</h2>
+            <div class="info-container" id="worker-info">
+                <div class="info-item worker">Checking service workers...</div>
+            </div>
+            <div class="button-group">
+                <button id="check-workers">Refresh Worker Info</button>
+                <button id="unregister-all-workers" class="danger">Unregister All Service Workers</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Navigation Tests</h2>
+            <p>These buttons will navigate to the main app using different methods to test how redirects behave.</p>
+            <div class="button-group">
+                <button id="navigate-location">Navigate with location.href</button>
+                <button id="navigate-assign">Navigate with location.assign()</button>
+                <button id="navigate-replace">Navigate with location.replace()</button>
+                <button id="navigate-link">Navigate with Link Click</button>
+                <button id="navigate-form">Navigate with Form Submit</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Network Tests</h2>
+            <div class="info-container" id="network-info">
+                <div class="info-item network">Network tests will appear here...</div>
+            </div>
+            <div class="button-group">
+                <button id="fetch-root">Fetch Root URL</button>
+                <button id="fetch-standalone">Fetch Standalone Test</button>
+                <button id="check-redirects">Check for Redirects</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize page
+        function initPage() {
+            // Set browser info
+            document.getElementById('user-agent').textContent = navigator.userAgent;
+            document.getElementById('current-url').textContent = window.location.href;
+            document.getElementById('referrer').textContent = document.referrer || 'None';
+            
+            // Set timing
+            if (window.performance) {
+                const perfData = window.performance.getEntriesByType('navigation')[0];
+                if (perfData) {
+                    document.getElementById('load-time').textContent = `${Math.round(perfData.duration)}ms`;
+                }
+            }
+            
+            // Check storage
+            checkStorage();
+            
+            // Check service workers
+            checkServiceWorkers();
+        }
+        
+        // Check storage
+        function checkStorage() {
+            const storageInfo = document.getElementById('storage-info');
+            storageInfo.innerHTML = '';
+            
+            // Check localStorage
+            try {
+                const localStorageKeys = Object.keys(localStorage);
+                const item = document.createElement('div');
+                item.className = 'info-item storage';
+                item.innerHTML = `<strong>localStorage:</strong> ${localStorageKeys.length} items`;
+                
+                if (localStorageKeys.length > 0) {
+                    let details = '<ul>';
+                    localStorageKeys.forEach(key => {
+                        const value = localStorage.getItem(key);
+                        const truncatedValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                        details += `<li><strong>${key}:</strong> ${truncatedValue}</li>`;
+                    });
+                    details += '</ul>';
+                    item.innerHTML += details;
+                }
+                
+                storageInfo.appendChild(item);
+            } catch (e) {
+                const item = document.createElement('div');
+                item.className = 'info-item storage';
+                item.innerHTML = `<strong>localStorage Error:</strong> ${e.message}`;
+                storageInfo.appendChild(item);
+            }
+            
+            // Check sessionStorage
+            try {
+                const sessionStorageKeys = Object.keys(sessionStorage);
+                const item = document.createElement('div');
+                item.className = 'info-item storage';
+                item.innerHTML = `<strong>sessionStorage:</strong> ${sessionStorageKeys.length} items`;
+                
+                if (sessionStorageKeys.length > 0) {
+                    let details = '<ul>';
+                    sessionStorageKeys.forEach(key => {
+                        const value = sessionStorage.getItem(key);
+                        const truncatedValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                        details += `<li><strong>${key}:</strong> ${truncatedValue}</li>`;
+                    });
+                    details += '</ul>';
+                    item.innerHTML += details;
+                }
+                
+                storageInfo.appendChild(item);
+            } catch (e) {
+                const item = document.createElement('div');
+                item.className = 'info-item storage';
+                item.innerHTML = `<strong>sessionStorage Error:</strong> ${e.message}`;
+                storageInfo.appendChild(item);
+            }
+            
+            // Check cookies
+            const item = document.createElement('div');
+            item.className = 'info-item storage';
+            item.innerHTML = `<strong>Cookies:</strong> ${document.cookie || 'None'}`;
+            storageInfo.appendChild(item);
+        }
+        
+        // Check for service workers
+        function checkServiceWorkers() {
+            const serviceWorkersElement = document.getElementById('service-workers');
+            const workerInfo = document.getElementById('worker-info');
+            workerInfo.innerHTML = '';
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        if (registrations.length === 0) {
+                            serviceWorkersElement.innerHTML = '<span class="status-indicator inactive"></span> No active service workers';
+                            
+                            const item = document.createElement('div');
+                            item.className = 'info-item worker';
+                            item.textContent = 'No service workers registered for this origin.';
+                            workerInfo.appendChild(item);
+                        } else {
+                            serviceWorkersElement.innerHTML = `<span class="status-indicator active"></span> ${registrations.length} active service worker(s)`;
+                            
+                            registrations.forEach((registration, index) => {
+                                const item = document.createElement('div');
+                                item.className = 'info-item worker';
+                                item.innerHTML = `
+                                    <strong>Service Worker #${index + 1}</strong><br>
+                                    Scope: ${registration.scope}<br>
+                                    Updating: ${registration.updating ? 'Yes' : 'No'}<br>
+                                    State: ${registration.active ? registration.active.state : 'Unknown'}
+                                `;
+                                
+                                const unregisterButton = document.createElement('button');
+                                unregisterButton.textContent = 'Unregister';
+                                unregisterButton.className = 'danger';
+                                unregisterButton.style.marginTop = '10px';
+                                unregisterButton.onclick = () => {
+                                    registration.unregister()
+                                        .then(success => {
+                                            if (success) {
+                                                alert(`Service worker unregistered: ${registration.scope}`);
+                                                checkServiceWorkers();
+                                            } else {
+                                                alert(`Failed to unregister service worker: ${registration.scope}`);
+                                            }
+                                        });
+                                };
+                                
+                                item.appendChild(unregisterButton);
+                                workerInfo.appendChild(item);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        serviceWorkersElement.textContent = 'Error checking service workers';
+                        
+                        const item = document.createElement('div');
+                        item.className = 'info-item worker';
+                        item.textContent = `Error checking service workers: ${error.message}`;
+                        workerInfo.appendChild(item);
+                    });
+            } else {
+                serviceWorkersElement.textContent = 'Service Workers not supported';
+                
+                const item = document.createElement('div');
+                item.className = 'info-item worker';
+                item.textContent = 'Service Workers API not supported in this browser.';
+                workerInfo.appendChild(item);
+            }
+        }
+        
+        // Clear localStorage
+        function clearLocalStorage() {
+            try {
+                const count = Object.keys(localStorage).length;
+                localStorage.clear();
+                alert(`Cleared ${count} items from localStorage`);
+                checkStorage();
+            } catch (e) {
+                alert(`Error clearing localStorage: ${e.message}`);
+            }
+        }
+        
+        // Clear sessionStorage
+        function clearSessionStorage() {
+            try {
+                const count = Object.keys(sessionStorage).length;
+                sessionStorage.clear();
+                alert(`Cleared ${count} items from sessionStorage`);
+                checkStorage();
+            } catch (e) {
+                alert(`Error clearing sessionStorage: ${e.message}`);
+            }
+        }
+        
+        // Clear cookies
+        function clearCookies() {
+            try {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i];
+                    const eqPos = cookie.indexOf('=');
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                }
+                alert(`Attempted to clear ${cookies.length} cookies`);
+                checkStorage();
+            } catch (e) {
+                alert(`Error clearing cookies: ${e.message}`);
+            }
+        }
+        
+        // Clear all storage
+        function clearAllStorage() {
+            if (confirm('This will clear ALL browser storage (localStorage, sessionStorage, and cookies). Continue?')) {
+                clearLocalStorage();
+                clearSessionStorage();
+                clearCookies();
+                
+                // Also try to unregister service workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations()
+                        .then(registrations => {
+                            const promises = registrations.map(registration => registration.unregister());
+                            Promise.all(promises)
+                                .then(results => {
+                                    const successCount = results.filter(Boolean).length;
+                                    alert(`Unregistered ${successCount} of ${results.length} service workers`);
+                                    checkServiceWorkers();
+                                });
+                        });
+                }
+                
+                alert('All storage cleared! The page will now reload.');
+                window.location.reload(true);
+            }
+        }
+        
+        // Unregister all service workers
+        function unregisterAllServiceWorkers() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        if (registrations.length === 0) {
+                            alert('No service workers to unregister');
+                            return;
+                        }
+                        
+                        const promises = registrations.map(registration => registration.unregister());
+                        Promise.all(promises)
+                            .then(results => {
+                                const successCount = results.filter(Boolean).length;
+                                alert(`Unregistered ${successCount} of ${results.length} service workers`);
+                                checkServiceWorkers();
+                            });
+                    })
+                    .catch(error => {
+                        alert(`Error unregistering service workers: ${error.message}`);
+                    });
+            } else {
+                alert('Service Workers API not supported in this browser');
+            }
+        }
+        
+        // Fetch root URL
+        function fetchRootUrl() {
+            const networkInfo = document.getElementById('network-info');
+            const item = document.createElement('div');
+            item.className = 'info-item network';
+            item.innerHTML = '<strong>Fetching root URL...</strong>';
+            networkInfo.prepend(item);
+            
+            fetch('/')
+                .then(response => {
+                    item.innerHTML = `
+                        <strong>Root URL Fetch Result:</strong><br>
+                        Status: ${response.status} ${response.statusText}<br>
+                        Redirected: ${response.redirected ? 'Yes' : 'No'}<br>
+                        ${response.redirected ? `Redirect URL: ${response.url}<br>` : ''}
+                        Type: ${response.type}<br>
+                        Content-Type: ${response.headers.get('content-type')}
+                    `;
+                })
+                .catch(error => {
+                    item.innerHTML = `<strong>Root URL Fetch Error:</strong> ${error.message}`;
+                });
+        }
+        
+        // Fetch standalone test
+        function fetchStandaloneTest() {
+            const networkInfo = document.getElementById('network-info');
+            const item = document.createElement('div');
+            item.className = 'info-item network';
+            item.innerHTML = '<strong>Fetching standalone test...</strong>';
+            networkInfo.prepend(item);
+            
+            fetch('/standalone-test.html')
+                .then(response => {
+                    item.innerHTML = `
+                        <strong>Standalone Test Fetch Result:</strong><br>
+                        Status: ${response.status} ${response.statusText}<br>
+                        Redirected: ${response.redirected ? 'Yes' : 'No'}<br>
+                        ${response.redirected ? `Redirect URL: ${response.url}<br>` : ''}
+                        Type: ${response.type}<br>
+                        Content-Type: ${response.headers.get('content-type')}
+                    `;
+                })
+                .catch(error => {
+                    item.innerHTML = `<strong>Standalone Test Fetch Error:</strong> ${error.message}`;
+                });
+        }
+        
+        // Check for redirects
+        function checkRedirects() {
+            const networkInfo = document.getElementById('network-info');
+            const item = document.createElement('div');
+            item.className = 'info-item network';
+            item.innerHTML = '<strong>Checking for redirects...</strong>';
+            networkInfo.prepend(item);
+            
+            // Create an iframe to test navigation without leaving the page
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            // Listen for load events
+            iframe.onload = function() {
+                try {
+                    const currentUrl = iframe.contentWindow.location.href;
+                    const originalUrl = window.location.origin + '/';
+                    
+                    item.innerHTML = `
+                        <strong>Redirect Check Result:</strong><br>
+                        Original URL: ${originalUrl}<br>
+                        Current URL: ${currentUrl}<br>
+                        Redirected: ${currentUrl !== originalUrl ? 'Yes' : 'No'}
+                    `;
+                } catch (e) {
+                    // If we can't access the iframe's location due to CORS
+                    item.innerHTML = `<strong>Redirect Check Error:</strong> Cannot access iframe content due to security restrictions.`;
+                }
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 1000);
+            };
+            
+            // Navigate the iframe to the root URL
+            iframe.src = '/';
+        }
+        
+        // Navigation test functions
+        function navigateWithLocationHref() {
+            if (confirm('This will navigate away from this page to the main app using location.href. Continue?')) {
+                window.location.href = '/';
+            }
+        }
+        
+        function navigateWithLocationAssign() {
+            if (confirm('This will navigate away from this page to the main app using location.assign(). Continue?')) {
+                window.location.assign('/');
+            }
+        }
+        
+        function navigateWithLocationReplace() {
+            if (confirm('This will navigate away from this page to the main app using location.replace(). Continue?')) {
+                window.location.replace('/');
+            }
+        }
+        
+        function navigateWithLinkClick() {
+            if (confirm('This will navigate away from this page to the main app using a simulated link click. Continue?')) {
+                const link = document.createElement('a');
+                link.href = '/';
+                link.click();
+            }
+        }
+        
+        function navigateWithFormSubmit() {
+            if (confirm('This will navigate away from this page to the main app using a form submit. Continue?')) {
+                const form = document.createElement('form');
+                form.method = 'get';
+                form.action = '/';
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+            }
+        }
+        
+        // Initialize the page when loaded
+        window.addEventListener('DOMContentLoaded', initPage);
+        
+        // Add event listeners to buttons
+        document.getElementById('check-storage').addEventListener('click', checkStorage);
+        document.getElementById('clear-local-storage').addEventListener('click', clearLocalStorage);
+        document.getElementById('clear-session-storage').addEventListener('click', clearSessionStorage);
+        document.getElementById('clear-cookies').addEventListener('click', clearCookies);
+        document.getElementById('clear-all-storage').addEventListener('click', clearAllStorage);
+        
+        document.getElementById('check-workers').addEventListener('click', checkServiceWorkers);
+        document.getElementById('unregister-all-workers').addEventListener('click', unregisterAllServiceWorkers);
+        
+        document.getElementById('navigate-location').addEventListener('click', navigateWithLocationHref);
+        document.getElementById('navigate-assign').addEventListener('click', navigateWithLocationAssign);
+        document.getElementById('navigate-replace').addEventListener('click', navigateWithLocationReplace);
+        document.getElementById('navigate-link').addEventListener('click', navigateWithLinkClick);
+        document.getElementById('navigate-form').addEventListener('click', navigateWithFormSubmit);
+        
+        document.getElementById('fetch-root').addEventListener('click', fetchRootUrl);
+        document.getElementById('fetch-standalone').addEventListener('click', fetchStandaloneTest);
+        document.getElementById('check-redirects').addEventListener('click', checkRedirects);
+    </script>
+</body>
+</html>
