@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direct Supabase Authentication Test</title>
+  <!-- Load Supabase directly from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #4a5568;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .warning {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #4299e1;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #3182ce;
+    }
+    input {
+      padding: 8px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    pre {
+      background-color: #f7fafc;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: monospace;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      border-bottom: 2px solid #4299e1;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Direct Supabase Authentication Test</h1>
+  <p>This page tests Supabase connectivity and authentication directly, bypassing React.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="connection">Connection Test</div>
+    <div class="tab" data-tab="auth">Authentication</div>
+    <div class="tab" data-tab="debug">Debug Info</div>
+  </div>
+
+  <div class="tab-content active" id="connection">
+    <div class="card">
+      <h2>Supabase Connection Test</h2>
+      <p>This will test the connection to your Supabase project.</p>
+      
+      <div id="connection-status"></div>
+      
+      <button id="test-connection">Test Connection</button>
+      <button id="ping-database">Ping Database</button>
+    </div>
+  </div>
+
+  <div class="tab-content" id="auth">
+    <div class="card">
+      <h2>Authentication Test</h2>
+      
+      <div id="auth-status"></div>
+      
+      <div id="login-form">
+        <h3>Login</h3>
+        <div>
+          <label for="email">Email:</label>
+          <input type="email" id="email" placeholder="your@email.com" value="test@example.com">
+        </div>
+        <div>
+          <label for="password">Password:</label>
+          <input type="password" id="password" placeholder="Your password" value="password123">
+        </div>
+        <button id="login-button">Login</button>
+        <button id="signup-button">Sign Up</button>
+      </div>
+      
+      <div id="user-info" style="display: none;">
+        <h3>User Information</h3>
+        <pre id="user-details"></pre>
+        <button id="logout-button">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="debug">
+    <div class="card">
+      <h2>Debug Information</h2>
+      
+      <h3>Supabase Configuration</h3>
+      <pre id="supabase-config"></pre>
+      
+      <h3>Current Session</h3>
+      <pre id="session-info"></pre>
+      
+      <h3>Log</h3>
+      <pre id="debug-log"></pre>
+      
+      <button id="clear-log">Clear Log</button>
+      <button id="refresh-session">Refresh Session</button>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Supabase client
+    const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+    
+    // Display configuration (without showing full key)
+    document.getElementById('supabase-config').textContent = 
+      `URL: ${SUPABASE_URL}\nAnon Key: ${SUPABASE_ANON_KEY.substring(0, 10)}...`;
+    
+    // Initialize Supabase client
+    // Use the global `supabase` injected by the CDN script (window.supabase)
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Debug logging function
+    function log(message, type = 'info') {
+      const timestamp = new Date().toISOString().substring(11, 19);
+      const logElement = document.getElementById('debug-log');
+      logElement.textContent = `[${timestamp}] ${message}\n` + logElement.textContent;
+      
+      // Also show in appropriate status area
+      const statusContainers = {
+        'connection': document.getElementById('connection-status'),
+        'auth': document.getElementById('auth-status')
+      };
+      
+      if (statusContainers[type]) {
+        const statusElement = document.createElement('div');
+        statusElement.className = type === 'error' ? 'error' : 
+                                  type === 'success' ? 'success' : 
+                                  type === 'warning' ? 'warning' : 'info';
+        statusElement.textContent = message;
+        
+        // Insert at the top
+        if (statusContainers[type].firstChild) {
+          statusContainers[type].insertBefore(statusElement, statusContainers[type].firstChild);
+        } else {
+          statusContainers[type].appendChild(statusElement);
+        }
+      }
+    }
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Deactivate all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activate clicked tab
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+    
+    // Connection test
+    document.getElementById('test-connection').addEventListener('click', async () => {
+      try {
+        log('Testing Supabase connection...', 'connection');
+        
+        // Simple health check
+        const { data, error } = await supabase.from('_test_connection').select('*').limit(1).catch(e => ({ error: e }));
+        
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // This is actually good - it means we connected but the table doesn't exist
+            log('✅ Connection successful! (Table does not exist, but that\'s expected)', 'connection');
+            return;
+          }
+          
+          log(`❌ Connection error: ${error.message || JSON.stringify(error)}`, 'connection');
+          console.error('Connection error:', error);
+        } else {
+          log('✅ Connection successful!', 'connection');
+        }
+      } catch (err) {
+        log(`❌ Unexpected error: ${err.message}`, 'connection');
+        console.error('Unexpected error:', err);
+      }
+    });
+    
+    // Ping database
+    document.getElementById('ping-database').addEventListener('click', async () => {
+      try {
+        log('Pinging database...', 'connection');
+        
+        const startTime = performance.now();
+        const { data, error } = await supabase.rpc('ping').catch(e => ({ error: e }));
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+        
+        if (error) {
+          log(`❌ Database ping failed: ${error.message || JSON.stringify(error)}`, 'connection');
+          console.error('Ping error:', error);
+        } else {
+          log(`✅ Database ping successful! Response time: ${duration}ms`, 'connection');
+        }
+      } catch (err) {
+        log(`❌ Unexpected error: ${err.message}`, 'connection');
+        console.error('Unexpected error:', err);
+      }
+    });
+    
+    // Login
+    document.getElementById('login-button').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        log('❌ Email and password are required', 'auth');
+        return;
+      }
+      
+      try {
+        log(`Attempting login with email: ${email}...`, 'auth');
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) {
+          log(`❌ Login failed: ${error.message}`, 'auth');
+          console.error('Login error:', error);
+        } else {
+          log('✅ Login successful!', 'auth');
+          updateUserInfo(data.user);
+          updateSessionInfo();
+        }
+      } catch (err) {
+        log(`❌ Unexpected error: ${err.message}`, 'auth');
+        console.error('Unexpected error:', err);
+      }
+    });
+    
+    // Sign up
+    document.getElementById('signup-button').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        log('❌ Email and password are required', 'auth');
+        return;
+      }
+      
+      try {
+        log(`Attempting signup with email: ${email}...`, 'auth');
+        
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password
+        });
+        
+        if (error) {
+          log(`❌ Signup failed: ${error.message}`, 'auth');
+          console.error('Signup error:', error);
+        } else {
+          if (data.user?.identities?.length === 0) {
+            log('⚠️ User already exists. Try logging in instead.', 'auth');
+          } else {
+            log('✅ Signup successful! Check your email for confirmation.', 'auth');
+            updateUserInfo(data.user);
+            updateSessionInfo();
+          }
+        }
+      } catch (err) {
+        log(`❌ Unexpected error: ${err.message}`, 'auth');
+        console.error('Unexpected error:', err);
+      }
+    });
+    
+    // Logout
+    document.getElementById('logout-button').addEventListener('click', async () => {
+      try {
+        log('Logging out...', 'auth');
+        
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
+          log(`❌ Logout failed: ${error.message}`, 'auth');
+          console.error('Logout error:', error);
+        } else {
+          log('✅ Logout successful!', 'auth');
+          document.getElementById('user-info').style.display = 'none';
+          document.getElementById('login-form').style.display = 'block';
+          updateSessionInfo();
+        }
+      } catch (err) {
+        log(`❌ Unexpected error: ${err.message}`, 'auth');
+        console.error('Unexpected error:', err);
+      }
+    });
+    
+    // Clear log
+    document.getElementById('clear-log').addEventListener('click', () => {
+      document.getElementById('debug-log').textContent = '';
+      log('Log cleared', 'debug');
+    });
+    
+    // Refresh session info
+    document.getElementById('refresh-session').addEventListener('click', async () => {
+      await updateSessionInfo();
+      log('Session info refreshed', 'debug');
+    });
+    
+    // Update user info display
+    function updateUserInfo(user) {
+      if (user) {
+        document.getElementById('user-details').textContent = JSON.stringify(user, null, 2);
+        document.getElementById('user-info').style.display = 'block';
+        document.getElementById('login-form').style.display = 'none';
+      } else {
+        document.getElementById('user-info').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
+      }
+    }
+    
+    // Update session info display
+    async function updateSessionInfo() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          document.getElementById('session-info').textContent = 
+            `Error retrieving session: ${error.message}`;
+        } else {
+          document.getElementById('session-info').textContent = 
+            JSON.stringify(data, null, 2);
+            
+          // Update user info if we have a session
+          if (data.session) {
+            updateUserInfo(data.session.user);
+          } else {
+            updateUserInfo(null);
+          }
+        }
+      } catch (err) {
+        document.getElementById('session-info').textContent = 
+          `Unexpected error: ${err.message}`;
+      }
+    }
+    
+    // Initial setup
+    (async function init() {
+      log('Initializing authentication test page...', 'debug');
+      await updateSessionInfo();
+      log('Initialization complete', 'debug');
+    })();
+  </script>
+</body>
+</html>

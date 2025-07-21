@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Selection Mockup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        body {
+            font-family: 'Cinzel', serif; /* Using a more thematic font */
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a); /* Darker, richer blue gradient */
+            min-height: 100vh;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 40px;
+            padding-bottom: 40px;
+        }
+        .container {
+            max-width: 1200px;
+            width: 95%;
+            background-color: rgba(255, 255, 255, 0.08); /* More subtle glass effect */
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: relative; /* For alphabetical sidebar positioning */
+        }
+        h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #facc15; /* Gold accent */
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        .filter-section {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            .filter-section input[type="text"],
+            .filter-section select {
+                width: 100%;
+            }
+            .view-toggle {
+                margin-top: 10px;
+                justify-content: center;
+            }
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        .filter-section label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #facc15;
+        }
+        .filter-section select,
+        .filter-section input[type="text"] {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-section select:focus,
+        .filter-section input[type="text"]:focus {
+            border-color: #facc15;
+            box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.3);
+        }
+        .filter-section button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-section button.active,
+        .filter-section button:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(250, 204, 21, 0.2);
+            color: #facc15;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #facc15;
+        }
+        .filter-chip .remove {
+            margin-left: 8px;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .filter-chip .remove:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        .results-count {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #e0e0e0;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .view-toggle button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+        .character-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px 0;
+        }
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 15px;
+            border: 3px solid #facc15;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-bottom: 5px;
+        }
+        .character-card p {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+        .character-list-item {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .character-list-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-list-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 20px;
+            border: 2px solid #facc15;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .character-list-item .info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        .character-list-item h3 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-bottom: 5px;
+        }
+        .character-list-item p {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+        .character-list-item .meta {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            margin-top: 5px;
+        }
+        .no-results {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #c0c0c0;
+            padding: 50px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        .pagination button {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #e0e0e0;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .pagination button:hover,
+        .pagination button.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            border-color: #facc15;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+        .alpha-nav {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 10px 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .alpha-nav a {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+            font-size: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .alpha-nav a:hover,
+        .alpha-nav a.active {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .alpha-nav {
+                position: static;
+                transform: none;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-top: 20px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Choose Your Biblical Guide</h1>
+
+        <div class="filter-section">
+            <div class="filter-group" style="flex-grow: 1;">
+                <label for="search">Search:</label>
+                <input type="text" id="search" placeholder="Search characters..." class="w-full">
+            </div>
+
+            <div class="filter-group">
+                <label>Testament:</label>
+                <div class="flex gap-2">
+                    <button class="testament-filter active" data-testament="all">All</button>
+                    <button class="testament-filter" data-testament="old">Old</button>
+                    <button class="testament-filter" data-testament="new">New</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="book">Book:</label>
+                <select id="book">
+                    <option value="all">All Books</option>
+                    <optgroup label="Old Testament">
+                        <option value="Genesis">Genesis</option>
+                        <option value="Exodus">Exodus</option>
+                        <option value="Psalms">Psalms</option>
+                        <option value="Isaiah">Isaiah</option>
+                    </optgroup>
+                    <optgroup label="New Testament">
+                        <option value="Matthew">Matthew</option>
+                        <option value="John">John</option>
+                        <option value="Acts">Acts</option>
+                        <option value="Revelation">Revelation</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="group">Group:</label>
+                <select id="group">
+                    <option value="all">All Groups</option>
+                    <option value="Prophets">Prophets</option>
+                    <option value="Apostles">Apostles</option>
+                    <option value="Kings">Kings</option>
+                    <option value="Women">Women of the Bible</option>
+                </select>
+            </div>
+
+            <div class="view-toggle">
+                <button id="gridViewBtn" class="active" title="Grid View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </button>
+                <button id="listViewBtn" title="List View">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="active-filters" class="active-filters hidden">
+            <!-- Active filter chips will be rendered here -->
+        </div>
+
+        <div id="results-count" class="results-count">
+            Showing 10 of 10 characters
+        </div>
+
+        <div id="character-container">
+            <div id="character-grid" class="character-grid">
+                <!-- Character cards will be rendered here by JavaScript -->
+            </div>
+            
+            <div id="character-list" class="character-list hidden">
+                <!-- Character list items will be rendered here by JavaScript -->
+            </div>
+        </div>
+
+        <div id="no-results" class="no-results hidden">
+            No characters found matching your criteria.
+        </div>
+
+        <div id="pagination" class="pagination">
+            <!-- Pagination controls will be rendered here -->
+        </div>
+
+        <div class="alpha-nav">
+            <!-- Alphabetical navigation will be rendered here -->
+        </div>
+    </div>
+
+    <script>
+        // Generate more characters for demonstration
+        const baseCharacters = [
+            {
+                id: '1',
+                name: 'Jesus',
+                avatar: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=100&q=80',
+                description: 'The central figure of Christianity, Son of God.',
+                testament: 'new',
+                book: 'Matthew',
+                group: 'Apostles' // Simplified for mockup
+            },
+            {
+                id: '2',
+                name: 'Moses',
+                avatar: 'https://images.unsplash.com/photo-1508896694512-1eade558679c?auto=format&fit=crop&w=100&q=80',
+                description: 'Leader who led the Israelites out of Egypt.',
+                testament: 'old',
+                book: 'Exodus',
+                group: 'Prophets'
+            },
+            {
+                id: '3',
+                name: 'Mary',
+                avatar: 'https://images.unsplash.com/photo-1565505146646-c02f3676d491?auto=format&fit=crop&w=100&q=80',
+                description: 'The mother of Jesus, a humble and faithful woman.',
+                testament: 'new',
+                book: 'Luke',
+                group: 'Women'
+            },
+            {
+                id: '4',
+                name: 'David',
+                avatar: 'https://images.unsplash.com/photo-1519475889208-0968e5438f7d?auto=format&fit=crop&w=100&q=80',
+                description: 'Second king of Israel, a shepherd, warrior, and psalmist.',
+                testament: 'old',
+                book: 'Psalms',
+                group: 'Kings'
+            },
+            {
+                id: '5',
+                name: 'Paul',
+                avatar: 'https://images.unsplash.com/photo-1501493870936-9c2e41625521?auto=format&fit=crop&w=100&q=80',
+                description: 'Apostle to the Gentiles, author of many New Testament letters.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles'
+            },
+            {
+                id: '6',
+                name: 'Abraham',
+                avatar: 'https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?auto=format&fit=crop&w=100&q=80',
+                description: 'Father of many nations, central figure in Judaism, Christianity, and Islam.',
+                testament: 'old',
+                book: 'Genesis',
+                group: 'Patriarchs'
+            },
+            {
+                id: '7',
+                name: 'Esther',
+                avatar: 'https://images.unsplash.com/photo-1565505146646-c02f3676d491?auto=format&fit=crop&w=100&q=80',
+                description: 'Queen who saved her people from destruction.',
+                testament: 'old',
+                book: 'Esther',
+                group: 'Women'
+            },
+            {
+                id: '8',
+                name: 'Peter',
+                avatar: 'https://images.unsplash.com/photo-1501493870936-9c2e41625521?auto=format&fit=crop&w=100&q=80',
+                description: 'One of Jesus\'s twelve apostles, a prominent leader in the early Christian church.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles'
+            },
+            {
+                id: '9',
+                name: 'Isaiah',
+                avatar: 'https://images.unsplash.com/photo-1508896694512-1eade558679c?auto=format&fit=crop&w=100&q=80',
+                description: 'Major prophet of the Old Testament, known for prophecies about the Messiah.',
+                testament: 'old',
+                book: 'Isaiah',
+                group: 'Prophets'
+            },
+            {
+                id: '10',
+                name: 'Ruth',
+                avatar: 'https://images.unsplash.com/photo-1565505146646-c02f3676d491?auto=format&fit=crop&w=100&q=80',
+                description: 'A Moabite woman known for her loyalty and faithfulness.',
+                testament: 'old',
+                book: 'Ruth',
+                group: 'Women'
+            }
+        ];
+
+        // Expand to 100+ characters for demonstration
+        const characters = [...baseCharacters];
+        const moreTestaments = ['old', 'new'];
+        const moreBooks = ['Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth', 'Samuel', 'Kings', 'Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon', 'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi', 'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', 'Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians', 'Thessalonians', 'Timothy', 'Titus', 'Philemon', 'Hebrews', 'James', 'Peter', 'John', 'Jude', 'Revelation'];
+        const moreGroups = ['Prophets', 'Apostles', 'Kings', 'Women', 'Patriarchs', 'Judges', 'Priests', 'Disciples', 'Leaders', 'Warriors'];
+        const moreNames = ['Aaron', 'Abel', 'Abigail', 'Adam', 'Andrew', 'Barnabas', 'Bartholomew', 'Boaz', 'Cain', 'Caleb', 'Daniel', 'Deborah', 'Elijah', 'Elisha', 'Elizabeth', 'Eve', 'Ezekiel', 'Ezra', 'Gabriel', 'Gideon', 'Hannah', 'Isaac', 'Jacob', 'James', 'Jeremiah', 'Job', 'John', 'Jonah', 'Jonathan', 'Joseph', 'Joshua', 'Judas', 'Leah', 'Lot', 'Luke', 'Lydia', 'Mark', 'Martha', 'Matthew', 'Methuselah', 'Micah', 'Miriam', 'Naomi', 'Nathaniel', 'Nehemiah', 'Noah', 'Philip', 'Pontius Pilate', 'Priscilla', 'Rachel', 'Rahab', 'Rebecca', 'Samson', 'Samuel', 'Sarah', 'Saul', 'Seth', 'Simon', 'Solomon', 'Stephen', 'Thomas', 'Timothy', 'Titus', 'Zechariah', 'Zephaniah'];
+
+        // Add more characters to reach 100+
+        for (let i = 11; i <= 120; i++) {
+            const nameIndex = (i - 11) % moreNames.length;
+            const testamentIndex = i % 2;
+            const bookIndex = i % moreBooks.length;
+            const groupIndex = i % moreGroups.length;
+            
+            characters.push({
+                id: i.toString(),
+                name: moreNames[nameIndex] + (i > moreNames.length + 10 ? ' ' + Math.ceil((i - 10 - moreNames.length) / moreNames.length) : ''),
+                avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(moreNames[nameIndex])}&background=random`,
+                description: `Biblical character from the ${moreTestaments[testamentIndex] === 'old' ? 'Old' : 'New'} Testament.`,
+                testament: moreTestaments[testamentIndex],
+                book: moreBooks[bookIndex],
+                group: moreGroups[groupIndex]
+            });
+        }
+
+        // Sort alphabetically
+        characters.sort((a, b) => a.name.localeCompare(b.name));
+
+        // State variables
+        let currentTestament = 'all';
+        let currentBook = 'all';
+        let currentGroup = 'all';
+        let currentSearchQuery = '';
+        let currentPage = 1;
+        let itemsPerPage = 20;
+        let currentView = 'grid'; // 'grid' or 'list'
+        let currentLetter = 'all';
+
+        // DOM elements
+        const characterGridDiv = document.getElementById('character-grid');
+        const characterListDiv = document.getElementById('character-list');
+        const noResultsDiv = document.getElementById('no-results');
+        const searchInput = document.getElementById('search');
+        const bookSelect = document.getElementById('book');
+        const groupSelect = document.getElementById('group');
+        const testamentButtons = document.querySelectorAll('.testament-filter');
+        const resultsCountDiv = document.getElementById('results-count');
+        const activeFiltersDiv = document.getElementById('active-filters');
+        const paginationDiv = document.getElementById('pagination');
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        const listViewBtn = document.getElementById('listViewBtn');
+        const alphaNavDiv = document.querySelector('.alpha-nav');
+
+        // Initialize alphabetical navigation
+        function initAlphaNav() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            let html = `<a data-letter="all" class="active">All</a>`;
+            
+            letters.forEach(letter => {
+                html += `<a data-letter="${letter}">${letter}</a>`;
+            });
+            
+            alphaNavDiv.innerHTML = html;
+            
+            // Add event listeners
+            alphaNavDiv.querySelectorAll('a').forEach(a => {
+                a.addEventListener('click', (e) => {
+                    alphaNavDiv.querySelectorAll('a').forEach(el => el.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentLetter = e.target.dataset.letter;
+                    currentPage = 1;
+                    renderCharacters();
+                });
+            });
+        }
+
+        // Update active filters display
+        function updateActiveFilters() {
+            let activeFilters = [];
+            
+            if (currentTestament !== 'all') {
+                activeFilters.push({
+                    type: 'testament',
+                    value: currentTestament === 'old' ? 'Old Testament' : 'New Testament'
+                });
+            }
+            
+            if (currentBook !== 'all') {
+                activeFilters.push({
+                    type: 'book',
+                    value: currentBook
+                });
+            }
+            
+            if (currentGroup !== 'all') {
+                activeFilters.push({
+                    type: 'group',
+                    value: currentGroup
+                });
+            }
+            
+            if (currentSearchQuery) {
+                activeFilters.push({
+                    type: 'search',
+                    value: `"${currentSearchQuery}"`
+                });
+            }
+            
+            if (currentLetter !== 'all') {
+                activeFilters.push({
+                    type: 'letter',
+                    value: `Starting with "${currentLetter}"`
+                });
+            }
+            
+            if (activeFilters.length === 0) {
+                activeFiltersDiv.classList.add('hidden');
+                return;
+            }
+            
+            activeFiltersDiv.classList.remove('hidden');
+            
+            let html = '<div class="mr-2 text-sm">Active Filters:</div>';
+            activeFilters.forEach(filter => {
+                html += `
+                    <div class="filter-chip" data-type="${filter.type}" data-value="${filter.type === 'testament' ? (filter.value === 'Old Testament' ? 'old' : 'new') : filter.value}">
+                        <span>${filter.value}</span>
+                        <span class="remove">×</span>
+                    </div>
+                `;
+            });
+            
+            activeFiltersDiv.innerHTML = html;
+            
+            // Add event listeners to remove buttons
+            activeFiltersDiv.querySelectorAll('.filter-chip .remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const chip = e.target.closest('.filter-chip');
+                    const type = chip.dataset.type;
+                    
+                    if (type === 'testament') {
+                        currentTestament = 'all';
+                        testamentButtons.forEach(btn => {
+                            btn.classList.remove('active');
+                            if (btn.dataset.testament === 'all') {
+                                btn.classList.add('active');
+                            }
+                        });
+                    } else if (type === 'book') {
+                        currentBook = 'all';
+                        bookSelect.value = 'all';
+                    } else if (type === 'group') {
+                        currentGroup = 'all';
+                        groupSelect.value = 'all';
+                    } else if (type === 'search') {
+                        currentSearchQuery = '';
+                        searchInput.value = '';
+                    } else if (type === 'letter') {
+                        currentLetter = 'all';
+                        alphaNavDiv.querySelectorAll('a').forEach(a => {
+                            a.classList.remove('active');
+                            if (a.dataset.letter === 'all') {
+                                a.classList.add('active');
+                            }
+                        });
+                    }
+                    
+                    currentPage = 1;
+                    renderCharacters();
+                });
+            });
+        }
+
+        // Update pagination controls
+        function updatePagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            if (totalPages <= 1) {
+                paginationDiv.classList.add('hidden');
+                return;
+            }
+            
+            paginationDiv.classList.remove('hidden');
+            
+            let html = `
+                <button id="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+            `;
+            
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                html += `<button data-page="1">1</button>`;
+                if (startPage > 2) {
+                    html += `<button disabled>...</button>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button data-page="${i}" ${i === currentPage ? 'class="active"' : ''}>${i}</button>`;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<button disabled>...</button>`;
+                }
+                html += `<button data-page="${totalPages}">${totalPages}</button>`;
+            }
+            
+            html += `
+                <button id="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            `;
+            
+            paginationDiv.innerHTML = html;
+            
+            // Add event listeners
+            paginationDiv.querySelectorAll('button[data-page]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentPage = parseInt(btn.dataset.page);
+                    renderCharacters();
+                    window.scrollTo(0, 0);
+                });
+            });
+            
+            const prevBtn = document.getElementById('prev-page');
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        renderCharacters();
+                        window.scrollTo(0, 0);
+                    }
+                });
+            }
+            
+            const nextBtn = document.getElementById('next-page');
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderCharacters();
+                        window.scrollTo(0, 0);
+                    }
+                });
+            }
+        }
+
+        // Toggle between grid and list views
+        function setView(view) {
+            currentView = view;
+            
+            if (view === 'grid') {
+                characterGridDiv.classList.remove('hidden');
+                characterListDiv.classList.add('hidden');
+                gridViewBtn.classList.add('active');
+                listViewBtn.classList.remove('active');
+            } else {
+                characterGridDiv.classList.add('hidden');
+                characterListDiv.classList.remove('hidden');
+                gridViewBtn.classList.remove('active');
+                listViewBtn.classList.add('active');
+            }
+        }
+
+        // Main render function
+        function renderCharacters() {
+            let filteredCharacters = characters.filter(char => {
+                const matchesSearch = char.name.toLowerCase().includes(currentSearchQuery.toLowerCase()) ||
+                                      char.description.toLowerCase().includes(currentSearchQuery.toLowerCase());
+
+                const matchesTestament = currentTestament === 'all' || char.testament === currentTestament;
+                const matchesBook = currentBook === 'all' || char.book === currentBook;
+                const matchesGroup = currentGroup === 'all' || char.group === currentGroup;
+                const matchesLetter = currentLetter === 'all' || char.name.toUpperCase().startsWith(currentLetter);
+
+                return matchesSearch && matchesTestament && matchesBook && matchesGroup && matchesLetter;
+            });
+
+            // Update results count
+            resultsCountDiv.textContent = `Showing ${Math.min(filteredCharacters.length, itemsPerPage)} of ${filteredCharacters.length} characters`;
+            
+            // Update active filters
+            updateActiveFilters();
+            
+            // Update pagination
+            updatePagination(filteredCharacters.length);
+            
+            // Paginate results
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedCharacters = filteredCharacters.slice(startIndex, startIndex + itemsPerPage);
+
+            // Render characters
+            characterGridDiv.innerHTML = '';
+            characterListDiv.innerHTML = '';
+            
+            if (filteredCharacters.length === 0) {
+                noResultsDiv.classList.remove('hidden');
+                resultsCountDiv.classList.add('hidden');
+            } else {
+                noResultsDiv.classList.add('hidden');
+                resultsCountDiv.classList.remove('hidden');
+                
+                // Render grid view
+                paginatedCharacters.forEach(char => {
+                    const card = document.createElement('div');
+                    card.className = 'character-card';
+                    card.innerHTML = `
+                        <img src="${char.avatar}" alt="${char.name}">
+                        <h3>${char.name}</h3>
+                        <p>${char.description}</p>
+                    `;
+                    characterGridDiv.appendChild(card);
+                    
+                    // Add click event
+                    card.addEventListener('click', () => {
+                        // Navigate to character chat page
+                        console.log(`Navigating to chat with ${char.name}`);
+                    });
+                });
+                
+                // Render list view
+                paginatedCharacters.forEach(char => {
+                    const item = document.createElement('div');
+                    item.className = 'character-list-item';
+                    item.innerHTML = `
+                        <img src="${char.avatar}" alt="${char.name}">
+                        <div class="info">
+                            <h3>${char.name}</h3>
+                            <p>${char.description}</p>
+                            <div class="meta">
+                                ${char.testament === 'old' ? 'Old Testament' : 'New Testament'} • ${char.book} • ${char.group}
+                            </div>
+                        </div>
+                    `;
+                    characterListDiv.appendChild(item);
+                    
+                    // Add click event
+                    item.addEventListener('click', () => {
+                        // Navigate to character chat page
+                        console.log(`Navigating to chat with ${char.name}`);
+                    });
+                });
+            }
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', (e) => {
+            currentSearchQuery = e.target.value;
+            currentPage = 1;
+            renderCharacters();
+        });
+
+        bookSelect.addEventListener('change', (e) => {
+            currentBook = e.target.value;
+            currentPage = 1;
+            renderCharacters();
+        });
+
+        groupSelect.addEventListener('change', (e) => {
+            currentGroup = e.target.value;
+            currentPage = 1;
+            renderCharacters();
+        });
+
+        testamentButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                testamentButtons.forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                currentTestament = e.target.dataset.testament;
+                currentPage = 1;
+                renderCharacters();
+            });
+        });
+
+        gridViewBtn.addEventListener('click', () => setView('grid'));
+        listViewBtn.addEventListener('click', () => setView('list'));
+
+        // Initialize
+        initAlphaNav();
+        renderCharacters();
+    </script>
+</body>
+</html>

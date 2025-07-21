@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Loading Diagnostic Tool - Bible Character Chat</title>
+  <style>
+    :root {
+      --primary-color: #1e3a8a;
+      --secondary-color: #3b82f6;
+      --accent-color: #f59e0b;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --text-color: #1f2937;
+      --bg-color: #f9fafb;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #1e3a8a, #2563eb, #3b82f6);
+      color: white;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    h2 {
+      font-size: 1.75rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 0.5rem;
+    }
+    
+    .card {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .code-block {
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: monospace;
+      white-space: pre;
+      margin: 1rem 0;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: var(--accent-color);
+      color: var(--primary-color);
+      font-weight: bold;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      text-decoration: none;
+      margin-top: 1rem;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background-color: #fbbf24;
+    }
+    
+    .results {
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 1rem;
+    }
+    
+    .result-item {
+      padding: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .result-item:last-child {
+      border-bottom: none;
+    }
+    
+    .error {
+      color: var(--error-color);
+    }
+    
+    .success {
+      color: var(--success-color);
+    }
+    
+    .warning {
+      color: #f59e0b;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .flex-col {
+      flex-direction: column;
+    }
+    
+    .gap-4 {
+      gap: 1rem;
+    }
+    
+    input, textarea {
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background-color: rgba(0, 0, 0, 0.2);
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    th {
+      font-weight: bold;
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab.active {
+      border-bottom-color: var(--accent-color);
+      font-weight: bold;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Image Loading Diagnostic Tool</h1>
+      <p>Detect and fix example.com image loading issues in Bible Character Chat</p>
+    </header>
+    
+    <div class="card">
+      <h2>Active Network Monitor</h2>
+      <p>This tool is actively monitoring network requests for example.com URLs. Any detected requests will be blocked and listed below.</p>
+      
+      <div class="tabs">
+        <div class="tab active" data-tab="blocked-requests">Blocked Requests</div>
+        <div class="tab" data-tab="all-images">All Images</div>
+      </div>
+      
+      <div class="tab-content active" id="blocked-requests">
+        <div id="blocked-results" class="results">
+          <div class="result-item">Monitoring for example.com requests...</div>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="all-images">
+        <div id="all-images-results" class="results">
+          <div class="result-item">Scanning page for all image elements...</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>URL Test Tool</h2>
+      <p>Enter an image URL to check if it would be blocked by our sanitization logic:</p>
+      
+      <div class="flex flex-col gap-4">
+        <input type="text" id="test-url" placeholder="https://example.com/image.jpg" />
+        <button id="test-button" class="button">Test URL</button>
+      </div>
+      
+      <div id="test-result" class="results" style="display: none;"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Fix Implementation</h2>
+      
+      <div class="tabs">
+        <div class="tab active" data-tab="utils">Utility Functions</div>
+        <div class="tab" data-tab="component">Component Implementation</div>
+        <div class="tab" data-tab="repository">Repository Layer</div>
+      </div>
+      
+      <div class="tab-content active" id="utils">
+        <p>Add these utility functions to <code>src/utils/imageUtils.ts</code>:</p>
+        <div class="code-block">/**
+ * Generates a fallback avatar URL using the ui-avatars.com service.
+ */
+export const generateFallbackAvatar = (name: string): string => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name,
+  )}&background=random`;
+};
+
+/**
+ * Returns a "safe" avatar URL by validating and sanitizing the input URL.
+ * - Rejects obvious placeholders like `example.com/*`
+ * - Falls back to the ui-avatar generator when URL is missing or invalid
+ */
+export const getSafeAvatarUrl = (name: string, url?: string | null): string => {
+  // If no URL provided, generate a fallback
+  if (!url) return generateFallbackAvatar(name);
+
+  try {
+    // Parse the URL to check its validity and extract the hostname
+    const { hostname } = new URL(url);
+    
+    // Reject common placeholder domains
+    if (
+      hostname === 'example.com' ||
+      hostname.endsWith('.example.com') ||
+      hostname === 'localhost'
+    ) {
+      return generateFallbackAvatar(name);
+    }
+    
+    // URL is valid and not a placeholder
+    return url;
+  } catch {
+    // URL is malformed, generate a fallback
+    return generateFallbackAvatar(name);
+  }
+};</div>
+      </div>
+      
+      <div class="tab-content" id="component">
+        <p>Update image elements in your components like this:</p>
+        <div class="code-block">import { getSafeAvatarUrl, generateFallbackAvatar } from '../utils/imageUtils';
+
+// In your component:
+const avatarUrl = getSafeAvatarUrl(character.name, character.avatar_url);
+
+// In your JSX:
+<img
+  src={avatarUrl}
+  alt={character.name}
+  className="h-10 w-10 rounded-full"
+  onError={(e) => {
+    (e.target as HTMLImageElement).src = generateFallbackAvatar(character.name);
+  }}
+/></div>
+      </div>
+      
+      <div class="tab-content" id="repository">
+        <p>Sanitize URLs at the repository level:</p>
+        <div class="code-block">import { getSafeAvatarUrl } from '../utils/imageUtils';
+
+// In your repository methods:
+sanitizeCharacter(character: Character): Character {
+  if (!character) return character;
+  
+  // Create a copy to avoid mutating the original
+  const sanitized = { ...character };
+  
+  // Sanitize avatar URL if present
+  if (sanitized.avatar_url) {
+    sanitized.avatar_url = getSafeAvatarUrl(sanitized.name, sanitized.avatar_url);
+  }
+  
+  // Sanitize feature image URL if present
+  if (sanitized.feature_image_url) {
+    sanitized.feature_image_url = getSafeAvatarUrl(sanitized.name, sanitized.feature_image_url);
+  }
+  
+  return sanitized;
+}</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Database Scan</h2>
+      <p>Check your database for example.com URLs that need to be fixed:</p>
+      
+      <div class="code-block">-- SQL query to find all example.com URLs in your database
+SELECT id, name, avatar_url 
+FROM characters 
+WHERE avatar_url LIKE '%example.com%'
+   OR feature_image_url LIKE '%example.com%';</div>
+      
+      <p>Then update them with:</p>
+      
+      <div class="code-block">-- SQL query to update example.com URLs to fallbacks
+UPDATE characters 
+SET avatar_url = NULL,
+    feature_image_url = NULL
+WHERE avatar_url LIKE '%example.com%'
+   OR feature_image_url LIKE '%example.com%';</div>
+    </div>
+    
+    <div class="card">
+      <h2>CSV File Check</h2>
+      <p>Scan your CSV files for example.com URLs:</p>
+      
+      <div class="code-block">// In your terminal
+grep -r "example.com" --include="*.csv" .</div>
+      
+      <p>Update your CSV import code to sanitize URLs during import:</p>
+      
+      <div class="code-block">// When processing CSV rows
+if (row.avatar_url && row.avatar_url.includes('example.com')) {
+  row.avatar_url = null; // Will use fallback instead
+}</div>
+    </div>
+  </div>
+
+  <script>
+    // Global image interceptor
+    const originalFetch = window.fetch;
+    const originalXHR = window.XMLHttpRequest.prototype.open;
+    const originalImageSrc = Object.getOwnPropertyDescriptor(Image.prototype, 'src');
+    
+    // Track blocked requests
+    const blockedRequests = [];
+    const allImages = [];
+    
+    // Helper to check if a URL is from example.com
+    function isExampleDomain(url) {
+      try {
+        const { hostname } = new URL(url, window.location.origin);
+        return hostname === 'example.com' || 
+               hostname.endsWith('.example.com') || 
+               hostname === 'localhost';
+      } catch {
+        return false;
+      }
+    }
+    
+    // Generate a fallback avatar
+    function generateFallbackAvatar(name) {
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random`;
+    }
+    
+    // Add a blocked request to the list
+    function addBlockedRequest(url, source) {
+      const timestamp = new Date().toLocaleTimeString();
+      blockedRequests.push({ url, timestamp, source });
+      
+      const blockedResults = document.getElementById('blocked-results');
+      blockedResults.innerHTML = blockedRequests.map(req => 
+        `<div class="result-item">
+          <span class="error">[${req.timestamp}] Blocked:</span> ${req.url}
+          <br><small>Source: ${req.source}</small>
+        </div>`
+      ).join('') || '<div class="result-item">No example.com requests detected yet.</div>';
+    }
+    
+    // Add an image to the all images list
+    function addImageElement(element, src) {
+      const timestamp = new Date().toLocaleTimeString();
+      const isSafe = !isExampleDomain(src);
+      
+      allImages.push({ 
+        element, 
+        src, 
+        timestamp, 
+        isSafe,
+        alt: element.alt || 'No alt text'
+      });
+      
+      const allImagesResults = document.getElementById('all-images-results');
+      allImagesResults.innerHTML = allImages.map(img => 
+        `<div class="result-item">
+          <span class="${img.isSafe ? 'success' : 'error'}">
+            [${img.timestamp}] ${img.isSafe ? 'Safe' : 'Unsafe'}:
+          </span> 
+          ${img.src}
+          <br><small>Alt text: ${img.alt}</small>
+        </div>`
+      ).join('') || '<div class="result-item">No images detected on page.</div>';
+    }
+    
+    // Intercept fetch requests
+    window.fetch = function(input, init) {
+      const url = typeof input === 'string' ? input : input instanceof Request ? input.url : '';
+      
+      if (isExampleDomain(url)) {
+        addBlockedRequest(url, 'fetch');
+        return Promise.reject(new Error(`Blocked request to example.com: ${url}`));
+      }
+      
+      return originalFetch.apply(this, arguments);
+    };
+    
+    // Intercept XMLHttpRequest
+    window.XMLHttpRequest.prototype.open = function(method, url) {
+      if (isExampleDomain(url)) {
+        addBlockedRequest(url, 'XMLHttpRequest');
+        throw new Error(`Blocked request to example.com: ${url}`);
+      }
+      
+      return originalXHR.apply(this, arguments);
+    };
+    
+    // Intercept Image.src assignments
+    Object.defineProperty(Image.prototype, 'src', {
+      set: function(value) {
+        if (isExampleDomain(value)) {
+          addBlockedRequest(value, 'Image.src');
+          addImageElement(this, value);
+          
+          // Use fallback instead
+          const fallback = generateFallbackAvatar(this.alt);
+          return originalImageSrc.set.call(this, fallback);
+        }
+        
+        addImageElement(this, value);
+        return originalImageSrc.set.call(this, value);
+      },
+      get: originalImageSrc.get
+    });
+    
+    // Tab switching functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        tab.classList.add('active');
+        
+        // Show corresponding content
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+      });
+    });
+    
+    // URL test functionality
+    document.getElementById('test-button').addEventListener('click', () => {
+      const urlInput = document.getElementById('test-url');
+      const url = urlInput.value.trim();
+      const resultDiv = document.getElementById('test-result');
+      
+      resultDiv.style.display = 'block';
+      
+      if (!url) {
+        resultDiv.innerHTML = '<div class="result-item error">Please enter a URL to test</div>';
+        return;
+      }
+      
+      try {
+        const { hostname } = new URL(url);
+        const isBlocked = hostname === 'example.com' || hostname.endsWith('.example.com') || hostname === 'localhost';
+        
+        if (isBlocked) {
+          resultDiv.innerHTML = `
+            <div class="result-item">
+              <div class="error">❌ This URL would be blocked</div>
+              <div>Domain: ${hostname}</div>
+              <div>Fallback would be generated using ui-avatars.com</div>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="result-item">
+              <div class="success">✓ This URL is safe to use</div>
+              <div>Domain: ${hostname}</div>
+            </div>
+          `;
+        }
+      } catch (e) {
+        resultDiv.innerHTML = `
+          <div class="result-item">
+            <div class="error">❌ Invalid URL format</div>
+            <div>Error: ${e.message}</div>
+            <div>Fallback would be generated using ui-avatars.com</div>
+          </div>
+        `;
+      }
+    });
+    
+    // Scan page for images on load
+    window.addEventListener('load', () => {
+      // Scan for all image elements
+      document.querySelectorAll('img').forEach(img => {
+        addImageElement(img, img.src);
+      });
+      
+      // Check if any were found
+      if (allImages.length === 0) {
+        document.getElementById('all-images-results').innerHTML = 
+          '<div class="result-item">No images found on this page.</div>';
+      }
+      
+      // Check if any were blocked
+      if (blockedRequests.length === 0) {
+        document.getElementById('blocked-results').innerHTML = 
+          '<div class="result-item">No example.com requests detected yet.</div>';
+      }
+    });
+  </script>
+</body>
+</html>

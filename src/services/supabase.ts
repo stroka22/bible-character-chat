@@ -1,89 +1,114 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Get environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// =========================================================================
+// IMPORTANT: Update these values with your Supabase project information
+// =========================================================================
 
-// Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
-    'Missing Supabase environment variables. Please check your .env file.'
-  );
-}
+// The URL is constructed using your Supabase project ID
+export const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
 
-// Create Supabase client
-export const supabase = createClient(
-  supabaseUrl as string,
-  supabaseAnonKey as string
-);
+// INSTRUCTIONS: Replace this with your actual anon key from Supabase
+// To find your anon key:
+// 1. Go to https://app.supabase.com and sign in
+// 2. Select your project (with ID: sihfbzltlhkerkxozadt)
+// 3. Go to Project Settings > API
+// 4. Copy the "anon" key (public) - it's safe to use in browser code
+// 5. Paste it below between the quotes
+export const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
 
-// Define database types for better type safety
-export type Character = {
+// =========================================================================
+// Database Types - these should match your Supabase schema
+// =========================================================================
+
+// Character type definition
+export interface Character {
   id: string;
   name: string;
-  description: string;
-  persona_prompt: string;
-  opening_line?: string;
+  description?: string;
+  persona?: string;
+  greeting?: string;
   avatar_url?: string;
   feature_image_url?: string;
-  short_biography?: string;
+  status?: string;
   bible_book?: string;
-  scriptural_context?: string;
-  /**
-   * Indicates whether this character should be displayed to regular users.
-   * Admins can toggle this field in the dashboard. Defaults to `true`
-   * for backward-compatibility with existing rows that don't yet have
-   * the column populated.
-   */
-  is_visible?: boolean;
-
-  /* ------------------------------------------------------------------
-   * Character Insights fields (for the Character Insights Panel)
-   * ---------------------------------------------------------------- */
-
-  /** A short label that places the character in biblical history
-   *  e.g. "Patriarchs", "United Kingdom", "Exile", "Early Church" */
-  timeline_period?: string;
-
-  /** A brief description of the historical / cultural backdrop
-   *  in which the character lived (politics, society, key events) */
-  historical_context?: string;
-
-  /** Primary geographic location associated with the character
-   *  (city, region, or modern-day country) */
-  geographic_location?: string;
-
-  /** Comma-separated list of key scripture references
-   *  (e.g. "Genesis 37-50; Hebrews 11:22") */
+  category?: string;
   key_scripture_references?: string;
-
-  /** One-paragraph summary of the character’s theological significance */
+  is_visible?: boolean;
+  timeline_period?: string;
+  historical_context?: string;
+  geographic_location?: string;
   theological_significance?: string;
-
-  /** JSON object containing relationship arrays, e.g.
-   *  { "parents": ["Jacob", "Rachel"], "siblings": ["Benjamin"], "spouse": [] } */
   relationships?: Record<string, string[]>;
-
-  /** Optional list of suggested study or reflection questions  */
   study_questions?: string;
-  created_at: string;
-  updated_at: string;
-};
+  created_at?: string;
+  updated_at?: string;
+}
 
-export type ChatMessage = {
-  id: string;
-  chat_id: string;
-  content: string;
-  role: 'user' | 'assistant' | 'system';
-  created_at: string;
-};
-
-export type Chat = {
+// Conversation type definition
+export interface Conversation {
   id: string;
   user_id: string;
   character_id: string;
   title: string;
   created_at: string;
   updated_at: string;
-  is_favorite: boolean;
-};
+  character?: Character;
+}
+
+// Chat message type definition
+export interface ChatMessage {
+  id: string;
+  conversation_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  created_at: string;
+}
+
+// User profile type definition
+export interface Profile {
+  id: string;
+  email?: string;
+  display_name?: string;
+  avatar_url?: string;
+  role?: 'user' | 'pastor' | 'admin';
+  created_at?: string;
+  updated_at?: string;
+}
+
+// =========================================================================
+// Supabase Client Initialization
+// =========================================================================
+
+// Initialize the Supabase client with the URL and anon key
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =========================================================================
+// Helper Functions
+// =========================================================================
+
+/**
+ * Checks if the Supabase connection is working
+ * @returns A promise that resolves to a boolean indicating if the connection is working
+ */
+export async function checkSupabaseConnection(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.from('characters').select('count');
+    return !error;
+  } catch (error) {
+    console.error('Supabase connection check failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Gets the current Supabase configuration for debugging
+ * @returns An object with the current Supabase configuration
+ */
+export function getSupabaseConfig() {
+  return {
+    url: SUPABASE_URL,
+    projectId: SUPABASE_URL.split('https://')[1].split('.')[0],
+    hasAnonKey: !!SUPABASE_ANON_KEY,
+  };
+}

@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { type ChatMessage } from './supabase';
 
 // ---------------------------------------------------------------------------
-
+// OpenAI Configuration - Safe Version
 // ---------------------------------------------------------------------------
 
 /**
@@ -17,7 +17,7 @@ const OPENAI_ENABLED = Boolean(apiKey);
 
 // Only instantiate the SDK when we actually have a key.  This prevents the
 // library from throwing at import-time when the key is missing (e.g. on
-// contributor machines that don’t need chat features).
+// contributor machines that don't need chat features).
 const openai = OPENAI_ENABLED
   ? new OpenAI({
       apiKey,
@@ -29,9 +29,10 @@ const openai = OPENAI_ENABLED
 if (!OPENAI_ENABLED) {
   console.warn(
     '[OpenAI] No API key detected. Chat features will return placeholder ' +
-      'responses.  Provide VITE_OPENAI_API_KEY in your .env file to enable.',
+      'responses. Provide VITE_OPENAI_API_KEY in your .env file to enable.',
   );
 }
+
 // Message types for OpenAI API
 export type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -88,8 +89,8 @@ export async function generateCharacterResponse(
     
     return generatedText;
   } catch (error) {
-    console.error('Error generating character response:', error);
-    throw new Error('Failed to generate character response. Please try again.');
+    console.warn('[OpenAI] Error generating character response:', error);
+    return `(${characterName} is unable to respond due to a technical issue. Please try again later.)`;
   }
 }
 
@@ -162,7 +163,10 @@ export async function streamCharacterResponse(
       }
     }
   } catch (error) {
-    console.error('Error streaming character response:', error);
-    throw new Error('Failed to generate character response. Please try again.');
+    console.warn('[OpenAI] Error streaming character response:', error);
+    onChunk(`(${characterName} is unable to respond due to a technical issue. Please try again later.)`);
   }
 }
+
+// Export a dummy version of the OpenAI client for type compatibility
+export { openai };
