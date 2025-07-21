@@ -17,6 +17,7 @@ export const ChatProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [chatId, setChatId] = useState(null);
   const [isChatSaved, setIsChatSaved] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   // Refs
   const messageIdCounter = useRef(1);
@@ -83,6 +84,7 @@ export const ChatProvider = ({ children }) => {
     setMessages([]);
     setChatId(null);
     setIsChatSaved(false);
+    setIsFavorite(false);
     
     // Add greeting message if character has an opening line
     if (characterData?.opening_line) {
@@ -189,6 +191,7 @@ export const ChatProvider = ({ children }) => {
     setCharacter(null);
     setChatId(null);
     setIsChatSaved(false);
+    setIsFavorite(false);
     setError(null);
   }, []);
 
@@ -240,6 +243,149 @@ export const ChatProvider = ({ children }) => {
     }
   }, [character, messages, createConversation, addMessage]);
 
+  /**
+   * Update the title of the current saved chat
+   */
+  const saveChatTitle = useCallback(
+    async (newTitle) => {
+      if (!chatId) {
+        setError('Cannot rename an unsaved conversation');
+        return false;
+      }
+
+      if (!newTitle.trim()) {
+        setError('Title cannot be empty');
+        return false;
+      }
+
+      // If real persistence layer unavailable fall back to mock behaviour
+      if (
+        !conversationContext ||
+        typeof conversationContext.updateConversation !== 'function'
+      ) {
+        console.warn(
+          '[ChatContext] No updateConversation function available – mock rename',
+        );
+        console.log(
+          `[MockChatContext] Would rename conversation ${chatId} to: ${newTitle}`,
+        );
+        return true;
+      }
+
+      setIsLoading(true);
+
+      try {
+        await conversationContext.updateConversation(chatId, {
+          title: newTitle.trim(),
+        });
+        return true;
+      } catch (err) {
+        console.error('Error updating chat title:', err);
+        setError('Failed to rename conversation. Please try again.');
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [chatId, conversationContext],
+  );
+
+  /**
+   * Toggle favorite status of the current conversation
+   */
+  const toggleFavorite = useCallback(
+    async (isFavorite) => {
+      if (!chatId) {
+        setError('Cannot favorite an unsaved conversation');
+        return false;
+      }
+
+      // optimistic local update for UX
+      setIsFavorite(isFavorite);
+
+      // If real persistence layer unavailable fall back to mock behaviour
+      if (
+        !conversationContext ||
+        typeof conversationContext.updateConversation !== 'function'
+      ) {
+        console.warn(
+          '[ChatContext] No updateConversation function available – mock favorite',
+        );
+        console.log(
+          `[MockChatContext] Would set conversation ${chatId} favorite status to: ${isFavorite}`,
+        );
+        return true;
+      }
+
+      setIsLoading(true);
+
+      try {
+        await conversationContext.updateConversation(chatId, {
+          is_favorite: isFavorite,
+        });
+        return true;
+      } catch (err) {
+        console.error('Error updating favorite status:', err);
+        setError('Failed to update favorite status. Please try again.');
+        // revert optimistic update
+        setIsFavorite(prev => !prev);
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [chatId, conversationContext],
+  );
+
+  /**
+   * Delete the current conversation
+   */
+  const deleteCurrentChat = useCallback(async () => {
+    if (!chatId) {
+      setError('Cannot delete an unsaved conversation');
+      return false;
+    }
+
+    // Fallback to mock behaviour when real persistence layer is unavailable
+    if (
+      !conversationContext ||
+      typeof conversationContext.deleteConversation !== 'function'
+    ) {
+      console.warn(
+        '[ChatContext] No deleteConversation function available – mock delete',
+      );
+      console.log(`[MockChatContext] Would delete conversation ${chatId}`);
+
+      // Reset local state
+      setMessages([]);
+      setCharacter(null);
+      setChatId(null);
+      setIsChatSaved(false);
+
+      return true;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await conversationContext.deleteConversation(chatId);
+
+      // Reset local state
+      setMessages([]);
+      setCharacter(null);
+      setChatId(null);
+      setIsChatSaved(false);
+
+      return true;
+    } catch (err) {
+      console.error('Error deleting conversation:', err);
+      setError('Failed to delete conversation. Please try again.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [chatId, conversationContext]);
+
   // Create the context value
   const contextValue = {
     // State
@@ -250,6 +396,7 @@ export const ChatProvider = ({ children }) => {
     error,
     chatId,
     isChatSaved,
+    isFavorite,
     
     // Methods
     selectCharacter,
@@ -257,6 +404,9 @@ export const ChatProvider = ({ children }) => {
     retryLastMessage,
     resetChat,
     saveChat,
+    saveChatTitle,
+    toggleFavorite,
+    deleteCurrentChat,
     
     // Helper methods
     clearError: () => setError(null)
@@ -300,6 +450,18 @@ export const useChat = () => {
       },
       saveChat: () => {
         console.warn('[ChatContext] Cannot save chat - no provider');
+        return Promise.resolve(false);
+      },
+      saveChatTitle: () => {
+        console.warn('[ChatContext] Cannot rename chat - no provider');
+        return Promise.resolve(false);
+      },
+      toggleFavorite: () => {
+        console.warn('[ChatContext] Cannot toggle favorite - no provider');
+        return Promise.resolve(false);
+      },
+      deleteCurrentChat: () => {
+        console.warn('[ChatContext] Cannot delete chat - no provider');
         return Promise.resolve(false);
       },
       clearError: () => {
