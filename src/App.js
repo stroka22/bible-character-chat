@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // (including any legacy ones still importing from `../contexts/ChatContext`)
 // receive the same provider instance.
 import { ChatProvider } from './contexts/ChatContext.jsx';
-import { ConversationProvider } from './contexts/ConversationContext.jsx';
+import { ConversationProvider } from './contexts/ConversationContext.js';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
