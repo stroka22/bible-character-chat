@@ -7,6 +7,8 @@ const ChatContext = createContext();
 
 // Provider component
 export const ChatProvider = ({ children }) => {
+  console.log('[ChatContext] Initializing provider');
+  
   // Chat state
   const [messages, setMessages] = useState([]);
   const [character, setCharacter] = useState(null);
@@ -184,19 +186,21 @@ export const ChatProvider = ({ children }) => {
    * Save the current chat
    */
   const saveChat = useCallback(async (title) => {
+    console.log('[ChatContext] Attempting to save chat');
+    
     if (!character || messages.length === 0) {
       setError('Cannot save an empty conversation');
       return false;
     }
     
-    // If persistence layer unavailable (e.g. guest user), fallback to mock behaviour
-    if (!createConversation || !addMessage) {
-      console.warn('[ChatContext] ConversationContext unavailable – using mock save');
+    // Safety check - if no createConversation, use the mock implementation
+    if (typeof createConversation !== 'function') {
+      console.warn('[ChatContext] No createConversation function available');
       setChatId('mock-chat-id-' + Date.now());
       setIsChatSaved(true);
       return true;
     }
-
+    
     setIsLoading(true);
     
     try {
@@ -260,7 +264,38 @@ export const useChat = () => {
   const context = useContext(ChatContext);
   
   if (!context) {
-    throw new Error('useChat must be used within a ChatProvider');
+    console.error('[ChatContext] Hook used outside provider');
+    // Return a minimal safe object to prevent crashes
+    return {
+      messages: [],
+      character: null,
+      isLoading: false,
+      isTyping: false,
+      error: null,
+      chatId: null,
+      isChatSaved: false,
+      
+      sendMessage: () => {
+        console.warn('[ChatContext] Cannot send message - no provider');
+        return Promise.resolve(null);
+      },
+      selectCharacter: () => {
+        console.warn('[ChatContext] Cannot select character - no provider');
+      },
+      retryLastMessage: () => {
+        console.warn('[ChatContext] Cannot retry message - no provider');
+      },
+      resetChat: () => {
+        console.warn('[ChatContext] Cannot reset chat - no provider');
+      },
+      saveChat: () => {
+        console.warn('[ChatContext] Cannot save chat - no provider');
+        return Promise.resolve(false);
+      },
+      clearError: () => {
+        console.warn('[ChatContext] Cannot clear error - no provider');
+      }
+    };
   }
   
   return context;

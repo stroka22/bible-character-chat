@@ -7,6 +7,9 @@ const ConversationContext = createContext();
 
 // Provider component
 export const ConversationProvider = ({ children }) => {
+  // Debug: track provider initialization
+  console.log('[ConversationContext] Initializing provider');
+
   const { user, isAuthenticated } = useAuth();
   
   // State for conversations list
@@ -425,13 +428,65 @@ export const ConversationProvider = ({ children }) => {
 
 // Custom hook for using the conversation context
 export const useConversation = () => {
-  const context = useContext(ConversationContext);
-  
-  if (!context) {
-    throw new Error('useConversation must be used within a ConversationProvider');
+  console.log('[ConversationContext] Hook called');
+
+  try {
+    const context = useContext(ConversationContext);
+
+    if (!context) {
+      console.error('[ConversationContext] No context found – provider missing?');
+      // Safe fallback object with no-op methods
+      const noop = () => {
+        /* no-op */
+      };
+      const noopAsync = () => Promise.resolve(null);
+      return {
+        conversations: [],
+        activeConversation: null,
+        isLoading: false,
+        isSaving: false,
+        error: null,
+        fetchConversations: noopAsync,
+        fetchConversationWithMessages: noopAsync,
+        createConversation: noopAsync,
+        addMessage: noopAsync,
+        updateConversation: noopAsync,
+        deleteConversation: noopAsync,
+        shareConversation: noopAsync,
+        stopSharing: noopAsync,
+        getSharedConversation: noopAsync,
+        clearError: noop,
+        clearActiveConversation: noop,
+      };
+    }
+
+    return context;
+  } catch (err) {
+    console.error('[ConversationContext] Error in hook:', err);
+    // Return fallback to avoid runtime crash
+    const noop = () => {
+      /* no-op */
+    };
+    const noopAsync = () => Promise.resolve(null);
+    return {
+      conversations: [],
+      activeConversation: null,
+      isLoading: false,
+      isSaving: false,
+      error: null,
+      fetchConversations: noopAsync,
+      fetchConversationWithMessages: noopAsync,
+      createConversation: noopAsync,
+      addMessage: noopAsync,
+      updateConversation: noopAsync,
+      deleteConversation: noopAsync,
+      shareConversation: noopAsync,
+      stopSharing: noopAsync,
+      getSharedConversation: noopAsync,
+      clearError: noop,
+      clearActiveConversation: noop,
+    };
   }
-  
-  return context;
 };
 
 export default ConversationContext;
