@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { generateCharacterResponse } from '../services/openai';
-import { useConversation } from './ConversationContext.js';
+import { useConversation } from './ConversationContext.jsx';
 
 // Create the chat context
 const ChatContext = createContext();
