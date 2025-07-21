@@ -1,75 +1,54 @@
 import supabase from '../supabase/client';
 
-// Mock data for conversations
+// Mock data for characters – align with actual characters used in the app
 const MOCK_CHARACTERS = {
-  'char-1': { id: 'char-1', name: 'Moses', avatar_url: 'https://example.com/moses.jpg', testament: 'old', bible_book: 'Exodus' },
-  'char-2': { id: 'char-2', name: 'David', avatar_url: 'https://example.com/david.jpg', testament: 'old', bible_book: 'Samuel' },
-  'char-3': { id: 'char-3', name: 'Paul', avatar_url: 'https://example.com/paul.jpg', testament: 'new', bible_book: 'Acts' },
-  'char-4': { id: 'char-4', name: 'Mary', avatar_url: 'https://example.com/mary.jpg', testament: 'new', bible_book: 'Luke' }
+  jesus: {
+    id: 'jesus',
+    name: 'Jesus',
+    avatar_url: '/characters/jesus.jpg',
+    testament: 'new',
+    bible_book: 'Gospels'
+  },
+  peter: {
+    id: 'peter',
+    name: 'Peter',
+    avatar_url: '/characters/peter.jpg',
+    testament: 'new',
+    bible_book: 'Acts'
+  },
+  john: {
+    id: 'john',
+    name: 'John',
+    avatar_url: '/characters/john.jpg',
+    testament: 'new',
+    bible_book: 'Revelation'
+  },
+  mary: {
+    id: 'mary',
+    name: 'Mary',
+    avatar_url: '/characters/mary.jpg',
+    testament: 'new',
+    bible_book: 'Luke'
+  }
 };
 
 // In-memory storage for mock data
 const mockStorage = {
-  conversations: [
-    {
-      id: 'conv-1',
-      character_id: 'char-1',
-      title: 'Conversation with Moses',
-      is_favorite: true,
-      is_shared: false,
-      share_code: null,
-      is_deleted: false,
-      created_at: '2025-06-15T10:30:00Z',
-      updated_at: '2025-06-15T11:15:00Z',
-      last_message_preview: 'Tell me about the Ten Commandments'
-    },
-    {
-      id: 'conv-2',
-      character_id: 'char-2',
-      title: 'Talking with King David',
-      is_favorite: false,
-      is_shared: true,
-      share_code: 'abc123',
-      is_deleted: false,
-      created_at: '2025-06-14T15:20:00Z',
-      updated_at: '2025-06-14T16:45:00Z',
-      last_message_preview: 'How did you defeat Goliath?'
-    }
-  ],
-  messages: [
-    {
-      id: 'msg-1',
-      conversation_id: 'conv-1',
-      role: 'user',
-      content: 'Hello Moses, tell me about the Ten Commandments',
-      is_deleted: false,
-      created_at: '2025-06-15T10:30:00Z'
-    },
-    {
-      id: 'msg-2',
-      conversation_id: 'conv-1',
-      role: 'assistant',
-      content: 'The Ten Commandments were given to me by God on Mount Sinai. They are the foundation of God\'s law and represent His covenant with Israel...',
-      is_deleted: false,
-      created_at: '2025-06-15T10:30:30Z'
-    },
-    {
-      id: 'msg-3',
-      conversation_id: 'conv-2',
-      role: 'user',
-      content: 'King David, how did you defeat Goliath?',
-      is_deleted: false,
-      created_at: '2025-06-14T15:20:00Z'
-    },
-    {
-      id: 'msg-4',
-      conversation_id: 'conv-2',
-      role: 'assistant',
-      content: 'With faith in God, I faced Goliath with just a sling and five smooth stones. Though I was young and not a warrior, I trusted in the Lord...',
-      is_deleted: false,
-      created_at: '2025-06-14T15:20:30Z'
-    }
-  ]
+  conversations: [], // start empty
+  messages: []       // start empty
+};
+
+// ---------------------------------------------------------------------------
+// Helpers to reset mock data on first load (useful while developing)
+// ---------------------------------------------------------------------------
+let isFirstLoad = true;
+const resetMockData = () => {
+  if (isFirstLoad) {
+    console.log('[MOCK] First load – clearing preset mock data');
+    mockStorage.conversations = [];
+    mockStorage.messages = [];
+    isFirstLoad = false;
+  }
 };
 
 // Helper function to simulate async API calls
@@ -146,6 +125,8 @@ export const conversationRepository = {
     characterId = null
   } = {}) {
     try {
+      // Ensure stale preset data is cleared once per session
+      resetMockData();
       console.log('[MOCK] Fetching user conversations');
       
       // Filter conversations based on options
