@@ -6,7 +6,7 @@ import ScriptureReference from './ScriptureReference';
 // descendant components relying on `useChat()` reference the mock provider.
 // We don't actually use `useChat` inside this file, but importing it here
 // guarantees the bundle includes the right context implementation.
-import { useChat } from '../../contexts/MockChatContext.jsx';
+import { useChat } from '../../contexts/ChatContext.jsx';
 
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 

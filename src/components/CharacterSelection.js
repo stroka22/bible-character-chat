@@ -2,7 +2,8 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { characterRepository } from '../repositories/characterRepository';
 import { groupRepository } from '../repositories/groupRepository';
-import { useChat } from '../contexts/ChatContext';
+// Ensure we always import the unified JSX version of the context
+import { useChat } from '../contexts/ChatContext.jsx';
 import CharacterCard from './CharacterCard';
 const BIBLE_BOOKS = {
     oldTestament: [

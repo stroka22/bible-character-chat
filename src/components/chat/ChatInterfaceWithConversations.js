@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useChat } from '../../contexts/ChatContext';
+import { useChat } from '../../contexts/ChatContext.jsx';
 import { useConversation } from '../../contexts/ConversationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link, useParams, useNavigate } from 'react-router-dom';
