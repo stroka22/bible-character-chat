@@ -71,10 +71,14 @@ function App() {
      * screens/guards in development.  Any "skip" logic should be handled
      * inside consumer components rather than removing the context.
      * ------------------------------------------------------------------ */
+    // Correct provider hierarchy:
+    // 1. AuthProvider         – provides authentication state
+    // 2. ChatProvider         – chat logic (may rely on auth)
+    // 3. ConversationProvider – conversation persistence (relies on chat)
     const Providers = ({ children }) => (
         _jsx(AuthProvider, {
-            children: _jsx(ConversationProvider, {
-                children: _jsx(ChatProvider, { children })
+            children: _jsx(ChatProvider, {
+                children: _jsx(ConversationProvider, { children })
             })
         })
     );
