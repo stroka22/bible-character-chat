@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
-import { useChat } from '../../contexts/ChatContext';
+import { useChat } from '../../contexts/MockChatContext.jsx';
 import { Link } from 'react-router-dom';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
@@ -27,7 +27,16 @@ const getSafeAvatarUrl = (name, url) => {
 };
 
 const ChatInterface = () => {
-    const { character, messages, isLoading, error, isTyping, retryLastMessage, resetChat } = useChat();
+    const { 
+        character,
+        messages,
+        isLoading,
+        error,
+        isTyping,
+        retryLastMessage,
+        resetChat,
+        sendMessage           // <-- needed for ChatInput
+    } = useChat();
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
@@ -307,6 +316,7 @@ const ChatInterface = () => {
                 _jsx("div", { 
                     className: "chat-input-area border-t border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)] p-4",
                     children: _jsx(ChatInput, { 
+                        onSendMessage: sendMessage,
                         disabled: isLoading, 
                         placeholder: `Ask ${character.name} anything...`,
                         className: "bg-[rgba(255,255,255,.15)] border border-[rgba(255,255,255,.3)] rounded-lg text-white focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"

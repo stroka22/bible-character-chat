@@ -16,10 +16,10 @@ const CharacterCard = ({ character, onSelect, isSelected = false }) => {
       `, whileHover: {
             scale: 1.02,
             transition: { duration: 0.2 }
-        }, whileTap: { scale: 0.98 }, onClick: () => onSelect(character.id), role: "button", tabIndex: 0, onKeyDown: (e) => {
+        }, whileTap: { scale: 0.98 }, onClick: () => onSelect(character), role: "button", tabIndex: 0, onKeyDown: (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                onSelect(character.id);
+                onSelect(character);
             }
         }, "aria-label": `Chat with ${character.name}${bibleBook ? ` from ${bibleBook}` : ''}`, children: [_jsx("div", { className: "absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30 mix-blend-overlay pointer-events-none" }), isSelected && (_jsx("div", { className: "absolute -inset-0.5 bg-yellow-300 opacity-20 blur-md rounded-xl animate-pulse" })), _jsx("button", { "aria-label": isFav ? 'Remove from favourites' : 'Add to favourites', onClick: (e) => {
                     e.stopPropagation();
@@ -40,7 +40,7 @@ const CharacterCard = ({ character, onSelect, isSelected = false }) => {
                                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
                                         } }) }) }) }) }), _jsx("div", { className: "absolute top-0 right-0 w-8 h-8 opacity-70 z-10 pointer-events-none", children: _jsx("svg", { viewBox: "0 0 100 100", fill: "none", xmlns: "http://www.w3.org/2000/svg", className: "w-full h-full", children: _jsx("path", { d: "M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z", fill: "#FFD700" }) }) }), bibleBook && (_jsx("div", { className: "absolute bottom-1 left-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded z-10 backdrop-blur-sm", children: bibleBook }))] }), _jsxs("div", { className: "flex flex-1 flex-col p-4 sm:pr-4 sm:pl-0", children: [_jsx("h3", { className: "mb-1 text-xl font-extrabold text-blue-900 tracking-tight", children: character.name }), _jsx("div", { className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2 opacity-80" }), _jsxs("div", { className: "relative mb-4", children: [_jsx("div", { className: "absolute inset-0 bg-blue-50/30 rounded pointer-events-none" }), " ", _jsx("p", { className: "relative text-sm text-gray-700 line-clamp-2 group-hover:line-clamp-none transition-all duration-300 z-10", children: character.description })] }), _jsx("button", { onClick: (e) => {
                             e.stopPropagation();
-                            onSelect(character.id);
+                            onSelect(character);
                         }, className: `
             mt-auto rounded-lg px-4 py-2 text-sm font-semibold shadow-md
             transition-all duration-300

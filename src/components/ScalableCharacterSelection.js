@@ -3,7 +3,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { characterRepository } from '../repositories/characterRepository';
 import { groupRepository } from '../repositories/groupRepository';
-import { useChat } from '../contexts/ChatContext';
+// Use the mock chat context so we don’t hit the real Supabase APIs
+import { useChat } from '../contexts/MockChatContext.jsx';
 import CharacterCard from './CharacterCard';
 console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
 const BIBLE_BOOKS = {

@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import React from 'react';
-import { useChat } from '../contexts/ChatContext';
+import { useChat } from '../contexts/MockChatContext.jsx';
 import ScalableCharacterSelection from '../components/ScalableCharacterSelection';
 import ChatInterface from '../components/chat/ChatInterface';
 const HomePage = () => {
