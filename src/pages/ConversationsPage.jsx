@@ -6,6 +6,16 @@ import { useConversation } from '../contexts/ConversationContext.jsx';
 const ConversationsPage = () => {
   console.log('[ConversationsPage] Rendering');
   
+  /* ------------------------------------------------------------------
+   * Detect SKIP_AUTH flag (query param or env var)
+   * When SKIP_AUTH is enabled we treat the user as “virtually” logged in
+   * so that developers can test the UI without going through Supabase.
+   * ------------------------------------------------------------------ */
+  const params = new URLSearchParams(window.location.search);
+  const SKIP_AUTH =
+    params.get('skipAuth') === '1' ||
+    import.meta.env.VITE_SKIP_AUTH === 'true';
+
   const { user, isAuthenticated } = useAuth();
   const {
     conversations = [],
@@ -19,14 +29,15 @@ const ConversationsPage = () => {
 
   // Fetch conversations when authenticated
   useEffect(() => {
-    if (isAuthenticated && typeof fetchConversations === 'function') {
+    // Fetch when authenticated OR when auth checks are bypassed
+    if ((isAuthenticated || SKIP_AUTH) && typeof fetchConversations === 'function') {
       console.log('[ConversationsPage] Fetching conversations');
       fetchConversations().catch(err => {
         console.error('[ConversationsPage] Error fetching conversations:', err);
       });
       setHasAttemptedLoad(true);
     }
-  }, [isAuthenticated, fetchConversations]);
+  }, [isAuthenticated, fetchConversations, SKIP_AUTH]);
 
   // Helper: format date
   const formatDate = (iso) => {
@@ -43,7 +54,7 @@ const ConversationsPage = () => {
   };
 
   // Placeholder when not logged in
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !SKIP_AUTH) {
     return (
       <div className="min-h-screen bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-8">
