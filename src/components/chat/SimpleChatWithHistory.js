@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
-import { useChat } from '../../contexts/ChatContext';
+import { useChat } from '../../contexts/MockChatContext.jsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import ChatBubble from './ChatBubble';
@@ -30,7 +30,7 @@ const getSafeAvatarUrl = (name, url) => {
 const SimpleChatWithHistory = () => {
     const navigate = useNavigate();
     const { user, isAuthenticated } = useAuth();
-    const { character, messages, isLoading, error, isTyping, retryLastMessage, resetChat, chatId, isChatSaved, saveChat } = useChat();
+    const { character, messages, isLoading, error, isTyping, retryLastMessage, resetChat, chatId, isChatSaved, saveChat, sendMessage } = useChat();
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [conversationTitle, setConversationTitle] = useState('');
@@ -414,6 +414,7 @@ const SimpleChatWithHistory = () => {
                 _jsx("div", { 
                     className: "chat-input-area border-t border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)] p-4",
                     children: _jsx(ChatInput, { 
+                        onSendMessage: sendMessage,
                         disabled: isLoading, 
                         placeholder: `Ask ${character.name} anything...`,
                         className: "bg-[rgba(255,255,255,.15)] border border-[rgba(255,255,255,.3)] rounded-lg text-white focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
