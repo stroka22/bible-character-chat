@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useConversation } from '../contexts/ConversationContext';
+import { useConversation } from '../contexts/ConversationContext.js';
 
 const ConversationsPage = () => {
   const { user, isAuthenticated } = useAuth();
