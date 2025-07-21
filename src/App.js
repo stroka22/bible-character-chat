@@ -73,12 +73,12 @@ function App() {
      * ------------------------------------------------------------------ */
     // Correct provider hierarchy:
     // 1. AuthProvider         – provides authentication state
-    // 2. ChatProvider         – chat logic (may rely on auth)
-    // 3. ConversationProvider – conversation persistence (relies on chat)
+    // 2. ConversationProvider – conversation persistence (used by chat)
+    // 3. ChatProvider         – chat logic (depends on conversation context)
     const Providers = ({ children }) => (
         _jsx(AuthProvider, {
-            children: _jsx(ChatProvider, {
-                children: _jsx(ConversationProvider, { children })
+            children: _jsx(ConversationProvider, {
+                children: _jsx(ChatProvider, { children })
             })
         })
     );

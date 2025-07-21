@@ -23,10 +23,20 @@ export const ChatProvider = ({ children }) => {
   const typingTimeoutRef = useRef(null);
   
   // Conversation persistence helpers (may be no-ops when user isn't authenticated)
-  const {
-    createConversation,
-    addMessage,
-  } = useConversation();
+  let conversationContext;
+  try {
+    conversationContext = useConversation();
+    console.log('[ChatContext] Successfully connected to ConversationContext');
+  } catch (err) {
+    console.error('[ChatContext] Error connecting to ConversationContext:', err);
+    // Fallback object so the rest of ChatContext can still operate
+    conversationContext = {
+      createConversation: null,
+      addMessage: null,
+    };
+  }
+
+  const { createConversation, addMessage } = conversationContext;
 
   // Clear error after 5 seconds
   useEffect(() => {
