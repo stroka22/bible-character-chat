@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { generateCharacterResponse } from '../services/openai';
+import { useConversation } from './ConversationContext.jsx';
 
 // Create the chat context
 const ChatContext = createContext();
@@ -19,6 +20,12 @@ export const ChatProvider = ({ children }) => {
   const messageIdCounter = useRef(1);
   const typingTimeoutRef = useRef(null);
   
+  // Conversation persistence helpers (may be no-ops when user isn't authenticated)
+  const {
+    createConversation,
+    addMessage,
+  } = useConversation();
+
   // Clear error after 5 seconds
   useEffect(() => {
     if (error) {
@@ -182,17 +189,31 @@ export const ChatProvider = ({ children }) => {
       return false;
     }
     
+    // If persistence layer unavailable (e.g. guest user), fallback to mock behaviour
+    if (!createConversation || !addMessage) {
+      console.warn('[ChatContext] ConversationContext unavailable – using mock save');
+      setChatId('mock-chat-id-' + Date.now());
+      setIsChatSaved(true);
+      return true;
+    }
+
     setIsLoading(true);
     
     try {
-      // In mock implementation, we just log the action
-      console.log('[MockChatContext] Would save chat with title:', title);
-      
-      // Simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Update local state as if save was successful
-      setChatId('mock-chat-id-' + Date.now());
+      // 1. create conversation row
+      const newConversation = await createConversation(character.id, title);
+
+      if (!newConversation?.id) {
+        throw new Error('Failed to create conversation');
+      }
+
+      // 2. persist all existing messages
+      for (const msg of messages) {
+        await addMessage(msg.content, msg.role);
+      }
+
+      // 3. update local state
+      setChatId(newConversation.id);
       setIsChatSaved(true);
       
       return true;
@@ -203,7 +224,7 @@ export const ChatProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [character, messages]);
+  }, [character, messages, createConversation, addMessage]);
 
   // Create the context value
   const contextValue = {
