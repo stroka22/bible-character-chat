@@ -1,30 +1,32 @@
 import supabase from '../supabase/client';
 
-// Mock data for characters – align with actual characters used in the app
+// Mock data for characters – keys and IDs now align with the numeric IDs
+// defined in src/data/mockCharacters.js so that conversations reference
+// the same identifier scheme across the entire app.
 const MOCK_CHARACTERS = {
-  jesus: {
-    id: 'jesus',
-    name: 'Jesus',
-    avatar_url: '/characters/jesus.jpg',
-    testament: 'new',
-    bible_book: 'Gospels'
+  1: {
+    id: 1,
+    name: 'Moses',
+    avatar_url: '/characters/moses.jpg',
+    testament: 'old',
+    bible_book: 'Exodus'
   },
-  peter: {
-    id: 'peter',
-    name: 'Peter',
-    avatar_url: '/characters/peter.jpg',
+  2: {
+    id: 2,
+    name: 'David',
+    avatar_url: '/characters/david.jpg',
+    testament: 'old',
+    bible_book: '1 Samuel'
+  },
+  5: {
+    id: 5,
+    name: 'Paul',
+    avatar_url: '/characters/paul.jpg',
     testament: 'new',
     bible_book: 'Acts'
   },
-  john: {
-    id: 'john',
-    name: 'John',
-    avatar_url: '/characters/john.jpg',
-    testament: 'new',
-    bible_book: 'Revelation'
-  },
-  mary: {
-    id: 'mary',
+  4: {
+    id: 4,
     name: 'Mary',
     avatar_url: '/characters/mary.jpg',
     testament: 'new',
@@ -48,6 +50,10 @@ const resetMockData = () => {
     mockStorage.conversations = [];
     mockStorage.messages = [];
     isFirstLoad = false;
+
+    // Inform devs that the mock repository now starts empty so that only
+    // conversations they create during the current session will appear.
+    console.log('[MOCK] Ready to save new conversations with biblical characters');
   }
 };
 
