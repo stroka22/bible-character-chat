@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Character Chat - Minimal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #facc15;
+            margin-bottom: 30px;
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-card h2 {
+            color: #facc15;
+            margin: 10px 0;
+        }
+        .character-card p {
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+        .character-image-container {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+        }
+        .instructions {
+            max-width: 800px;
+            margin: 0 auto 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bible Character Chat - Minimal Version</h1>
+    
+    <div class="instructions">
+        Click on any character to start a chat with them.
+    </div>
+    
+    <div id="character-grid" class="character-grid">
+        <!-- Character cards will be inserted here by JavaScript -->
+    </div>
+
+    <script>
+        // Character data - hardcoded directly in the file
+        const characters = [
+            {
+                id: '1',
+                name: 'Jesus',
+                description: 'Central figure of Christianity who taught through parables and performed miracles.',
+                img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '2',
+                name: 'Mary',
+                description: 'Mother of Jesus noted for her faith and obedience.',
+                img: 'https://images.unsplash.com/photo-1591059683048-9a6208e91d2c?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '3',
+                name: 'Moses',
+                description: 'Led the Israelites out of Egypt and received the Ten Commandments.',
+                img: 'https://images.unsplash.com/photo-1566193232556-d3fd467e1712?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '4',
+                name: 'David',
+                description: 'Shepherd, psalmist and second king of Israel who defeated Goliath.',
+                img: 'https://images.unsplash.com/photo-1533073526757-2c8ca1df9f1c?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '5',
+                name: 'Paul',
+                description: 'Apostle to the Gentiles and prolific New-Testament author.',
+                img: 'https://images.unsplash.com/photo-1504275107627-0c2ba7a43dba?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '6',
+                name: 'Abraham',
+                description: 'Patriarch chosen by God and father of many nations.',
+                img: 'https://images.unsplash.com/photo-1470859624578-4bb64151d9be?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '7',
+                name: 'Esther',
+                description: 'Jewish queen who bravely saved her people.',
+                img: 'https://images.unsplash.com/photo-1502323777036-f29e3972f5ea?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '8',
+                name: 'John the Baptist',
+                description: 'Prophet who prepared the way for Jesus.',
+                img: 'https://images.unsplash.com/photo-1542856391-010fb87dcfed?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                id: '9',
+                name: 'Peter',
+                description: 'Disciple of Jesus and leader in the early church.',
+                img: 'https://images.unsplash.com/photo-1542396601-dca920ea2807?auto=format&fit=crop&w=150&q=80'
+            }
+        ];
+
+        // Function to render character cards
+        function renderCharacterCards() {
+            const grid = document.getElementById('character-grid');
+            
+            // Clear the grid first
+            grid.innerHTML = '';
+            
+            // Create and append character cards
+            characters.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                
+                // Table-based approach for circular images
+                card.innerHTML = `
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="${character.img}" alt="${character.name}" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h2>${character.name}</h2>
+                    <p>${character.description}</p>
+                `;
+                
+                // Add click handler
+                card.addEventListener('click', function() {
+                    alert(`You selected ${character.name}. In a real app this would start a chat.`);
+                });
+                
+                grid.appendChild(card);
+            });
+        }
+        
+        // Initialize when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, rendering character cards');
+            renderCharacterCards();
+        });
+    </script>
+</body>
+</html>

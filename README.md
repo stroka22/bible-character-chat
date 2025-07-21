@@ -1,149 +1,90 @@
-# 📖 Bible Character Chat
+# Bible Character Chat
 
-Chat in real-time with notable figures from Scripture powered by GPT-4.  
-Select **Paul**, **Moses**, **Mary Magdalene**, and many more to ask questions, explore theology, or simply enjoy a first-person perspective on biblical events.
-
----
-
-## ✨ Key Features
-
-| Feature | Description |
-|---------|-------------|
-| Character Selection | Browse/search Bible characters with avatars and summaries. |
-| Persona-Driven Responses | Each character has a system prompt that shapes its unique voice and knowledge scope. |
-| Streaming Chat | Answers stream token-by-token for a natural “typing” feel. |
-| Context Preservation | Conversation history is stored so the model can stay on topic. |
-| Typing & Error States | “_Paul is responding…_” indicator, graceful error cards with **Retry**. |
-| Authentication | Email/password via Supabase Auth (anonymous usage also works). |
-| Tailwind UI | Responsive chat bubbles, light mode by default. |
-| Future-Ready | Hooks & DB schema prepared for **Save/Resume**, **Favorites**, voice or avatar chat. |
+A web experience that lets users **chat with biblical figures** such as Jesus, Mary, Moses, Paul, and many more.  
+It blends a rich character-selection UI with an AI-powered chat and an “insights” side-panel that surfaces scripture, historical context, relationships, and study questions.
 
 ---
 
-## 🏗️ Architecture Overview
+## 🌟 Current Status
 
-```
-src/
-│
-├── services/        # Thin wrappers around external APIs
-│   ├── supabase.ts  # Supabase JS client
-│   └── openai.ts    # OpenAI SDK helper & streaming
-│
-├── repositories/    # Data access (characters, chats, messages)
-├── contexts/        # Global React Contexts (Auth, Chat)
-├── components/
-│   ├── CharacterSelection/  # Cards & search UI
-│   └── chat/                # ChatBubble, ChatInput, ChatInterface
-├── pages/           # Page-level layout (HomePage)
-└── App.tsx          # Routing & providers
-```
-
-Database (Supabase PostgreSQL):
-
-```
-characters      <-- static persona metadata
-chats           <-- per-user sessions
-chat_messages   <-- ordered conversation log
-```
-
-Edge Functions _(optional in v1)_ will later proxy OpenAI calls to keep the API key server-side.
+| Layer | State | Notes |
+|-------|-------|-------|
+| **Standalone HTML** (`public/standalone-chat.html`) | **Stable** ✅ | Complete selection grid/list, filters, chat, insights. No build step required. |
+| **React app** (`src/…`) | ❌ *Won’t build* | Several TypeScript syntax errors still block `npm run build`. |
+| **Backend / Supabase** | ✅ | Schema & RLS policies fixed; admin roles work. |
+| **Stripe / Subscriptions** | ⚙️ *Mocked* | Placeholder keys; no live billing yet. |
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Launch the Stand-Alone Chat (Zero Dependencies)
 
-### 1. Prerequisites
-
-* Node 20+ and npm 10+ (or pnpm/yarn)
-* A Supabase project
-* An OpenAI API key (GPT-4 access)
-
-### 2. Clone & Install
-
-```bash
-git clone https://github.com/your-org/bible-character-chat.git
-cd bible-character-chat
-npm install          # or pnpm install
-```
-
-### 3. Environment Variables
-
-Create `.env` in the project root:
+### Quick open
 
 ```
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=public-anon-key
-***REMOVED***
+open public/standalone-chat.html      # macOS  
+start public\standalone-chat.html     # Windows  
+xdg-open public/standalone-chat.html  # Linux (if xdg-open installed)
 ```
 
-> 🔒  In production **never** expose `VITE_OPENAI_API_KEY` to browsers.  
-> Use an Edge Function or serverless API to proxy requests instead.
-
-### 4. Database Setup
-
-```bash
-npm i -g supabase
-supabase login
-supabase db reset            # spins up local Postgres
-supabase db push             # applies migrations in /supabase/migrations
-```
-
-### 5. Run Dev Server
-
-```bash
-npm run dev
-```
-
-Open http://localhost:5173 and start chatting! 🎉
-
----
-
-## 🛠️ Scripts
-
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Vite + HMR |
-| `npm run build` | Production build (`dist/`) |
-| `npm run preview` | Preview dist locally |
-| `supabase db push` | Apply SQL migrations locally |
-| `supabase functions deploy` | Deploy edge functions (later phase) |
-
----
-
-## ☁️ Deployment
-
-1. **Frontend** – deploy `dist/` on Vercel, Netlify, Cloudflare Pages, etc.  
-2. **Supabase** – push the SQL migration to your hosted DB.  
-3. **OpenAI Key** – create a Supabase Edge Function (Node 18) that receives chat history, adds persona prompt, calls OpenAI, and streams the result. Store `OPENAI_API_KEY` as a secret:  
-   ```bash
-   supabase secrets set ***REMOVED***
-   ```
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Persist chat history & resume sessions
-- [ ] Mark chats/characters as favourites
-- [ ] Voice input & TTS output
-- [ ] Animated character avatars
-- [ ] Mobile PWA offline caching
-
----
-
-## 🤝 Contributing
-
-Pull requests are welcome! Please open an issue first to discuss major changes.
+### Serve over HTTP (for mobiles / other devices)
 
 ```
-git checkout -b feat/your-feature
-npm run lint && npm run test
-git commit -m "feat: awesome feature"
-git push origin feat/your-feature
+# From repo root
+./start-chat.sh --http --port=8000   # auto-uses python3 if available
+# then visit http://localhost:8000/public/standalone-chat.html
 ```
 
 ---
 
-## 📄 License
+## 🖼️ Key Features (textual screenshots)
 
-MIT © 2025 Your Name / AskJesusAI Team
+1. **Header & Navigation** – Dark-blue translucent bar with gold “Bible Character Chat” logo and two tabs: *Characters* (active) & *Chat*.  
+2. **Character Selection Grid** – 3 × N cards with perfectly circular 150 px portraits, character name in gold, short bio under each.  
+3. **Filters Bar** – Search box, Testament toggle (All/Old/New), Book & Group dropdowns, plus Grid/List view buttons.  
+4. **Alphabetical Rail** – A-Z pill buttons floating on the right for jump-to-letter filtering.  
+5. **Pagination** – « 1 2 3 … » buttons centred under the grid.  
+6. **Chat View** – White panel with back arrow, tiny circular avatar, character name & description, message stream, and input box with blue send button.  
+7. **Insights Panel** – Slides in from right; sections for Historical Context, Scripture References (clickable chips), Relationships (pills), and Study Questions (indented italics).
+
+---
+
+## 🏗️ Accessing the React App (experimental)
+
+> The React build currently fails; use only if you plan to help fix TS errors.
+
+```
+# install deps
+npm install
+# start with auth bypass & force-serve React (IGNORE legacy html)
+./start-app.sh --skip-auth --force-react --port=5175
+# open http://localhost:5175
+```
+
+If the screen is blank check browser console for TypeScript stack traces.
+
+---
+
+## ⚠️ Known Issues & Limitations
+
+1. **TypeScript build errors** in `CharacterCard.tsx`, `AuthContext.tsx`, several page components.  
+2. **Legacy service-workers** may still trigger redirects; run `public/service-worker-cleanup.js` or clear site data.  
+3. **Stripe integration** is mocked; attempting to purchase will no-op.  
+4. **AI responses** in standalone mode are **rule-based placeholders**, not actual OpenAI calls.  
+5. **Mobile viewport** needs polishing—alpha navigation overlaps on very small screens.  
+
+---
+
+## 🔮 Future Plans
+
+1. **Fix TS & restore full React build** (replace curly quotes, close JSX tags, run `npm run lint`).  
+2. **Port standalone logic into React components** (`ScalableCharacterSelection`, `ChatPage`) for single-page delivery.  
+3. **Wire genuine OpenAI streaming** (with env var `VITE_OPENAI_API_KEY`) and real Stripe checkout.  
+4. **Add Pastor/Admin dashboards** for content moderation & subscription management.  
+5. **Progressive-Web-App polish** – unified, clean service-worker, offline scripture cache.  
+6. **Automated tests** (Playwright): select character → send message → expect response chip.  
+7. **Multilingual support** starting with Spanish & Portuguese character bios.
+
+---
+
+🙏 **Thank you for trying Bible Character Chat!**  
+Feel free to open issues or submit pull requests as we journey toward the full React release.  

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Component Test - Bible Characters</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.20/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            min-height: 100vh;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #facc15;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+        .character-card {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+        .character-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #facc15;
+            margin-bottom: 5px;
+        }
+        .character-card p {
+            font-size: 0.9rem;
+            color: #c0c0c0;
+            line-height: 1.4;
+        }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        .nav-links a {
+            color: #facc15;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: background-color 0.2s;
+        }
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .notice {
+            background-color: #dc2626;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="notice">COMPONENT TEST PAGE - Table-Based Circular Images</div>
+    
+    <div class="container">
+        <h1>Bible Character Components Test</h1>
+        <p style="text-align: center; margin-bottom: 30px;">
+            This page demonstrates the table-based approach for perfectly circular character images.
+        </p>
+        
+        <div id="root"></div>
+        
+        <div class="nav-links">
+            <a href="/">Main App</a>
+            <a href="/bible-characters.html">Standalone Characters Page</a>
+            <a href="/circle-test.html">Circle Test Page</a>
+        </div>
+    </div>
+
+    <script type="text/babel">
+        // Sample character data
+        const characters = [
+            {id: '1', name: 'Jesus', description: 'Central figure of Christianity who taught through parables and performed miracles.', avatar_url: 'https://via.placeholder.com/150?text=Jesus'},
+            {id: '2', name: 'Mary', description: 'Mother of Jesus noted for her faith and obedience.', avatar_url: 'https://via.placeholder.com/150?text=Mary'},
+            {id: '3', name: 'Peter', description: 'Disciple of Jesus and leader in the early church.', avatar_url: 'https://via.placeholder.com/150?text=Peter'},
+            {id: '4', name: 'Paul', description: 'Apostle to the Gentiles and prolific New-Testament author.', avatar_url: 'https://via.placeholder.com/150?text=Paul'},
+            {id: '5', name: 'Moses', description: 'Led the Israelites out of Egypt and received the Ten Commandments.', avatar_url: 'https://via.placeholder.com/150?text=Moses'},
+            {id: '6', name: 'David', description: 'Shepherd, psalmist and second king of Israel who defeated Goliath.', avatar_url: 'https://via.placeholder.com/150?text=David'},
+        ];
+        
+        // Character Card Component with table-based circular image
+        const CharacterCard = ({ character }) => {
+            const [isSelected, setIsSelected] = React.useState(false);
+            
+            return (
+                <div 
+                    className="character-card"
+                    onClick={() => setIsSelected(!isSelected)}
+                >
+                    {/* Table-based circular image */}
+                    <table style={{ borderCollapse: 'collapse', margin: '0 auto 15px' }}>
+                        <tbody>
+                            <tr>
+                                <td style={{ 
+                                    width: '150px', 
+                                    height: '150px', 
+                                    borderRadius: '50%', 
+                                    overflow: 'hidden', 
+                                    border: isSelected ? '4px solid #facc15' : '2px solid rgba(255, 255, 255, 0.4)', 
+                                    boxShadow: '0 0 15px rgba(250, 204, 21, 0.55)', 
+                                    padding: 0 
+                                }}>
+                                    <img 
+                                        src={character.avatar_url} 
+                                        alt={character.name} 
+                                        style={{ 
+                                            width: '150px', 
+                                            height: '150px', 
+                                            display: 'block', 
+                                            objectFit: 'cover' 
+                                        }} 
+                                    />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <h3>{character.name}</h3>
+                    <p>{character.description}</p>
+                    
+                    <button 
+                        style={{ 
+                            marginTop: '15px',
+                            backgroundColor: isSelected ? '#facc15' : 'rgba(255, 255, 255, 0.1)',
+                            color: isSelected ? '#0a0a2a' : '#ffffff',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontFamily: 'Cinzel, serif',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        {isSelected ? 'Selected' : 'Select Character'}
+                    </button>
+                </div>
+            );
+        };
+        
+        // Main App Component
+        const App = () => {
+            return (
+                <div>
+                    <div className="character-grid">
+                        {characters.map(character => (
+                            <CharacterCard key={character.id} character={character} />
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+        
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

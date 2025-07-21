@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bible Character Selection Test Page</title>
+  
+  <!-- Cinzel font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Cinzel', serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+      color: #e0e0e0;
+    }
+    
+    .test-instructions {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    h1 {
+      color: #facc15;
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+    }
+    
+    p {
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    
+    .highlight {
+      color: #facc15;
+      font-weight: bold;
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: rgba(250, 204, 21, 0.2);
+      border: 1px solid #facc15;
+      color: #facc15;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      text-decoration: none;
+      margin-top: 10px;
+    }
+    
+    .button:hover {
+      background-color: #facc15;
+      color: #0a0a2a;
+      box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+    }
+    
+    #root {
+      padding-top: 20px;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-instructions">
+    <h1>Character Selection Test Page</h1>
+    <p>This page directly loads the <span class="highlight">ScalableCharacterSelection</span> component, bypassing the normal authentication and routing flow for testing purposes.</p>
+    <p><span class="highlight">How to use:</span></p>
+    <ul>
+      <li>Browse the character selection interface below</li>
+      <li>Test the search functionality, filters, and pagination</li>
+      <li>Try both grid and list views</li>
+      <li>Use the alphabetical navigation on the right side</li>
+      <li>Verify that the design matches the mockup</li>
+    </ul>
+    <p>If you encounter any issues, try clearing your browser cache or using an incognito/private window.</p>
+    <a href="/" class="button">Return to Main App</a>
+  </div>
+  
+  <!-- Root element for React to mount on -->
+  <div id="root"></div>
+  
+  <!-- Script to initialize the component -->
+  <script type="module">
+    // Import the necessary modules from the main bundle
+    import { createRoot } from '/assets/react-dom_client.js';
+    import { ScalableCharacterSelection } from '/assets/ScalableCharacterSelection.js';
+    import { AuthProvider } from '/assets/AuthContext.js';
+    import { ChatProvider } from '/assets/ChatContext.js';
+    
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      const rootElement = document.getElementById('root');
+      
+      // Create a React root and render the component
+      const root = createRoot(rootElement);
+      root.render(
+        React.createElement(
+          AuthProvider,
+          null,
+          React.createElement(
+            ChatProvider,
+            null,
+            React.createElement(ScalableCharacterSelection, null)
+          )
+        )
+      );
+      
+      console.log('Character Selection Test Page initialized');
+    });
+  </script>
+  
+  <!-- Main bundle -->
+  <script type="module" src="/assets/main.js"></script>
+</body>
+</html>

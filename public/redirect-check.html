@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect Diagnostic Tool - Bible Character Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        h1, h2, h3 {
+            color: #facc15;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(250, 204, 21, 0.3);
+            padding-bottom: 8px;
+        }
+        
+        .panel {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .log-entry.redirect {
+            background-color: rgba(220, 38, 38, 0.2);
+            border-left: 4px solid #dc2626;
+        }
+        
+        .log-entry.navigation {
+            background-color: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .log-entry.meta {
+            background-color: rgba(245, 158, 11, 0.2);
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .log-entry.header {
+            background-color: rgba(16, 185, 129, 0.2);
+            border-left: 4px solid #10b981;
+        }
+        
+        .log-entry.storage {
+            background-color: rgba(139, 92, 246, 0.2);
+            border-left: 4px solid #8b5cf6;
+        }
+        
+        .log-entry.worker {
+            background-color: rgba(236, 72, 153, 0.2);
+            border-left: 4px solid #ec4899;
+        }
+        
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        button {
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+        
+        button.danger {
+            background-color: rgba(220, 38, 38, 0.2);
+            border: 1px solid #dc2626;
+            color: #dc2626;
+        }
+        
+        button.danger:hover {
+            background-color: #dc2626;
+            color: white;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+        
+        .highlight {
+            color: #facc15;
+            font-weight: bold;
+        }
+        
+        .timestamp {
+            color: #a0a0a0;
+            font-size: 0.8em;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #facc15;
+            color: #0a0a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notification a {
+            color: #0a0a2a;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-indicator.active {
+            background-color: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+        
+        .status-indicator.inactive {
+            background-color: #dc2626;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        table th {
+            color: #facc15;
+            font-weight: bold;
+        }
+        
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        .nav-links a {
+            display: inline-block;
+            background-color: rgba(250, 204, 21, 0.2);
+            border: 1px solid #facc15;
+            color: #facc15;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .nav-links a:hover {
+            background-color: #facc15;
+            color: #0a0a2a;
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="notification">
+        Redirect Diagnostic Tool •&nbsp;
+        <a href="/">Main App</a> •&nbsp;
+        <a href="/standalone-test.html">Standalone Test</a> •&nbsp;
+        <a href="/direct-render-test.html">Direct Render Test</a>
+    </div>
+
+    <div class="container">
+        <h1>Redirect Diagnostic Tool</h1>
+        
+        <div class="panel">
+            <h2>Current Page Information</h2>
+            <table>
+                <tr>
+                    <th>Original URL:</th>
+                    <td id="original-url"></td>
+                </tr>
+                <tr>
+                    <th>Current URL:</th>
+                    <td id="current-url"></td>
+                </tr>
+                <tr>
+                    <th>Referrer:</th>
+                    <td id="referrer"></td>
+                </tr>
+                <tr>
+                    <th>Page Load Time:</th>
+                    <td id="load-time"></td>
+                </tr>
+                <tr>
+                    <th>Navigation Type:</th>
+                    <td id="nav-type"></td>
+                </tr>
+                <tr>
+                    <th>Service Workers:</th>
+                    <td id="service-workers">Checking...</td>
+                </tr>
+            </table>
+            
+            <div class="button-group">
+                <button id="check-meta-refresh">Check for Meta Refresh Tags</button>
+                <button id="check-headers">Check Response Headers</button>
+                <button id="check-storage">Check Browser Storage</button>
+                <button id="force-reload" class="danger">Force Hard Reload</button>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="/" target="_blank">Open Main App</a>
+            <a href="/standalone-test.html" target="_blank">Open Standalone Test</a>
+            <a href="/direct-render-test.html" target="_blank">Open Direct Render Test</a>
+            <a href="/new-entry.html" target="_blank">Open New Entry Page</a>
+        </div>
+        
+        <div class="panel">
+            <h2>Meta Refresh Tags</h2>
+            <div id="meta-refresh-container">Checking for meta refresh tags...</div>
+        </div>
+        
+        <div class="panel">
+            <h2>Navigation & Redirect Log</h2>
+            <button class="copy-button" id="copy-log">Copy Log</button>
+            <div class="log-container" id="redirect-log"></div>
+        </div>
+        
+        <div class="panel">
+            <h2>Browser Storage Management</h2>
+            <div class="button-group">
+                <button id="clear-local-storage">Clear localStorage</button>
+                <button id="clear-session-storage">Clear sessionStorage</button>
+                <button id="clear-cookies">Clear Cookies</button>
+                <button id="clear-all-storage" class="danger">Clear ALL Storage</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Service Worker Management</h2>
+            <div id="service-worker-list">Checking for service workers...</div>
+            <div class="button-group">
+                <button id="unregister-all-workers" class="danger">Unregister All Service Workers</button>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Manual Navigation Tests</h2>
+            <p>These buttons will navigate to the main app using different methods to test how redirects behave.</p>
+            <div class="button-group">
+                <button id="navigate-location">Navigate with location.href</button>
+                <button id="navigate-assign">Navigate with location.assign()</button>
+                <button id="navigate-replace">Navigate with location.replace()</button>
+                <button id="navigate-link">Navigate with Link Click</button>
+                <button id="navigate-form">Navigate with Form Submit</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Store the original URL
+        const originalUrl = window.location.href;
+        document.getElementById('original-url').textContent = originalUrl;
+        
+        // Log function with timestamps
+        function logEntry(message, type = '') {
+            const logContainer = document.getElementById('redirect-log');
+            const timestamp = new Date().toISOString();
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+            logContainer.insertBefore(entry, logContainer.firstChild);
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        // Update current URL display
+        function updateCurrentUrl() {
+            document.getElementById('current-url').textContent = window.location.href;
+            if (window.location.href !== originalUrl) {
+                logEntry(`URL changed to: ${window.location.href}`, 'redirect');
+            }
+        }
+        
+        // Initialize page
+        function initPage() {
+            // Set referrer
+            document.getElementById('referrer').textContent = document.referrer || 'None';
+            
+            // Set navigation type and timing
+            if (window.performance) {
+                const perfData = window.performance.getEntriesByType('navigation')[0];
+                if (perfData) {
+                    document.getElementById('nav-type').textContent = perfData.type;
+                    document.getElementById('load-time').textContent = `${Math.round(perfData.duration)}ms`;
+                    
+                    if (perfData.redirectCount > 0) {
+                        logEntry(`Performance API detected ${perfData.redirectCount} redirect(s) taking ${Math.round(perfData.redirectDuration)}ms`, 'redirect');
+                    }
+                }
+            }
+            
+            // Check for service workers
+            checkServiceWorkers();
+            
+            // Check meta refresh tags
+            checkMetaRefreshTags();
+            
+            // Log initial page load
+            logEntry(`Page loaded: ${window.location.href}`, 'navigation');
+            
+            // Update current URL
+            updateCurrentUrl();
+        }
+        
+        // Check for meta refresh tags
+        function checkMetaRefreshTags() {
+            const metaRefreshContainer = document.getElementById('meta-refresh-container');
+            const metaTags = document.querySelectorAll('meta[http-equiv="refresh"]');
+            
+            if (metaTags.length === 0) {
+                metaRefreshContainer.innerHTML = '<div class="log-entry">No meta refresh tags found.</div>';
+            } else {
+                metaRefreshContainer.innerHTML = '';
+                metaTags.forEach(tag => {
+                    const content = tag.getAttribute('content');
+                    logEntry(`Meta refresh tag found: ${content}`, 'meta');
+                    const entry = document.createElement('div');
+                    entry.className = 'log-entry meta';
+                    entry.textContent = `Meta refresh tag found: ${content}`;
+                    metaRefreshContainer.appendChild(entry);
+                });
+            }
+        }
+        
+        // Check for service workers
+        function checkServiceWorkers() {
+            const serviceWorkersElement = document.getElementById('service-workers');
+            const serviceWorkerList = document.getElementById('service-worker-list');
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        if (registrations.length === 0) {
+                            serviceWorkersElement.innerHTML = '<span class="status-indicator inactive"></span> No active service workers';
+                            serviceWorkerList.innerHTML = '<div class="log-entry">No service workers registered for this origin.</div>';
+                        } else {
+                            serviceWorkersElement.innerHTML = `<span class="status-indicator active"></span> ${registrations.length} active service worker(s)`;
+                            serviceWorkerList.innerHTML = '';
+                            
+                            registrations.forEach((registration, index) => {
+                                logEntry(`Service worker found: ${registration.scope}`, 'worker');
+                                
+                                const entry = document.createElement('div');
+                                entry.className = 'log-entry worker';
+                                entry.innerHTML = `
+                                    <strong>Service Worker #${index + 1}</strong><br>
+                                    Scope: ${registration.scope}<br>
+                                    Updating: ${registration.updating ? 'Yes' : 'No'}<br>
+                                    State: ${registration.active ? registration.active.state : 'Unknown'}
+                                `;
+                                
+                                const unregisterButton = document.createElement('button');
+                                unregisterButton.textContent = 'Unregister';
+                                unregisterButton.className = 'danger';
+                                unregisterButton.style.marginTop = '10px';
+                                unregisterButton.onclick = () => {
+                                    registration.unregister()
+                                        .then(success => {
+                                            if (success) {
+                                                logEntry(`Service worker unregistered: ${registration.scope}`, 'worker');
+                                                checkServiceWorkers();
+                                            } else {
+                                                logEntry(`Failed to unregister service worker: ${registration.scope}`, 'worker');
+                                            }
+                                        });
+                                };
+                                
+                                entry.appendChild(unregisterButton);
+                                serviceWorkerList.appendChild(entry);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        serviceWorkersElement.textContent = 'Error checking service workers';
+                        serviceWorkerList.innerHTML = `<div class="log-entry">Error checking service workers: ${error.message}</div>`;
+                        logEntry(`Error checking service workers: ${error.message}`, 'worker');
+                    });
+            } else {
+                serviceWorkersElement.textContent = 'Service Workers not supported';
+                serviceWorkerList.innerHTML = '<div class="log-entry">Service Workers API not supported in this browser.</div>';
+            }
+        }
+        
+        // Check response headers (using fetch to the current page)
+        function checkResponseHeaders() {
+            fetch(window.location.href)
+                .then(response => {
+                    const headers = Array.from(response.headers.entries());
+                    logEntry('Response headers:', 'header');
+                    headers.forEach(([key, value]) => {
+                        logEntry(`  ${key}: ${value}`, 'header');
+                    });
+                    
+                    // Check for redirect-related headers
+                    if (response.redirected) {
+                        logEntry(`Fetch detected a redirect from ${response.url}`, 'redirect');
+                    }
+                })
+                .catch(error => {
+                    logEntry(`Error fetching headers: ${error.message}`, 'header');
+                });
+        }
+        
+        // Check browser storage
+        function checkBrowserStorage() {
+            // Check localStorage
+            try {
+                const localStorageKeys = Object.keys(localStorage);
+                logEntry(`localStorage has ${localStorageKeys.length} keys:`, 'storage');
+                localStorageKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    const truncatedValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                    logEntry(`  ${key}: ${truncatedValue}`, 'storage');
+                });
+            } catch (e) {
+                logEntry(`Error accessing localStorage: ${e.message}`, 'storage');
+            }
+            
+            // Check sessionStorage
+            try {
+                const sessionStorageKeys = Object.keys(sessionStorage);
+                logEntry(`sessionStorage has ${sessionStorageKeys.length} keys:`, 'storage');
+                sessionStorageKeys.forEach(key => {
+                    const value = sessionStorage.getItem(key);
+                    const truncatedValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                    logEntry(`  ${key}: ${truncatedValue}`, 'storage');
+                });
+            } catch (e) {
+                logEntry(`Error accessing sessionStorage: ${e.message}`, 'storage');
+            }
+            
+            // Check cookies
+            logEntry(`Cookies: ${document.cookie || 'None'}`, 'storage');
+        }
+        
+        // Clear localStorage
+        function clearLocalStorage() {
+            try {
+                const count = Object.keys(localStorage).length;
+                localStorage.clear();
+                logEntry(`Cleared ${count} items from localStorage`, 'storage');
+                alert(`Cleared ${count} items from localStorage`);
+            } catch (e) {
+                logEntry(`Error clearing localStorage: ${e.message}`, 'storage');
+                alert(`Error clearing localStorage: ${e.message}`);
+            }
+        }
+        
+        // Clear sessionStorage
+        function clearSessionStorage() {
+            try {
+                const count = Object.keys(sessionStorage).length;
+                sessionStorage.clear();
+                logEntry(`Cleared ${count} items from sessionStorage`, 'storage');
+                alert(`Cleared ${count} items from sessionStorage`);
+            } catch (e) {
+                logEntry(`Error clearing sessionStorage: ${e.message}`, 'storage');
+                alert(`Error clearing sessionStorage: ${e.message}`);
+            }
+        }
+        
+        // Clear cookies
+        function clearCookies() {
+            try {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i];
+                    const eqPos = cookie.indexOf('=');
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                }
+                logEntry(`Attempted to clear ${cookies.length} cookies`, 'storage');
+                alert(`Attempted to clear ${cookies.length} cookies`);
+            } catch (e) {
+                logEntry(`Error clearing cookies: ${e.message}`, 'storage');
+                alert(`Error clearing cookies: ${e.message}`);
+            }
+        }
+        
+        // Clear all storage
+        function clearAllStorage() {
+            if (confirm('This will clear ALL browser storage (localStorage, sessionStorage, and cookies). Continue?')) {
+                clearLocalStorage();
+                clearSessionStorage();
+                clearCookies();
+                
+                // Also try to unregister service workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations()
+                        .then(registrations => {
+                            const promises = registrations.map(registration => registration.unregister());
+                            Promise.all(promises)
+                                .then(results => {
+                                    const successCount = results.filter(Boolean).length;
+                                    logEntry(`Unregistered ${successCount} of ${results.length} service workers`, 'worker');
+                                });
+                        });
+                }
+                
+                alert('All storage cleared! The page will now reload.');
+                window.location.reload(true);
+            }
+        }
+        
+        // Unregister all service workers
+        function unregisterAllServiceWorkers() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        if (registrations.length === 0) {
+                            alert('No service workers to unregister');
+                            return;
+                        }
+                        
+                        const promises = registrations.map(registration => registration.unregister());
+                        Promise.all(promises)
+                            .then(results => {
+                                const successCount = results.filter(Boolean).length;
+                                logEntry(`Unregistered ${successCount} of ${results.length} service workers`, 'worker');
+                                alert(`Unregistered ${successCount} of ${results.length} service workers`);
+                                checkServiceWorkers();
+                            });
+                    })
+                    .catch(error => {
+                        logEntry(`Error unregistering service workers: ${error.message}`, 'worker');
+                        alert(`Error unregistering service workers: ${error.message}`);
+                    });
+            } else {
+                alert('Service Workers API not supported in this browser');
+            }
+        }
+        
+        // Copy log to clipboard
+        function copyLogToClipboard() {
+            const logContainer = document.getElementById('redirect-log');
+            const logText = Array.from(logContainer.children)
+                .map(entry => entry.textContent)
+                .join('\n');
+            
+            navigator.clipboard.writeText(logText)
+                .then(() => {
+                    alert('Log copied to clipboard');
+                })
+                .catch(err => {
+                    alert('Failed to copy log: ' + err.message);
+                });
+        }
+        
+        // Force hard reload
+        function forceHardReload() {
+            if (confirm('This will perform a hard reload of the page, bypassing the cache. Continue?')) {
+                logEntry('Performing hard reload...', 'navigation');
+                window.location.reload(true);
+            }
+        }
+        
+        // Manual navigation tests
+        function navigateWithLocationHref() {
+            logEntry('Navigating to / with location.href...', 'navigation');
+            window.location.href = '/';
+        }
+        
+        function navigateWithLocationAssign() {
+            logEntry('Navigating to / with location.assign()...', 'navigation');
+            window.location.assign('/');
+        }
+        
+        function navigateWithLocationReplace() {
+            logEntry('Navigating to / with location.replace()...', 'navigation');
+            window.location.replace('/');
+        }
+        
+        function navigateWithLinkClick() {
+            logEntry('Navigating to / with simulated link click...', 'navigation');
+            const link = document.createElement('a');
+            link.href = '/';
+            link.click();
+        }
+        
+        function navigateWithFormSubmit() {
+            logEntry('Navigating to / with form submit...', 'navigation');
+            const form = document.createElement('form');
+            form.method = 'get';
+            form.action = '/';
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+        
+        // Event listeners
+        window.addEventListener('DOMContentLoaded', initPage);
+        
+        window.addEventListener('popstate', event => {
+            logEntry(`popstate event fired. State: ${JSON.stringify(event.state)}`, 'navigation');
+            updateCurrentUrl();
+        });
+        
+        window.addEventListener('hashchange', event => {
+            logEntry(`hashchange event fired. Old URL: ${event.oldURL}, New URL: ${event.newURL}`, 'navigation');
+            updateCurrentUrl();
+        });
+        
+        // Monitor location changes
+        const originalPushState = history.pushState;
+        history.pushState = function() {
+            logEntry(`history.pushState called with state ${JSON.stringify(arguments[0])} and URL ${arguments[2]}`, 'navigation');
+            originalPushState.apply(this, arguments);
+            updateCurrentUrl();
+        };
+        
+        const originalReplaceState = history.replaceState;
+        history.replaceState = function() {
+            logEntry(`history.replaceState called with state ${JSON.stringify(arguments[0])} and URL ${arguments[2]}`, 'navigation');
+            originalReplaceState.apply(this, arguments);
+            updateCurrentUrl();
+        };
+        
+        // Button event listeners
+        document.getElementById('check-meta-refresh').addEventListener('click', checkMetaRefreshTags);
+        document.getElementById('check-headers').addEventListener('click', checkResponseHeaders);
+        document.getElementById('check-storage').addEventListener('click', checkBrowserStorage);
+        document.getElementById('force-reload').addEventListener('click', forceHardReload);
+        
+        document.getElementById('clear-local-storage').addEventListener('click', clearLocalStorage);
+        document.getElementById('clear-session-storage').addEventListener('click', clearSessionStorage);
+        document.getElementById('clear-cookies').addEventListener('click', clearCookies);
+        document.getElementById('clear-all-storage').addEventListener('click', clearAllStorage);
+        
+        document.getElementById('unregister-all-workers').addEventListener('click', unregisterAllServiceWorkers);
+        document.getElementById('copy-log').addEventListener('click', copyLogToClipboard);
+        
+        document.getElementById('navigate-location').addEventListener('click', navigateWithLocationHref);
+        document.getElementById('navigate-assign').addEventListener('click', navigateWithLocationAssign);
+        document.getElementById('navigate-replace').addEventListener('click', navigateWithLocationReplace);
+        document.getElementById('navigate-link').addEventListener('click', navigateWithLinkClick);
+        document.getElementById('navigate-form').addEventListener('click', navigateWithFormSubmit);
+        
+        // Log any unhandled errors
+        window.addEventListener('error', event => {
+            logEntry(`Unhandled error: ${event.message} at ${event.filename}:${event.lineno}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', event => {
+            logEntry(`Unhandled promise rejection: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>

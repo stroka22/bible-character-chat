@@ -2,12 +2,36 @@ import { jsx as _jsx } from "react/jsx-runtime";
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import App from './App-DirectLogin';
-// Inject Google Font "Cinzel" for a more biblical look
-(function () {
-    var id = 'google-font-cinzel';
+import App from './App';
+import './services/import-services';
+(() => {
+    const id = 'sw-cleanup';
+    if ('serviceWorker' in navigator && !document.getElementById(id)) {
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = '/service-worker-cleanup.js';
+        document.head.prepend(script);
+    }
+})();
+(() => {
+    const id = 'network-interceptor';
+    const DISABLED = import.meta.env.VITE_ENABLE_INTERCEPTOR &&
+        import.meta.env.VITE_ENABLE_INTERCEPTOR.toString() === 'false';
+    if (DISABLED) {
+        console.info('[Interceptor] Skipped – disabled via VITE_ENABLE_INTERCEPTOR');
+        return;
+    }
     if (!document.getElementById(id)) {
-        var link = document.createElement('link');
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = '/intercept.js';
+        document.head.appendChild(script);
+    }
+})();
+(() => {
+    const id = 'google-font-cinzel';
+    if (!document.getElementById(id)) {
+        const link = document.createElement('link');
         link.id = id;
         link.rel = 'stylesheet';
         link.href =
@@ -15,11 +39,19 @@ import App from './App-DirectLogin';
         document.head.appendChild(link);
     }
 })();
-// Get the root DOM element
-var rootElement = document.getElementById('root');
-// In development, fail fast if the root element is missing
+const rootElement = document.getElementById('root');
 if (!rootElement) {
     throw new Error("Root element with id 'root' not found");
 }
-// Mount the React application
-createRoot(rootElement).render(_jsx(StrictMode, { children: _jsx(App, {}) }));
+console.log('[App] Starting Bible Character Chat with safe service initialization');
+try {
+    createRoot(rootElement).render(_jsx(StrictMode, { children: _jsx(App, {}) }));
+}
+catch (err) {
+    console.error('[App] Failed to initialise React root:', err);
+    const div = document.createElement('div');
+    div.style.cssText =
+        'position:fixed;top:0;left:0;width:100%;padding:12px;background:#b91c1c;color:#fff;font-family:monospace;z-index:9999';
+    div.textContent = '⚠️ Bible Character Chat failed to load. Check console for details.';
+    document.body.appendChild(div);
+}

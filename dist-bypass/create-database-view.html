@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Database View - Bible Character Chat</title>
+  <!-- Load Supabase directly from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary-color: #f59e0b;
+      --text-color: #1e293b;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+      --warning-color: #f59e0b;
+      --info-color: #3b82f6;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1, h2, h3 {
+      font-family: 'Cinzel', serif;
+      color: #ffffff;
+    }
+    
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #e2e8f0;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .message {
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    
+    .success {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success-color);
+      border-left: 4px solid var(--success-color);
+    }
+    
+    .error {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--error-color);
+      border-left: 4px solid var(--error-color);
+    }
+    
+    .warning {
+      background-color: rgba(245, 158, 11, 0.1);
+      color: var(--warning-color);
+      border-left: 4px solid var(--warning-color);
+    }
+    
+    .info {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--info-color);
+      border-left: 4px solid var(--info-color);
+    }
+    
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-right: 10px;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+    
+    button.secondary {
+      background-color: var(--secondary-color);
+    }
+    
+    button.secondary:hover {
+      background-color: #d97706;
+    }
+    
+    button.danger {
+      background-color: var(--error-color);
+    }
+    
+    button.danger:hover {
+      background-color: #dc2626;
+    }
+    
+    pre {
+      background-color: #f1f5f9;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .code-block {
+      background-color: #1e293b;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary-color);
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .flex {
+      display: flex;
+    }
+    
+    .flex-col {
+      flex-direction: column;
+    }
+    
+    .items-center {
+      align-items: center;
+    }
+    
+    .justify-between {
+      justify-content: space-between;
+    }
+    
+    .mb-4 {
+      margin-bottom: 16px;
+    }
+    
+    .mt-4 {
+      margin-top: 16px;
+    }
+    
+    .text-sm {
+      font-size: 14px;
+    }
+    
+    .text-xs {
+      font-size: 12px;
+    }
+    
+    .text-gray {
+      color: #6b7280;
+    }
+    
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Database View Creator</h1>
+    <p class="subtitle">Create compatibility view for character columns</p>
+    
+    <div class="card">
+      <h2>Connection Status</h2>
+      <div id="connection-messages"></div>
+      
+      <div id="connection-status" class="message info">
+        Checking connection to Supabase...
+      </div>
+      
+      <div class="actions">
+        <button id="test-connection">Test Connection</button>
+        <button id="refresh-session">Refresh Session</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Create Database View</h2>
+      <p>This will create a view named <code>characters_expected</code> that maps the current database columns to what the React code expects:</p>
+      <ul>
+        <li><code>name</code> → <code>character_name</code></li>
+        <li><code>description</code> → <code>short_biography</code></li>
+        <li><code>opening_line</code> → <code>opening_sentence</code></li>
+      </ul>
+      
+      <h3>SQL to Execute:</h3>
+      <div class="code-block">CREATE OR REPLACE VIEW public.characters_expected AS
+SELECT id,
+       name            AS character_name,
+       description     AS short_biography,
+       opening_line    AS opening_sentence,
+       *               -- other cols unchanged
+FROM public.characters;</div>
+      
+      <div id="view-messages"></div>
+      
+      <div id="view-loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Creating database view...</p>
+      </div>
+      
+      <div class="actions">
+        <button id="create-view">Create View</button>
+        <button id="test-view" class="secondary">Test View</button>
+        <button id="drop-view" class="danger">Drop View</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Results</h2>
+      <div id="results-messages"></div>
+      
+      <div id="results-loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Loading results...</p>
+      </div>
+      
+      <pre id="results-output">No results yet</pre>
+    </div>
+    
+    <div class="card">
+      <h2>Debug Log</h2>
+      <pre id="debug-log"></pre>
+      
+      <div class="actions">
+        <button id="clear-log">Clear Log</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Supabase client
+    const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+    
+    // Initialize Supabase client
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Current user state
+    let currentUser = null;
+    let userProfile = null;
+    
+    // Debug logging function
+    function log(message, type = 'info') {
+      const timestamp = new Date().toISOString().substring(11, 19);
+      const logElement = document.getElementById('debug-log');
+      logElement.textContent = `[${timestamp}] ${message}\n` + logElement.textContent;
+      
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+    
+    // Show message in a specific container
+    function showMessage(containerId, message, type = 'info') {
+      const container = document.getElementById(containerId);
+      const messageElement = document.createElement('div');
+      messageElement.className = `message ${type}`;
+      messageElement.textContent = message;
+      
+      // Insert at the top
+      if (container.firstChild) {
+        container.insertBefore(messageElement, container.firstChild);
+      } else {
+        container.appendChild(messageElement);
+      }
+      
+      // Auto-remove after 5 seconds for success messages
+      if (type === 'success') {
+        setTimeout(() => {
+          messageElement.remove();
+        }, 5000);
+      }
+    }
+    
+    // Test connection
+    document.getElementById('test-connection').addEventListener('click', async () => {
+      try {
+        log('Testing Supabase connection...');
+        document.getElementById('connection-status').textContent = 'Testing connection...';
+        document.getElementById('connection-status').className = 'message info';
+        
+        // Simple health check
+        const { data, error } = await supabase.from('characters').select('count').limit(1);
+        
+        if (error) {
+          log(`Connection error: ${error.message}`, 'error');
+          document.getElementById('connection-status').textContent = `Connection error: ${error.message}`;
+          document.getElementById('connection-status').className = 'message error';
+        } else {
+          log('Connection successful!', 'success');
+          document.getElementById('connection-status').textContent = 'Connection successful! Database is accessible.';
+          document.getElementById('connection-status').className = 'message success';
+        }
+      } catch (err) {
+        log(`Unexpected error: ${err.message}`, 'error');
+        document.getElementById('connection-status').textContent = `Unexpected error: ${err.message}`;
+        document.getElementById('connection-status').className = 'message error';
+      }
+    });
+    
+    // Refresh session
+    document.getElementById('refresh-session').addEventListener('click', async () => {
+      try {
+        log('Refreshing session...');
+        
+        const { data, error } = await supabase.auth.refreshSession();
+        
+        if (error) {
+          log(`Session refresh error: ${error.message}`, 'error');
+          showMessage('connection-messages', `Session refresh error: ${error.message}`, 'error');
+        } else {
+          log('Session refreshed successfully', 'success');
+          showMessage('connection-messages', 'Session refreshed successfully', 'success');
+          
+          // Update current user
+          currentUser = data.session?.user || null;
+          
+          // Fetch user profile if logged in
+          if (currentUser) {
+            await fetchUserProfile();
+          }
+        }
+      } catch (err) {
+        log(`Unexpected error: ${err.message}`, 'error');
+        showMessage('connection-messages', `Unexpected error: ${err.message}`, 'error');
+      }
+    });
+    
+    // Create view
+    document.getElementById('create-view').addEventListener('click', async () => {
+      try {
+        log('Creating database view...');
+        document.getElementById('view-loading').classList.remove('hidden');
+        
+        // SQL to create the view
+        const sql = `
+          CREATE OR REPLACE VIEW public.characters_expected AS
+          SELECT id,
+                 name            AS character_name,
+                 description     AS short_biography,
+                 opening_line    AS opening_sentence,
+                 *               -- other cols unchanged
+          FROM public.characters;
+        `;
+        
+        const { data, error } = await supabase.rpc('exec_sql', { sql });
+        
+        document.getElementById('view-loading').classList.add('hidden');
+        
+        if (error) {
+          // Special handling for "function does not exist" error
+          if (error.message.includes('function exec_sql() does not exist')) {
+            log('The exec_sql function does not exist. This is expected if you haven\'t created the function.', 'warning');
+            showMessage('view-messages', 'The exec_sql function does not exist. Please run this SQL directly in the Supabase SQL editor.', 'warning');
+            
+            // Show SQL in results for easy copying
+            document.getElementById('results-output').textContent = sql;
+          } else {
+            log(`Error creating view: ${error.message}`, 'error');
+            showMessage('view-messages', `Error creating view: ${error.message}`, 'error');
+          }
+        } else {
+          log('View created successfully!', 'success');
+          showMessage('view-messages', 'View created successfully!', 'success');
+          
+          // Test the view immediately
+          await testView();
+        }
+      } catch (err) {
+        document.getElementById('view-loading').classList.add('hidden');
+        log(`Unexpected error: ${err.message}`, 'error');
+        showMessage('view-messages', `Unexpected error: ${err.message}`, 'error');
+      }
+    });
+    
+    // Test view
+    async function testView() {
+      try {
+        log('Testing the view...');
+        document.getElementById('results-loading').classList.remove('hidden');
+        document.getElementById('results-output').textContent = 'Loading data from view...';
+        
+        const { data, error } = await supabase
+          .from('characters_expected')
+          .select('id, character_name, short_biography, opening_sentence')
+          .limit(5);
+        
+        document.getElementById('results-loading').classList.add('hidden');
+        
+        if (error) {
+          log(`Error testing view: ${error.message}`, 'error');
+          showMessage('results-messages', `Error testing view: ${error.message}`, 'error');
+          document.getElementById('results-output').textContent = `Error: ${error.message}`;
+        } else {
+          log(`View test successful! Found ${data.length} records.`, 'success');
+          showMessage('results-messages', `View test successful! Found ${data.length} records.`, 'success');
+          document.getElementById('results-output').textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        document.getElementById('results-loading').classList.add('hidden');
+        log(`Unexpected error: ${err.message}`, 'error');
+        showMessage('results-messages', `Unexpected error: ${err.message}`, 'error');
+        document.getElementById('results-output').textContent = `Error: ${err.message}`;
+      }
+    }
+    
+    // Test view button
+    document.getElementById('test-view').addEventListener('click', testView);
+    
+    // Drop view
+    document.getElementById('drop-view').addEventListener('click', async () => {
+      try {
+        log('Dropping database view...');
+        document.getElementById('view-loading').classList.remove('hidden');
+        
+        // SQL to drop the view
+        const sql = 'DROP VIEW IF EXISTS public.characters_expected;';
+        
+        const { data, error } = await supabase.rpc('exec_sql', { sql });
+        
+        document.getElementById('view-loading').classList.add('hidden');
+        
+        if (error) {
+          // Special handling for "function does not exist" error
+          if (error.message.includes('function exec_sql() does not exist')) {
+            log('The exec_sql function does not exist. This is expected if you haven\'t created the function.', 'warning');
+            showMessage('view-messages', 'The exec_sql function does not exist. Please run this SQL directly in the Supabase SQL editor.', 'warning');
+            
+            // Show SQL in results for easy copying
+            document.getElementById('results-output').textContent = sql;
+          } else {
+            log(`Error dropping view: ${error.message}`, 'error');
+            showMessage('view-messages', `Error dropping view: ${error.message}`, 'error');
+          }
+        } else {
+          log('View dropped successfully!', 'success');
+          showMessage('view-messages', 'View dropped successfully!', 'success');
+          document.getElementById('results-output').textContent = 'View has been dropped.';
+        }
+      } catch (err) {
+        document.getElementById('view-loading').classList.add('hidden');
+        log(`Unexpected error: ${err.message}`, 'error');
+        showMessage('view-messages', `Unexpected error: ${err.message}`, 'error');
+      }
+    });
+    
+    // Clear log
+    document.getElementById('clear-log').addEventListener('click', () => {
+      document.getElementById('debug-log').textContent = '';
+      log('Log cleared');
+    });
+    
+    // Fetch user profile from the database
+    async function fetchUserProfile() {
+      if (!currentUser) return;
+      
+      try {
+        log(`Fetching profile for user: ${currentUser.id}`);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+        
+        if (error) {
+          log(`Error fetching user profile: ${error.message}`, 'error');
+        } else if (data) {
+          userProfile = data;
+          log(`Successfully fetched user profile. Role: ${data.role || 'user'}`);
+          
+          // Check if user has admin rights
+          const isAdmin = data.role === 'admin' || data.role === 'pastor';
+          
+          if (!isAdmin) {
+            log('Warning: Current user does not have admin rights', 'warning');
+            showMessage('connection-messages', 'Warning: You don\'t have admin rights. Some operations may fail.', 'warning');
+          } else {
+            log('User has admin rights', 'success');
+          }
+        } else {
+          log('No profile found for user', 'warning');
+        }
+      } catch (err) {
+        log(`Unexpected error fetching profile: ${err.message}`, 'error');
+      }
+    }
+    
+    // Initial setup
+    (async function init() {
+      log('Initializing database view creator...', 'info');
+      
+      // Test connection
+      try {
+        const { data, error } = await supabase.from('characters').select('count').limit(1);
+        
+        if (error) {
+          log(`Initial connection error: ${error.message}`, 'error');
+          document.getElementById('connection-status').textContent = `Connection error: ${error.message}`;
+          document.getElementById('connection-status').className = 'message error';
+        } else {
+          log('Initial connection successful!', 'success');
+          document.getElementById('connection-status').textContent = 'Connection successful! Database is accessible.';
+          document.getElementById('connection-status').className = 'message success';
+        }
+      } catch (err) {
+        log(`Unexpected error during initialization: ${err.message}`, 'error');
+        document.getElementById('connection-status').textContent = `Unexpected error: ${err.message}`;
+        document.getElementById('connection-status').className = 'message error';
+      }
+      
+      // Check current session
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          log(`Session error: ${error.message}`, 'error');
+        } else if (data.session) {
+          currentUser = data.session.user;
+          log(`User is logged in: ${currentUser.email}`, 'info');
+          await fetchUserProfile();
+        } else {
+          log('No active session', 'info');
+          showMessage('connection-messages', 'You are not logged in. Some operations may require authentication.', 'info');
+        }
+      } catch (err) {
+        log(`Unexpected error checking session: ${err.message}`, 'error');
+      }
+      
+      log('Initialization complete', 'success');
+    })();
+  </script>
+</body>
+</html>

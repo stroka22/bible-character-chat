@@ -1,0 +1,134 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import React, { useMemo } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ChatProvider } from './contexts/ChatContext';
+import { ConversationProvider } from './contexts/ConversationContext';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import PricingPage from './pages/PricingPage';
+import AdminPage from './pages/AdminPage';
+import ConversationsPage from './pages/ConversationsPage';
+import ChatInterfaceWithConversations from './components/chat/ChatInterfaceWithConversations';
+import DebugPanel from './components/DebugPanel';
+import Header from './components/layout/Header';
+
+class ErrorBoundary extends React.Component {
+    constructor() {
+        super(...arguments);
+        this.state = { hasError: false };
+    }
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+    componentDidCatch(error) {
+        console.error('[ErrorBoundary] Rendering error:', error);
+    }
+    render() {
+        if (this.state.hasError) {
+            return (_jsx("div", { className: "flex items-center justify-center min-h-screen bg-blue-900 text-white", children: _jsxs("div", { className: "text-center space-y-4", children: [_jsx("h1", { className: "text-2xl font-bold", children: "Something went wrong." }), _jsx("p", { children: "Please refresh the page to try again." }), _jsx("button", { onClick: () => window.location.reload(), className: "bg-amber-400 text-blue-900 font-semibold px-4 py-2 rounded-lg", children: "Reload" })] }) }));
+        }
+        return this.props.children;
+    }
+}
+
+// Protected Route component that checks authentication
+const ProtectedRoute = ({ redirectPath = '/login' }) => {
+    const { user, loading } = useAuth();
+    const location = useLocation();
+    
+    // If still loading auth state, show a loading indicator
+    if (loading) {
+        return _jsx("div", { className: "flex items-center justify-center min-h-screen bg-blue-900 text-white", children: _jsxs("div", { className: "text-center", children: [_jsx("div", { className: "animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4" }), _jsx("p", { children: "Loading..." })] }) });
+    }
+    
+    // If not authenticated, redirect to login with return path
+    if (!user) {
+        return _jsx(Navigate, { to: redirectPath, state: { from: location }, replace: true });
+    }
+    
+    // If authenticated, render the child routes
+    return _jsx(Outlet, {});
+};
+
+// Shared conversation viewer - no authentication required
+const SharedConversationView = () => {
+    // This will be implemented to display a shared conversation using the share code
+    return _jsx(ChatInterfaceWithConversations, { isSharedView: true });
+};
+
+function AppWithConversations() {
+    const params = new URLSearchParams(window.location.search);
+    const DIRECT_RENDER = params.get('direct') === '1' ||
+        import.meta.env.VITE_DIRECT_RENDER === 'true';
+    const SKIP_AUTH = params.get('skipAuth') === '1' ||
+        import.meta.env.VITE_SKIP_AUTH === 'true';
+    console.log(`[App] init – DIRECT_RENDER=${DIRECT_RENDER} | SKIP_AUTH=${SKIP_AUTH}`);
+
+    /* ------------------------------------------------------------------
+     * Providers
+     * Wrap the application in all necessary providers:
+     * - AuthProvider for authentication
+     * - ConversationProvider for conversation persistence
+     * - ChatProvider for chat functionality
+     * ------------------------------------------------------------------ */
+    const Providers = ({ children }) => (
+        _jsx(AuthProvider, { 
+            children: _jsx(ConversationProvider, { 
+                children: _jsx(ChatProvider, { 
+                    children: children 
+                }) 
+            }) 
+        })
+    );
+
+    const DebugBanner = () => {
+        const loc = useLocation();
+        const { flags, label } = useMemo(() => {
+            const f = [];
+            if (DIRECT_RENDER)
+                f.push('DIRECT');
+            if (SKIP_AUTH)
+                f.push('SKIP_AUTH');
+            return { flags: f, label: f.join(' • ') };
+        }, [DIRECT_RENDER, SKIP_AUTH]);
+        if (flags.length === 0)
+            return null;
+        return (_jsxs("div", { className: "fixed top-4 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded-md shadow-lg text-xs", children: [label, " ", _jsx("br", {}), loc.pathname] }));
+    };
+
+    if (DIRECT_RENDER) {
+        return (_jsx(ErrorBoundary, { children: _jsx(Providers, { children: _jsxs(Router, { children: [_jsx("div", { className: "flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600", children: [_jsx(Header, {}), _jsx("main", { className: "flex-1", children: _jsx(HomePage, {}) })] }), _jsx(DebugBanner, {}), _jsx(DebugPanel, {})] }) }) }));
+    }
+
+    return (_jsx(ErrorBoundary, { children: _jsx(Providers, { children: _jsxs(Router, { children: [
+        _jsx("div", { className: "flex flex-col min-h-screen", children: [_jsx(Header, {}), _jsx("main", { className: "flex-1 px-4 md:px-6", children: _jsxs(Routes, { children: [
+        // Public routes
+        _jsx(Route, { path: "/", element: _jsx(HomePage, {}) }),
+        _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }),
+        _jsx(Route, { path: "/signup", element: _jsx(SignupPage, {}) }),
+        _jsx(Route, { path: "/pricing", element: _jsx(PricingPage, {}) }),
+        _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
+        
+        // Chat routes - can be accessed without authentication but some features will be limited
+        _jsx(Route, { path: "/chat", element: _jsx(ChatInterfaceWithConversations, {}) }),
+        
+        // Specific conversation route - requires authentication to load conversation
+        _jsx(Route, { path: "/chat/:conversationId", element: _jsx(ChatInterfaceWithConversations, {}) }),
+        
+        // Shared conversation route - public access with share code
+        _jsx(Route, { path: "/shared/:shareCode", element: _jsx(SharedConversationView, {}) }),
+        
+        // Protected routes
+        _jsx(Route, { element: _jsx(ProtectedRoute, { redirectPath: "/login" }), children: [
+            _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
+            _jsx(Route, { path: "/conversations", element: _jsx(ConversationsPage, {}) })
+        ]}),
+        
+        // Fallback route
+        _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })
+    ] }) })] }), _jsx(DebugBanner, {})] }) }) }));
+}
+
+export default AppWithConversations;

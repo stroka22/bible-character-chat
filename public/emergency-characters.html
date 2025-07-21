@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Bible Characters Display</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ---- Root Variables ---- */
+        :root {
+            --primary-bg: linear-gradient(to bottom, #0a0a2a, #1a1a4a, #2a2a6a);
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --gold: #facc15;
+            --gold-hover: #eab308;
+            --text-light: #e0e0e0;
+            --text-dim: #c0c0c0;
+            --text-dimmer: #a0a0a0;
+            --border-light: rgba(255, 255, 255, 0.15);
+            --border-medium: rgba(255, 255, 255, 0.25);
+            --shadow-standard: 0 8px 15px rgba(0, 0, 0, 0.2);
+            --shadow-hover: 0 12px 20px rgba(0, 0, 0, 0.3);
+            --radius-standard: 15px;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lora', serif;
+        }
+
+        /* ---- Global Styles ---- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--primary-bg);
+            min-height: 100vh;
+            color: var(--text-light);
+            margin: 0;
+            padding: 30px 20px;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-standard);
+            padding: 30px;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+
+        .status-message {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius-standard);
+            padding: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* ---- Character Grid ---- */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+
+        /* ---- Character Card ---- */
+        .character-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-standard);
+            padding: 25px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-standard);
+            border: 1px solid var(--border-light);
+            transition: all 0.25s ease-in-out;
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border-medium);
+        }
+
+        .character-card h3 {
+            font-size: 1.5rem;
+            margin: 15px 0 5px;
+        }
+
+        .character-card p {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .character-card .meta {
+            font-size: 0.8rem;
+            color: var(--text-dimmer);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* ---- Responsive Adjustments ---- */
+        @media (max-width: 768px) {
+            .character-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .character-grid {
+                grid-template-columns: 1fr;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bible Characters</h1>
+        
+        <div class="status-message">
+            <p><strong>Emergency Display Mode</strong></p>
+            <p>This is a simplified version that ensures all characters are displayed correctly.</p>
+            <p id="character-count">Loading characters...</p>
+        </div>
+        
+        <div id="character-grid" class="character-grid">
+            <!-- Characters will be added here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Bible Character Data
+        const characters = [
+            {
+                name: 'Jesus',
+                description: 'Central figure of Christianity who taught through parables and performed miracles.',
+                testament: 'new',
+                book: 'Matthew',
+                group: 'Messiah',
+                img: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Mary',
+                description: 'Mother of Jesus noted for her faith and obedience.',
+                testament: 'new',
+                book: 'Luke',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Peter',
+                description: 'Disciple of Jesus and leader in the early church.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles',
+                img: 'https://images.unsplash.com/photo-1508021397575-6e9ca999c0f3?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Paul',
+                description: 'Apostle to the Gentiles and prolific New-Testament author.',
+                testament: 'new',
+                book: 'Acts',
+                group: 'Apostles',
+                img: 'https://images.unsplash.com/photo-1504022462188-88f023db211c?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'John the Baptist',
+                description: 'Prophet who prepared the way for Jesus.',
+                testament: 'new',
+                book: 'John',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1541707423647-0742c9d3e3a0?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Moses',
+                description: 'Led the Israelites out of Egypt and received the Ten Commandments.',
+                testament: 'old',
+                book: 'Exodus',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1566211886021-ec1a73a3a5f9?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'David',
+                description: 'Shepherd, psalmist and second king of Israel who defeated Goliath.',
+                testament: 'old',
+                book: '1 Samuel',
+                group: 'Kings',
+                img: 'https://images.unsplash.com/photo-1542259009477-d625272157b7?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Abraham',
+                description: 'Patriarch chosen by God and father of many nations.',
+                testament: 'old',
+                book: 'Genesis',
+                group: 'Patriarchs',
+                img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Isaiah',
+                description: 'Major prophet who foretold the coming Messiah.',
+                testament: 'old',
+                book: 'Isaiah',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1504870712357-65ea720d6078?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Esther',
+                description: 'Jewish queen who bravely saved her people.',
+                testament: 'old',
+                book: 'Esther',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Ruth',
+                description: 'Moabite woman whose loyalty became exemplary.',
+                testament: 'old',
+                book: 'Ruth',
+                group: 'Women',
+                img: 'https://images.unsplash.com/photo-1516726817505-f5ed825624d8?auto=format&fit=crop&w=150&q=80'
+            },
+            {
+                name: 'Samuel',
+                description: 'Prophet who anointed the first kings of Israel.',
+                testament: 'old',
+                book: '1 Samuel',
+                group: 'Prophets',
+                img: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f8e1c1?auto=format&fit=crop&w=150&q=80'
+            }
+        ];
+
+        // Simple function to render all characters
+        function renderCharacters() {
+            const gridEl = document.getElementById('character-grid');
+            const countEl = document.getElementById('character-count');
+            
+            // Clear grid
+            gridEl.innerHTML = '';
+            
+            // Update count
+            countEl.textContent = `Displaying all ${characters.length} characters`;
+            
+            // Add each character to the grid
+            characters.forEach(character => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                
+                // Table-based circular image
+                card.innerHTML = `
+                    <table style="border-collapse: collapse; margin: 0 auto;">
+                        <tr>
+                            <td style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #facc15; padding: 0;">
+                                <img src="${character.img}" alt="${character.name}" style="width: 150px; height: 150px; display: block; object-fit: cover;">
+                            </td>
+                        </tr>
+                    </table>
+                    <h3>${character.name}</h3>
+                    <p>${character.description}</p>
+                    <div class="meta">${character.testament === 'old' ? 'Old Testament' : 'New Testament'} · ${character.book}</div>
+                `;
+                
+                gridEl.appendChild(card);
+            });
+            
+            console.log('Characters rendered successfully:', characters.length);
+        }
+
+        // Render characters when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, rendering characters...');
+            renderCharacters();
+        });
+    </script>
+</body>
+</html>

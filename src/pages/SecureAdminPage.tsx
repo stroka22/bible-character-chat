@@ -688,7 +688,12 @@ const SecureAdminPage: React.FC = () => {
                 ></textarea>
               </div>
               <div>
-                <label htmlFor="relationships" className="block text-sm font-medium text-gray-700">Relationships (JSON string, e.g., {"parents":["Jacob","Rachel"]})</label>
+                <label
+                  htmlFor="relationships"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Relationships (JSON string, e.g., {'{\"parents\":[\"Jacob\",\"Rachel\"]}'})
+                </label>
                 <textarea
                   id="relationships"
                   rows={5}
