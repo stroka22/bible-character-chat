@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
-import { useConversation } from './ConversationContext.jsx';
-import { useParams } from 'react-router-dom';
 
 // Create the chat context
 const ChatContext = createContext();
@@ -53,14 +51,6 @@ const getRandomResponse = (character) => {
 
 // Provider component
 export const ChatProvider = ({ children }) => {
-  const { conversationId, shareCode } = useParams();
-  const { 
-    createConversation, 
-    fetchConversationWithMessages, 
-    addMessage,
-    getSharedConversation
-  } = useConversation();
-  
   // Chat state
   const [messages, setMessages] = useState([]);
   const [character, setCharacter] = useState(null);
@@ -82,15 +72,6 @@ export const ChatProvider = ({ children }) => {
     }
   }, [error]);
 
-  // Load conversation if ID is provided
-  useEffect(() => {
-    if (conversationId) {
-      loadConversation(conversationId);
-    } else if (shareCode) {
-      loadSharedConversation(shareCode);
-    }
-  }, [conversationId, shareCode]);
-
   /**
    * Generate a unique message ID
    */
@@ -104,77 +85,19 @@ export const ChatProvider = ({ children }) => {
    * Load a conversation by ID
    */
   const loadConversation = useCallback(async (id) => {
-    if (!id) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const conversation = await fetchConversationWithMessages(id);
-      
-      if (conversation) {
-        // Set character
-        setCharacter(conversation.characters);
-        
-        // Set messages
-        if (conversation.messages && conversation.messages.length > 0) {
-          setMessages(conversation.messages.map(msg => ({
-            id: msg.id || generateMessageId(),
-            role: msg.role,
-            content: msg.content,
-            timestamp: new Date(msg.created_at || Date.now()).toISOString()
-          })));
-        }
-        
-        // Set chat ID and saved status
-        setChatId(id);
-        setIsChatSaved(true);
-      }
-    } catch (err) {
-      console.error('Error loading conversation:', err);
-      setError('Failed to load conversation. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchConversationWithMessages, generateMessageId]);
+    console.log('[MockChatContext] Would load conversation:', id);
+    // In mock implementation, we don't actually load anything
+    return null;
+  }, []);
 
   /**
    * Load a shared conversation by share code
    */
   const loadSharedConversation = useCallback(async (code) => {
-    if (!code) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const conversation = await getSharedConversation(code);
-      
-      if (conversation) {
-        // Set character
-        setCharacter(conversation.characters);
-        
-        // Set messages
-        if (conversation.messages && conversation.messages.length > 0) {
-          setMessages(conversation.messages.map(msg => ({
-            id: msg.id || generateMessageId(),
-            role: msg.role,
-            content: msg.content,
-            timestamp: new Date(msg.created_at || Date.now()).toISOString()
-          })));
-        }
-        
-        // Mark as shared view (read-only)
-        setChatId(conversation.id);
-        setIsChatSaved(true);
-      }
-    } catch (err) {
-      console.error('Error loading shared conversation:', err);
-      setError('Failed to load shared conversation. It may have been deleted or made private.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getSharedConversation, generateMessageId]);
+    console.log('[MockChatContext] Would load shared conversation:', code);
+    // In mock implementation, we don't actually load anything
+    return null;
+  }, []);
 
   /**
    * Select a character to chat with
@@ -302,20 +225,14 @@ export const ChatProvider = ({ children }) => {
     setIsLoading(true);
     
     try {
-      // Create a new conversation
-      const newConversation = await createConversation(character.id, title);
+      // In mock implementation, we just log the action
+      console.log('[MockChatContext] Would save chat with title:', title);
       
-      if (!newConversation) {
-        throw new Error('Failed to create conversation');
-      }
+      // Simulate a delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Add all messages to the conversation
-      for (const msg of messages) {
-        await addMessage(msg.content, msg.role);
-      }
-      
-      // Update local state
-      setChatId(newConversation.id);
+      // Update local state as if save was successful
+      setChatId('mock-chat-id-' + Date.now());
       setIsChatSaved(true);
       
       return true;
@@ -326,7 +243,7 @@ export const ChatProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [character, messages, createConversation, addMessage]);
+  }, [character, messages]);
 
   // Create the context value
   const contextValue = {
