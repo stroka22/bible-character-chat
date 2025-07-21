@@ -10,6 +10,15 @@ export const ConversationProvider = ({ children }) => {
   // Debug: track provider initialization
   console.log('[ConversationContext] Initializing provider');
 
+  /* ------------------------------------------------------------------
+   * Detect SKIP_AUTH flag
+   * Allows bypassing Supabase auth in development/demo mode.
+   * ------------------------------------------------------------------ */
+  const params = new URLSearchParams(window.location.search);
+  const SKIP_AUTH =
+    params.get('skipAuth') === '1' ||
+    import.meta.env.VITE_SKIP_AUTH === 'true';
+
   const { user, isAuthenticated } = useAuth();
   
   // State for conversations list
@@ -43,7 +52,7 @@ export const ConversationProvider = ({ children }) => {
    * @param {Object} options - Query options
    */
   const fetchConversations = useCallback(async (options = {}) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !SKIP_AUTH) {
       console.warn('Cannot fetch conversations: User is not authenticated');
       return [];
     }
@@ -62,7 +71,7 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, SKIP_AUTH]);
 
   /**
    * Fetch a single conversation with its messages
@@ -96,7 +105,7 @@ export const ConversationProvider = ({ children }) => {
    * @param {string} title - Optional title for the conversation
    */
   const createConversation = useCallback(async (characterId, title) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !SKIP_AUTH) {
       console.warn('Cannot create conversation: User is not authenticated');
       return null;
     }
@@ -129,7 +138,7 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, conversations]);
+  }, [isAuthenticated, conversations, SKIP_AUTH]);
 
   /**
    * Add a message to the active conversation
@@ -184,7 +193,7 @@ export const ConversationProvider = ({ children }) => {
    * @param {Object} updates - Properties to update
    */
   const updateConversation = useCallback(async (conversationId, updates) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !SKIP_AUTH) {
       console.warn('Cannot update conversation: User is not authenticated');
       return null;
     }
@@ -224,14 +233,14 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, conversations, activeConversation]);
+  }, [isAuthenticated, conversations, activeConversation, SKIP_AUTH]);
 
   /**
    * Delete a conversation
    * @param {string} conversationId - ID of the conversation to delete
    */
   const deleteConversation = useCallback(async (conversationId) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !SKIP_AUTH) {
       console.warn('Cannot delete conversation: User is not authenticated');
       return false;
     }
@@ -266,14 +275,14 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, activeConversation]);
+  }, [isAuthenticated, activeConversation, SKIP_AUTH]);
 
   /**
    * Share a conversation by generating a share code
    * @param {string} conversationId - ID of the conversation to share
    */
   const shareConversation = useCallback(async (conversationId) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !SKIP_AUTH) {
       console.warn('Cannot share conversation: User is not authenticated');
       return null;
     }
@@ -316,14 +325,14 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, conversations, activeConversation]);
+  }, [isAuthenticated, conversations, activeConversation, SKIP_AUTH]);
 
   /**
    * Stop sharing a conversation
    * @param {string} conversationId - ID of the conversation
    */
   const stopSharing = useCallback(async (conversationId) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !SKIP_AUTH) {
       console.warn('Cannot stop sharing conversation: User is not authenticated');
       return false;
     }
@@ -366,7 +375,7 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, conversations, activeConversation]);
+  }, [isAuthenticated, conversations, activeConversation, SKIP_AUTH]);
 
   /**
    * Get a shared conversation by share code
