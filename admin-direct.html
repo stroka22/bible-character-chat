@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Admin - Character Import</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            color: #007bff;
+        }
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Direct Admin - Character Import</h1>
+        <p>This page allows you to directly import character data via CSV, bypassing the main application's authentication. Use with caution.</p>
+
+        <div class="form-group">
+            <label for="csvFile">Upload CSV File:</label>
+            <input type="file" id="csvFile" accept=".csv">
+        </div>
+        <!-- Optional paste-in area for quick tests -->
+        <div class="form-group">
+            <label for="csvText">Or paste CSV text here:</label>
+            <textarea id="csvText" rows="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;"></textarea>
+        </div>
+        <button id="uploadButton">Upload Characters</button>
+
+        <div id="messageContainer" class="message"></div>
+        <div id="logContainer" class="message">
+            <h3>Logs:</h3>
+            <pre id="logs"></pre>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace with your actual Supabase URL and Anon Key
+        // These values are typically found in your .env file or Supabase project settings
+        const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+
+        // Initialize Supabase client using the global 'supabase' object exposed by the UMD build
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const uploadButton = document.getElementById('uploadButton');
+        const csvFile = document.getElementById('csvFile');
+        const messageContainer = document.getElementById('messageContainer');
+        const logsElement = document.getElementById('logs');
+        const csvTextArea = document.getElementById('csvText');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logsElement.textContent += `[${timestamp}] ${message}\n`;
+            logsElement.scrollTop = logsElement.scrollHeight; // Auto-scroll to bottom
+
+            messageContainer.className = `message ${type}`;
+            messageContainer.textContent = message;
+            console.log(`[${timestamp}] ${message}`); // Also log to console
+        }
+
+        function tryParseJson(str) {
+            try {
+                const parsed = JSON.parse(str);
+                log(`Successfully parsed JSON: ${JSON.stringify(parsed)}`, 'info');
+                return parsed;
+            } catch (e) {
+                log(`Failed to parse JSON: ${str}. Error: ${e.message}`, 'error');
+                return null;
+            }
+        }
+
+        // Helper function to clean objects by removing null/undefined/empty string values
+        function cleanObject(obj) {
+            const result = {};
+            for (const key in obj) {
+                // Skip null, undefined, or empty string values
+                if (obj[key] === null || obj[key] === undefined || obj[key] === '') {
+                    continue;
+                }
+                result[key] = obj[key];
+            }
+            return result;
+        }
+
+        uploadButton.addEventListener('click', () => {
+            const file = csvFile.files[0];
+            const pastedText = csvTextArea.value.trim();
+
+            if (!file && !pastedText) {
+                log('Please select a CSV file OR paste CSV text.', 'error');
+                return;
+            }
+
+            log('Reading CSV data…', 'loading');
+            if (pastedText) {
+                log(`Parsing pasted text: ${pastedText.substring(0, 100)}...`, 'info');
+            } else if (file) {
+                log(`Parsing file: ${file.name}`, 'info');
+            }
+
+            const parseConfig = {
+                header: true,
+                skipEmptyLines: 'greedy',
+                dynamicTyping: false,
+                quoteChar: '"',
+                escapeChar: '"',
+                complete: async (results) => {
+                    log(`PapaParse results: ${JSON.stringify(results.meta)}`, 'info');
+                    if (results.errors.length) {
+                        // Log each error line separately for clarity
+                        results.errors.forEach(err =>
+                            log(`CSV error row ${err.row}: ${err.message}`, 'error')
+                        );
+                        return;
+                    }
+
+                    log(`Raw parsed data rows: ${results.data.length}`, 'info');
+                    console.log('Raw parsed data:', results.data);
+
+                    const charactersToCreate = results.data.map(row => {
+                        // Create the character object with all possible fields
+                        const characterData = {
+                            // Core fields
+                            name: row.character_name || '', // Map character_name from CSV to name in DB
+                            avatar_url: row.avatar_url || '',
+                            feature_image_url: row.feature_image_url || '',
+                            short_biography: row.short_biography || '',
+                            // Removed bible_book field as it doesn't exist in the database
+                            opening_line: row.opening_sentence || '', // Map opening_sentence to opening_line in DB
+                            persona_prompt: row.persona_prompt || '',
+                            scriptural_context: row.scriptural_context || '',
+                            description: row.description || '',
+                            is_visible: row.is_visible ? row.is_visible.toLowerCase() === 'true' : true,
+                            
+                            // Character Insights fields
+                            timeline_period: row.timeline_period || '',
+                            historical_context: row.historical_context || '',
+                            geographic_location: row.geographic_location || '',
+                            key_scripture_references: row.key_scripture_references || '',
+                            theological_significance: row.theological_significance || '',
+                            relationships: tryParseJson(row.relationships) || {},
+                            study_questions: row.study_questions || '',
+                        };
+                        
+                        // Clean the object to remove any null/undefined/empty values
+                        return cleanObject(characterData);
+                    }).filter(char => char.name && char.persona_prompt); // Basic validation
+
+                    if (charactersToCreate.length === 0) {
+                        log('No valid characters found in CSV. Ensure headers and data are correct.', 'error');
+                        return;
+                    }
+
+                    log(`Attempting to upload ${charactersToCreate.length} characters to Supabase...`, 'loading');
+                    console.log('Characters to create:', charactersToCreate);
+
+                    try {
+                        const { data, error } = await supabaseClient
+                            .from('characters')
+                            .insert(charactersToCreate)
+                            .select('*');
+
+                        if (error) {
+                            throw error;
+                        }
+
+                        log(`Successfully uploaded ${data.length} characters.`, 'success');
+                        log(JSON.stringify(data, null, 2));
+                    } catch (err) {
+                        log(`Failed to upload characters: ${err.message || JSON.stringify(err)}`, 'error');
+                        console.error('Supabase upload error:', err);
+                    }
+                },
+                error: (err) => {
+                    log(`PapaParse fatal error: ${err}`, 'error');
+                    console.error('PapaParse fatal error object:', err);
+                }
+            };
+
+            if (file) {
+                Papa.parse(file, parseConfig);
+            } else {
+                Papa.parse(pastedText, parseConfig);
+            }
+        });
+    </script>
+</body>
+</html>

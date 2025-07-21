@@ -5,6 +5,43 @@ import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
 import CharacterInsightsPanel from './CharacterInsightsPanel'; // Import the CharacterInsightsPanel component
 
+/**
+ * --------------------------------------------------------------------------
+ * Utilities
+ * --------------------------------------------------------------------------
+ */
+
+// Fallback avatar generator (ui-avatars with random background)
+const generateFallbackAvatar = (name: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name,
+  )}&background=random`;
+
+/**
+ * Returns a “safe” avatar URL.
+ * – Rejects obvious placeholders like `example.com/*`
+ * – Falls back to the ui-avatar generator when URL is missing/invalid
+ */
+const getSafeAvatarUrl = (name: string, url?: string | null) => {
+  if (!url) return generateFallbackAvatar(name);
+
+  try {
+    const { hostname } = new URL(url);
+    // Treat `example.com` (and localhost placeholders) as invalid
+    if (
+      hostname === 'example.com' ||
+      hostname.endsWith('.example.com') ||
+      hostname === 'localhost'
+    ) {
+      return generateFallbackAvatar(name);
+    }
+    return url;
+  } catch {
+    // Malformed URL → fallback
+    return generateFallbackAvatar(name);
+  }
+};
+
 const ChatInterface: React.FC = () => {
   const { 
     character, 
@@ -93,13 +130,19 @@ const ChatInterface: React.FC = () => {
         </button>
         
         <div className="flex items-center">
+          {/*
+            ----------------------------------------------------------------
+            Unified avatar handling with robust fallback
+            ----------------------------------------------------------------
+          */}
           <img
-            src={character.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`}
+            src={getSafeAvatarUrl(character.name, character.avatar_url)}
             alt={character.name}
             className="h-10 w-10 rounded-full object-cover border border-gray-200 mr-3"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
+              (e.target as HTMLImageElement).src = generateFallbackAvatar(
+                character.name,
+              );
             }}
           />
           <div>
@@ -173,7 +216,7 @@ const ChatInterface: React.FC = () => {
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0 mr-2">
                   <img
-                    src={character.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`}
+                    src={getSafeAvatarUrl(character.name, character.avatar_url)}
                     alt={character.name}
                     className="h-10 w-10 rounded-full object-cover border border-gray-200"
                   />

@@ -16,9 +16,40 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
 }) => {
   const isUser = message.role === 'user';
   
-  // Default avatar if none provided
-  const avatarUrl = characterAvatar || 
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(characterName)}&background=random`;
+  /* ------------------------------------------------------------------
+   * Avatar helpers (duplicated logic for consistency)
+   * ---------------------------------------------------------------- */
+
+  // Generates a ui-avatars fallback (random background colour)
+  const generateFallbackAvatar = (name: string) =>
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+      name,
+    )}&background=random`;
+
+  /**
+   * Returns a “safe” avatar URL.
+   *  – Rejects obvious placeholders like example.com / localhost
+   *  – Falls back to ui-avatars when url is missing or invalid
+   */
+  const getSafeAvatarUrl = (name: string, url?: string | null) => {
+    if (!url) return generateFallbackAvatar(name);
+    try {
+      const { hostname } = new URL(url);
+      if (
+        hostname === 'example.com' ||
+        hostname.endsWith('.example.com') ||
+        hostname === 'localhost'
+      ) {
+        return generateFallbackAvatar(name);
+      }
+      return url;
+    } catch {
+      return generateFallbackAvatar(name);
+    }
+  };
+
+  // Final avatar URL (safe & validated)
+  const avatarUrl = getSafeAvatarUrl(characterName, characterAvatar);
   
   // Format timestamp
   const timestamp = new Date(message.created_at).toLocaleTimeString([], { 
@@ -38,8 +69,9 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
               className="h-10 w-10 rounded-full object-cover border border-gray-200"
               onError={(e) => {
                 // Fallback if image fails to load
-                (e.target as HTMLImageElement).src = 
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(characterName)}&background=random`;
+                (e.target as HTMLImageElement).src = generateFallbackAvatar(
+                  characterName,
+                );
               }}
             />
           </div>
