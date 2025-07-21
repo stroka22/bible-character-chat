@@ -40,12 +40,71 @@ const CHARACTER_RESPONSES = {
     "My soul magnifies the Lord, for He has done great things for me and for all who fear Him.",
     "Being chosen by God doesn't mean an easy path, but it does mean a meaningful one."
   ]
+  // --- Added characters for richer demo responses ------------------------
+  abraham: [
+    "As the father of many nations, I had to learn to walk by faith, not by sight.",
+    "When God called me to leave my homeland, I stepped out in faith without knowing the destination.",
+    "Offering my son Isaac was the greatest test of my faith, showing that God provides.",
+    "My journey with God taught me that His promises may take time, but they never fail.",
+    "The covenant God made with me was about blessing all nations, not just land."
+  ],
+  peter: [
+    "I was impulsive, often speaking before thinking, but Jesus saw potential in me.",
+    "Walking on water taught me that faith conquers fear, but doubt makes us sink.",
+    "After denying Jesus three times, I learned the bitter lesson of my own weakness.",
+    "Pentecost transformed me from a fearful fisherman to a bold apostle.",
+    "Jesus called me the rock upon which He would build His church, despite my failures."
+  ],
+  esther: [
+    "Perhaps I was made queen for such a time as this, to save my people.",
+    "Courage isn't the absence of fear, but acting despite it when God calls you.",
+    "Though God's name isn't mentioned in my story, His providence is evident throughout.",
+    "Sometimes silence is deadly. When injustice threatens, we must speak up.",
+    "Royal position means nothing if not used to serve God's purposes."
+  ],
+  john: [
+    "As the disciple whom Jesus loved, I learned that love is at the heart of God's character.",
+    "From the foot of the cross to the empty tomb, I witnessed God's love conquering death.",
+    "In my gospel I stressed that God so loved the world that He gave His only Son.",
+    "My exile on Patmos revealed the ultimate victory of Christ over all evil.",
+    "Love one another—this command summarizes all that Jesus taught us."
+  ]
 };
 
 // Helper function to get a random response
-const getRandomResponse = (character) => {
-  const characterKey = character?.id?.toLowerCase() || 'default';
-  const responses = CHARACTER_RESPONSES[characterKey] || CHARACTER_RESPONSES.default;
+const getRandomResponse = (character, userMessage = '') => {
+  // Figure out which key to use
+  let key = 'default';
+  if (character) {
+    // normalised name (strip spaces & lowercase)
+    const normName = (character.name || '').toLowerCase().replace(/\s+/g, '');
+    if (CHARACTER_RESPONSES[normName]) {
+      key = normName;
+    } else {
+      // partial match
+      const possible = Object.keys(CHARACTER_RESPONSES).filter(k => k !== 'default');
+      const found = possible.find(k => normName.includes(k));
+      if (found) key = found;
+    }
+  }
+
+  const responses = CHARACTER_RESPONSES[key] || CHARACTER_RESPONSES.default;
+
+  // Track used responses on character instance to minimise repetition
+  if (character) {
+    if (!character._usedResponses) {
+      character._usedResponses = new Set();
+    }
+    if (character._usedResponses.size >= responses.length - 1) {
+      character._usedResponses.clear();
+    }
+    const available = responses.filter(r => !character._usedResponses.has(r));
+    const chosen = available[Math.floor(Math.random() * available.length)];
+    character._usedResponses.add(chosen);
+    return chosen;
+  }
+
+  // fallback when character not supplied
   return responses[Math.floor(Math.random() * responses.length)];
 };
 
@@ -162,7 +221,7 @@ export const ChatProvider = ({ children }) => {
     
     // Generate mock response with delay
     const typingDelay = 1000 + Math.random() * 2000; // 1-3 seconds
-    const response = getRandomResponse(character);
+    const response = getRandomResponse(character, content);
     
     typingTimeoutRef.current = setTimeout(() => {
       // Update assistant message with response
