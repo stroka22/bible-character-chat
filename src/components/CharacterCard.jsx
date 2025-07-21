@@ -1,96 +1,158 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useChat } from '../contexts/MockChatContext.jsx';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 
-const CharacterCard = ({ character }) => {
-  const navigate = useNavigate();
-  const { selectCharacter } = useChat();
-
-  const handleSelectCharacter = () => {
-    try {
-      // Select the character using our mock context
-      selectCharacter(character);
-      
-      // Navigate to the chat route
-      navigate('/chat');
-    } catch (error) {
-      console.error('Error selecting character:', error);
-      alert('Failed to start chat. Please try again.');
-    }
-  };
-
-  // Generate a fallback avatar if the character doesn't have one
-  const getAvatarUrl = () => {
-    if (!character.avatar_url) {
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
-    }
+const CharacterCard = ({ character, onSelect, isSelected = false }) => {
+    const [isFav, setIsFav] = useState(false);
     
-    // Check if the URL is valid
-    try {
-      const { hostname } = new URL(character.avatar_url);
-      if (hostname === 'example.com' || hostname.endsWith('.example.com') || hostname === 'localhost') {
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
-      }
-      return character.avatar_url;
-    } catch {
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
-    }
-  };
-
-  // Get the testament badge color
-  const getTestamentBadgeColor = () => {
-    return character.testament === 'old' 
-      ? 'bg-amber-700/60 text-amber-100' 
-      : 'bg-blue-700/60 text-blue-100';
-  };
-
-  return (
-    <div 
-      className="character-card bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-lg overflow-hidden hover:border-yellow-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-yellow-400/10 cursor-pointer"
-      onClick={handleSelectCharacter}
-    >
-      {/* Character Image */}
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={getAvatarUrl()} 
-          alt={character.name} 
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
-          }}
-        />
-        {/* Testament Badge */}
-        {character.testament && (
-          <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold ${getTestamentBadgeColor()}`}>
-            {character.testament === 'old' ? 'Old Testament' : 'New Testament'}
-          </div>
-        )}
-      </div>
-      
-      {/* Character Info */}
-      <div className="p-4">
-        <h3 className="text-xl font-bold text-yellow-400 mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
-          {character.name}
-        </h3>
-        
-        {character.bible_book && (
-          <p className="text-sm text-blue-200 mb-2">
-            {character.bible_book}
-          </p>
-        )}
-        
-        <p className="text-sm text-gray-300 line-clamp-3 mb-4">
-          {character.description || "A biblical figure with a unique perspective and story to share."}
-        </p>
-        
-        <button 
-          className="w-full bg-[rgba(250,204,21,0.2)] hover:bg-yellow-400 text-yellow-400 hover:text-blue-900 font-semibold py-2 px-4 rounded-md transition-colors duration-300"
+    const avatarUrl = character.avatar_url ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
+    
+    const bibleBook = character.bible_book || '';
+    
+    return (
+        <motion.div
+            className={`
+                group relative flex flex-col sm:flex-row items-center gap-4 overflow-hidden rounded-xl border-2 
+                bg-white/90 backdrop-blur-sm shadow-lg
+                transition-all duration-300 ease-in-out cursor-pointer
+                ${isSelected
+                    ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
+                    : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
+            `}
+            whileHover={{
+                scale: 1.02,
+                transition: { duration: 0.2 }
+            }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onSelect(character)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect(character);
+                }
+            }}
+            aria-label={`Chat with ${character.name}${bibleBook ? ` from ${bibleBook}` : ''}`}
         >
-          Chat with {character.name}
-        </button>
-      </div>
-    </div>
-  );
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30 mix-blend-overlay pointer-events-none" />
+            
+            {isSelected && (
+                <div className="absolute -inset-0.5 bg-yellow-300 opacity-20 blur-md rounded-xl animate-pulse" />
+            )}
+            
+            <button
+                aria-label={isFav ? 'Remove from favourites' : 'Add to favourites'}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsFav(!isFav);
+                }}
+                className={`
+                    absolute top-2 left-2 z-10 rounded-full p-1.5 
+                    transition-all duration-300
+                    ${isFav
+                        ? 'bg-red-100 text-red-600 shadow-md'
+                        : 'bg-white/80 text-gray-400 hover:text-gray-600 hover:bg-white/90 backdrop-blur-sm'}
+                    focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2
+                `}
+            >
+                {isFav ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="h-5 w-5">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09A6.003 6.003 0 0119 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-5 w-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364 4.318 12.682a4.5 4.5 0 010-6.364z" />
+                    </svg>
+                )}
+            </button>
+            
+            <div className="relative w-[150px] h-[150px] flex-shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent pointer-events-none z-10 rounded-full" />
+                
+                <table className="border-collapse m-0 p-0 w-[150px] h-[150px] relative z-0">
+                    <tbody>
+                        <tr>
+                            <td
+                                className={`
+                                    w-[150px] h-[150px] rounded-full overflow-hidden p-0
+                                    ${isSelected ? 'border-4 border-yellow-400' : 'border-2 border-white/40'}
+                                    shadow-md bg-blue-50
+                                `}
+                            >
+                                <img
+                                    src={avatarUrl}
+                                    alt={character.name}
+                                    className="w-[150px] h-[150px] object-cover block"
+                                    onError={(e) => {
+                                        e.target.src =
+                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
+                                    }}
+                                />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div className="absolute top-0 right-0 w-8 h-8 opacity-70 z-10 pointer-events-none">
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                        <path d="M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z" fill="#FFD700" />
+                    </svg>
+                </div>
+                
+                {bibleBook && (
+                    <div className="absolute bottom-1 left-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded z-10 backdrop-blur-sm">
+                        {bibleBook}
+                    </div>
+                )}
+            </div>
+            
+            <div className="flex flex-1 flex-col p-4 sm:pr-4 sm:pl-0">
+                <h3 className="mb-1 text-xl font-extrabold text-blue-900 tracking-tight">
+                    {character.name}
+                </h3>
+                
+                <div className="h-0.5 w-12 bg-yellow-400 rounded-full mb-2 opacity-80" />
+                
+                <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-blue-50/30 rounded pointer-events-none" /> {" "}
+                    <p className="relative text-sm text-gray-700 line-clamp-2 group-hover:line-clamp-none transition-all duration-300 z-10">
+                        {character.description}
+                    </p>
+                </div>
+                
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onSelect(character);
+                    }}
+                    className={`
+                        mt-auto rounded-lg px-4 py-2 text-sm font-semibold shadow-md
+                        transition-all duration-300
+                        ${isSelected
+                            ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'}
+                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300
+                    `}
+                    aria-label={`Start chat with ${character.name}`}
+                >
+                    {isSelected ? 'Continue Chat' : 'Start Chat'}
+                </button>
+            </div>
+            
+            {isSelected && (
+                <div className="absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path
+                            fillRule="evenodd"
+                            d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                </div>
+            )}
+        </motion.div>
+    );
 };
 
 export default CharacterCard;
