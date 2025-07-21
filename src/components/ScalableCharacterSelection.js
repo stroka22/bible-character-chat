@@ -76,19 +76,34 @@ const ScalableCharacterSelection = () => {
             }
         })();
     }, []);
-    const handleSelectCharacter = useCallback(async (characterId) => {
-        try {
-            setIsSelecting(true);
-            await selectCharacter(characterId);
-        }
-        catch (err) {
-            console.error('Error selecting character:', err);
-            setError('Failed to select character. Please try again.');
-        }
-        finally {
-            setIsSelecting(false);
-        }
-    }, [selectCharacter]);
+    /**
+     * Handle when a user chooses a character card.
+     * We receive the `characterId`, locate the full character
+     * object from local state, and pass that object to
+     * `selectCharacter` so downstream consumers have the
+     * complete data they expect.
+     */
+    const handleSelectCharacter = useCallback(
+        async (characterId) => {
+            try {
+                setIsSelecting(true);
+
+                // Locate full character object.
+                const characterObj = characters.find((c) => c.id === characterId);
+                if (!characterObj) {
+                    throw new Error('Character not found');
+                }
+
+                await selectCharacter(characterObj);
+            } catch (err) {
+                console.error('Error selecting character:', err);
+                setError('Failed to select character. Please try again.');
+            } finally {
+                setIsSelecting(false);
+            }
+        },
+        [selectCharacter, characters]
+    );
     useEffect(() => {
         const newFilters = [];
         if (testament !== 'all') {
