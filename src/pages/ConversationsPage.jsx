@@ -30,12 +30,19 @@ const ConversationsPage = () => {
   const {
     conversations = [],
     fetchConversations,
+    updateConversation,
     isLoading,
     error,
   } = useConversation() || {};
 
   // State to track if we've tried loading
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+
+  // ------------------------------------------------------------------
+  // Local UI state for renaming a conversation
+  // ------------------------------------------------------------------
+  const [renamingConversationId, setRenamingConversationId] = useState(null);
+  const [newTitle, setNewTitle] = useState('');
 
   // Fetch conversations when authenticated
   useEffect(() => {
@@ -184,13 +191,73 @@ const ConversationsPage = () => {
                 key={conv.id}
                 className="bg-[rgba(255,255,255,0.05)] p-4 rounded-lg hover:bg-[rgba(255,255,255,0.1)] transition-colors"
               >
+                {/* Header with title + rename */}
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-xl font-semibold text-yellow-300">
-                    {conv.title || "Untitled Conversation"}
-                  </h3>
-                  <span className="text-blue-200 text-sm">
-                    {formatDate(conv.updated_at)}
-                  </span>
+                  {renamingConversationId === conv.id ? (
+                    /* Rename input */
+                    <div className="flex-1 flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder="Enter new title"
+                        className="flex-1 p-1 text-blue-900 rounded border border-blue-400 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        autoFocus
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!newTitle.trim()) return;
+                          try {
+                            await updateConversation(conv.id, { title: newTitle.trim() });
+                          } catch (err) {
+                            console.error('Error renaming conversation:', err);
+                          } finally {
+                            setRenamingConversationId(null);
+                            setNewTitle('');
+                          }
+                        }}
+                        className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => {
+                          setRenamingConversationId(null);
+                          setNewTitle('');
+                        }}
+                        className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    /* Normal title display */
+                    <>
+                      <h3 className="flex-1 text-xl font-semibold text-yellow-300 flex items-center">
+                        {conv.title || "Untitled Conversation"}
+                        <button
+                          onClick={() => {
+                            setRenamingConversationId(conv.id);
+                            setNewTitle(conv.title || '');
+                          }}
+                          className="ml-2 text-yellow-200 hover:text-white"
+                          title="Rename conversation"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                          </svg>
+                        </button>
+                      </h3>
+                      <span className="text-blue-200 text-sm flex-shrink-0">
+                        {formatDate(conv.updated_at)}
+                      </span>
+                    </>
+                  )}
                 </div>
                 <p className="text-white/70 mb-3 line-clamp-1">
                   {conv.last_message_preview || "No messages"}
