@@ -227,6 +227,14 @@ export const ChatProvider = ({ children }) => {
       console.log(
         `[ChatContext] Creating conversation with character ID: ${character.id}`,
       );
+      // Extra diagnostics to confirm character object and params
+      console.log('[ChatContext] Character details:', character);
+
+      console.log('[ChatContext] Calling createConversation with params:', {
+        character_id: character.id,
+        title: undefined, // force repository to auto-generate title
+        is_favorite: false,
+      });
 
       /* -----------------------------------------------------------
        * 1️⃣  Create conversation row.
@@ -235,8 +243,11 @@ export const ChatProvider = ({ children }) => {
        * --------------------------------------------------------- */
       const newConversation = await createConversation({
         character_id: character.id,
+        title: undefined,   // explicitly undefined to trigger default title
         is_favorite: false,
       });
+
+      console.log('[ChatContext] Conversation created:', newConversation);
 
       if (!newConversation?.id) {
         throw new Error('Failed to create conversation - no ID returned');
