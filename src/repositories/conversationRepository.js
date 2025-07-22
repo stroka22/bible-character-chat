@@ -141,7 +141,17 @@ export const conversationRepository = {
     try {
       // Ensure stale preset data is cleared once per session
       resetMockData();
-      console.log('[MOCK] Fetching user conversations');
+      // ------------------------------------------------------------------
+      // Detailed diagnostics to help trace why conversations might
+      // not appear in the UI.
+      // ------------------------------------------------------------------
+      console.log('[MOCK] Fetching user conversations with options:', {
+        includeDeleted,
+        favoritesOnly,
+        characterId
+      });
+      console.log('[MOCK] Current conversation storage:', mockStorage.conversations);
+      console.log('[MOCK] Current message storage:', mockStorage.messages);
       
       // Filter conversations based on options
       let filteredConversations = mockStorage.conversations.filter(conv => {
@@ -164,16 +174,30 @@ export const conversationRepository = {
       });
       
       // Add character information
-      const conversationsWithCharacters = filteredConversations.map(conv => ({
-        ...conv,
-        characters: MOCK_CHARACTERS[conv.character_id]
-      }));
+      const conversationsWithCharacters = filteredConversations.map(conv => {
+        const character = MOCK_CHARACTERS[conv.character_id];
+        console.log(`[MOCK] Adding character for conversation ${conv.id}:`, {
+          characterId: conv.character_id,
+          character
+        });
+        return {
+          ...conv,
+          characters: character
+        };
+      });
       
       // Sort by updated_at in descending order
       conversationsWithCharacters.sort((a, b) => 
         new Date(b.updated_at) - new Date(a.updated_at)
       );
-      
+
+      console.log('[MOCK] Final conversations list:', conversationsWithCharacters);
+
+      // Expose underlying storage for browser-side debugging
+      if (typeof window !== 'undefined') {
+        window.__mockStorage = mockStorage;
+      }
+
       return await simulateApiCall(conversationsWithCharacters);
     } catch (error) {
       console.error('Error fetching user conversations:', error);
