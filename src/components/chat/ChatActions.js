@@ -53,24 +53,23 @@ const ChatActions = ({ className = '', compact = false }) => {
         }
     };
     const handleSaveChat = async () => {
-        if (!character)
-            return;
+        if (!character) return;
+        
         try {
             setIsLoading(true);
             setError(null);
-            // Use the default title generated in ChatContext
+            
+            // Don't pass any title - let the repository generate the default
             const success = await saveChat();
-
+            
             if (success) {
                 setShowSaveSuccess(true);
                 setTimeout(() => setShowSaveSuccess(false), 3000);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Error saving chat:', error);
             setError('Failed to save chat. Please try again.');
-        }
-        finally {
+        } finally {
             setIsLoading(false);
         }
     };
@@ -92,26 +91,41 @@ const ChatActions = ({ className = '', compact = false }) => {
             setIsLoading(false);
         }
     };
+    /**
+     * Toggle favourite state with optimistic UI update.
+     * If the backend / repository call fails we roll back the change.
+     */
     const handleToggleFavorite = async () => {
+        const newFavoriteState = !localFavorite;
+
+        // Optimistic UI update
+        setLocalFavorite(newFavoriteState);
+
         try {
             setIsLoading(true);
             setError(null);
-            const newFavoriteState = !localFavorite;
-            setLocalFavorite(newFavoriteState);
+
+            // Handle non-saved chats (bypass mode)
             if (bypassMode && !chatId) {
                 const chatKey = `temp_favorite_${character.id}`;
                 localStorage.setItem(chatKey, newFavoriteState ? 'true' : 'false');
             }
+            // Saved chats – sync with repository
             else if (chatId) {
-                await toggleFavorite(newFavoriteState);
+                const success = await toggleFavorite(newFavoriteState);
+
+                // If repository indicates failure, revert optimistic change
+                if (!success) {
+                    setLocalFavorite(!newFavoriteState);
+                }
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Error toggling favorite status:', error);
             setError('Failed to update favorite status. Please try again.');
-            setLocalFavorite(!localFavorite);
-        }
-        finally {
+
+            // Revert optimistic UI update on error
+            setLocalFavorite(!newFavoriteState);
+        } finally {
             setIsLoading(false);
         }
     };
