@@ -232,7 +232,7 @@ export const ChatProvider = ({ children }) => {
 
       console.log('[ChatContext] Calling createConversation with params:', {
         character_id: character.id,
-        title: undefined, // force repository to auto-generate title
+        // NOTE: title intentionally omitted to trigger auto-generation
         is_favorite: false,
       });
 
@@ -243,7 +243,7 @@ export const ChatProvider = ({ children }) => {
        * --------------------------------------------------------- */
       const newConversation = await createConversation({
         character_id: character.id,
-        title: undefined,   // explicitly undefined to trigger default title
+        // deliberately omit `title`
         is_favorite: false,
       });
 

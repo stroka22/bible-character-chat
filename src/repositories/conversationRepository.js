@@ -108,39 +108,48 @@ export const conversationRepository = {
    * @param {boolean} conversation.is_favorite - Whether the conversation is favorited (optional)
    * @returns {Promise<Object>} - The created conversation
    */
-  async createConversation({ character_id, title = 'New Conversation', is_favorite = false }) {
+  async createConversation(conversation = {}) {
     try {
       // ------------------------------------------------------------------
-      // Verbose diagnostics so we can trace why auto–naming might fail
+      // Extract parameters with safe defaults
       // ------------------------------------------------------------------
-      console.log('[MOCK] Creating conversation for character:', character_id);
-      console.log('[MOCK] Title parameter received:', title);
-      console.log('[MOCK] Type of title param:', typeof title);
-      
-      // Get character info if available
-      const character = MOCK_CHARACTERS[character_id];
-      console.log('[MOCK] Character lookup result:', character);
-      
-      // ------------------------------------------------------------------
-      // Determine conversation title
-      //  1. If caller supplied a custom title (anything other than the
-      //     literal default `"New Conversation"`), honour it.
-      //  2. Otherwise generate a default:
-      //        "Conversation with <Character Name> - <MM/DD/YYYY>"
-      // ------------------------------------------------------------------
-      let conversationTitle = title;
-      console.log('[MOCK] Title generation pre-check:', {
-        titleEqualsDefault: title === 'New Conversation',
-        characterExists: !!character,
-        characterHasName: !!character?.name
+      const {
+        character_id,
+        title,
+        is_favorite = false,
+      } = conversation;
+
+      console.log('[MOCK] Creating conversation with params:', {
+        character_id,
+        title,
+        title_type: typeof title,
+        is_favorite,
       });
 
-      if (title === 'New Conversation' && character?.name) {
+      // Resolve character (may be undefined when called in bypass/dev modes)
+      const character = MOCK_CHARACTERS[character_id];
+      if (!character) {
+        console.warn(`[MOCK] Character not found for ID ${character_id}`);
+      }
+
+      // ------------------------------------------------------------------
+      // Title generation
+      //  1. Use non-empty custom title if supplied.
+      //  2. Else generate using character name + date if available.
+      //  3. Else fallback to generic date-based title.
+      // ------------------------------------------------------------------
+      let conversationTitle;
+
+      if (typeof title === 'string' && title.trim() !== '') {
+        conversationTitle = title.trim();
+        console.log(`[MOCK] Using explicit title: "${conversationTitle}"`);
+      } else if (character?.name) {
         const formattedDate = new Date().toLocaleDateString();
         conversationTitle = `Conversation with ${character.name} - ${formattedDate}`;
-        console.log(`[MOCK] Generated default title: "${conversationTitle}"`);
+        console.log(`[MOCK] Auto-generated title: "${conversationTitle}"`);
       } else {
-        console.log(`[MOCK] Using provided title: "${conversationTitle}"`);
+        conversationTitle = `New Conversation - ${new Date().toLocaleDateString()}`;
+        console.log(`[MOCK] Fallback title: "${conversationTitle}"`);
       }
 
       // Create new conversation object
