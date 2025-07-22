@@ -118,57 +118,67 @@ export const conversationRepository = {
    */
   async createConversation(conversation = {}) {
     try {
-      // ------------------------------------------------------------------
-      // Extract parameters with safe defaults
-      // ------------------------------------------------------------------
-      const {
-        character_id,
-        title,
-        is_favorite = false,
-      } = conversation;
+      /* --------------------------------------------------------------
+       * Extract params with safe defaults
+       * ------------------------------------------------------------*/
+      const { character_id, title, is_favorite = false } = conversation;
 
-      console.log('[MOCK] Creating conversation – raw params:', {
+      console.log('[MOCK] Creating conversation with params:', {
         character_id,
         title,
         title_type: typeof title,
         is_favorite,
       });
 
-      // ------------------------------------------------------------------
-      // Character lookup (add detailed logging to see why it may fail)
-      // ------------------------------------------------------------------
-      console.log('[MOCK] character_id type:', typeof character_id);
-      console.log('[MOCK] All mock character keys:', Object.keys(MOCK_CHARACTERS));
+      /* --------------------------------------------------------------
+       * Character name resolution
+       * ------------------------------------------------------------*/
+      let characterName = 'Unknown';
 
-      let character = MOCK_CHARACTERS[character_id];
+      // Normalise id to string & number forms
+      const idStr = String(character_id).trim();
+      const idNum = Number(idStr);
 
-      if (!character) {
-        console.warn(`[MOCK] Character not found for ID "${character_id}"`);
-        // Try numeric / string conversions to help debugging
-        const numericId = Number(character_id);
-        const stringId = String(character_id);
-        console.log('[MOCK] Trying numeric lookup:', numericId, MOCK_CHARACTERS[numericId]);
-        console.log('[MOCK] Trying string  lookup:', stringId, MOCK_CHARACTERS[stringId]);
+      // Primary lookup using numeric key (matches MOCK_CHARACTERS keys)
+      const characterByNum = MOCK_CHARACTERS[idNum];
+
+      if (characterByNum?.name) {
+        characterName = characterByNum.name;
+      } else {
+        // Hard-coded fallback map (ensures a name is always found)
+        switch (idStr) {
+          case '1':
+            characterName = 'Moses';
+            break;
+          case '2':
+            characterName = 'David';
+            break;
+          case '4':
+            characterName = 'Mary';
+            break;
+          case '5':
+            characterName = 'Paul';
+            break;
+          default:
+            console.warn(`[MOCK] No hard-coded name for ID "${idStr}"`);
+        }
       }
 
-      // ------------------------------------------------------------------
-      // Title generation
-      //  1. Use non-empty custom title if supplied.
-      //  2. Else generate using character name + date if available.
-      //  3. Else fallback to generic date-based title.
-      // ------------------------------------------------------------------
+      console.log(`[MOCK] Character name resolved as: "${characterName}"`);
+
+      /* --------------------------------------------------------------
+       * Title generation
+       * ------------------------------------------------------------*/
       let conversationTitle;
 
-      if (typeof title === 'string' && title.trim() !== '') {
+      if (typeof title === 'string' && title.trim()) {
+        // Respect explicit title
         conversationTitle = title.trim();
         console.log(`[MOCK] Using explicit title: "${conversationTitle}"`);
-      } else if (character?.name) {
-        const formattedDate = new Date().toLocaleDateString();
-        conversationTitle = `Conversation with ${character.name} - ${formattedDate}`;
-        console.log(`[MOCK] Auto-generated title: "${conversationTitle}"`);
       } else {
-        conversationTitle = `New Conversation - ${new Date().toLocaleDateString()}`;
-        console.log(`[MOCK] Fallback title: "${conversationTitle}"`);
+        const formattedDate = new Date().toLocaleDateString();
+        conversationTitle = `Conversation with ${characterName} - ${formattedDate}`;
+        console.log(`[MOCK] Generated title: "${conversationTitle}"`);
       }
 
       // Create new conversation object
