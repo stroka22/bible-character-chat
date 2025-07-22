@@ -110,11 +110,16 @@ export const conversationRepository = {
    */
   async createConversation({ character_id, title = 'New Conversation', is_favorite = false }) {
     try {
+      // ------------------------------------------------------------------
+      // Verbose diagnostics so we can trace why auto–naming might fail
+      // ------------------------------------------------------------------
       console.log('[MOCK] Creating conversation for character:', character_id);
-      console.log('[MOCK] Title provided:', title);
+      console.log('[MOCK] Title parameter received:', title);
+      console.log('[MOCK] Type of title param:', typeof title);
       
       // Get character info if available
       const character = MOCK_CHARACTERS[character_id];
+      console.log('[MOCK] Character lookup result:', character);
       
       // ------------------------------------------------------------------
       // Determine conversation title
@@ -124,10 +129,18 @@ export const conversationRepository = {
       //        "Conversation with <Character Name> - <MM/DD/YYYY>"
       // ------------------------------------------------------------------
       let conversationTitle = title;
+      console.log('[MOCK] Title generation pre-check:', {
+        titleEqualsDefault: title === 'New Conversation',
+        characterExists: !!character,
+        characterHasName: !!character?.name
+      });
+
       if (title === 'New Conversation' && character?.name) {
         const formattedDate = new Date().toLocaleDateString();
         conversationTitle = `Conversation with ${character.name} - ${formattedDate}`;
-        console.log(`[MOCK] Using generated title: ${conversationTitle}`);
+        console.log(`[MOCK] Generated default title: "${conversationTitle}"`);
+      } else {
+        console.log(`[MOCK] Using provided title: "${conversationTitle}"`);
       }
 
       // Create new conversation object
@@ -142,6 +155,7 @@ export const conversationRepository = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      console.log(`[MOCK] Final conversation title set on object: "${newConversation.title}"`);
       
       // Set as active conversation
       this.activeConversationId = newConversation.id;

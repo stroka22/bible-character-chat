@@ -44,6 +44,51 @@ else
     echo -e "${GREEN}No running servers found.${RESET}"
 fi
 
+# ------------------------------------------------------------------
+# Clear localStorage (mock data) before launching a fresh preview
+# ------------------------------------------------------------------
+echo -e "${BLUE}Clearing localStorage to reset mock data...${RESET}"
+
+# Generate a temporary HTML file that clears browser storage
+cat > clear-storage.html <<'EOF'
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Clearing Storage</title>
+    <script>
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+        document.write('localStorage & sessionStorage cleared!');
+      } catch (e) {
+        document.write('Unable to clear storage: ' + e.message);
+      }
+    </script>
+  </head>
+  <body></body>
+</html>
+EOF
+
+# Open the file with an available browser (headless if possible)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS – use the default browser
+    open clear-storage.html
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux – try xdg-open
+    xdg-open clear-storage.html 2>/dev/null || sensible-browser clear-storage.html 2>/dev/null
+elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+    # Windows (Git Bash)
+    start "" clear-storage.html 2>/dev/null
+fi
+
+# Give the browser a moment to execute the script
+sleep 1
+
+# Remove the temporary file
+rm -f clear-storage.html
+echo -e "${GREEN}Local storage cleared.${RESET}"
+
 # Step 3: Start the preview server
 echo -e "${BLUE}Starting server on port ${BOLD}${PORT}${RESET}..."
 # Start the server in the background
