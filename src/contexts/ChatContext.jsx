@@ -224,28 +224,37 @@ export const ChatProvider = ({ children }) => {
     setIsLoading(true);
 
     try {
-      console.log(
-        `[ChatContext] Creating conversation with character ID: ${character.id}`,
-      );
-      // Extra diagnostics to confirm character object and params
-      console.log('[ChatContext] Character details:', character);
+      /* -----------------------------------------------------------
+       * Extra-detailed diagnostics so we can trace why the repository
+       * sometimes fails to include the character name in the auto-
+       * generated title.  We ensure a numeric ID is passed because
+       * the MOCK_CHARACTERS keys are numbers (1, 2, 3…).
+       * --------------------------------------------------------- */
 
-      console.log('[ChatContext] Calling createConversation with params:', {
-        character_id: character.id,
-        // NOTE: title intentionally omitted to trigger auto-generation
-        is_favorite: false,
+      const characterId = Number(character.id);
+
+      console.log('[ChatContext] Creating conversation with character:', {
+        rawId: character.id,
+        coercedId: characterId,
+        idType: typeof character.id,
+        character,
       });
+
+      // Build params once so we can log and pass the same object
+      const createParams = {
+        character_id: characterId, // Pass numeric ID to match MOCK_CHARACTERS
+        // intentionally omit `title` so repository auto-generates
+        is_favorite: false,
+      };
+
+      console.log('[ChatContext] Calling createConversation with params:', createParams);
 
       /* -----------------------------------------------------------
        * 1️⃣  Create conversation row.
        *     We do NOT pass a title – repository will generate the
        *     default “Conversation with <Name> - <Date>” title.
        * --------------------------------------------------------- */
-      const newConversation = await createConversation({
-        character_id: character.id,
-        // deliberately omit `title`
-        is_favorite: false,
-      });
+      const newConversation = await createConversation(createParams);
 
       console.log('[ChatContext] Conversation created:', newConversation);
 
