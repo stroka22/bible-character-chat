@@ -78,6 +78,7 @@ export const ChatProvider = ({ children }) => {
    * Select a character to chat with
    */
   const selectCharacter = useCallback((characterData) => {
+    console.log(`[ChatContext] Selecting character: ${characterData?.name ?? 'unknown'}`);
     setCharacter(characterData);
     
     // Clear previous chat if character changes
@@ -217,20 +218,41 @@ export const ChatProvider = ({ children }) => {
     setIsLoading(true);
     
     try {
-      // 1. create conversation row
-      const newConversation = await createConversation(character.id, title);
+      console.log(`[ChatContext] Creating conversation with character ID: ${character.id}`);
+
+      /* -----------------------------------------------------------
+       * 1️⃣  Create conversation row using the repository’s object
+       *     signature instead of positional params.
+       * --------------------------------------------------------- */
+      const newConversation = await createConversation({
+        character_id: character.id,
+        title: title || `Chat with ${character.name}`,
+        is_favorite: false,
+      });
 
       if (!newConversation?.id) {
-        throw new Error('Failed to create conversation');
+        throw new Error('Failed to create conversation - no ID returned');
       }
 
+      // store id early so any subsequent UI actions have it
+      setChatId(newConversation.id);
+
       // 2. persist all existing messages
+      console.log(
+        `[ChatContext] Adding ${messages.length} messages to conversation ${newConversation.id}`,
+      );
+
       for (const msg of messages) {
-        await addMessage(msg.content, msg.role);
+        if (typeof addMessage === 'function') {
+          await addMessage({
+            conversation_id: newConversation.id,
+            role: msg.role,
+            content: msg.content,
+          });
+        }
       }
 
       // 3. update local state
-      setChatId(newConversation.id);
       setIsChatSaved(true);
       
       return true;

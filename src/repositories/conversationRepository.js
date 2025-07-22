@@ -73,6 +73,9 @@ const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.floor(Math.random
  * Repository for handling conversations and messages
  */
 export const conversationRepository = {
+  // Track the active conversation ID for legacy method calls
+  activeConversationId: null,
+
   /**
    * Create a new conversation
    * @param {Object} conversation - The conversation data
@@ -106,8 +109,13 @@ export const conversationRepository = {
         updated_at: new Date().toISOString()
       };
       
+      // Set as active conversation
+      this.activeConversationId = newConversation.id;
+      
       // Add to mock storage
       mockStorage.conversations.push(newConversation);
+      
+      console.log(`[MOCK] Created conversation with ID: ${newConversation.id}`);
       
       // Simulate API delay
       return await simulateApiCall(newConversation);
@@ -215,28 +223,52 @@ export const conversationRepository = {
 
   /**
    * Add a message to a conversation
-   * @param {Object} message - The message data
-   * @param {string} message.conversation_id - ID of the conversation
-   * @param {string} message.role - Role of the message sender ('user' or 'assistant')
-   * @param {string} message.content - Content of the message
-   * @param {Object} message.metadata - Additional metadata (optional)
+   * @param {Object|string} messageData - The message data or message content string
+   * @param {string} [role] - Role of the message if first param is string content
    * @returns {Promise<Object>} - The created message
    */
-  async addMessage({ conversation_id, role, content, metadata = {} }) {
+  async addMessage(messageData, role) {
     try {
-      console.log('[MOCK] Adding message to conversation:', conversation_id);
+      // Handle different parameter formats
+      let content, messageRole, conversationId, metadata = {};
+      
+      if (typeof messageData === 'string') {
+        // Legacy format: addMessage(content, role)
+        content = messageData;
+        messageRole = role;
+        
+        if (!this.activeConversationId) {
+          throw new Error('No active conversation ID when using legacy addMessage format');
+        }
+        
+        conversationId = this.activeConversationId;
+        console.log('[MOCK] Adding message (legacy format) to conversation:', conversationId);
+      } else if (typeof messageData === 'object') {
+        // New format: addMessage({conversation_id, role, content, metadata})
+        content = messageData.content;
+        messageRole = messageData.role;
+        conversationId = messageData.conversation_id;
+        metadata = messageData.metadata || {};
+        
+        console.log('[MOCK] Adding message (object format) to conversation:', conversationId);
+      } else {
+        throw new Error('Invalid parameters for addMessage');
+      }
       
       // Check if conversation exists
-      const conversation = mockStorage.conversations.find(c => c.id === conversation_id);
+      const conversation = mockStorage.conversations.find(c => c.id === conversationId);
       if (!conversation) {
+        console.error(`[MOCK] Conversation not found with ID: ${conversationId}`);
+        console.log('[MOCK] Available conversation IDs:', 
+          mockStorage.conversations.map(c => c.id).join(', '));
         throw new Error('Conversation not found');
       }
       
       // Create new message
       const newMessage = {
         id: generateId('msg'),
-        conversation_id,
-        role,
+        conversation_id: conversationId,
+        role: messageRole,
         content,
         metadata,
         is_deleted: false,
@@ -269,18 +301,24 @@ export const conversationRepository = {
     try {
       console.log('[MOCK] Updating conversation:', conversationId, updates);
       
-      // Find the conversation
-      const conversation = mockStorage.conversations.find(c => c.id === conversationId);
+      // Find the conversation with exact ID match
+      const conversationIndex = mockStorage.conversations.findIndex(c => c.id === conversationId);
       
-      if (!conversation) {
+      if (conversationIndex === -1) {
+        console.error(`[MOCK] Conversation not found with ID: ${conversationId}`);
+        console.log('[MOCK] Available conversation IDs:', 
+          mockStorage.conversations.map(c => c.id).join(', '));
         throw new Error('Conversation not found');
       }
       
       // Apply updates
+      const conversation = mockStorage.conversations[conversationIndex];
       Object.assign(conversation, updates);
       
       // Update timestamp
       conversation.updated_at = new Date().toISOString();
+      
+      console.log('[MOCK] Conversation updated successfully:', conversation);
       
       return await simulateApiCall(conversation);
     } catch (error) {
