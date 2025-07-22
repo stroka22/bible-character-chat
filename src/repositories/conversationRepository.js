@@ -111,14 +111,24 @@ export const conversationRepository = {
   async createConversation({ character_id, title = 'New Conversation', is_favorite = false }) {
     try {
       console.log('[MOCK] Creating conversation for character:', character_id);
+      console.log('[MOCK] Title provided:', title);
       
       // Get character info if available
       const character = MOCK_CHARACTERS[character_id];
       
-      // Use character name as default title if available
-      const conversationTitle = title === 'New Conversation' && character?.name 
-        ? `Conversation with ${character.name}` 
-        : title;
+      // ------------------------------------------------------------------
+      // Determine conversation title
+      //  1. If caller supplied a custom title (anything other than the
+      //     literal default `"New Conversation"`), honour it.
+      //  2. Otherwise generate a default:
+      //        "Conversation with <Character Name> - <MM/DD/YYYY>"
+      // ------------------------------------------------------------------
+      let conversationTitle = title;
+      if (title === 'New Conversation' && character?.name) {
+        const formattedDate = new Date().toLocaleDateString();
+        conversationTitle = `Conversation with ${character.name} - ${formattedDate}`;
+        console.log(`[MOCK] Using generated title: ${conversationTitle}`);
+      }
 
       // Create new conversation object
       const newConversation = {
