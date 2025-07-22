@@ -58,10 +58,13 @@ const ChatActions = ({ className = '', compact = false }) => {
         try {
             setIsLoading(true);
             setError(null);
-            const defaultTitle = `Chat with ${character.name} - ${new Date().toLocaleDateString()}`;
-            await saveChat(defaultTitle);
-            setShowSaveSuccess(true);
-            setTimeout(() => setShowSaveSuccess(false), 3000);
+            // Use the default title generated in ChatContext
+            const success = await saveChat();
+
+            if (success) {
+                setShowSaveSuccess(true);
+                setTimeout(() => setShowSaveSuccess(false), 3000);
+            }
         }
         catch (error) {
             console.error('Error saving chat:', error);

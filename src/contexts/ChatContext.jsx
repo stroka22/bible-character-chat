@@ -198,12 +198,14 @@ export const ChatProvider = ({ children }) => {
 
   /**
    * Save the current chat
+   * If no custom title is provided, default to
+   *   "Conversation with <Character Name> - <MM/DD/YYYY>"
    */
-  const saveChat = useCallback(async (title) => {
+  const saveChat = useCallback(async (customTitle = null) => {
     // ------------------------------------------------------------------
     // Enhanced diagnostics + defensive checks
     // ------------------------------------------------------------------
-    console.log('[ChatContext] Attempting to save chat with title:', title);
+    console.log('[ChatContext] Attempting to save chat');
     console.log('[ChatContext] Current character:', character);
     console.log('[ChatContext] Message count:', messages.length);
     
@@ -211,7 +213,14 @@ export const ChatProvider = ({ children }) => {
       setError('Cannot save an empty conversation');
       return false;
     }
-    
+
+    // ------------------------------------------------------------------
+    // Determine title: custom provided OR default using name + date
+    // ------------------------------------------------------------------
+    const defaultTitle = `Conversation with ${character.name} - ${new Date().toLocaleDateString()}`;
+    const title = customTitle || defaultTitle;
+    console.log(`[ChatContext] Using title: ${title}`);
+
     // Safety check - if no createConversation, use the mock implementation
     if (typeof createConversation !== 'function') {
       console.warn('[ChatContext] No createConversation function available');
@@ -233,7 +242,7 @@ export const ChatProvider = ({ children }) => {
        * --------------------------------------------------------- */
       const newConversation = await createConversation({
         character_id: character.id,
-        title: title || `Chat with ${character.name}`,
+        title,
         is_favorite: false,
       });
 
