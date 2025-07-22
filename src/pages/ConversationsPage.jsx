@@ -17,6 +17,16 @@ const ConversationsPage = () => {
     import.meta.env.VITE_SKIP_AUTH === 'true';
 
   const { user, isAuthenticated } = useAuth();
+
+  // ------------------------------------------------------------------
+  // Extra diagnostic logging so we can see what auth / skipAuth flags
+  // are active when the page renders.
+  // ------------------------------------------------------------------
+  console.log('[ConversationsPage] Authentication status:', {
+    isAuthenticated,
+    skipAuth: SKIP_AUTH,
+  });
+
   const {
     conversations = [],
     fetchConversations,
@@ -32,13 +42,30 @@ const ConversationsPage = () => {
     // Fetch when authenticated OR when auth checks are bypassed
     if ((isAuthenticated || SKIP_AUTH) && typeof fetchConversations === 'function') {
       console.log('[ConversationsPage] Fetching conversations');
-      fetchConversations().catch(err => {
-        console.error('[ConversationsPage] Error fetching conversations:', err);
-      });
+      fetchConversations()
+        .then((result) => {
+          console.log('[ConversationsPage] Fetch result:', result);
+          if (!result || result.length === 0) {
+            console.log('[ConversationsPage] No conversations found');
+          } else {
+            console.log(`[ConversationsPage] Found ${result.length} conversations`);
+          }
+        })
+        .catch(err => {
+          console.error('[ConversationsPage] Error fetching conversations:', err);
+        });
       setHasAttemptedLoad(true);
+    } else {
+      // Helpful diagnostic when conversations aren't fetched
+      console.log('[ConversationsPage] Not fetching conversations:', {
+        isAuthenticated,
+        skipAuth: SKIP_AUTH,
+        hasFetchFunction: typeof fetchConversations === 'function',
+      });
     }
   }, [isAuthenticated, fetchConversations, SKIP_AUTH]);
 
+  // Helper: format date
   // Helper: format date
   const formatDate = (iso) => {
     if (!iso) return '';
@@ -76,6 +103,9 @@ const ConversationsPage = () => {
       </div>
     );
   }
+
+  // Log conversations each render for debugging
+  console.log('[ConversationsPage] Rendering with conversations:', conversations);
 
   return (
     <div className="min-h-screen bg-blue-900 text-white">

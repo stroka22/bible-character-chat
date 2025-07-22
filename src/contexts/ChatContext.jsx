@@ -200,7 +200,12 @@ export const ChatProvider = ({ children }) => {
    * Save the current chat
    */
   const saveChat = useCallback(async (title) => {
-    console.log('[ChatContext] Attempting to save chat');
+    // ------------------------------------------------------------------
+    // Enhanced diagnostics + defensive checks
+    // ------------------------------------------------------------------
+    console.log('[ChatContext] Attempting to save chat with title:', title);
+    console.log('[ChatContext] Current character:', character);
+    console.log('[ChatContext] Message count:', messages.length);
     
     if (!character || messages.length === 0) {
       setError('Cannot save an empty conversation');
@@ -218,7 +223,9 @@ export const ChatProvider = ({ children }) => {
     setIsLoading(true);
     
     try {
-      console.log(`[ChatContext] Creating conversation with character ID: ${character.id}`);
+      console.log(
+        `[ChatContext] Creating conversation with character ID: ${character.id}`,
+      );
 
       /* -----------------------------------------------------------
        * 1️⃣  Create conversation row using the repository’s object
@@ -239,26 +246,33 @@ export const ChatProvider = ({ children }) => {
 
       // 2. persist all existing messages
       console.log(
-        `[ChatContext] Adding ${messages.length} messages to conversation ${newConversation.id}`,
+        `[ChatContext] Persisting ${messages.length} messages to conversation ${newConversation.id}`,
       );
 
       for (const msg of messages) {
         if (typeof addMessage === 'function') {
-          await addMessage({
-            conversation_id: newConversation.id,
-            role: msg.role,
-            content: msg.content,
-          });
+          try {
+            await addMessage({
+              conversation_id: newConversation.id,
+              role: msg.role,
+              content: msg.content,
+            });
+          } catch (msgErr) {
+            // Log but continue with remaining messages
+            console.error('[ChatContext] Error adding message:', msgErr);
+          }
         }
       }
+
+      console.log('[ChatContext] All messages added successfully');
 
       // 3. update local state
       setIsChatSaved(true);
       
       return true;
     } catch (err) {
-      console.error('Error saving chat:', err);
-      setError('Failed to save conversation. Please try again.');
+      console.error('[ChatContext] Error saving chat:', err);
+      setError(`Failed to save conversation: ${err.message}`);
       return false;
     } finally {
       setIsLoading(false);

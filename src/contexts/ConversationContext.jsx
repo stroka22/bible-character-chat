@@ -52,20 +52,40 @@ export const ConversationProvider = ({ children }) => {
    * @param {Object} options - Query options
    */
   const fetchConversations = useCallback(async (options = {}) => {
+    // ---------- enhanced diagnostic logging ----------
+    console.log(
+      '[ConversationContext] fetchConversations called with options:',
+      options,
+    );
+    console.log('[ConversationContext] Auth state:', {
+      isAuthenticated,
+      skipAuth: SKIP_AUTH,
+    });
+
     if (!isAuthenticated && !SKIP_AUTH) {
-      console.warn('Cannot fetch conversations: User is not authenticated');
+      console.warn(
+        '[ConversationContext] Cannot fetch conversations: User is not authenticated',
+      );
       return [];
     }
 
     setIsLoading(true);
     setError(null);
-    
+
     try {
+      console.log(
+        '[ConversationContext] Calling repository.getUserConversations()',
+      );
       const data = await conversationRepository.getUserConversations(options);
+      console.log(
+        '[ConversationContext] Conversations received from repository:',
+        data,
+      );
+
       setConversations(data || []);
       return data;
     } catch (err) {
-      console.error('Error fetching conversations:', err);
+      console.error('[ConversationContext] Error fetching conversations:', err);
       setError('Failed to load conversations. Please try again.');
       return [];
     } finally {
@@ -427,6 +447,15 @@ export const ConversationProvider = ({ children }) => {
     clearError: () => setError(null),
     clearActiveConversation: () => setActiveConversation(null)
   };
+
+  // ------------------------------------------------------------------
+  // Expose conversations for debugging purposes
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__debugConversations = conversations;
+    }
+  }, [conversations]);
 
   return (
     <ConversationContext.Provider value={contextValue}>
