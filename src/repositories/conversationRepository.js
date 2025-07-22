@@ -34,6 +34,14 @@ const MOCK_CHARACTERS = {
   }
 };
 
+// ---------------------------------------------------------------------------
+// Extra diagnostics – helps trace problems where a character name
+// does not appear because the ID coming in does not match the keys here.
+// ---------------------------------------------------------------------------
+/* eslint-disable no-console */
+console.log('[MOCK] Available characters loaded in repository:', Object.keys(MOCK_CHARACTERS));
+/* eslint-enable  no-console */
+
 // In-memory storage for mock data
 const mockStorage = {
   conversations: [], // start empty
@@ -119,17 +127,28 @@ export const conversationRepository = {
         is_favorite = false,
       } = conversation;
 
-      console.log('[MOCK] Creating conversation with params:', {
+      console.log('[MOCK] Creating conversation – raw params:', {
         character_id,
         title,
         title_type: typeof title,
         is_favorite,
       });
 
-      // Resolve character (may be undefined when called in bypass/dev modes)
-      const character = MOCK_CHARACTERS[character_id];
+      // ------------------------------------------------------------------
+      // Character lookup (add detailed logging to see why it may fail)
+      // ------------------------------------------------------------------
+      console.log('[MOCK] character_id type:', typeof character_id);
+      console.log('[MOCK] All mock character keys:', Object.keys(MOCK_CHARACTERS));
+
+      let character = MOCK_CHARACTERS[character_id];
+
       if (!character) {
-        console.warn(`[MOCK] Character not found for ID ${character_id}`);
+        console.warn(`[MOCK] Character not found for ID "${character_id}"`);
+        // Try numeric / string conversions to help debugging
+        const numericId = Number(character_id);
+        const stringId = String(character_id);
+        console.log('[MOCK] Trying numeric lookup:', numericId, MOCK_CHARACTERS[numericId]);
+        console.log('[MOCK] Trying string  lookup:', stringId, MOCK_CHARACTERS[stringId]);
       }
 
       // ------------------------------------------------------------------
