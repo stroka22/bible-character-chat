@@ -45,6 +45,11 @@ const ConversationsPage = () => {
   const [renamingConversationId, setRenamingConversationId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
 
+  // ------------------------------------------------------------------
+  // Show only favorites toggle
+  // ------------------------------------------------------------------
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
   /* ------------------------------------------------------------------
    * Delete conversation helper
    * ------------------------------------------------------------------ */
@@ -143,12 +148,36 @@ const ConversationsPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-yellow-300">Your Conversations</h1>
-          <Link
-            to="/"
-            className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
-          >
-            Back to Home
-          </Link>
+
+          <div className="flex items-center gap-3">
+            {/* Toggle favorites filter */}
+            <button
+              onClick={() => setShowOnlyFavorites(prev => !prev)}
+              className={`px-3 py-1 rounded-md flex items-center text-sm font-semibold transition-colors ${
+                showOnlyFavorites
+                  ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-400'
+                  : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+              }`}
+              title={showOnlyFavorites ? 'Show all conversations' : 'Show only favorites'}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 mr-1"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              {showOnlyFavorites ? 'Show All' : 'Show Favorites'}
+            </button>
+
+            <Link
+              to="/"
+              className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+            >
+              Back to Home
+            </Link>
+          </div>
         </div>
 
         {/* Loading spinner */}
@@ -165,21 +194,38 @@ const ConversationsPage = () => {
           </div>
         )}
 
-        {/* Empty state */}
-        {!isLoading && (!conversations || conversations.length === 0) && (
+        {/* Empty state (handles both no conversations and no favourites) */}
+        {!isLoading &&
+          ((!conversations || conversations.length === 0) ||
+            (showOnlyFavorites &&
+              conversations &&
+              !conversations.some(c => c.is_favorite))) && (
           <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-8 text-center">
             <h3 className="text-xl font-semibold text-yellow-300 mb-4">
-              No Conversations Yet
+              {showOnlyFavorites && conversations && conversations.length > 0
+                ? 'No Favorite Conversations'
+                : 'No Conversations Yet'}
             </h3>
             <p className="text-blue-100 mb-6">
-              You haven't saved any conversations yet. Start a chat with a biblical character to begin!
+              {showOnlyFavorites && conversations && conversations.length > 0
+                ? "You haven't marked any conversations as favorites yet."
+                : "You haven't saved any conversations yet. Start a chat with a biblical character to begin!"}
             </p>
-            <Link
-              to="/"
-              className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
-            >
-              Browse Characters
-            </Link>
+            {showOnlyFavorites && conversations && conversations.length > 0 ? (
+              <button
+                onClick={() => setShowOnlyFavorites(false)}
+                className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+              >
+                Show All Conversations
+              </button>
+            ) : (
+              <Link
+                to="/"
+                className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+              >
+                Browse Characters
+              </Link>
+            )}
 
             {/* Debug button – helps diagnose why conversations might not appear */}
             <div className="mt-4">
@@ -208,9 +254,13 @@ const ConversationsPage = () => {
         )}
 
         {/* Simple conversations list */}
-        {conversations && conversations.length > 0 && (
+        {conversations &&
+          conversations.length > 0 &&
+          (!showOnlyFavorites || conversations.some(c => c.is_favorite)) && (
           <div className="space-y-4">
-            {conversations.map((conv) => (
+            {conversations
+              .filter(conv => !showOnlyFavorites || conv.is_favorite)
+              .map(conv => (
               <div
                 key={conv.id}
                 className={`p-4 rounded-lg transition-colors ${
