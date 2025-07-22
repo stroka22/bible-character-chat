@@ -46,9 +46,24 @@ const mockStorage = {
 let isFirstLoad = true;
 const resetMockData = () => {
   if (isFirstLoad) {
-    console.log('[MOCK] First load – clearing preset mock data');
-    mockStorage.conversations = [];
-    mockStorage.messages = [];
+    console.log('[MOCK] First load – checking for saved conversations in localStorage');
+    try {
+      const savedStorage = localStorage.getItem('mockConversationStorage');
+      if (savedStorage) {
+        const parsed = JSON.parse(savedStorage);
+        if (parsed &&
+            Array.isArray(parsed.conversations) &&
+            Array.isArray(parsed.messages)) {
+          mockStorage.conversations = parsed.conversations;
+          mockStorage.messages = parsed.messages;
+          console.log(`[MOCK] Loaded ${parsed.conversations.length} conversations from localStorage`);
+        }
+      }
+    } catch (err) {
+      console.error('[MOCK] Error loading conversations from localStorage:', err);
+      mockStorage.conversations = [];
+      mockStorage.messages = [];
+    }
     isFirstLoad = false;
 
     // Inform devs that the mock repository now starts empty so that only
@@ -57,6 +72,15 @@ const resetMockData = () => {
   }
 };
 
+// Persist mock data to localStorage
+const saveMockData = () => {
+  try {
+    localStorage.setItem('mockConversationStorage', JSON.stringify(mockStorage));
+    console.log(`[MOCK] Saved ${mockStorage.conversations.length} conversations to localStorage`);
+  } catch (err) {
+    console.error('[MOCK] Error saving conversations to localStorage:', err);
+  }
+};
 // Helper function to simulate async API calls
 const simulateApiCall = (data, delay = 300) => {
   return new Promise(resolve => {
@@ -114,6 +138,7 @@ export const conversationRepository = {
       
       // Add to mock storage
       mockStorage.conversations.push(newConversation);
+      saveMockData();
       
       console.log(`[MOCK] Created conversation with ID: ${newConversation.id}`);
       
@@ -301,6 +326,7 @@ export const conversationRepository = {
       
       // Add to mock storage
       mockStorage.messages.push(newMessage);
+      saveMockData();
       
       // Update conversation's last_message_preview and updated_at
       conversation.last_message_preview = content.substring(0, 50) + (content.length > 50 ? '...' : '');
@@ -341,6 +367,7 @@ export const conversationRepository = {
       
       // Update timestamp
       conversation.updated_at = new Date().toISOString();
+      saveMockData();
       
       console.log('[MOCK] Conversation updated successfully:', conversation);
       
@@ -370,6 +397,7 @@ export const conversationRepository = {
       // Mark as deleted
       conversation.is_deleted = true;
       conversation.updated_at = new Date().toISOString();
+      saveMockData();
       
       return await simulateApiCall(true);
     } catch (error) {
@@ -428,6 +456,7 @@ export const conversationRepository = {
       conversation.is_shared = true;
       conversation.share_code = shareCode;
       conversation.updated_at = new Date().toISOString();
+      saveMockData();
       
       return await simulateApiCall(shareCode);
     } catch (error) {
@@ -496,6 +525,7 @@ export const conversationRepository = {
       conversation.is_shared = false;
       conversation.share_code = null;
       conversation.updated_at = new Date().toISOString();
+      saveMockData();
       
       return await simulateApiCall(conversation);
     } catch (error) {
