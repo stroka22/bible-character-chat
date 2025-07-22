@@ -244,6 +244,31 @@ export const ConversationProvider = ({ children }) => {
           ...updatedConversation
         }));
       }
+
+      /* ------------------------------------------------------------------
+       * Keep different parts of the UI in-sync
+       * ------------------------------------------------------------------
+       * If the caller updated the `is_favorite` flag we want the
+       * Conversations list (and any other components that rely on the
+       * conversations array) to immediately reflect the change, even
+       * when the update originated from the Chat page.
+       *
+       * We achieve this by triggering a fresh fetch after a favourite
+       * status change.  This guarantees consistency between the Chat
+       * view heart icon and the star shown on the My Conversations page.
+       * ------------------------------------------------------------------ */
+      if (Object.prototype.hasOwnProperty.call(updates, 'is_favorite')) {
+        console.log(
+          '[ConversationContext] Favourite status changed – refreshing list',
+        );
+        // Fire and forget – we don't need to await because UI will re-render
+        fetchConversations().catch(err =>
+          console.error(
+            '[ConversationContext] Error refreshing conversations after favourite toggle:',
+            err,
+          ),
+        );
+      }
       
       return updatedConversation;
     } catch (err) {
@@ -253,7 +278,13 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsSaving(false);
     }
-  }, [isAuthenticated, conversations, activeConversation, SKIP_AUTH]);
+  }, [
+    isAuthenticated,
+    conversations,
+    activeConversation,
+    SKIP_AUTH,
+    fetchConversations,
+  ]);
 
   /**
    * Delete a conversation
