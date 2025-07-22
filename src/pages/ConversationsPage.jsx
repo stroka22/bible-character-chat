@@ -149,6 +149,30 @@ const ConversationsPage = () => {
             >
               Browse Characters
             </Link>
+
+            {/* Debug button – helps diagnose why conversations might not appear */}
+            <div className="mt-4">
+              <button
+                onClick={() => {
+                  console.log('[ConversationsPage] Manual fetch triggered');
+                  if (typeof fetchConversations === 'function') {
+                    fetchConversations().then((result) => {
+                      console.log(
+                        '[ConversationsPage] Manual fetch result:',
+                        result,
+                      );
+                    });
+                  } else {
+                    console.warn(
+                      '[ConversationsPage] fetchConversations is not a function',
+                    );
+                  }
+                }}
+                className="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
+              >
+                Refresh Conversations
+              </button>
+            </div>
           </div>
         )}
 
