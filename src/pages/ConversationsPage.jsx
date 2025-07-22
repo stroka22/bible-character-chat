@@ -211,9 +211,13 @@ const ConversationsPage = () => {
         {conversations && conversations.length > 0 && (
           <div className="space-y-4">
             {conversations.map((conv) => (
-              <div 
+              <div
                 key={conv.id}
-                className="bg-[rgba(255,255,255,0.05)] p-4 rounded-lg hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+                className={`p-4 rounded-lg transition-colors ${
+                  conv.is_favorite
+                    ? 'bg-[rgba(255,223,118,0.08)] hover:bg-[rgba(255,223,118,0.12)] border border-yellow-400/30'
+                    : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
+                }`}
               >
                 {/* Header with title + rename */}
                 <div className="flex justify-between items-center mb-2">
@@ -258,7 +262,47 @@ const ConversationsPage = () => {
                     /* Normal title display */
                     <>
                       <h3 className="flex-1 text-xl font-semibold text-yellow-300 flex items-center">
-                        {conv.title || "Untitled Conversation"}
+                        {conv.title || 'Untitled Conversation'}
+
+                        {/* ⭐ Toggle favourite */}
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            try {
+                              await updateConversation(conv.id, {
+                                is_favorite: !conv.is_favorite,
+                              });
+                              fetchConversations?.();
+                            } catch (err) {
+                              console.error(
+                                'Error updating favorite status:',
+                                err,
+                              );
+                            }
+                          }}
+                          className={`ml-2 ${
+                            conv.is_favorite
+                              ? 'text-yellow-400 hover:text-yellow-300'
+                              : 'text-gray-400 hover:text-yellow-300'
+                          }`}
+                          title={
+                            conv.is_favorite
+                              ? 'Remove from favorites'
+                              : 'Add to favorites'
+                          }
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        </button>
+
+                        {/* ✏️ Rename */}
                         <button
                           onClick={() => {
                             setRenamingConversationId(conv.id);

@@ -198,51 +198,43 @@ export const ChatProvider = ({ children }) => {
 
   /**
    * Save the current chat
-   * If no custom title is provided, default to
-   *   "Conversation with <Character Name> - <MM/DD/YYYY>"
+   * Repository will auto-generate a title if none is supplied
    */
-  const saveChat = useCallback(async (customTitle = null) => {
+  const saveChat = useCallback(async () => {
     // ------------------------------------------------------------------
-    // Enhanced diagnostics + defensive checks
+    // Diagnostics + defensive checks
     // ------------------------------------------------------------------
     console.log('[ChatContext] Attempting to save chat');
     console.log('[ChatContext] Current character:', character);
     console.log('[ChatContext] Message count:', messages.length);
-    
+
     if (!character || messages.length === 0) {
       setError('Cannot save an empty conversation');
       return false;
     }
 
-    // ------------------------------------------------------------------
-    // Determine title: custom provided OR default using name + date
-    // ------------------------------------------------------------------
-    const defaultTitle = `Conversation with ${character.name} - ${new Date().toLocaleDateString()}`;
-    const title = customTitle || defaultTitle;
-    console.log(`[ChatContext] Using title: ${title}`);
-
-    // Safety check - if no createConversation, use the mock implementation
+    // Fallback when persistence layer is unavailable
     if (typeof createConversation !== 'function') {
       console.warn('[ChatContext] No createConversation function available');
       setChatId('mock-chat-id-' + Date.now());
       setIsChatSaved(true);
       return true;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       console.log(
         `[ChatContext] Creating conversation with character ID: ${character.id}`,
       );
 
       /* -----------------------------------------------------------
-       * 1️⃣  Create conversation row using the repository’s object
-       *     signature instead of positional params.
+       * 1️⃣  Create conversation row.
+       *     We do NOT pass a title – repository will generate the
+       *     default “Conversation with <Name> - <Date>” title.
        * --------------------------------------------------------- */
       const newConversation = await createConversation({
         character_id: character.id,
-        title,
         is_favorite: false,
       });
 
