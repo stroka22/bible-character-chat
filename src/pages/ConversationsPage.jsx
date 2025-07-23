@@ -120,8 +120,10 @@ const ConversationsPage = () => {
    * Replace “Unknown” in conversation titles with actual character name
    * ------------------------------------------------------------------ */
   const fixTitle = (title, characterId) => {
+    // Short-circuit if nothing to fix
     if (!title || !title.includes('Unknown')) return title;
 
+    // Static lookup map (keep in sync with mock data)
     const characterNames = {
       1: 'Moses',
       2: 'David',
@@ -135,7 +137,29 @@ const ConversationsPage = () => {
       10: 'Daniel',
     };
 
-    const characterName = characterNames[characterId] || 'Unknown';
+    /* --------------------------------------------------------------
+     * Robust extraction of numeric ID or usable title
+     * ------------------------------------------------------------*/
+    let numericId = null;
+
+    // Handle object variant e.g. { character_id: 1, title: 'Conversation …' }
+    if (characterId && typeof characterId === 'object') {
+      // 1) If nested title exists and is already correct, use it.
+      if (
+        typeof characterId.title === 'string' &&
+        !characterId.title.includes('Unknown')
+      ) {
+        return characterId.title;
+      }
+      // 2) Otherwise pick the nested numeric ID
+      if (characterId.character_id !== undefined) {
+        numericId = Number(characterId.character_id);
+      }
+    } else if (!Number.isNaN(Number(characterId))) {
+      numericId = Number(characterId);
+    }
+
+    const characterName = characterNames[numericId] || 'Unknown';
     return title.replace('Unknown', characterName);
   };
 
