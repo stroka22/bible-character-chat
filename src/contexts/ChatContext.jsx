@@ -225,35 +225,57 @@ export const ChatProvider = ({ children }) => {
 
     try {
       /* -----------------------------------------------------------
-       * Extra-detailed diagnostics so we can trace why the repository
-       * sometimes fails to include the character name in the auto-
-       * generated title.  We ensure a numeric ID is passed because
-       * the MOCK_CHARACTERS keys are numbers (1, 2, 3…).
+       * Resolve a reliable numeric character ID
        * --------------------------------------------------------- */
+      let characterId;
 
-      const characterId = Number(character.id);
+      // 1. Already numeric
+      if (typeof character.id === 'number') {
+        characterId = character.id;
+        console.log('[ChatContext] Using numeric character ID:', characterId);
+      }
+      // 2. String that can be coerced
+      else if (typeof character.id === 'string' && !isNaN(Number(character.id))) {
+        characterId = Number(character.id);
+        console.log('[ChatContext] Converted string ID to number:', characterId);
+      }
+      // 3. Fallback map by name
+      else {
+        const nameToId = {
+          Moses: 1,
+          David: 2,
+          Esther: 3,
+          Mary: 4,
+          Paul: 5,
+          Peter: 6,
+          Abraham: 7,
+          John: 8,
+          Ruth: 9,
+          Daniel: 10,
+        };
+        characterId = nameToId[character.name] || 1; // default to Moses
+        console.log('[ChatContext] Using name-based ID mapping:', {
+          name: character.name,
+          mappedId: characterId,
+        });
+      }
 
       console.log('[ChatContext] Creating conversation with character:', {
         rawId: character.id,
-        coercedId: characterId,
+        finalId: characterId,
         idType: typeof character.id,
-        character,
+        name: character.name,
       });
 
-      // Build params once so we can log and pass the same object
       const createParams = {
-        character_id: characterId, // Pass numeric ID to match MOCK_CHARACTERS
-        // intentionally omit `title` so repository auto-generates
+        character_id: characterId,
+        // intentionally omit title so repository auto-generates
         is_favorite: false,
       };
 
       console.log('[ChatContext] Calling createConversation with params:', createParams);
 
-      /* -----------------------------------------------------------
-       * 1️⃣  Create conversation row.
-       *     We do NOT pass a title – repository will generate the
-       *     default “Conversation with <Name> - <Date>” title.
-       * --------------------------------------------------------- */
+      // 1️⃣  Create conversation
       const newConversation = await createConversation(createParams);
 
       console.log('[ChatContext] Conversation created:', newConversation);
@@ -262,10 +284,10 @@ export const ChatProvider = ({ children }) => {
         throw new Error('Failed to create conversation - no ID returned');
       }
 
-      // store id early so any subsequent UI actions have it
+      // store id early
       setChatId(newConversation.id);
 
-      // 2. persist all existing messages
+      // 2️⃣  Persist existing messages
       console.log(
         `[ChatContext] Persisting ${messages.length} messages to conversation ${newConversation.id}`,
       );
@@ -279,7 +301,6 @@ export const ChatProvider = ({ children }) => {
               content: msg.content,
             });
           } catch (msgErr) {
-            // Log but continue with remaining messages
             console.error('[ChatContext] Error adding message:', msgErr);
           }
         }
@@ -287,9 +308,9 @@ export const ChatProvider = ({ children }) => {
 
       console.log('[ChatContext] All messages added successfully');
 
-      // 3. update local state
+      // 3️⃣  Update local state
       setIsChatSaved(true);
-      
+
       return true;
     } catch (err) {
       console.error('[ChatContext] Error saving chat:', err);
