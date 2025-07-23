@@ -134,37 +134,46 @@ export const conversationRepository = {
        * Character name resolution
        * ------------------------------------------------------------*/
       let characterName = 'Unknown';
+      const idStr = String(character_id).trim();      // unified string form
 
-      // Normalise id to string & number forms
-      const idStr = String(character_id).trim();
-      const idNum = Number(idStr);
-
-      // Primary lookup using numeric key (matches MOCK_CHARACTERS keys)
-      const characterByNum = MOCK_CHARACTERS[idNum];
-
-      if (characterByNum?.name) {
-        characterName = characterByNum.name;
-      } else {
-        // Hard-coded fallback map (ensures a name is always found)
-        switch (idStr) {
-          case '1':
-            characterName = 'Moses';
-            break;
-          case '2':
-            characterName = 'David';
-            break;
-          case '4':
-            characterName = 'Mary';
-            break;
-          case '5':
-            characterName = 'Paul';
-            break;
-          default:
-            console.warn(`[MOCK] No hard-coded name for ID "${idStr}"`);
+      /* ----------------------------------------------------------
+       * DIRECT, EXPLICIT ID → NAME MAP
+       *  This bypasses any object-lookup or type-coercion pitfalls
+       *  we have seen in previous iterations.
+       * ---------------------------------------------------------- */
+      switch (idStr) {
+        case '1':
+        case 'Moses':
+          characterName = 'Moses';
+          break;
+        case '2':
+        case 'David':
+          characterName = 'David';
+          break;
+        case '4':
+        case 'Mary':
+          characterName = 'Mary';
+          break;
+        case '5':
+        case 'Paul':
+          characterName = 'Paul';
+          break;
+        default: {
+          // Fall back to numeric lookup in MOCK_CHARACTERS just in case.
+          const numericLookup = MOCK_CHARACTERS[Number(idStr)];
+          if (numericLookup?.name) {
+            characterName = numericLookup.name;
+          } else {
+            console.warn(
+              `[MOCK] Unable to resolve character name for ID "${character_id}". Using "Unknown".`,
+            );
+          }
         }
       }
 
-      console.log(`[MOCK] Character name resolved as: "${characterName}"`);
+      console.log(
+        `[MOCK] Character name resolved as: "${characterName}" for ID "${character_id}"`,
+      );
 
       /* --------------------------------------------------------------
        * Title generation

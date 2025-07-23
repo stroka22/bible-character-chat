@@ -377,9 +377,17 @@ export const ChatProvider = ({ children }) => {
       setIsLoading(true);
 
       try {
+        console.log('[ChatContext] Updating favorite status:', {
+          chatId,
+          newStatus: isFavorite,
+        });
+
+        // Perform update – ConversationContext will refresh list on favourite change
         await conversationContext.updateConversation(chatId, {
           is_favorite: isFavorite,
         });
+
+        console.log('[ChatContext] Favorite status updated successfully');
         return true;
       } catch (err) {
         console.error('Error updating favorite status:', err);
