@@ -269,7 +269,8 @@ export const ChatProvider = ({ children }) => {
 
       const createParams = {
         character_id: characterId,
-        // intentionally omit title so repository auto-generates
+        // Supply explicit title so repository isn't relied upon
+        title: `Conversation with ${character?.name ?? 'Unknown'} - ${new Date().toLocaleDateString()}`,
         is_favorite: false,
       };
 
