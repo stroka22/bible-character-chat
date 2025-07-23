@@ -244,6 +244,15 @@ export const conversationRepository = {
       // Set as active conversation
       this.activeConversationId = newConversation.id;
       
+      // ------------------------------------------------------------------
+      //  🔍 FINAL TITLE DEBUG – ensure the title being returned is correct
+      // ------------------------------------------------------------------
+      console.log('[MOCK] FINAL TITLE CHECK:', newConversation.title);
+      console.log(
+        '[MOCK] COMPLETE CONVERSATION OBJECT:',
+        JSON.stringify(newConversation, null, 2),
+      );
+
       // Add to mock storage
       mockStorage.conversations.push(newConversation);
       saveMockData();
@@ -323,6 +332,16 @@ export const conversationRepository = {
       conversationsWithCharacters.sort((a, b) => 
         new Date(b.updated_at) - new Date(a.updated_at)
       );
+
+      // ------------------------------------------------------------------
+      //  🔍 Debug the final conversations list that will be displayed
+      // ------------------------------------------------------------------
+      console.log('[MOCK] CONVERSATIONS TO BE DISPLAYED:');
+      conversationsWithCharacters.forEach(conv => {
+        console.log(
+          `- ID: ${conv.id}, Title: "${conv.title}", Character: ${conv.character_id}`,
+        );
+      });
 
       console.log('[MOCK] Final conversations list:', conversationsWithCharacters);
 

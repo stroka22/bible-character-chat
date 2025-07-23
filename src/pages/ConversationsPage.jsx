@@ -254,6 +254,31 @@ const ConversationsPage = () => {
         )}
 
         {/* Simple conversations list */}
+        {/* CRITICAL DEBUG INFO */}
+        <div className="bg-purple-900/30 border border-purple-500 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-semibold text-purple-300 mb-2">Debug Information</h3>
+          <div className="text-sm text-purple-200">
+            <p>Total conversations: {conversations?.length || 0}</p>
+            {conversations && conversations.length > 0 && (
+              <div className="mt-2">
+                <p className="font-semibold">First conversation details:</p>
+                <pre className="mt-1 p-2 bg-purple-900/50 rounded overflow-auto text-xs">
+                  {JSON.stringify(
+                    {
+                      id: conversations[0].id,
+                      title: conversations[0].title,
+                      character_id: conversations[0].character_id,
+                    },
+                    null,
+                    2,
+                  )}
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Simple conversations list */}
         {conversations &&
           conversations.length > 0 &&
           (!showOnlyFavorites || conversations.some(c => c.is_favorite)) && (
