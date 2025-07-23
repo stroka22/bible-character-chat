@@ -116,6 +116,29 @@ const ConversationsPage = () => {
     }
   };
 
+  /* ------------------------------------------------------------------
+   * Replace “Unknown” in conversation titles with actual character name
+   * ------------------------------------------------------------------ */
+  const fixTitle = (title, characterId) => {
+    if (!title || !title.includes('Unknown')) return title;
+
+    const characterNames = {
+      1: 'Moses',
+      2: 'David',
+      3: 'Esther',
+      4: 'Mary',
+      5: 'Paul',
+      6: 'Peter',
+      7: 'Abraham',
+      8: 'John',
+      9: 'Ruth',
+      10: 'Daniel',
+    };
+
+    const characterName = characterNames[characterId] || 'Unknown';
+    return title.replace('Unknown', characterName);
+  };
+
   // Placeholder when not logged in
   if (!isAuthenticated && !SKIP_AUTH) {
     return (
@@ -337,7 +360,7 @@ const ConversationsPage = () => {
                     /* Normal title display */
                     <>
                       <h3 className="flex-1 text-xl font-semibold text-yellow-300 flex items-center">
-                        {conv.title || 'Untitled Conversation'}
+                        {fixTitle(conv.title, conv.character_id) || 'Untitled Conversation'}
 
                         {/* ⭐ Toggle favourite */}
                         <button
