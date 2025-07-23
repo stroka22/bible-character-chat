@@ -225,40 +225,15 @@ export const ChatProvider = ({ children }) => {
 
     try {
       /* -----------------------------------------------------------
-       * Resolve a reliable numeric character ID
+       * Extract only the numeric ID, not the full object
        * --------------------------------------------------------- */
-      let characterId;
+      const characterId = typeof character.id === 'number' 
+        ? character.id 
+        : (typeof character.id === 'string' && !isNaN(Number(character.id))) 
+          ? Number(character.id) 
+          : 1; // Default to 1 (Moses) as fallback
 
-      // 1. Already numeric
-      if (typeof character.id === 'number') {
-        characterId = character.id;
-        console.log('[ChatContext] Using numeric character ID:', characterId);
-      }
-      // 2. String that can be coerced
-      else if (typeof character.id === 'string' && !isNaN(Number(character.id))) {
-        characterId = Number(character.id);
-        console.log('[ChatContext] Converted string ID to number:', characterId);
-      }
-      // 3. Fallback map by name
-      else {
-        const nameToId = {
-          Moses: 1,
-          David: 2,
-          Esther: 3,
-          Mary: 4,
-          Paul: 5,
-          Peter: 6,
-          Abraham: 7,
-          John: 8,
-          Ruth: 9,
-          Daniel: 10,
-        };
-        characterId = nameToId[character.name] || 1; // default to Moses
-        console.log('[ChatContext] Using name-based ID mapping:', {
-          name: character.name,
-          mappedId: characterId,
-        });
-      }
+      console.log('[ChatContext] Final resolved characterId:', characterId);
 
       console.log('[ChatContext] Creating conversation with character:', {
         rawId: character.id,
@@ -267,9 +242,9 @@ export const ChatProvider = ({ children }) => {
         name: character.name,
       });
 
+      // Pass ONLY the numeric ID as character_id, not an object
       const createParams = {
-        character_id: characterId,
-        // Supply explicit title so repository isn't relied upon
+        character_id: characterId, // Just the number
         title: `Conversation with ${character?.name ?? 'Unknown'} - ${new Date().toLocaleDateString()}`,
         is_favorite: false,
       };
