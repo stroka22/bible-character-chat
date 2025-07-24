@@ -6,9 +6,22 @@ export const getSafeAvatarUrl = (name, url) => {
         return generateFallbackAvatar(name);
     try {
         const { hostname } = new URL(url);
-        // Explicitly allow Unsplash-hosted images (and sub-domains).
-        const allowedHosts = ['images.unsplash.com', 'unsplash.com'];
-        const isAllowed = allowedHosts.includes(hostname) || hostname.endsWith('.unsplash.com');
+        // Explicitly allow Unsplash and Imgur hosted images (and sub-domains).
+        const allowedHosts = [
+            // Unsplash
+            'images.unsplash.com',
+            'unsplash.com',
+            // Imgur
+            'imgur.com',
+            'i.imgur.com',
+            'm.imgur.com',
+            's.imgur.com'
+        ];
+
+        const isAllowed =
+            allowedHosts.includes(hostname) ||
+            hostname.endsWith('.unsplash.com') ||
+            hostname.endsWith('.imgur.com');
 
         if (isAllowed) {
             return url;
