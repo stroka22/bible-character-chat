@@ -15,6 +15,8 @@ const CharacterCard = ({ character, onSelect, isSelected = false }) => {
                 group relative flex flex-col sm:flex-row items-center gap-4 overflow-hidden rounded-xl border-2 
                 bg-white/90 backdrop-blur-sm shadow-lg
                 transition-all duration-300 ease-in-out cursor-pointer
+                /* uniform sizing so every card aligns before hover */
+                h-[320px] sm:h-[200px] w-full
                 ${isSelected
                     ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
                     : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}

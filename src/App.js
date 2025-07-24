@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import React, { useMemo } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Use the mock chat provider (local, no real Supabase writes)
@@ -60,9 +60,7 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     const DIRECT_RENDER = params.get('direct') === '1' ||
         import.meta.env.VITE_DIRECT_RENDER === 'true';
-    const SKIP_AUTH = params.get('skipAuth') === '1' ||
-        import.meta.env.VITE_SKIP_AUTH === 'true';
-    console.log(`[App] init – DIRECT_RENDER=${DIRECT_RENDER} | SKIP_AUTH=${SKIP_AUTH}`);
+    console.log(`[App] init – DIRECT_RENDER=${DIRECT_RENDER}`);
 
     /* ------------------------------------------------------------------
      * Providers
@@ -83,23 +81,8 @@ function App() {
         })
     );
 
-    const DebugBanner = () => {
-        const loc = useLocation();
-        const { flags, label } = useMemo(() => {
-            const f = [];
-            if (DIRECT_RENDER)
-                f.push('DIRECT');
-            if (SKIP_AUTH)
-                f.push('SKIP_AUTH');
-            return { flags: f, label: f.join(' • ') };
-        }, [DIRECT_RENDER, SKIP_AUTH]);
-        if (flags.length === 0)
-            return null;
-        return (_jsxs("div", { className: "fixed top-4 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded-md shadow-lg text-xs", children: [label, " ", _jsx("br", {}), loc.pathname] }));
-    };
-
     if (DIRECT_RENDER) {
-        return (_jsx(ErrorBoundary, { children: _jsx(Providers, { children: _jsxs(Router, { children: [_jsx("div", { className: "flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600", children: [_jsx(Header, {}), _jsx("main", { className: "flex-1", children: _jsx(HomePage, {}) })] }), _jsx(DebugBanner, {}), _jsx(DebugPanel, {})] }) }) }));
+        return (_jsx(ErrorBoundary, { children: _jsx(Providers, { children: _jsxs(Router, { children: [_jsx("div", { className: "flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600", children: [_jsx(Header, {}), _jsx("main", { className: "flex-1", children: _jsx(HomePage, {}) })] }), _jsx(DebugPanel, {})] }) }) }));
     }
 
     return (_jsx(ErrorBoundary, { children: _jsx(Providers, { children: _jsxs(Router, { children: [
@@ -124,7 +107,7 @@ function App() {
         
         // Fallback route
         _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })
-    ] }) })] }), _jsx(DebugBanner, {})] }) }) }));
+        ] }) })] }) }) }));
 }
 
 export default App;
