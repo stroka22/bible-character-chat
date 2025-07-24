@@ -281,22 +281,23 @@ const ScalableCharacterSelection = () => {
     };
     const renderAlphaNav = () => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        /* 
-         * Alphabet navigation was hidden on most screen sizes because of
-         * `hidden lg:flex`.  Replace with `flex` so it’s always visible, and
-         * add a subtle shadow for readability.
+        /*
+         * Improve visibility/spacing of the alphabet nav.
+         * 1. move 2px further from the edge (`right-6`)
+         * 2. stronger backdrop + shadow
+         * 3. slightly larger padding so buttons don’t feel cramped
          */
-        return (_jsxs("div", { className: "fixed right-4 top-1/2 transform -translate-y-1/2 bg-white/5 backdrop-blur-sm rounded-full py-4 px-2 flex flex-col gap-1 border border-white/10 shadow-lg", children: [_jsx("button", { onClick: () => {
+        return (_jsxs("div", { className: "fixed right-6 top-1/2 -translate-y-1/2 bg-white/15 backdrop-blur-md rounded-full py-6 px-3 flex flex-col gap-1 border border-white/30 shadow-xl", children: [_jsx("button", { onClick: () => {
                         setCurrentLetter('all');
                         setCurrentPage(1);
-                    }, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm ${currentLetter === 'all'
+                    }, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === 'all'
                         ? 'bg-yellow-400 text-blue-900 font-bold'
-                        : 'text-white hover:bg-white/10'}`, children: "All" }), letters.map(letter => (_jsx("button", { onClick: () => {
+                        : 'text-white hover:bg-white/20'}`, children: "All" }), letters.map(letter => (_jsx("button", { onClick: () => {
                         setCurrentLetter(letter);
                         setCurrentPage(1);
-                    }, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm ${currentLetter === letter
+                    }, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === letter
                         ? 'bg-yellow-400 text-blue-900 font-bold'
-                        : 'text-white hover:bg-white/10'}`, children: letter }, letter)))] }));
+                        : 'text-white hover:bg-white/20'}`, children: letter }, letter)))] }));
     };
     if (isLoading) {
         return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]", children: _jsxs("div", { className: "text-center", children: [_jsxs("div", { className: "relative mb-6", children: [_jsx("div", { className: "absolute inset-0 rounded-full bg-yellow-300 blur-xl opacity-30 animate-pulse" }), _jsx("div", { className: "relative h-16 w-16 mx-auto animate-spin rounded-full border-4 border-yellow-200 border-t-yellow-400" }), _jsx("div", { className: "absolute inset-0 flex items-center justify-center", children: _jsx("span", { className: "text-white text-xl", children: "\u271D" }) })] }), _jsx("p", { className: "text-white text-lg font-light", style: { fontFamily: 'Cinzel, serif' }, children: "Loading Bible characters..." })] }) }));
