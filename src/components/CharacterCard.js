@@ -146,8 +146,11 @@ const CharacterCard = ({
                         _jsx("div", {
                             className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2 opacity-80"
                         }),
+                        /* Description + blue overlay */
                         _jsxs("div", {
-                            className: "relative mb-4",
+                            /* fixed height so the card never grows/shrinks on hover,
+                               ensuring the action button below remains in view */
+                            className: "relative mb-4 h-16 overflow-hidden",
                             children: [
                                 _jsx("div", {
                                     className: "absolute inset-0 bg-blue-50/30 rounded pointer-events-none"
@@ -168,7 +171,8 @@ const CharacterCard = ({
                             },
                             className: `
                                 mt-auto rounded-lg px-4 py-2 text-sm font-semibold shadow-md
-                                transition-all duration-300
+                                transition-colors duration-200
+                                z-20 relative
                                 ${isSelected
                                     ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
                                     : 'bg-blue-600 text-white hover:bg-blue-700'}
