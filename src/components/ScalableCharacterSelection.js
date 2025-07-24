@@ -330,7 +330,7 @@ const ScalableCharacterSelection = () => {
                     ]},
                     _jsx("p", { className: "text-white/80 line-clamp-2", children: character.description }),
                     _jsxs("div", { className: "text-xs text-white/50 mt-1", children: [character.bible_book && `${character.bible_book} • `, testament === 'old' ? 'Old Testament' : testament === 'new' ? 'New Testament' : ''] })
-                ] }), 
+                ] }),
                 _jsx("button", { className: `
               px-4 py-2 rounded-lg text-sm font-medium
               ${selectedCharacter?.id === character.id
