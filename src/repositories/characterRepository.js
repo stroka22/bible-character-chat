@@ -152,26 +152,83 @@ export const characterRepository = {
     },
     async updateCharacter(id, updates) {
         try {
+            console.log(`[characterRepository] Updating character ${id} with:`, updates);
+
+            /* ------------------------------------------------------------------
+             * 1.  URL sanitisation (avatars / feature images)
+             * ------------------------------------------------------------------ */
             const sanitizedUpdates = { ...updates };
             if (updates.avatar_url && updates.name) {
                 sanitizedUpdates.avatar_url = getSafeAvatarUrl(updates.name, updates.avatar_url);
+                console.log('[characterRepository] Sanitized avatar_url:', sanitizedUpdates.avatar_url);
             }
             if (updates.feature_image_url && updates.name) {
                 sanitizedUpdates.feature_image_url = getSafeAvatarUrl(updates.name, updates.feature_image_url);
+                console.log('[characterRepository] Sanitized feature_image_url:', sanitizedUpdates.feature_image_url);
             }
+
+            /* ------------------------------------------------------------------
+             * 2.  Whitelist fields – prevents Supabase 400 errors caused by
+             *     unknown columns being sent in the payload.
+             * ------------------------------------------------------------------ */
+            const knownFields = [
+                'name',
+                'description',
+                'persona_prompt',
+                'testament',
+                'is_visible',
+                'avatar_url',
+                'feature_image_url',
+                'opening_line',
+                'bible_book',
+                'relationships',
+                // --- Extended metadata ---
+                'timeline_period',
+                'historical_context',
+                'geographic_location',
+                'key_scripture_references',
+                'theological_significance',
+                'study_questions',
+                'scriptural_context',
+                'key_events',
+                'character_traits'
+            ];
+
+            const filteredUpdates = {};
+            Object.keys(sanitizedUpdates).forEach(key => {
+                if (knownFields.includes(key)) {
+                    filteredUpdates[key] = sanitizedUpdates[key];
+                }
+                else {
+                    console.warn(`[characterRepository] Removing unknown field "${key}" from update`);
+                }
+            });
+
+            // Always stamp updated_at
+            filteredUpdates.updated_at = new Date().toISOString();
+
+            console.log('[characterRepository] Final update payload:', filteredUpdates);
+
+            /* ------------------------------------------------------------------
+             * 3.  Execute update
+             * ------------------------------------------------------------------ */
             const { data, error } = await supabase
                 .from('characters')
-                .update({ ...sanitizedUpdates, updated_at: new Date().toISOString() })
+                .update(filteredUpdates)
                 .eq('id', id)
                 .select('*')
                 .single();
+
             if (error) {
+                console.error('[characterRepository] Supabase error updating character:', error);
                 throw error;
             }
+
+            console.log('[characterRepository] Character updated successfully:', data);
             return this.sanitizeCharacter(data);
         }
         catch (error) {
-            console.error(`Failed to update character ${id}:`, error);
+            console.error(`[characterRepository] Failed to update character ${id}:`, error);
             throw new Error('Failed to update character. Please try again later.');
         }
     },
