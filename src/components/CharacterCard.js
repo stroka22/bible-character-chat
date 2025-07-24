@@ -15,7 +15,7 @@ const CharacterCard = ({
     return (
         _jsxs(motion.div, {
             className: `
-                group relative flex flex-col sm:flex-row items-center gap-4 overflow-hidden rounded-xl border-2 
+                group relative flex flex-col sm:flex-row items-center gap-4 overflow-visible rounded-xl border-2 
                 bg-white/90 backdrop-blur-sm shadow-lg
                 transition-all duration-300 ease-in-out cursor-pointer
                 /* ensure cards are equal height before hover */
@@ -164,26 +164,7 @@ const CharacterCard = ({
                                 })
                             ]
                         }),
-                        _jsx("button", {
-                            onClick: (e) => {
-                                e.stopPropagation();
-                                onSelect(character);
-                            },
-                            /* absolutely position so it never gets pushed out
-                               of view when other elements change height */
-                            className: `
-                                absolute bottom-4 left-4 right-4 sm:left-0 sm:right-auto
-                                rounded-lg px-6 py-2 text-sm font-semibold shadow-md
-                                transition-colors duration-200
-                                z-20
-                                ${isSelected
-                                    ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
-                                    : 'bg-blue-600 text-white hover:bg-blue-700'}
-                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300
-                            `,
-                            "aria-label": `Start chat with ${character.name}`,
-                            children: isSelected ? 'Continue Chat' : 'Start Chat'
-                        })
+                        /* Start-chat button moved out to a global overlay below */
                     ]
                 }),
                 isSelected && (_jsx("div", {
@@ -200,6 +181,27 @@ const CharacterCard = ({
                         })
                     })
                 }))
+                /* GUARANTEED VISIBLE BUTTON (bottom overlay) */
+                _jsx("div", {
+                    className: "absolute bottom-0 left-0 right-0 py-4 px-4 bg-gradient-to-t from-white via-white/90 to-transparent",
+                    style: { zIndex: 50 },
+                    children: _jsx("button", {
+                        onClick: (e) => {
+                            e.stopPropagation();
+                            onSelect(character);
+                        },
+                        className: `
+                            w-full rounded-lg px-4 py-2.5 text-sm font-bold
+                            shadow-lg
+                            ${isSelected
+                                ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
+                                : 'bg-blue-600 text-white hover:bg-blue-700'}
+                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300
+                        `,
+                        "aria-label": `Start chat with ${character.name}`,
+                        children: isSelected ? 'Continue Chat' : 'Start Chat'
+                    })
+                })
             ]
         })
     );
