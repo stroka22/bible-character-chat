@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { characterRepository } from '../repositories/characterRepository';
 import { groupRepository } from '../repositories/groupRepository';
-// Use the mock chat context so we don’t hit the real Supabase APIs
+// Use the mock chat context so we don't hit the real Supabase APIs
 import { useChat } from '../contexts/ChatContext.jsx';
 import CharacterCard from './CharacterCard.jsx';
 console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
@@ -41,8 +41,32 @@ const ScalableCharacterSelection = () => {
     const [activeFilters, setActiveFilters] = useState([]);
     const [featuredCharacter, setFeaturedCharacter] = useState(null);
     const [isSelecting, setIsSelecting] = useState(false);
+    const [favoriteCharacters, setFavoriteCharacters] = useState([]);
+    const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
     const itemsPerPage = 20;
     const { selectCharacter, character: selectedCharacter } = useChat();
+    
+    // Load saved favorites from localStorage on component mount
+    useEffect(() => {
+        try {
+            const savedFavorites = localStorage.getItem('favoriteCharacters');
+            if (savedFavorites) {
+                setFavoriteCharacters(JSON.parse(savedFavorites));
+            }
+        } catch (error) {
+            console.error('Error loading favorite characters:', error);
+        }
+    }, []);
+    
+    // Save favorites to localStorage whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem('favoriteCharacters', JSON.stringify(favoriteCharacters));
+        } catch (error) {
+            console.error('Error saving favorite characters:', error);
+        }
+    }, [favoriteCharacters]);
+    
     const fetchCharacters = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -83,7 +107,7 @@ const ScalableCharacterSelection = () => {
      *   2) a character ID (string/number) – when the list view button calls
      *
      * Support both forms to avoid mismatches that lead to the
-     * “Character not found” error.
+     * "Character not found" error.
      */
     const handleSelectCharacter = useCallback(
         async (characterIdOrObject) => {
@@ -116,6 +140,18 @@ const ScalableCharacterSelection = () => {
         },
         [selectCharacter, characters]
     );
+    
+    // Handle toggling a character as favorite
+    const handleToggleFavorite = useCallback((characterId) => {
+        setFavoriteCharacters(prevFavorites => {
+            if (prevFavorites.includes(characterId)) {
+                return prevFavorites.filter(id => id !== characterId);
+            } else {
+                return [...prevFavorites, characterId];
+            }
+        });
+    }, []);
+    
     useEffect(() => {
         const newFilters = [];
         if (testament !== 'all') {
@@ -148,8 +184,15 @@ const ScalableCharacterSelection = () => {
                 value: `Starting with "${currentLetter}"`
             });
         }
+        if (showOnlyFavorites) {
+            newFilters.push({
+                type: 'favorites',
+                value: 'Favorites only'
+            });
+        }
         setActiveFilters(newFilters);
-    }, [testament, bookFilter, groupFilter, searchQuery, currentLetter]);
+    }, [testament, bookFilter, groupFilter, searchQuery, currentLetter, showOnlyFavorites]);
+    
     const removeFilter = (type) => {
         switch (type) {
             case 'testament':
@@ -167,11 +210,21 @@ const ScalableCharacterSelection = () => {
             case 'letter':
                 setCurrentLetter('all');
                 break;
+            case 'favorites':
+                setShowOnlyFavorites(false);
+                break;
         }
         setCurrentPage(1);
     };
+    
     const filteredCharacters = useMemo(() => {
         let result = [...characters];
+        
+        // Filter by favorites if enabled
+        if (showOnlyFavorites) {
+            result = result.filter(c => favoriteCharacters.includes(c.id));
+        }
+        
         if (searchQuery.trim()) {
             result = result.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (c.description || '').toLowerCase().includes(searchQuery.toLowerCase()));
@@ -219,35 +272,75 @@ const ScalableCharacterSelection = () => {
         // Resort after forced inclusion so alphabetical order is preserved
         result.sort((a, b) => a.name.localeCompare(b.name));
         return result;
-    }, [characters, searchQuery, testament, bookFilter, groupFilter, currentLetter]);
+    }, [characters, searchQuery, testament, bookFilter, groupFilter, currentLetter, showOnlyFavorites, favoriteCharacters]);
+    
     const paginatedCharacters = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         return filteredCharacters.slice(startIndex, startIndex + itemsPerPage);
     }, [filteredCharacters, currentPage, itemsPerPage]);
+    
     const totalPages = Math.ceil(filteredCharacters.length / itemsPerPage);
+    
     const renderCharacterItem = useCallback((index) => {
         const character = paginatedCharacters[index];
+        const isFavorite = favoriteCharacters.includes(character.id);
+        
         if (viewMode === 'grid') {
-            return (_jsx("div", { className: "p-2", children: _jsx(CharacterCard, { character: character, onSelect: handleSelectCharacter, isSelected: selectedCharacter?.id === character.id }) }, character.id));
+            return (_jsx("div", { className: "p-2", children: _jsx(CharacterCard, { 
+                character: character, 
+                onSelect: handleSelectCharacter, 
+                isSelected: selectedCharacter?.id === character.id,
+                isFavorite: isFavorite,
+                onToggleFavorite: () => handleToggleFavorite(character.id)
+            }) }, character.id));
         }
         else {
             return (_jsxs("div", { className: `
             flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15
             transition-all duration-300 hover:bg-white/15 cursor-pointer
             ${selectedCharacter?.id === character.id ? 'border-yellow-400 ring-2 ring-yellow-400/30' : ''}
-          `, onClick: () => handleSelectCharacter(character.id), children: [_jsx("table", { className: "border-collapse m-0 p-0", children: _jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { className: `
+          `, onClick: () => handleSelectCharacter(character.id), children: [
+                _jsx("table", { className: "border-collapse m-0 p-0", children: _jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { className: `
                     w-16 h-16 rounded-full overflow-hidden p-0
                     ${selectedCharacter?.id === character.id ? 'border-2 border-yellow-400' : 'border-2 border-white/30'}
                     bg-blue-50
                   `, children: _jsx("img", { src: character.avatar_url ||
-                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`, alt: character.name, className: "w-16 h-16 object-cover block" }) }) }) }) }), _jsxs("div", { className: "flex-1", children: [_jsx("h3", { className: "text-xl font-bold text-yellow-400", style: { fontFamily: 'Cinzel, serif' }, children: character.name }), _jsx("p", { className: "text-white/80 line-clamp-2", children: character.description }), _jsxs("div", { className: "text-xs text-white/50 mt-1", children: [character.bible_book && `${character.bible_book} • `, testament === 'old' ? 'Old Testament' : testament === 'new' ? 'New Testament' : ''] })] }), _jsx("button", { className: `
+                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`, alt: character.name, className: "w-16 h-16 object-cover block" }) }) }) }) }), 
+                _jsxs("div", { className: "flex-1", children: [
+                    _jsxs("div", { className: "flex items-center", children: [
+                        _jsx("h3", { className: "text-xl font-bold text-yellow-400", style: { fontFamily: 'Cinzel, serif' }, children: character.name }),
+                        _jsx("button", { 
+                            onClick: (e) => {
+                                e.stopPropagation();
+                                handleToggleFavorite(character.id);
+                            },
+                            className: `ml-2 ${isFavorite ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-300'}`,
+                            children: _jsx("svg", { 
+                                xmlns: "http://www.w3.org/2000/svg", 
+                                className: "h-5 w-5", 
+                                viewBox: "0 0 20 20", 
+                                fill: isFavorite ? "currentColor" : "none", 
+                                stroke: "currentColor",
+                                strokeWidth: isFavorite ? "0" : "1.5",
+                                children: _jsx("path", { 
+                                    d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" 
+                                }) 
+                            })
+                        })
+                    ]},
+                    _jsx("p", { className: "text-white/80 line-clamp-2", children: character.description }),
+                    _jsxs("div", { className: "text-xs text-white/50 mt-1", children: [character.bible_book && `${character.bible_book} • `, testament === 'old' ? 'Old Testament' : testament === 'new' ? 'New Testament' : ''] })
+                ] }), 
+                _jsx("button", { className: `
               px-4 py-2 rounded-lg text-sm font-medium
               ${selectedCharacter?.id === character.id
                             ? 'bg-yellow-400 text-blue-900'
                             : 'bg-white/10 text-white hover:bg-white/20'}
-            `, children: selectedCharacter?.id === character.id ? 'Continue' : 'Chat' })] }, character.id));
+            `, children: selectedCharacter?.id === character.id ? 'Continue' : 'Chat' })
+            ] }, character.id));
         }
-    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter]);
+    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite]);
+    
     const renderPagination = () => {
         if (totalPages <= 1)
             return null;
@@ -283,7 +376,7 @@ const ScalableCharacterSelection = () => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         /* ------------------------------------------------------------------
          *  Redesigned vertical alphabet selector
-         *  - High z-index so it’s never hidden
+         *  - High z-index so it's never hidden
          *  - Solid backdrop & yellow border for contrast
          *  - Subtle shadow for depth
          *  - Slightly bigger gap between letters for touch devices
@@ -332,7 +425,34 @@ const ScalableCharacterSelection = () => {
                                         }, className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50", children: [_jsx("option", { value: "all", children: "All Books" }), _jsx("optgroup", { label: "Old Testament", children: BIBLE_BOOKS.oldTestament.map(book => (_jsx("option", { value: book, children: book }, book))) }), _jsx("optgroup", { label: "New Testament", children: BIBLE_BOOKS.newTestament.map(book => (_jsx("option", { value: book, children: book }, book))) })] }) }), _jsx("div", { className: "w-full md:w-auto", children: _jsxs("select", { value: groupFilter, onChange: (e) => {
                                             setGroupFilter(e.target.value);
                                             setCurrentPage(1);
-                                        }, className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50", children: [_jsx("option", { value: "all", children: "All Groups" }), _jsx("option", { value: "Prophets", children: "Prophets" }), _jsx("option", { value: "Apostles", children: "Apostles" }), _jsx("option", { value: "Kings", children: "Kings" }), _jsx("option", { value: "Women", children: "Women of the Bible" }), groups.map(group => (_jsx("option", { value: group.name, children: group.name }, group.id)))] }) }), _jsxs("div", { className: "flex gap-2", children: [_jsx("button", { onClick: () => setViewMode('grid'), className: `w-10 h-10 rounded-lg flex items-center justify-center ${viewMode === 'grid'
+                                        }, className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50", children: [_jsx("option", { value: "all", children: "All Groups" }), _jsx("option", { value: "Prophets", children: "Prophets" }), _jsx("option", { value: "Apostles", children: "Apostles" }), _jsx("option", { value: "Kings", children: "Kings" }), _jsx("option", { value: "Women", children: "Women of the Bible" }), groups.map(group => (_jsx("option", { value: group.name, children: group.name }, group.id)))] }) }), 
+                                        
+                                        // Favorites toggle button
+                                        _jsx("button", {
+                                            onClick: () => {
+                                                setShowOnlyFavorites(prev => !prev);
+                                                setCurrentPage(1);
+                                            },
+                                            className: `px-4 py-2 rounded-full flex items-center gap-1 ${
+                                                showOnlyFavorites
+                                                    ? 'bg-yellow-400 text-blue-900 font-bold'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'
+                                            }`,
+                                            children: [
+                                                _jsx("svg", {
+                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                    className: "h-4 w-4 mr-1",
+                                                    viewBox: "0 0 20 20",
+                                                    fill: "currentColor",
+                                                    children: _jsx("path", {
+                                                        d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                                                    })
+                                                }),
+                                                "Favorites"
+                                            ]
+                                        }),
+                                        
+                                        _jsxs("div", { className: "flex gap-2", children: [_jsx("button", { onClick: () => setViewMode('grid'), className: `w-10 h-10 rounded-lg flex items-center justify-center ${viewMode === 'grid'
                                                 ? 'bg-yellow-400 text-blue-900'
                                                 : 'bg-white/10 text-white hover:bg-white/20'}`, "aria-label": "Grid view", children: _jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", viewBox: "0 0 20 20", fill: "currentColor", children: _jsx("path", { d: "M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" }) }) }), _jsx("button", { onClick: () => setViewMode('list'), className: `w-10 h-10 rounded-lg flex items-center justify-center ${viewMode === 'list'
                                                 ? 'bg-yellow-400 text-blue-900'
@@ -342,6 +462,7 @@ const ScalableCharacterSelection = () => {
                                     setGroupFilter('all');
                                     setSearchQuery('');
                                     setCurrentLetter('all');
+                                    setShowOnlyFavorites(false);
                                     setCurrentPage(1);
                                 }, className: "text-sm text-blue-300 hover:text-blue-200 ml-auto", children: "Clear All" })] })), _jsxs("div", { className: "text-center text-white/80 mb-6", children: ["Showing ", paginatedCharacters.length, " of ", filteredCharacters.length, " characters"] }), filteredCharacters.length === 0 && (_jsxs("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-8 text-center", children: [_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-16 w-16 mx-auto text-white/50 mb-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" }) }), _jsx("p", { className: "text-xl text-white mb-4", children: "No characters found matching your criteria." }), _jsx("button", { onClick: () => {
                                     setTestament('all');
@@ -349,7 +470,8 @@ const ScalableCharacterSelection = () => {
                                     setGroupFilter('all');
                                     setSearchQuery('');
                                     setCurrentLetter('all');
+                                    setShowOnlyFavorites(false);
                                     setCurrentPage(1);
-                                }, className: "text-yellow-400 hover:text-yellow-300 font-medium", children: "Clear all filters" })] })), filteredCharacters.length > 0 && (_jsx("div", { className: "relative bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg", children: viewMode === 'grid' ? (_jsx("div", { style: { height: '600px' }, children: _jsx(VirtuosoGrid, { totalCount: paginatedCharacters.length, overscan: 200, listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6", itemClassName: "character-card-container", itemContent: index => renderCharacterItem(index) }) })) : (_jsx("div", { className: "space-y-4", children: paginatedCharacters.map((_, index) => renderCharacterItem(index)) })) })), renderPagination()] }), _jsx("span", { className: "fixed bottom-3 left-3 z-50 rounded-full bg-amber-400/90 px-3 py-1 text-xs font-semibold text-blue-900 shadow-lg select-none", title: "Scalable selector active", children: "Scalable\u00A0UI" })] }));
+                                }, className: "text-yellow-400 hover:text-yellow-300 font-medium", children: "Clear all filters" })] })), filteredCharacters.length > 0 && (_jsx("div", { className: "relative bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg", children: viewMode === 'grid' ? (_jsx("div", { style: { height: '600px' }, children: _jsx(VirtuosoGrid, { totalCount: paginatedCharacters.length, overscan: 200, listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6", itemClassName: "character-card-container", itemContent: index => renderCharacterItem(index) }) })) : (_jsx("div", { className: "space-y-4", children: paginatedCharacters.map((_, index) => renderCharacterItem(index)) })) })), renderPagination()] })] }));
 };
 export default ScalableCharacterSelection;
