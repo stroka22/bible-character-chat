@@ -205,30 +205,33 @@ const ChatInterface = () => {
                 }),
                 
                 // Feature image banner (if available)
-                character.feature_image_url && (
-                    <div className="relative w-full h-48 md:h-64 overflow-hidden border-b border-[rgba(255,255,255,.1)]">
-                        <img
-                            src={getSafeAvatarUrl(character.name, character.feature_image_url)}
-                            alt={`${character.name} banner`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
+                character.feature_image_url && (_jsxs("div", {
+                    className: "relative w-full h-48 md:h-64 overflow-hidden border-b border-[rgba(255,255,255,.1)]",
+                    children: [
+                        _jsx("img", {
+                            src: getSafeAvatarUrl(character.name, character.feature_image_url),
+                            alt: `${character.name} banner`,
+                            className: "w-full h-full object-cover",
+                            onError: (e) => {
                                 // hide banner if image fails
                                 if (e?.target?.parentElement) {
                                     e.target.parentElement.style.display = 'none';
                                 }
-                            }}
-                        />
-                        {/* dark gradient for text readability */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,10,42,0.9)] via-[rgba(10,10,42,0.4)] to-transparent" />
-                        {character.opening_line && (
-                            <div className="absolute bottom-0 left-0 w-full p-4">
-                                <h3 className="text-xl font-bold text-yellow-400 drop-shadow-lg">
-                                    {character.opening_line}
-                                </h3>
-                            </div>
-                        )}
-                    </div>
-                ),
+                            }
+                        }),
+                        /* dark gradient for text readability */
+                        _jsx("div", {
+                            className: "absolute inset-0 bg-gradient-to-t from-[rgba(10,10,42,0.9)] via-[rgba(10,10,42,0.4)] to-transparent"
+                        }),
+                        character.opening_line && (_jsx("div", {
+                            className: "absolute bottom-0 left-0 w-full p-4",
+                            children: _jsx("h3", {
+                                className: "text-xl font-bold text-yellow-400 drop-shadow-lg",
+                                children: character.opening_line
+                            })
+                        }))
+                    ]
+                })),
 
                 // Chat messages area
                 _jsxs("div", { 
