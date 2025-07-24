@@ -284,69 +284,125 @@ const ScalableCharacterSelection = () => {
     const renderCharacterItem = useCallback((index) => {
         const character = paginatedCharacters[index];
         const isFavorite = favoriteCharacters.includes(character.id);
-        
+
+        /* ---------- GRID VIEW ---------- */
         if (viewMode === 'grid') {
-            return (_jsx("div", { className: "p-2", children: _jsx(CharacterCard, { 
-                character: character, 
-                onSelect: handleSelectCharacter, 
-                isSelected: selectedCharacter?.id === character.id,
-                isFavorite: isFavorite,
-                onToggleFavorite: () => handleToggleFavorite(character.id)
-            }) }, character.id));
+            return (
+                _jsx("div", {
+                    className: "p-2",
+                    children: _jsx(CharacterCard, {
+                        character,
+                        onSelect: handleSelectCharacter,
+                        isSelected: selectedCharacter?.id === character.id,
+                        isFavorite,
+                        onToggleFavorite: () => handleToggleFavorite(character.id),
+                    }),
+                }, character.id)
+            );
         }
-        else {
-            return (_jsxs("div", { className: `
-            flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15
-            transition-all duration-300 hover:bg-white/15 cursor-pointer
-            ${selectedCharacter?.id === character.id ? 'border-yellow-400 ring-2 ring-yellow-400/30' : ''}
-          `, onClick: () => handleSelectCharacter(character.id), children: [
-                _jsx("table", { className: "border-collapse m-0 p-0", children: _jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { className: `
-                    w-16 h-16 rounded-full overflow-hidden p-0
-                    ${selectedCharacter?.id === character.id ? 'border-2 border-yellow-400' : 'border-2 border-white/30'}
-                    bg-blue-50
-                  `, children: _jsx("img", { src: character.avatar_url ||
-                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`, alt: character.name, className: "w-16 h-16 object-cover block" }) }) }) }) }), 
-                _jsxs("div", { className: "flex-1", children: [
-                    _jsxs("div", { className: "flex items-center", children: [
-                        _jsx("h3", { className: "text-xl font-bold text-yellow-400", style: { fontFamily: 'Cinzel, serif' }, children: character.name }),
-                        _jsx("button", { 
-                            onClick: (e) => {
-                                e.stopPropagation();
-                                handleToggleFavorite(character.id);
-                            },
-                            className: `ml-2 ${isFavorite ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-300'}`,
-                            children: _jsx("svg", { 
-                                xmlns: "http://www.w3.org/2000/svg", 
-                                className: "h-5 w-5", 
-                                viewBox: "0 0 20 20", 
-                                fill: isFavorite ? "currentColor" : "none", 
-                                stroke: "currentColor",
-                                strokeWidth: isFavorite ? "0" : "1.5",
-                                children: _jsx("path", { 
-                                    d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" 
-                                }) 
-                            })
-                        })
-                    ]},
-                    _jsx("div", { className: "flex-1", children: [
-                        _jsx("p", { className: "text-white/80 line-clamp-2", children: character.description }),
-                        _jsxs("div", { className: "text-xs text-white/50 mt-1", children: [
-                            character.bible_book && `${character.bible_book} • `,
-                            testament === 'old'
-                                ? 'Old Testament'
-                                : testament === 'new'
-                                    ? 'New Testament'
-                                    : ''
-                        ] })
-                    ]}),
-                    _jsx("button", { className: `
-                        px-4 py-2 rounded-lg text-sm font-medium
-                        ${selectedCharacter?.id === character.id
-                            ? 'bg-yellow-400 text-blue-900'
-                            : 'bg-white/10 text-white hover:bg-white/20'}
-                    `, children: selectedCharacter?.id === character.id ? 'Continue' : 'Chat' })
-                ] }, character.id));
-        }
+
+        /* ---------- LIST VIEW ---------- */
+        return (
+            _jsxs("div", {
+                className: `
+                    flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4
+                    border border-white/15 transition-all duration-300 hover:bg-white/15 cursor-pointer
+                    ${selectedCharacter?.id === character.id ? 'border-yellow-400 ring-2 ring-yellow-400/30' : ''}
+                `,
+                onClick: () => handleSelectCharacter(character.id),
+                children: [
+                    /* Avatar ------------------------------------------------- */
+                    _jsx("table", {
+                        className: "border-collapse m-0 p-0",
+                        children: _jsx("tbody", {
+                            children: _jsx("tr", {
+                                children: _jsx("td", {
+                                    className: `
+                                        w-16 h-16 rounded-full overflow-hidden p-0
+                                        ${selectedCharacter?.id === character.id ? 'border-2 border-yellow-400' : 'border-2 border-white/30'}
+                                        bg-blue-50
+                                    `,
+                                    children: _jsx("img", {
+                                        src: character.avatar_url ||
+                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`,
+                                        alt: character.name,
+                                        className: "w-16 h-16 object-cover block",
+                                    }),
+                                }),
+                            }),
+                        }),
+                    }),
+
+                    /* Details ------------------------------------------------ */
+                    _jsxs("div", {
+                        className: "flex-1",
+                        children: [
+                            /* Name + star */
+                            _jsxs("div", {
+                                className: "flex items-center",
+                                children: [
+                                    _jsx("h3", {
+                                        className: "text-xl font-bold text-yellow-400",
+                                        style: { fontFamily: 'Cinzel, serif' },
+                                        children: character.name,
+                                    }),
+                                    _jsx("button", {
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            handleToggleFavorite(character.id);
+                                        },
+                                        className: `ml-2 ${isFavorite
+                                            ? 'text-yellow-400'
+                                            : 'text-gray-400 hover:text-yellow-300'}`,
+                                        children: _jsx("svg", {
+                                            xmlns: "http://www.w3.org/2000/svg",
+                                            className: "h-5 w-5",
+                                            viewBox: "0 0 20 20",
+                                            fill: isFavorite ? "currentColor" : "none",
+                                            stroke: "currentColor",
+                                            strokeWidth: isFavorite ? "0" : "1.5",
+                                            children: _jsx("path", {
+                                                d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z",
+                                            }),
+                                        }),
+                                    }),
+                                ],
+                            }),
+
+                            /* Description */
+                            _jsx("p", {
+                                className: "text-white/80 line-clamp-2",
+                                children: character.description,
+                            }),
+
+                            /* Meta */
+                            _jsxs("div", {
+                                className: "text-xs text-white/50 mt-1",
+                                children: [
+                                    character.bible_book && `${character.bible_book} • `,
+                                    testament === 'old'
+                                        ? 'Old Testament'
+                                        : testament === 'new'
+                                            ? 'New Testament'
+                                            : '',
+                                ],
+                            }),
+                        ],
+                    }),
+
+                    /* Action button ----------------------------------------- */
+                    _jsx("button", {
+                        className: `
+                            px-4 py-2 rounded-lg text-sm font-medium
+                            ${selectedCharacter?.id === character.id
+                                ? 'bg-yellow-400 text-blue-900'
+                                : 'bg-white/10 text-white hover:bg-white/20'}
+                        `,
+                        children: selectedCharacter?.id === character.id ? 'Continue' : 'Chat',
+                    }),
+                ],
+            }, character.id)
+        );
     }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite]);
     
     const renderPagination = () => {
