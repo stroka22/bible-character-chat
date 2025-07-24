@@ -107,7 +107,8 @@ function App() {
         
         // Fallback route
         _jsx(Route, { path: "*", element: _jsx(Navigate, { to: "/", replace: true }) })
-        ] }) })] }) }) }));
+        ] }) })]
+    })] }) }) }));
 }
 
 export default App;
