@@ -281,7 +281,12 @@ const ScalableCharacterSelection = () => {
     };
     const renderAlphaNav = () => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        return (_jsxs("div", { className: "fixed right-4 top-1/2 transform -translate-y-1/2 bg-white/5 backdrop-blur-sm rounded-full py-4 px-2 hidden lg:flex flex-col gap-1 border border-white/10", children: [_jsx("button", { onClick: () => {
+        /* 
+         * Alphabet navigation was hidden on most screen sizes because of
+         * `hidden lg:flex`.  Replace with `flex` so it’s always visible, and
+         * add a subtle shadow for readability.
+         */
+        return (_jsxs("div", { className: "fixed right-4 top-1/2 transform -translate-y-1/2 bg-white/5 backdrop-blur-sm rounded-full py-4 px-2 flex flex-col gap-1 border border-white/10 shadow-lg", children: [_jsx("button", { onClick: () => {
                         setCurrentLetter('all');
                         setCurrentPage(1);
                     }, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm ${currentLetter === 'all'
