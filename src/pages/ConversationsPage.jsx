@@ -124,7 +124,7 @@ const ConversationsPage = () => {
   };
 
   // Placeholder when not logged in
-  if (!isAuthenticated && !SKIP_AUTH) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-8">
@@ -231,11 +231,6 @@ const ConversationsPage = () => {
               </Link>
             )}
 
-              >
-                Refresh Conversations
-              </button>
-            </div>
-          </div>
         )}
 
         {/* Simple conversations list */}
