@@ -6,26 +6,7 @@ import { useConversation } from '../contexts/ConversationContext.jsx';
 const ConversationsPage = () => {
   console.log('[ConversationsPage] Rendering');
   
-  /* ------------------------------------------------------------------
-   * Detect SKIP_AUTH flag (query param or env var)
-   * When SKIP_AUTH is enabled we treat the user as “virtually” logged in
-   * so that developers can test the UI without going through Supabase.
-   * ------------------------------------------------------------------ */
-  const params = new URLSearchParams(window.location.search);
-  const SKIP_AUTH =
-    params.get('skipAuth') === '1' ||
-    import.meta.env.VITE_SKIP_AUTH === 'true';
-
   const { user, isAuthenticated } = useAuth();
-
-  // ------------------------------------------------------------------
-  // Extra diagnostic logging so we can see what auth / skipAuth flags
-  // are active when the page renders.
-  // ------------------------------------------------------------------
-  console.log('[ConversationsPage] Authentication status:', {
-    isAuthenticated,
-    skipAuth: SKIP_AUTH,
-  });
 
   const {
     conversations = [],
@@ -75,31 +56,10 @@ const ConversationsPage = () => {
 
   // Fetch conversations when authenticated
   useEffect(() => {
-    // Fetch when authenticated OR when auth checks are bypassed
-    if ((isAuthenticated || SKIP_AUTH) && typeof fetchConversations === 'function') {
-      console.log('[ConversationsPage] Fetching conversations');
-      fetchConversations()
-        .then((result) => {
-          console.log('[ConversationsPage] Fetch result:', result);
-          if (!result || result.length === 0) {
-            console.log('[ConversationsPage] No conversations found');
-          } else {
-            console.log(`[ConversationsPage] Found ${result.length} conversations`);
-          }
-        })
-        .catch(err => {
-          console.error('[ConversationsPage] Error fetching conversations:', err);
-        });
-      setHasAttemptedLoad(true);
-    } else {
-      // Helpful diagnostic when conversations aren't fetched
-      console.log('[ConversationsPage] Not fetching conversations:', {
-        isAuthenticated,
-        skipAuth: SKIP_AUTH,
-        hasFetchFunction: typeof fetchConversations === 'function',
-      });
+    if (isAuthenticated && typeof fetchConversations === 'function') {
+      fetchConversations().finally(() => setHasAttemptedLoad(true));
     }
-  }, [isAuthenticated, fetchConversations, SKIP_AUTH]);
+  }, [isAuthenticated, fetchConversations]);
 
   // Helper: format date
   // Helper: format date
@@ -187,9 +147,6 @@ const ConversationsPage = () => {
     );
   }
 
-  // Log conversations each render for debugging
-  console.log('[ConversationsPage] Rendering with conversations:', conversations);
-
   return (
     <div className="min-h-screen bg-blue-900 text-white">
       <div className="container mx-auto px-4 py-8">
@@ -274,25 +231,6 @@ const ConversationsPage = () => {
               </Link>
             )}
 
-            {/* Debug button – helps diagnose why conversations might not appear */}
-            <div className="mt-4">
-              <button
-                onClick={() => {
-                  console.log('[ConversationsPage] Manual fetch triggered');
-                  if (typeof fetchConversations === 'function') {
-                    fetchConversations().then((result) => {
-                      console.log(
-                        '[ConversationsPage] Manual fetch result:',
-                        result,
-                      );
-                    });
-                  } else {
-                    console.warn(
-                      '[ConversationsPage] fetchConversations is not a function',
-                    );
-                  }
-                }}
-                className="px-4 py-2 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
               >
                 Refresh Conversations
               </button>
@@ -301,29 +239,6 @@ const ConversationsPage = () => {
         )}
 
         {/* Simple conversations list */}
-        {/* CRITICAL DEBUG INFO */}
-        <div className="bg-purple-900/30 border border-purple-500 rounded-lg p-4 mb-6">
-          <h3 className="text-lg font-semibold text-purple-300 mb-2">Debug Information</h3>
-          <div className="text-sm text-purple-200">
-            <p>Total conversations: {conversations?.length || 0}</p>
-            {conversations && conversations.length > 0 && (
-              <div className="mt-2">
-                <p className="font-semibold">First conversation details:</p>
-                <pre className="mt-1 p-2 bg-purple-900/50 rounded overflow-auto text-xs">
-                  {JSON.stringify(
-                    {
-                      id: conversations[0].id,
-                      title: conversations[0].title,
-                      character_id: conversations[0].character_id,
-                    },
-                    null,
-                    2,
-                  )}
-                </pre>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Simple conversations list */}
         {conversations &&
