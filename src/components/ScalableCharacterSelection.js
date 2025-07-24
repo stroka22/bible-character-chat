@@ -281,22 +281,23 @@ const ScalableCharacterSelection = () => {
     };
     const renderAlphaNav = () => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        /*
-         * Improve visibility/spacing of the alphabet nav.
-         * 1. move 2px further from the edge (`right-6`)
-         * 2. stronger backdrop + shadow
-         * 3. slightly larger padding so buttons don’t feel cramped
-         */
-        return (_jsxs("div", { className: "fixed right-6 top-1/2 -translate-y-1/2 bg-white/15 backdrop-blur-md rounded-full py-6 px-3 flex flex-col gap-1 border border-white/30 shadow-xl", children: [_jsx("button", { onClick: () => {
+        /* ------------------------------------------------------------------
+         *  Redesigned vertical alphabet selector
+         *  - High z-index so it’s never hidden
+         *  - Solid backdrop & yellow border for contrast
+         *  - Subtle shadow for depth
+         *  - Slightly bigger gap between letters for touch devices
+         * ------------------------------------------------------------------ */
+        return (_jsxs("div", { className: "fixed right-4 top-1/2 -translate-y-1/2 z-50 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 flex flex-col gap-1.5 border-2 border-yellow-400/50 shadow-2xl", children: [_jsx("button", { onClick: () => {
                         setCurrentLetter('all');
                         setCurrentPage(1);
-                    }, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === 'all'
-                        ? 'bg-yellow-400 text-blue-900 font-bold'
+                    }, "aria-label": "Show all characters", className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === 'all'
+                        ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
                         : 'text-white hover:bg-white/20'}`, children: "All" }), letters.map(letter => (_jsx("button", { onClick: () => {
                         setCurrentLetter(letter);
                         setCurrentPage(1);
-                    }, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === letter
-                        ? 'bg-yellow-400 text-blue-900 font-bold'
+                    }, "aria-label": `Show characters starting with ${letter}`, className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === letter
+                        ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
                         : 'text-white hover:bg-white/20'}`, children: letter }, letter)))] }));
     };
     if (isLoading) {
