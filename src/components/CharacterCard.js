@@ -169,10 +169,13 @@ const CharacterCard = ({
                                 e.stopPropagation();
                                 onSelect(character);
                             },
+                            /* absolutely position so it never gets pushed out
+                               of view when other elements change height */
                             className: `
-                                mt-auto rounded-lg px-4 py-2 text-sm font-semibold shadow-md
+                                absolute bottom-4 left-4 right-4 sm:left-0 sm:right-auto
+                                rounded-lg px-6 py-2 text-sm font-semibold shadow-md
                                 transition-colors duration-200
-                                z-20 relative
+                                z-20
                                 ${isSelected
                                     ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
                                     : 'bg-blue-600 text-white hover:bg-blue-700'}
