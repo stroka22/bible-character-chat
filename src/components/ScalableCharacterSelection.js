@@ -288,7 +288,8 @@ const ScalableCharacterSelection = () => {
          *  - Subtle shadow for depth
          *  - Slightly bigger gap between letters for touch devices
          * ------------------------------------------------------------------ */
-        return (_jsxs("div", { className: "fixed right-4 top-1/2 -translate-y-1/2 z-50 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 flex flex-col gap-1.5 border-2 border-yellow-400/50 shadow-2xl", children: [_jsx("button", { onClick: () => {
+        /* make bar usable on short screens: stick near top & scroll when needed */
+        return (_jsxs("div", { className: "fixed right-4 top-20 translate-y-0 z-50 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 flex flex-col gap-1.5 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", children: [_jsx("button", { onClick: () => {
                         setCurrentLetter('all');
                         setCurrentPage(1);
                     }, "aria-label": "Show all characters", className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === 'all'
