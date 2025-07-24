@@ -154,7 +154,9 @@ const CharacterCard = ({
                                 }),
                                 " ",
                                 _jsx("p", {
-                                    className: "relative text-sm text-gray-700 line-clamp-2 group-hover:line-clamp-none transition-all duration-300 z-10",
+                                    /* Keep the paragraph height stable so the action
+                                       button never shifts (or disappears) on hover */
+                                    className: "relative text-sm text-gray-700 line-clamp-2 z-10",
                                     children: character.description
                                 })
                             ]
