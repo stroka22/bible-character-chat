@@ -10,6 +10,8 @@ const CharacterCard = ({ character, onSelect, isSelected = false }) => {
         group relative flex flex-col sm:flex-row items-center gap-4 overflow-hidden rounded-xl border-2 
         bg-white/90 backdrop-blur-sm shadow-lg
         transition-all duration-300 ease-in-out cursor-pointer
+        /* ensure cards are equal height before hover */
+        h-[320px] sm:h-[200px] w-full
         ${isSelected
             ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
             : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
@@ -39,7 +41,7 @@ const CharacterCard = ({ character, onSelect, isSelected = false }) => {
                                             e.target.src =
                                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
                                         } }) }) }) }) }), _jsx("div", { className: "absolute top-0 right-0 w-8 h-8 opacity-70 z-10 pointer-events-none", children: _jsx("svg", { viewBox: "0 0 100 100", fill: "none", xmlns: "http://www.w3.org/2000/svg", className: "w-full h-full", children: _jsx("path", { d: "M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z", fill: "#FFD700" }) }) }), bibleBook && (_jsx("div", { className: "absolute bottom-1 left-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded z-10 backdrop-blur-sm", children: bibleBook }))] }), _jsxs("div", { className: "flex flex-1 flex-col p-4 sm:pr-4 sm:pl-0", children: [_jsx("h3", { className: "mb-1 text-xl font-extrabold text-blue-900 tracking-tight", children: character.name }), _jsx("div", { className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2 opacity-80" }), _jsxs("div", { className: "relative mb-4", children: [_jsx("div", { className: "absolute inset-0 bg-blue-50/30 rounded pointer-events-none" }), " ", _jsx("p", { className: "relative text-sm text-gray-700 line-clamp-2 group-hover:line-clamp-none transition-all duration-300 z-10", children: character.description })] }), _jsx("button", { onClick: (e) => {
-                            e.stopPropagation();
+            "relative mb-4 h-[60px] overflow-hidden", 
                             onSelect(character);
                         }, className: `
             mt-auto rounded-lg px-4 py-2 text-sm font-semibold shadow-md

@@ -4,8 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Header = ({ simplified = false }) => {
     const { user, signOut } = useAuth();
-    // For development, we'll show admin link with a visual indicator when not actually admin
-    const isAdmin = user?.email === 'admin@example.com' || import.meta.env.VITE_SKIP_AUTH === 'true';
+    // Only show admin link for a verified admin user
+    const isAdmin = user?.email === 'admin@example.com';
     
     return (
         _jsxs("header", { 
