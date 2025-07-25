@@ -289,7 +289,7 @@ const ScalableCharacterSelection = () => {
         if (viewMode === 'grid') {
             return (
                 _jsx("div", {
-                    className: "p-2",
+                    className: "p-4 overflow-visible",
                     children: _jsx(CharacterCard, {
                         character,
                         onSelect: handleSelectCharacter,
