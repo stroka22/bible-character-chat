@@ -15,10 +15,8 @@ const CharacterCard = ({
     return (
         _jsxs(motion.div, {
             className: `
-                group relative flex flex-col sm:flex-row items-center gap-4 overflow-visible rounded-xl border-2 
-                bg-white/90 backdrop-blur-sm shadow-lg
-                transition-all duration-300 ease-in-out cursor-pointer
-                /* ensure cards are equal height before hover */
+                relative flex flex-col sm:flex-row items-center gap-4 
+                rounded-xl border-2 bg-white/90 shadow-lg
                 h-[320px] sm:h-[200px] w-full
                 ${isSelected
                     ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
@@ -40,12 +38,15 @@ const CharacterCard = ({
             },
             "aria-label": `Chat with ${character.name}${bibleBook ? ` from ${bibleBook}` : ''}`,
             children: [
+                /* Background and selection indicator */
                 _jsx("div", {
-                    className: "absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30 mix-blend-overlay pointer-events-none"
+                    className: "absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30 mix-blend-overlay"
                 }),
                 isSelected && (_jsx("div", {
                     className: "absolute -inset-0.5 bg-yellow-300 opacity-20 blur-md rounded-xl animate-pulse"
                 })),
+                
+                /* Favorite button */
                 _jsx("button", {
                     "aria-label": isFavorite ? 'Remove from favorites' : 'Add to favorites',
                     onClick: (e) => {
@@ -56,11 +57,9 @@ const CharacterCard = ({
                     },
                     className: `
                         absolute top-2 left-2 z-10 rounded-full p-1.5 
-                        transition-all duration-300
                         ${isFavorite
                             ? 'bg-yellow-100 text-yellow-600 shadow-md'
-                            : 'bg-white/80 text-gray-400 hover:text-gray-600 hover:bg-white/90 backdrop-blur-sm'}
-                        focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-offset-2
+                            : 'bg-white/80 text-gray-400 hover:text-gray-600 hover:bg-white/90'}
                     `,
                     children: isFavorite ? (
                         _jsx("svg", {
@@ -88,87 +87,69 @@ const CharacterCard = ({
                         })
                     )
                 }),
+                
+                /* Avatar */
                 _jsxs("div", {
                     className: "relative w-[150px] h-[150px] flex-shrink-0",
                     children: [
                         _jsx("div", {
-                            className: "absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent pointer-events-none z-10 rounded-full"
+                            className: "absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent rounded-full"
                         }),
-                        _jsx("table", {
-                            className: "border-collapse m-0 p-0 w-[150px] h-[150px] relative z-0",
-                            children: _jsx("tbody", {
-                                children: _jsx("tr", {
-                                    children: _jsx("td", {
-                                        className: `
-                                            w-[150px] h-[150px] rounded-full overflow-hidden p-0
-                                            ${isSelected ? 'border-4 border-yellow-400' : 'border-2 border-white/40'}
-                                            shadow-md bg-blue-50
-                                        `,
-                                        children: _jsx("img", {
-                                            src: avatarUrl,
-                                            alt: character.name,
-                                            className: "w-[150px] h-[150px] object-cover block",
-                                            onError: (e) => {
-                                                e.target.src =
-                                                    `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
-                                            }
-                                        })
-                                    })
-                                })
-                            })
-                        }),
-                        _jsx("div", {
-                            className: "absolute top-0 right-0 w-8 h-8 opacity-70 z-10 pointer-events-none",
-                            children: _jsx("svg", {
-                                viewBox: "0 0 100 100",
-                                fill: "none",
-                                xmlns: "http://www.w3.org/2000/svg",
-                                className: "w-full h-full",
-                                children: _jsx("path", {
-                                    d: "M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z",
-                                    fill: "#FFD700"
-                                })
-                            })
+                        _jsx("img", {
+                            src: avatarUrl,
+                            alt: character.name,
+                            className: `w-[150px] h-[150px] object-cover rounded-full border-2 ${isSelected ? 'border-yellow-400' : 'border-white/40'}`,
+                            onError: (e) => {
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
+                            }
                         }),
                         bibleBook && (_jsx("div", {
-                            className: "absolute bottom-1 left-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded z-10 backdrop-blur-sm",
+                            className: "absolute bottom-1 left-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded backdrop-blur-sm",
                             children: bibleBook
                         }))
                     ]
                 }),
+                
+                /* Content */
                 _jsxs("div", {
-                    className: "flex flex-1 flex-col p-4 sm:pr-4 sm:pl-0",
+                    className: "flex flex-1 flex-col p-4 sm:pl-0",
                     children: [
                         _jsx("h3", {
-                            className: "mb-1 text-xl font-extrabold text-blue-900 tracking-tight",
+                            className: "mb-1 text-xl font-extrabold text-blue-900",
                             children: character.name
                         }),
                         _jsx("div", {
-                            className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2 opacity-80"
+                            className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2"
                         }),
-                        /* Description + blue overlay */
-                        _jsxs("div", {
-                            /* fixed height so the card never grows/shrinks on hover,
-                               ensuring the action button below remains in view */
-                            className: "relative mb-4 h-16 overflow-hidden",
-                            children: [
-                                _jsx("div", {
-                                    className: "absolute inset-0 bg-blue-50/30 rounded pointer-events-none"
-                                }),
-                                " ",
-                                _jsx("p", {
-                                    /* Keep the paragraph height stable so the action
-                                       button never shifts (or disappears) on hover */
-                                    className: "relative text-sm text-gray-700 line-clamp-2 z-10",
-                                    children: character.description
-                                })
-                            ]
-                        }),
-                        /* Start-chat button moved out to a global overlay below */
+                        _jsx("p", {
+                            className: "text-sm text-gray-700 line-clamp-2 mb-4",
+                            children: character.description
+                        })
                     ]
                 }),
+                
+                /* FIXED ACTION BUTTON - positioned completely outside the flow */
+                _jsx("div", {
+                    className: "absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto",
+                    children: _jsx("button", {
+                        onClick: (e) => {
+                            e.stopPropagation();
+                            onSelect(character);
+                        },
+                        className: `
+                            w-full sm:w-auto px-6 py-2 rounded-lg text-sm font-semibold shadow-md
+                            ${isSelected
+                                ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
+                                : 'bg-blue-600 text-white hover:bg-blue-700'}
+                        `,
+                        "aria-label": `Start chat with ${character.name}`,
+                        children: isSelected ? 'Continue Chat' : 'Start Chat'
+                    })
+                }),
+                
+                /* Selected indicator */
                 isSelected && (_jsx("div", {
-                    className: "absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-20",
+                    className: "absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-10",
                     children: _jsx("svg", {
                         xmlns: "http://www.w3.org/2000/svg",
                         viewBox: "0 0 24 24",
@@ -181,53 +162,6 @@ const CharacterCard = ({
                         })
                     })
                 }))
-                /* GUARANTEED VISIBLE BUTTON – INLINE STYLES, UNTOUCHABLE BY OTHER CSS */
-                _jsx("div", {
-                    /* Wrapper intercepts no clicks, only positions the button. */
-                    style: {
-                        position: "absolute",
-                        bottom: "4px",
-                        left: "4px",
-                        right: "4px",
-                        padding: "10px",
-                        zIndex: 9999,
-                        pointerEvents: "none",
-                    },
-                    children: _jsx("button", {
-                        onClick: (e) => {
-                            e.stopPropagation();
-                            onSelect(character);
-                        },
-                        /* Core visual styles set inline with !important-level precedence */
-                        style: {
-                            display: "block",
-                            width: "100%",
-                            borderRadius: "0.5rem",
-                            padding: "0.75rem 1rem",
-                            fontWeight: "bold",
-                            boxShadow:
-                                "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)",
-                            backgroundColor: isSelected ? "#EAB308" : "#2563EB", // yellow-500 / blue-600
-                            color: isSelected ? "#1E3A8A" : "#FFFFFF", // blue-900 / white
-                            textAlign: "center",
-                            pointerEvents: "auto", // button itself is clickable
-                            position: "relative",
-                            zIndex: 9999,
-                        },
-                        onMouseEnter: (e) => {
-                            e.currentTarget.style.backgroundColor = isSelected
-                                ? "#CA8A04" // yellow-600
-                                : "#1D4ED8"; // blue-700
-                        },
-                        onMouseLeave: (e) => {
-                            e.currentTarget.style.backgroundColor = isSelected
-                                ? "#EAB308" // yellow-500
-                                : "#2563EB"; // blue-600
-                        },
-                        "aria-label": `Start chat with ${character.name}`,
-                        children: isSelected ? "Continue Chat" : "Start Chat",
-                    }),
-                })
             ]
         })
     );
