@@ -15,21 +15,23 @@ const CharacterCard = ({
     return (
         <motion.div
             className={`
-                relative flex flex-col rounded-xl border-2 bg-white shadow-lg
-                h-auto min-h-[300px] w-full
+                group relative flex flex-col rounded-xl border-2 bg-white shadow-lg
+                h-[340px] w-full overflow-hidden
                 ${isSelected
                     ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
                     : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
             `}
             whileHover={{
                 scale: 1.02,
+                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
                 transition: { duration: 0.2 }
             }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onSelect(character)}
         >
             {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30" />
+            {/* Card background (slightly intensifies on hover) */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30 transition-all duration-300 group-hover:opacity-80" />
             
             {/* Selected highlight */}
             {isSelected && (
@@ -66,11 +68,15 @@ const CharacterCard = ({
             {/* Content */}
             <div className="flex flex-col items-center pt-6 pb-16 px-4 h-full relative z-10">
                 {/* Avatar */}
-                <div className="relative w-24 h-24 mb-4">
+                {/* Avatar (grows & border brightens on hover) */}
+                <div className="relative w-24 h-24 mb-4 transition-transform duration-300 group-hover:scale-105">
                     <img
                         src={avatarUrl}
                         alt={character.name}
-                        className={`w-24 h-24 object-cover rounded-full border-2 ${isSelected ? 'border-yellow-400' : 'border-white/40'}`}
+                        className={`w-24 h-24 object-cover rounded-full border-2 transition-colors duration-300
+                            ${isSelected
+                                ? 'border-yellow-400'
+                                : 'border-white/40 group-hover:border-yellow-200'}`}
                         onError={(e) => {
                             e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
                         }}
@@ -83,8 +89,11 @@ const CharacterCard = ({
                 </div>
                 
                 {/* Name and description */}
-                <h3 className="text-xl font-bold text-blue-900 mb-2 text-center">{character.name}</h3>
-                <div className="h-0.5 w-12 bg-yellow-400 rounded-full mb-3 opacity-70" />
+                {/* Name & divider animate subtly on hover */}
+                <h3 className="text-xl font-bold text-blue-900 mb-2 text-center transition-colors duration-300 group-hover:text-blue-700">
+                    {character.name}
+                </h3>
+                <div className="h-0.5 w-12 bg-yellow-400 rounded-full mb-3 opacity-70 transition-all duration-300 group-hover:w-16 group-hover:opacity-100" />
                 <p className="text-sm text-gray-700 text-center mb-4 line-clamp-3">{character.description}</p>
             </div>
             
@@ -97,9 +106,10 @@ const CharacterCard = ({
                     }}
                     className={`
                         w-full py-2 px-4 rounded-lg text-sm font-semibold shadow-md
+                        transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5
                         ${isSelected
-                            ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'}
+                            ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-400'
+                            : 'bg-blue-600 text-white hover:bg-blue-500'}
                     `}
                 >
                     {isSelected ? 'Continue Chat' : 'Start Chat'}
@@ -108,7 +118,8 @@ const CharacterCard = ({
             
             {/* Selected checkmark */}
             {isSelected && (
-                <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-10">
+                {/* Selected indicator pulses */}
+                <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-10 animate-pulse">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                         <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
                     </svg>
