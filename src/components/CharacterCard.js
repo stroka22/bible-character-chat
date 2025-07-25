@@ -181,26 +181,52 @@ const CharacterCard = ({
                         })
                     })
                 }))
-                /* GUARANTEED VISIBLE BUTTON (bottom overlay) */
+                /* GUARANTEED VISIBLE BUTTON – INLINE STYLES, UNTOUCHABLE BY OTHER CSS */
                 _jsx("div", {
-                    className: "absolute bottom-0 left-0 right-0 py-4 px-4 bg-gradient-to-t from-white via-white/90 to-transparent",
-                    style: { zIndex: 50 },
+                    /* Wrapper intercepts no clicks, only positions the button. */
+                    style: {
+                        position: "absolute",
+                        bottom: "4px",
+                        left: "4px",
+                        right: "4px",
+                        padding: "10px",
+                        zIndex: 9999,
+                        pointerEvents: "none",
+                    },
                     children: _jsx("button", {
                         onClick: (e) => {
                             e.stopPropagation();
                             onSelect(character);
                         },
-                        className: `
-                            w-full rounded-lg px-4 py-2.5 text-sm font-bold
-                            shadow-lg
-                            ${isSelected
-                                ? 'bg-yellow-500 text-blue-900 hover:bg-yellow-600'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'}
-                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300
-                        `,
+                        /* Core visual styles set inline with !important-level precedence */
+                        style: {
+                            display: "block",
+                            width: "100%",
+                            borderRadius: "0.5rem",
+                            padding: "0.75rem 1rem",
+                            fontWeight: "bold",
+                            boxShadow:
+                                "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)",
+                            backgroundColor: isSelected ? "#EAB308" : "#2563EB", // yellow-500 / blue-600
+                            color: isSelected ? "#1E3A8A" : "#FFFFFF", // blue-900 / white
+                            textAlign: "center",
+                            pointerEvents: "auto", // button itself is clickable
+                            position: "relative",
+                            zIndex: 9999,
+                        },
+                        onMouseEnter: (e) => {
+                            e.currentTarget.style.backgroundColor = isSelected
+                                ? "#CA8A04" // yellow-600
+                                : "#1D4ED8"; // blue-700
+                        },
+                        onMouseLeave: (e) => {
+                            e.currentTarget.style.backgroundColor = isSelected
+                                ? "#EAB308" // yellow-500
+                                : "#2563EB"; // blue-600
+                        },
                         "aria-label": `Start chat with ${character.name}`,
-                        children: isSelected ? 'Continue Chat' : 'Start Chat'
-                    })
+                        children: isSelected ? "Continue Chat" : "Start Chat",
+                    }),
                 })
             ]
         })
