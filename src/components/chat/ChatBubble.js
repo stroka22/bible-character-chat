@@ -19,10 +19,20 @@ const ChatBubble = ({ message, characterName, characterAvatar, isTyping = false,
         }
     };
     const avatarUrl = getSafeAvatarUrl(characterName, characterAvatar);
-    const timestamp = new Date(message.created_at).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    /* ------------------------------------------------------------------ 
+     * Safely format timestamp
+     * - Guard against null / undefined / invalid dates that were causing
+     *   the visible “Invalid Date” string in the UI.
+     * ------------------------------------------------------------------ */
+    const timestamp = message?.created_at
+        ? new Date(message.created_at).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+        })
+        : new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
     return (_jsx("div", { className: `flex w-full mb-4 ${isUser ? 'justify-end' : 'justify-start'}`, children: _jsxs("div", { className: `flex max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`, children: [!isUser && (_jsx("div", { className: "flex-shrink-0 mr-2", children: _jsx("img", { src: avatarUrl, alt: characterName, className: "h-10 w-10 rounded-full object-cover border-2 border-yellow-400", onError: (e) => {
                             e.target.src = generateFallbackAvatar(characterName);
                         } }) })), _jsxs("div", { className: `flex flex-col ${isUser ? 'items-end mr-2' : 'items-start'}`, children: [!isUser && (_jsx("div", { className: "text-sm font-medium text-gray-700 mb-1 ml-1", children: characterName })), _jsx("div", { className: `
