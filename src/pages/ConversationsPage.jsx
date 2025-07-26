@@ -6,7 +6,8 @@ import { useConversation } from '../contexts/ConversationContext.jsx';
 const ConversationsPage = () => {
   console.log('[ConversationsPage] Rendering');
   
-  const { user, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
+  console.log('[ConversationsPage] Auth state:', { user: !!user, loading, isAuthenticated });
 
   const {
     conversations = [],
@@ -56,12 +57,30 @@ const ConversationsPage = () => {
 
   // Fetch conversations when authenticated
   useEffect(() => {
-    if (isAuthenticated && typeof fetchConversations === 'function') {
+    console.log('[ConversationsPage] useEffect for fetching conversations', { 
+      isAuthenticated, 
+      user: !!user,
+      fetchConversationsExists: typeof fetchConversations === 'function' 
+    });
+    
+    if (user && typeof fetchConversations === 'function') {
+      console.log('[ConversationsPage] Fetching conversations');
       fetchConversations().finally(() => setHasAttemptedLoad(true));
     }
-  }, [isAuthenticated, fetchConversations]);
+  }, [user, fetchConversations]);
 
-  // Helper: format date
+  // Add a failsafe timeout to ensure hasAttemptedLoad gets set to true
+  useEffect(() => {
+    if (!hasAttemptedLoad) {
+      console.log('[ConversationsPage] Setting up failsafe timeout for hasAttemptedLoad');
+      const timer = setTimeout(() => {
+        console.log('[ConversationsPage] Failsafe timeout triggered - setting hasAttemptedLoad to true');
+        setHasAttemptedLoad(true);
+      }, 3000); // 3 seconds timeout
+      return () => clearTimeout(timer);
+    }
+  }, [hasAttemptedLoad]);
+
   // Helper: format date
   const formatDate = (iso) => {
     if (!iso) return '';
@@ -123,8 +142,9 @@ const ConversationsPage = () => {
     return title.replace('Unknown', characterName);
   };
 
-  // Placeholder when not logged in
-  if (!isAuthenticated) {
+  // Placeholder when not logged in - using improved check that's more reliable
+  if (!user && !loading && hasAttemptedLoad) {
+    console.log('[ConversationsPage] Showing login required message');
     return (
       <div className="min-h-screen bg-blue-900 text-white">
         <div className="container mx-auto px-4 py-8">
@@ -147,6 +167,22 @@ const ConversationsPage = () => {
     );
   }
 
+  // Show loading state while auth is still being determined
+  if (loading && !hasAttemptedLoad) {
+    console.log('[ConversationsPage] Showing loading state while auth is being determined');
+    return (
+      <div className="min-h-screen bg-blue-900 text-white">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center my-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400" />
+          </div>
+          <p className="text-center text-blue-100">Loading your conversations...</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('[ConversationsPage] Rendering main content');
   return (
     <div className="min-h-screen bg-blue-900 text-white">
       <div className="container mx-auto px-4 py-8">
