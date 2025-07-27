@@ -18,11 +18,11 @@ const CharacterCard = ({
     return (
         <motion.div
             className={`
-                group relative flex flex-col rounded-xl border-2 bg-white shadow-lg
+                group relative flex flex-col rounded-xl border-4 bg-white shadow-lg
                 h-[340px] w-full overflow-hidden
                 ${isSelected
                     ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
-                    : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
+                    : 'border-white/60 hover:border-yellow-400/80 hover:shadow-xl hover:ring-2 hover:ring-yellow-400/40'}
             `}
             whileHover={{
                 scale: 1.02,
