@@ -116,11 +116,25 @@ const ChatInterface = () => {
                                 })
                             ]
                         }),
-                        _jsx("button", { 
+                        _jsxs("button", { 
                             onClick: resetChat, 
                             id: "backBtn", 
-                            className: "text-sm px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
-                            children: "Back to Characters" 
+                            className: "insights-toggle-button flex items-center gap-1 px-3 py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900",
+                            children: [
+                                /* Left-arrow icon */
+                                _jsx("svg", { 
+                                    xmlns: "http://www.w3.org/2000/svg", 
+                                    className: "h-5 w-5", 
+                                    viewBox: "0 0 20 20", 
+                                    fill: "currentColor",
+                                    children: _jsx("path", { 
+                                        fillRule: "evenodd", 
+                                        d: "M12.707 15.707a1 1 0 01-1.414 0L5.586 10l5.707-5.707a1 1 0 011.414 1.414L8.414 10l4.293 4.293a1 1 0 010 1.414z", 
+                                        clipRule: "evenodd" 
+                                    })
+                                }),
+                                "Back to Characters"
+                            ] 
                         })
                     ]
                 }),

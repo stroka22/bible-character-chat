@@ -350,6 +350,8 @@ const ScalableCharacterSelection = () => {
                         isSelected: selectedCharacter?.id === character.id,
                         isFavorite,
                         onToggleFavorite: () => handleToggleFavorite(character.id),
+                        isFeatured,
+                        onSetAsFeatured: () => handleSetAsFeatured(character),
                     }),
                 }, character.id)
             );
@@ -367,25 +369,18 @@ const ScalableCharacterSelection = () => {
                 onClick: () => handleSelectCharacter(character.id),
                 children: [
                     /* Avatar ------------------------------------------------- */
-                    _jsx("table", {
-                        className: "border-collapse m-0 p-0",
-                        children: _jsx("tbody", {
-                            children: _jsx("tr", {
-                                children: _jsx("td", {
-                                    className: `
-                                        w-16 h-16 rounded-full overflow-hidden p-0
-                                        ${selectedCharacter?.id === character.id ? 'border-2 border-yellow-400' : 'border-2 border-white/30'}
-                                        ${isFeatured ? 'border-2 border-yellow-500 ring-2 ring-yellow-500/30' : ''}
-                                        bg-blue-50
-                                    `,
-                                    children: _jsx("img", {
-                                        src: character.avatar_url ||
-                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`,
-                                        alt: character.name,
-                                        className: "w-16 h-16 object-cover block",
-                                    }),
-                                }),
-                            }),
+                    _jsx("div", {
+                        className: `
+                            flex-shrink-0 w-16 h-16 rounded-full overflow-hidden 
+                            ${selectedCharacter?.id === character.id ? 'border-2 border-yellow-400' : 'border-2 border-white/30'}
+                            ${isFeatured ? 'border-yellow-500 ring-2 ring-yellow-500/30' : ''}
+                            bg-blue-50
+                        `,
+                        children: _jsx("img", {
+                            src: character.avatar_url ||
+                                `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`,
+                            alt: character.name,
+                            className: "w-full h-full object-cover",
                         }),
                     }),
 
@@ -554,8 +549,12 @@ const ScalableCharacterSelection = () => {
     if (error) {
         return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]", children: _jsxs("div", { className: "max-w-md rounded-lg bg-white bg-opacity-90 p-8 text-center shadow-2xl", children: [_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-16 w-16 mx-auto text-red-500 mb-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" }) }), _jsx("h3", { className: "mb-2 text-xl font-semibold text-red-800", style: { fontFamily: 'Cinzel, serif' }, children: "Error" }), _jsx("p", { className: "text-red-700 mb-4", children: error }), _jsx("button", { onClick: () => window.location.reload(), className: "rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition-colors shadow-md", children: "Try Again" })] }) }));
     }
-    return (_jsxs("div", { className: "min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6", children: [renderAlphaNav(), _jsxs("div", { className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl", children: [_jsx("h1", { className: "text-4xl md:text-5xl font-extrabold text-center text-yellow-400 mb-8 tracking-tight drop-shadow-lg", style: { fontFamily: 'Cinzel, serif' }, children: "Choose Your Biblical Guide" }), featuredCharacter && (_jsxs("div", { className: "mb-12 flex flex-col items-center", children: [_jsxs("div", { className: "relative mb-4", children: [_jsx("div", { className: "absolute -inset-4 rounded-full bg-yellow-300 blur-xl opacity-30" }), _jsx("table", { className: "border-collapse m-0 p-0 relative z-0", children: _jsx("tbody", { children: _jsx("tr", { children: _jsx("td", { className: "w-32 h-32 rounded-full overflow-hidden p-0 border-4 border-yellow-300 shadow-xl bg-blue-50", children: _jsx("img", { src: featuredCharacter.avatar_url ||
-                                                            `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`, alt: featuredCharacter.name, className: "w-32 h-32 object-cover block" }) }) }) }) })] }), _jsx("h2", { className: "text-2xl font-bold text-white mb-2", style: { fontFamily: 'Cinzel, serif' }, children: featuredCharacter.name }), _jsx("p", { className: "text-blue-100 max-w-md text-center mb-4", children: featuredCharacter.description }), _jsxs("button", { onClick: () => handleSelectCharacter(featuredCharacter.id), className: "bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105 active:scale-95", children: ["Chat with ", featuredCharacter.name, " \uD83D\uDE4F"] }), _jsx("p", { className: "mt-6 text-blue-100 text-sm", children: "Or select another character below" })] })), _jsx("div", { className: "mb-8 flex justify-center", children: _jsx("button", { onClick: () => (window.location.href = '/pricing.html'), className: "animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200", children: "\uD83D\uDD13 Unlock all characters \u00A0\u2013\u00A0 Upgrade to Premium" }) }), _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6", children: _jsxs("div", { className: "flex flex-col md:flex-row gap-4 items-center", children: [_jsx("div", { className: "w-full md:flex-1", children: _jsx("input", { type: "text", placeholder: "Search characters...", value: searchQuery, onChange: (e) => {
+    return (_jsxs("div", { className: "min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6", children: [renderAlphaNav(), _jsxs("div", { className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl", children: [_jsx("h1", { className: "text-4xl md:text-5xl font-extrabold text-center text-yellow-400 mb-8 tracking-tight drop-shadow-lg", style: { fontFamily: 'Cinzel, serif' }, children: "Choose Your Biblical Guide" }), featuredCharacter && (_jsxs("div", { className: "mb-12 flex flex-col items-center", children: [_jsxs("div", { className: "relative mb-4", children: [_jsx("div", { className: "absolute -inset-4 rounded-full bg-yellow-300 blur-xl opacity-30" }), _jsx("div", { className: "relative w-32 h-32 rounded-full overflow-hidden border-4 border-yellow-300 shadow-xl bg-blue-50", children: _jsx("img", { 
+                                    src: featuredCharacter.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`, 
+                                    alt: featuredCharacter.name, 
+                                    className: "w-full h-full object-cover" 
+                                }) 
+                            })] }), _jsx("h2", { className: "text-2xl font-bold text-white mb-2", style: { fontFamily: 'Cinzel, serif' }, children: featuredCharacter.name }), _jsx("p", { className: "text-blue-100 max-w-md text-center mb-4", children: featuredCharacter.description }), _jsxs("button", { onClick: () => handleSelectCharacter(featuredCharacter.id), className: "bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105 active:scale-95", children: ["Chat with ", featuredCharacter.name, " \uD83D\uDE4F"] }), _jsx("p", { className: "mt-6 text-blue-100 text-sm", children: "Or select another character below" })] })), _jsx("div", { className: "mb-8 flex justify-center", children: _jsx("button", { onClick: () => (window.location.href = '/pricing.html'), className: "animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200", children: "\uD83D\uDD13 Unlock all characters \u00A0\u2013\u00A0 Upgrade to Premium" }) }), _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6", children: _jsxs("div", { className: "flex flex-col md:flex-row gap-4 items-center", children: [_jsx("div", { className: "w-full md:flex-1", children: _jsx("input", { type: "text", placeholder: "Search characters...", value: searchQuery, onChange: (e) => {
                                             setSearchQuery(e.target.value);
                                             setCurrentPage(1);
                                         }, className: "w-full bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-yellow-400/50" }) }), _jsxs("div", { className: "flex gap-2", children: [_jsx("button", { onClick: () => {
