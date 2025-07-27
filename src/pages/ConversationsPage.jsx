@@ -2,6 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useConversation } from '../contexts/ConversationContext.jsx';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { characterRepository } from '../repositories/characterRepository';
+import CharacterCard from '../components/CharacterCard';
 
 const ConversationsPage = () => {
   console.log('[ConversationsPage] Rendering');
@@ -31,6 +35,30 @@ const ConversationsPage = () => {
   // Show only favorites toggle
   // ------------------------------------------------------------------
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
+  /* ------------------------------------------------------------------
+   * Favorite characters for quick access
+   * ------------------------------------------------------------------ */
+  const [favoriteCharacters, setFavoriteCharacters] = useState([]);
+  const [favLoading, setFavLoading] = useState(true);
+
+  useEffect(() => {
+    // Load favorite characters once on mount
+    const loadFavorites = async () => {
+      try {
+        const allCharacters = await characterRepository.getAll();
+        const saved = localStorage.getItem('favoriteCharacters');
+        const favIds = saved ? JSON.parse(saved) : [];
+        const favChars = allCharacters.filter((c) => favIds.includes(c.id));
+        setFavoriteCharacters(favChars);
+      } catch (e) {
+        console.error('Failed loading favorite characters:', e);
+      } finally {
+        setFavLoading(false);
+      }
+    };
+    loadFavorites();
+  }, []);
 
   /* ------------------------------------------------------------------
    * Delete conversation helper
@@ -185,7 +213,34 @@ const ConversationsPage = () => {
   console.log('[ConversationsPage] Rendering main content');
   return (
     <div className="min-h-screen bg-blue-900 text-white">
-      <div className="container mx-auto px-4 py-8">
+      {/* Site header */}
+      <Header />
+
+      <div className="container mx-auto px-4 py-8 pt-24">
+
+        {/* Favorite Characters quick-access */}
+        {!favLoading && favoriteCharacters.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-2xl font-semibold text-yellow-300 mb-4">
+              Favorite Characters
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {favoriteCharacters.map((char) => (
+                <CharacterCard
+                  key={char.id}
+                  character={char}
+                  onSelect={(c) => (window.location.href = `/chat?character=${c.id}`)}
+                  isFavorite={true}
+                  /* dummy handlers to satisfy props */
+                  onToggleFavorite={() => {}}
+                  isFeatured={false}
+                  onSetAsFeatured={() => {}}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-yellow-300">Your Conversations</h1>
 
