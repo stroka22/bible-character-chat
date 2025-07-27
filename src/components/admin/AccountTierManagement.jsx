@@ -1,0 +1,339 @@
+import React, { useState, useEffect } from 'react';
+import { characterRepository } from '../../repositories/characterRepository';
+import { getPublicKey, SUBSCRIPTION_PRICES } from '../../services/stripe';
+
+/**
+ * Account Tier Management Component
+ * 
+ * Allows administrators to configure:
+ * - Character access limits for free accounts
+ * - Message limits per conversation for free accounts
+ * - Which characters are free vs premium-only
+ */
+const AccountTierManagement = () => {
+  // Configuration state
+  const [freeMessageLimit, setFreeMessageLimit] = useState(5);
+  const [freeCharacterLimit, setFreeCharacterLimit] = useState(10);
+  const [characters, setCharacters] = useState([]);
+  const [freeCharacters, setFreeCharacters] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
+  const [stripeConfig, setStripeConfig] = useState({
+    publicKey: '',
+    monthlyPrice: '',
+    yearlyPrice: '',
+    isConfigured: false
+  });
+
+  // Load characters and settings on mount
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Load characters
+        const allCharacters = await characterRepository.getAll();
+        setCharacters(allCharacters);
+
+        // Load Stripe configuration
+        const publicKey = getPublicKey();
+        setStripeConfig({
+          publicKey: publicKey,
+          monthlyPrice: SUBSCRIPTION_PRICES.MONTHLY,
+          yearlyPrice: SUBSCRIPTION_PRICES.YEARLY,
+          isConfigured: publicKey !== 'pk_missing_key'
+        });
+
+        // Load saved settings from localStorage
+        const savedSettings = localStorage.getItem('accountTierSettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          setFreeMessageLimit(settings.freeMessageLimit || 5);
+          setFreeCharacterLimit(settings.freeCharacterLimit || 10);
+          setFreeCharacters(settings.freeCharacters || []);
+        } else {
+          // Set defaults if no settings exist
+          // By default, make the first 5 characters free
+          const defaultFreeCharacters = allCharacters
+            .slice(0, 5)
+            .map(char => char.id);
+          setFreeCharacters(defaultFreeCharacters);
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setSaveMessage({
+          type: 'error',
+          text: 'Failed to load configuration data'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Save settings to localStorage
+  const saveSettings = () => {
+    setIsSaving(true);
+    try {
+      const settings = {
+        freeMessageLimit,
+        freeCharacterLimit,
+        freeCharacters,
+        lastUpdated: new Date().toISOString()
+      };
+      localStorage.setItem('accountTierSettings', JSON.stringify(settings));
+      setSaveMessage({
+        type: 'success',
+        text: 'Settings saved successfully!'
+      });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSaveMessage({ type: '', text: '' });
+      }, 3000);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      setSaveMessage({
+        type: 'error',
+        text: 'Failed to save settings'
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Reset settings to defaults
+  const resetSettings = () => {
+    if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
+      setFreeMessageLimit(5);
+      setFreeCharacterLimit(10);
+      
+      // Make the first 5 characters free by default
+      const defaultFreeCharacters = characters
+        .slice(0, 5)
+        .map(char => char.id);
+      setFreeCharacters(defaultFreeCharacters);
+      
+      setSaveMessage({
+        type: 'info',
+        text: 'Settings reset to defaults. Click Save to apply changes.'
+      });
+    }
+  };
+
+  // Toggle a character's free/premium status
+  const toggleCharacterStatus = (characterId) => {
+    setFreeCharacters(prev => {
+      if (prev.includes(characterId)) {
+        // Remove from free characters (make premium)
+        return prev.filter(id => id !== characterId);
+      } else {
+        // Add to free characters
+        return [...prev, characterId];
+      }
+    });
+  };
+
+  // Check if we've exceeded the free character limit
+  const isFreeLimitExceeded = freeCharacters.length > freeCharacterLimit;
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-2xl font-bold text-blue-900 mb-6">
+        Account Tier Management
+      </h2>
+
+      {isLoading ? (
+        <div className="flex justify-center my-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <>
+          {/* Stripe Configuration Status */}
+          <div className={`mb-6 p-4 rounded-lg ${stripeConfig.isConfigured ? 'bg-green-100' : 'bg-yellow-100'}`}>
+            <h3 className="font-semibold text-lg mb-2">
+              {stripeConfig.isConfigured ? 'Stripe Configuration' : 'Stripe Not Configured'}
+            </h3>
+            {stripeConfig.isConfigured ? (
+              <div className="space-y-1">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Public Key:</span> {stripeConfig.publicKey.substring(0, 10)}...
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Monthly Price ID:</span> {stripeConfig.monthlyPrice}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Yearly Price ID:</span> {stripeConfig.yearlyPrice}
+                </p>
+                <p className="text-sm text-gray-700 mt-2">
+                  These values are configured in your .env file and can be updated there.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-700">
+                Stripe is not configured. Add your Stripe public key and price IDs to the .env file to enable payment processing.
+              </p>
+            )}
+          </div>
+
+          {/* Free Account Limits */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-blue-800 mb-4">Free Account Limits</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Message Limit */}
+              <div className="space-y-2">
+                <label htmlFor="messageLimit" className="block text-sm font-medium text-gray-700">
+                  Message Limit per Conversation
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <input
+                    type="number"
+                    id="messageLimit"
+                    min="1"
+                    max="50"
+                    value={freeMessageLimit}
+                    onChange={(e) => setFreeMessageLimit(parseInt(e.target.value) || 1)}
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-3 pr-12 sm:text-sm border-gray-300 rounded-md"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">messages</span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Free users will be limited to this many messages per conversation before being prompted to upgrade.
+                </p>
+              </div>
+
+              {/* Character Limit */}
+              <div className="space-y-2">
+                <label htmlFor="characterLimit" className="block text-sm font-medium text-gray-700">
+                  Free Character Limit
+                </label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <input
+                    type="number"
+                    id="characterLimit"
+                    min="1"
+                    max={characters.length}
+                    value={freeCharacterLimit}
+                    onChange={(e) => setFreeCharacterLimit(parseInt(e.target.value) || 1)}
+                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-3 pr-12 sm:text-sm border-gray-300 rounded-md"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">characters</span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Maximum number of characters that can be set as free. Currently {freeCharacters.length} of {freeCharacterLimit} selected.
+                </p>
+                {isFreeLimitExceeded && (
+                  <p className="text-sm text-red-600 font-medium">
+                    Warning: You've selected {freeCharacters.length} free characters, which exceeds your limit of {freeCharacterLimit}.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Character Selection */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-blue-800 mb-4">Character Access Settings</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select which characters are available to free users. All other characters will require a premium subscription.
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {characters.map(character => (
+                <div 
+                  key={character.id}
+                  className={`
+                    border rounded-lg p-4 flex items-center space-x-3 cursor-pointer transition-all
+                    ${freeCharacters.includes(character.id) 
+                      ? 'bg-blue-50 border-blue-300' 
+                      : 'bg-purple-50 border-purple-300'}
+                  `}
+                  onClick={() => toggleCharacterStatus(character.id)}
+                >
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={character.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}`}
+                      alt={character.name}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {character.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {freeCharacters.includes(character.id) ? 'Free' : 'Premium Only'}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <span className={`
+                      inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                      ${freeCharacters.includes(character.id) 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-purple-100 text-purple-800'}
+                    `}>
+                      {freeCharacters.includes(character.id) ? 'Free' : 'Premium'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Save/Reset Buttons */}
+          <div className="flex justify-between items-center">
+            <button
+              type="button"
+              onClick={resetSettings}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Reset to Defaults
+            </button>
+            
+            <div className="flex items-center space-x-4">
+              {saveMessage.text && (
+                <div className={`text-sm ${
+                  saveMessage.type === 'success' ? 'text-green-600' :
+                  saveMessage.type === 'error' ? 'text-red-600' : 'text-blue-600'
+                }`}>
+                  {saveMessage.text}
+                </div>
+              )}
+              
+              <button
+                type="button"
+                onClick={saveSettings}
+                disabled={isSaving}
+                className={`
+                  inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white 
+                  ${isSaving 
+                    ? 'bg-blue-300 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'}
+                `}
+              >
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                  </>
+                ) : 'Save Settings'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default AccountTierManagement;
