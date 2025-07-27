@@ -32,7 +32,6 @@ const CharacterCard = ({
             whileTap={{ scale: 0.98 }}
             onClick={() => onSelect(character)}
         >
-            {/* Background */}
             {/* Card background (slightly intensifies on hover) */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30 transition-all duration-300 group-hover:opacity-80" />
             
@@ -100,7 +99,6 @@ const CharacterCard = ({
             
             {/* Content */}
             <div className="flex flex-col items-center pt-6 pb-16 px-4 h-full relative z-10">
-                {/* Avatar */}
                 {/* Avatar (grows & border brightens on hover) */}
                 <div className="relative w-24 h-24 mb-4 transition-transform duration-300 group-hover:scale-105">
                     <img
@@ -121,7 +119,6 @@ const CharacterCard = ({
                     )}
                 </div>
                 
-                {/* Name and description */}
                 {/* Name & divider animate subtly on hover */}
                 <h3 className="text-xl font-bold text-blue-900 mb-2 text-center transition-colors duration-300 group-hover:text-blue-700">
                     {character.name}
@@ -149,9 +146,8 @@ const CharacterCard = ({
                 </button>
             </div>
             
-            {/* Selected checkmark */}
+            {/* Selected checkmark (pulses) */}
             {isSelected && (
-                {/* Selected indicator pulses */}
                 <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-10 animate-pulse">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                         <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
