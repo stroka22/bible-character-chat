@@ -67,12 +67,65 @@ const ScalableCharacterSelection = () => {
         }
     }, [favoriteCharacters]);
     
+    // Handle setting a character as featured
+    const handleSetAsFeatured = useCallback((character) => {
+        if (!character) return;
+        
+        try {
+            // Save to localStorage
+            localStorage.setItem('featuredCharacter', character.name);
+            setFeaturedCharacter(character);
+            
+            // Show confirmation
+            alert(`${character.name} is now your featured character!`);
+        } catch (error) {
+            console.error('Error setting featured character:', error);
+        }
+    }, []);
+    
     const fetchCharacters = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
             const data = await characterRepository.getAll();
             setCharacters(data);
+            
+            // 1. Check URL parameter for featured character
+            const urlParams = new URLSearchParams(window.location.search);
+            const featuredParam = urlParams.get('featured');
+            
+            let featured = null;
+            
+            if (featuredParam) {
+                // Try to find character by name (case insensitive)
+                featured = data.find(c => 
+                    c.name.toLowerCase() === featuredParam.toLowerCase() ||
+                    c.name.toLowerCase().includes(featuredParam.toLowerCase())
+                );
+                
+                if (featured) {
+                    console.log(`Found featured character from URL: ${featured.name}`);
+                    setFeaturedCharacter(featured);
+                    return;
+                }
+            }
+            
+            // 2. Check localStorage for saved featured character
+            const savedFeatured = localStorage.getItem('featuredCharacter');
+            if (savedFeatured) {
+                featured = data.find(c => 
+                    c.name.toLowerCase() === savedFeatured.toLowerCase() ||
+                    c.name.toLowerCase().includes(savedFeatured.toLowerCase())
+                );
+                
+                if (featured) {
+                    console.log(`Found featured character from localStorage: ${featured.name}`);
+                    setFeaturedCharacter(featured);
+                    return;
+                }
+            }
+            
+            // 3. Fallback to Jesus or first character (existing logic)
             const jesus = data.find(c => c.name.toLowerCase().includes('jesus'));
             setFeaturedCharacter(jesus || (data.length > 0 ? data[0] : null));
         }
@@ -284,6 +337,7 @@ const ScalableCharacterSelection = () => {
     const renderCharacterItem = useCallback((index) => {
         const character = paginatedCharacters[index];
         const isFavorite = favoriteCharacters.includes(character.id);
+        const isFeatured = featuredCharacter?.id === character.id;
 
         /* ---------- GRID VIEW ---------- */
         if (viewMode === 'grid') {
@@ -308,6 +362,7 @@ const ScalableCharacterSelection = () => {
                     flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4
                     border border-white/15 transition-all duration-300 hover:bg-white/15 cursor-pointer
                     ${selectedCharacter?.id === character.id ? 'border-yellow-400 ring-2 ring-yellow-400/30' : ''}
+                    ${isFeatured ? 'border-yellow-500 bg-yellow-500/10' : ''}
                 `,
                 onClick: () => handleSelectCharacter(character.id),
                 children: [
@@ -320,6 +375,7 @@ const ScalableCharacterSelection = () => {
                                     className: `
                                         w-16 h-16 rounded-full overflow-hidden p-0
                                         ${selectedCharacter?.id === character.id ? 'border-2 border-yellow-400' : 'border-2 border-white/30'}
+                                        ${isFeatured ? 'border-2 border-yellow-500 ring-2 ring-yellow-500/30' : ''}
                                         bg-blue-50
                                     `,
                                     children: _jsx("img", {
@@ -337,15 +393,17 @@ const ScalableCharacterSelection = () => {
                     _jsxs("div", {
                         className: "flex-1",
                         children: [
-                            /* Name + star */
+                            /* Name + star + featured */
                             _jsxs("div", {
                                 className: "flex items-center",
                                 children: [
                                     _jsx("h3", {
-                                        className: "text-xl font-bold text-yellow-400",
+                                        className: `text-xl font-bold ${isFeatured ? 'text-yellow-500' : 'text-yellow-400'}`,
                                         style: { fontFamily: 'Cinzel, serif' },
                                         children: character.name,
                                     }),
+                                    
+                                    /* Favorite button */
                                     _jsx("button", {
                                         onClick: (e) => {
                                             e.stopPropagation();
@@ -354,6 +412,7 @@ const ScalableCharacterSelection = () => {
                                         className: `ml-2 ${isFavorite
                                             ? 'text-yellow-400'
                                             : 'text-gray-400 hover:text-yellow-300'}`,
+                                        title: isFavorite ? "Remove from favorites" : "Add to favorites",
                                         children: _jsx("svg", {
                                             xmlns: "http://www.w3.org/2000/svg",
                                             className: "h-5 w-5",
@@ -366,6 +425,37 @@ const ScalableCharacterSelection = () => {
                                             }),
                                         }),
                                     }),
+                                    
+                                    /* Set as Featured button */
+                                    _jsx("button", {
+                                        onClick: (e) => {
+                                            e.stopPropagation();
+                                            handleSetAsFeatured(character);
+                                        },
+                                        className: `ml-2 ${isFeatured
+                                            ? 'text-yellow-500'
+                                            : 'text-gray-400 hover:text-yellow-300'}`,
+                                        title: isFeatured ? "Current featured character" : "Set as featured character",
+                                        children: _jsx("svg", {
+                                            xmlns: "http://www.w3.org/2000/svg",
+                                            className: "h-5 w-5",
+                                            viewBox: "0 0 20 20",
+                                            fill: isFeatured ? "currentColor" : "none",
+                                            stroke: "currentColor",
+                                            strokeWidth: isFeatured ? "0" : "1.5",
+                                            children: _jsx("path", {
+                                                d: "M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z",
+                                            }),
+                                        }),
+                                    }),
+                                    
+                                    /* Featured badge */
+                                    isFeatured && (
+                                        _jsx("span", {
+                                            className: "ml-2 text-xs bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full border border-yellow-500/30",
+                                            children: "Featured"
+                                        })
+                                    )
                                 ],
                             }),
 
@@ -403,7 +493,7 @@ const ScalableCharacterSelection = () => {
                 ],
             }, character.id)
         );
-    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite]);
+    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite, featuredCharacter, handleSetAsFeatured]);
     
     const renderPagination = () => {
         if (totalPages <= 1)

@@ -7,6 +7,9 @@ const CharacterCard = ({
     isSelected = false,
     isFavorite = false,
     onToggleFavorite,
+    /* new: featured support ------------------------------------------------ */
+    isFeatured = false,
+    onSetAsFeatured,
 }) => {
     const avatarUrl = character.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
@@ -29,6 +32,7 @@ const CharacterCard = ({
             whileTap={{ scale: 0.98 }}
             onClick={() => onSelect(character)}
         >
+            {/* Background */}
             {/* Card background (slightly intensifies on hover) */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-white/50 to-yellow-50/30 transition-all duration-300 group-hover:opacity-80" />
             
@@ -63,9 +67,40 @@ const CharacterCard = ({
                     </svg>
                 )}
             </button>
+
+            {/* Set-as-featured button (shows on hover) */}
+            <button
+                aria-label={isFeatured ? 'Current featured character' : 'Set as featured'}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (typeof onSetAsFeatured === 'function') {
+                        onSetAsFeatured();
+                    }
+                }}
+                className={`
+                    absolute top-2 right-2 z-10 rounded-full p-1.5
+                    opacity-0 group-hover:opacity-100 transition-opacity
+                    ${isFeatured
+                        ? 'bg-yellow-100 text-yellow-600 shadow-md'
+                        : 'bg-white/80 text-gray-400 hover:text-gray-600 hover:bg-white/90'}
+                `}
+            >
+                {isFeatured ? (
+                    /* solid bookmark */
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                        <path d="M5 3a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 17V3z" />
+                    </svg>
+                ) : (
+                    /* outline bookmark */
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" stroke="currentColor" className="h-5 w-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 17V3z" />
+                    </svg>
+                )}
+            </button>
             
             {/* Content */}
             <div className="flex flex-col items-center pt-6 pb-16 px-4 h-full relative z-10">
+                {/* Avatar */}
                 {/* Avatar (grows & border brightens on hover) */}
                 <div className="relative w-24 h-24 mb-4 transition-transform duration-300 group-hover:scale-105">
                     <img
@@ -86,6 +121,7 @@ const CharacterCard = ({
                     )}
                 </div>
                 
+                {/* Name and description */}
                 {/* Name & divider animate subtly on hover */}
                 <h3 className="text-xl font-bold text-blue-900 mb-2 text-center transition-colors duration-300 group-hover:text-blue-700">
                     {character.name}
@@ -115,6 +151,7 @@ const CharacterCard = ({
             
             {/* Selected checkmark */}
             {isSelected && (
+                {/* Selected indicator pulses */}
                 <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-10 animate-pulse">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                         <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
