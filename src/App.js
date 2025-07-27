@@ -16,7 +16,7 @@ import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
-import Header from './components/layout/Header';
+import Header from './components/Header';
 
 class ErrorBoundary extends React.Component {
     constructor() {
