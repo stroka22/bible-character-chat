@@ -1,8 +1,11 @@
-import { jsx as _jsx } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import React from 'react';          // Needed for React.Fragment reference
 import './index.css';
 import App from './App';
+import Header from './components/Header';
+import Footer from './components/Footer';
 import './services/import-services';
 (() => {
     const id = 'sw-cleanup';
@@ -45,7 +48,19 @@ if (!rootElement) {
 }
 console.log('[App] Starting Bible Character Chat with safe service initialization');
 try {
-    createRoot(rootElement).render(_jsx(StrictMode, { children: _jsx(App, {}) }));
+    // Avoid JSX fragment shorthand so the file can be transpiled without the JSX plugin.
+    // We build the children array manually and use the `_jsxs` helper from `react/jsx-runtime`.
+    createRoot(rootElement).render(
+        _jsx(StrictMode, {
+            children: _jsxs(React.Fragment, {
+                children: [
+                    _jsx(Header, {}),
+                    _jsx(App, {}),
+                    _jsx(Footer, {})
+                ]
+            })
+        })
+    );
 }
 catch (err) {
     console.error('[App] Failed to initialise React root:', err);

@@ -15,14 +15,35 @@ const CharacterCard = ({
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
     const bibleBook = character.bible_book || '';
 
+    // Handler for favorite button to prevent event bubbling
+    const handleFavoriteClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof onToggleFavorite === 'function') {
+            onToggleFavorite();
+        }
+        return false;
+    };
+
+    // Handler for featured button to prevent event bubbling
+    const handleFeaturedClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof onSetAsFeatured === 'function') {
+            onSetAsFeatured();
+        }
+        return false;
+    };
+
     return (
         <motion.div
             className={`
-                group relative flex flex-col rounded-xl border-4 bg-white shadow-lg
+                group relative flex flex-col rounded-xl bg-white shadow-lg
                 h-[340px] w-full overflow-hidden
                 ${isSelected
-                    ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
-                    : 'border-white/60 hover:border-yellow-400/80 hover:shadow-xl hover:ring-2 hover:ring-yellow-400/40'}
+                    ? 'border-4 border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
+                    : 'border-4 border-yellow-300/40 hover:border-6 hover:border-yellow-400 hover:shadow-xl hover:ring-2 hover:ring-yellow-400/50'}
+                transition-all duration-300
             `}
             whileHover={{
                 scale: 1.02,
@@ -43,17 +64,14 @@ const CharacterCard = ({
             {/* Favorite button */}
             <button
                 aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (typeof onToggleFavorite === 'function') {
-                        onToggleFavorite();
-                    }
-                }}
+                onClick={handleFavoriteClick}
+                onMouseDown={(e) => e.stopPropagation()}
                 className={`
-                    absolute top-2 left-2 z-10 rounded-full p-1.5 
+                    absolute top-2 left-2 z-20 rounded-full p-1.5 
                     ${isFavorite
                         ? 'bg-yellow-100 text-yellow-600 shadow-md'
                         : 'bg-white/80 text-gray-400 hover:text-gray-600 hover:bg-white/90'}
+                    cursor-pointer
                 `}
             >
                 {isFavorite ? (
@@ -70,18 +88,14 @@ const CharacterCard = ({
             {/* Set-as-featured button (shows on hover) */}
             <button
                 aria-label={isFeatured ? 'Current featured character' : 'Set as featured'}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    if (typeof onSetAsFeatured === 'function') {
-                        onSetAsFeatured();
-                    }
-                }}
+                onClick={handleFeaturedClick}
+                onMouseDown={(e) => e.stopPropagation()}
                 className={`
-                    absolute top-2 right-2 z-10 rounded-full p-1.5
-                    opacity-0 group-hover:opacity-100 transition-opacity
-                    ${isFeatured
-                        ? 'bg-yellow-100 text-yellow-600 shadow-md'
-                        : 'bg-white/80 text-gray-400 hover:text-gray-600 hover:bg-white/90'}
+                    absolute top-2 right-2 z-20 rounded-full p-1.5
+                    ${isFeatured 
+                        ? 'opacity-100 bg-yellow-100 text-yellow-600 shadow-md' 
+                        : 'opacity-0 group-hover:opacity-100 bg-white/80 text-gray-400 hover:text-gray-600 hover:bg-white/90'}
+                    transition-opacity duration-200 cursor-pointer
                 `}
             >
                 {isFeatured ? (
@@ -107,7 +121,7 @@ const CharacterCard = ({
                         className={`w-24 h-24 object-cover rounded-full border-2 transition-colors duration-300
                             ${isSelected
                                 ? 'border-yellow-400'
-                                : 'border-white/40 group-hover:border-yellow-200'}`}
+                                : 'border-yellow-300/60 group-hover:border-yellow-400'}`}
                         onError={(e) => {
                             e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
                         }}
