@@ -4,8 +4,6 @@ import { createRoot } from 'react-dom/client';
 import React from 'react';          // Needed for React.Fragment reference
 import './index.css';
 import App from './App';
-import Header from './components/Header';
-import Footer from './components/Footer';
 import './services/import-services';
 (() => {
     const id = 'sw-cleanup';
@@ -52,13 +50,7 @@ try {
     // We build the children array manually and use the `_jsxs` helper from `react/jsx-runtime`.
     createRoot(rootElement).render(
         _jsx(StrictMode, {
-            children: _jsxs(React.Fragment, {
-                children: [
-                    _jsx(Header, {}),
-                    _jsx(App, {}),
-                    _jsx(Footer, {})
-                ]
-            })
+            children: _jsx(App, {})
         })
     );
 }

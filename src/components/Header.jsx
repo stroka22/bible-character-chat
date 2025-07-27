@@ -11,7 +11,25 @@ import FaithLogo from './FaithLogo';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { user, isAuthenticated, loading, logout } = useAuth();
+  /* ------------------------------------------------------------------
+   * Safely obtain auth context (header should never crash if provider
+   * is missing).  If the hook throws, fall back to a “guest” context.
+   * ------------------------------------------------------------------ */
+  let user = null;
+  let isAuthenticated = false;
+  let loading = false;
+  let logout = () => {};
+
+  try {
+    const auth = useAuth();
+    user = auth?.user ?? null;
+    isAuthenticated = auth?.isAuthenticated ?? false;
+    loading = auth?.loading ?? false;
+    logout = auth?.logout ?? (() => {});
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[Header] AuthContext unavailable – rendering guest header.', err);
+  }
   const location = useLocation();
 
   // Handle scroll effect for header
