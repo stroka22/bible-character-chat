@@ -114,7 +114,7 @@ const CharacterCard = ({
             {/* Content */}
             <div className="flex flex-col items-center pt-6 pb-16 px-4 h-full relative z-10">
                 {/* Avatar (grows & border brightens on hover) */}
-                <div className="relative w-24 h-24 mb-4 transition-transform duration-300 group-hover:scale-105">
+                <div className="relative w-24 h-24 mb-1 transition-transform duration-300 group-hover:scale-105">
                     <img
                         src={avatarUrl}
                         alt={character.name}
@@ -126,12 +126,14 @@ const CharacterCard = ({
                             e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
                         }}
                     />
-                    {bibleBook && (
-                        <div className="absolute bottom-0 -right-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded">
-                            {bibleBook}
-                        </div>
-                    )}
                 </div>
+                
+                {/* Bible book badge - moved below avatar */}
+                {bibleBook && (
+                    <div className="bg-blue-900/80 text-white text-xs px-2 py-0.5 rounded-full mb-2 transition-all duration-300 group-hover:bg-blue-800">
+                        {bibleBook}
+                    </div>
+                )}
                 
                 {/* Name & divider animate subtly on hover */}
                 <h3 className="text-xl font-bold text-blue-900 mb-2 text-center transition-colors duration-300 group-hover:text-blue-700">
