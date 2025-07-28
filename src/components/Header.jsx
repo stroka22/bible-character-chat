@@ -140,6 +140,16 @@ const Header = () => {
           >
             Pricing
           </Link>
+          <Link 
+            to="/faq" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/faq') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            FAQ
+          </Link>
         </nav>
 
         {/* User Menu / Auth Buttons */}
@@ -314,6 +324,16 @@ const Header = () => {
               }`}
             >
               Pricing
+            </Link>
+            <Link 
+              to="/faq" 
+              className={`text-sm font-medium transition-colors ${
+                isActive('/faq') 
+                  ? 'text-yellow-400' 
+                  : 'text-gray-300'
+              }`}
+            >
+              FAQ
             </Link>
           </nav>
 

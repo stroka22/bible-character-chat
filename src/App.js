@@ -14,6 +14,8 @@ import SignupPage from './pages/SignupPage';
 import PricingPage from './pages/PricingPage';
 import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
+import FavoritesPage from './pages/FavoritesPage.jsx';
+import FAQPage from './pages/FAQPage.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
@@ -92,6 +94,7 @@ function App() {
         _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }),
         _jsx(Route, { path: "/signup", element: _jsx(SignupPage, {}) }),
         _jsx(Route, { path: "/pricing", element: _jsx(PricingPage, {}) }),
+        _jsx(Route, { path: "/faq", element: _jsx(FAQPage, {}) }),
         _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         
         // Chat & Shared conversation routes (public access)
@@ -102,7 +105,8 @@ function App() {
         // Protected routes
         _jsx(Route, { element: _jsx(ProtectedRoute, { redirectPath: "/login" }), children: [
             _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
-            _jsx(Route, { path: "/conversations", element: _jsx(ConversationsPage, {}) })
+            _jsx(Route, { path: "/conversations", element: _jsx(ConversationsPage, {}) }),
+            _jsx(Route, { path: "/favorites", element: _jsx(FavoritesPage, {}) })
         ]}),
         
         // Fallback route
