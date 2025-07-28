@@ -6,6 +6,12 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CharacterCard from '../components/CharacterCard';
 
+/**
+ * FavoritesPage Component
+ * 
+ * Route: /favorites
+ * Displays all characters that the user has marked as favorites
+ */
 const FavoritesPage = () => {
   const { user, loading, isAuthenticated } = useAuth();
   const [characters, setCharacters] = useState([]);
