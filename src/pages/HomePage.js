@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext.jsx';
 import ScalableCharacterSelection from '../components/ScalableCharacterSelection';
 import ChatInterface from '../components/chat/ChatInterface';
@@ -28,6 +29,13 @@ const HomePage = () => {
 
             /* Free-tier badge (always visible for now) */
             _jsx("div", { className: "absolute top-4 left-1/2 -translate-x-1/2 z-40 select-none", children: _jsx("span", { className: "rounded-full bg-yellow-400/90 px-4 py-1 text-xs font-semibold text-blue-900 shadow", children: "Free Chat (Limited)" }) }),
+
+            /* Upgrade button */
+            _jsx(Link, { 
+              to: "/pricing",
+              className: "absolute top-4 right-4 z-40 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-blue-900 bg-yellow-400 hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors",
+              children: "Upgrade to Premium"
+            }),
 
             /* Glass container wrapping either selection or chat */
             _jsx("div", { className: "relative z-10 flex items-start justify-center pt-24 md:pt-32 pb-10", children: _jsxs("div", { className: "chat-container w-full max-w-6xl h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", children: [
