@@ -199,8 +199,7 @@ async function createDirectCheckoutSession(options) {
             successUrl: options.successUrl,
             cancelUrl: options.cancelUrl,
             customerEmail: options.customerEmail,
-            clientReferenceId: options.metadata?.userId || '',
-            allowPromotionCodes: true,
+            clientReferenceId: options.metadata?.userId || ''
         });
         
         if (error) {
