@@ -7,7 +7,7 @@
     },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!.*\\.html$).*)",
       "destination": "/index.html"
     }
   ],
