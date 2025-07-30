@@ -68,9 +68,11 @@ const CharacterCard = ({
     const handleSelectCharacter = (e) => {
         e.stopPropagation();
         
-        // If character is premium-only and user doesn't have premium access
+        // If character is premium-only and user doesn't have premium access,
+        // redirect directly to the public pricing page instead of showing a modal
         if (isPremiumOnly() && !hasPremiumAccess()) {
-            setShowUpgradeModal(true);
+            window.location.href = 'https://faithtalkai.com/pricing';
+            return;
         } else {
             // User has access, proceed normally
             onSelect(character);
