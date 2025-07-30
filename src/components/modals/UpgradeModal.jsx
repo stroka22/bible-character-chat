@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Link } from 'react-router-dom';
+// `Link` removed – plain anchor used for external domain
 
 /**
  * UpgradeModal Component
@@ -140,12 +140,12 @@ const UpgradeModal = ({
         
         {/* Footer */}
         <div className="px-6 py-4 bg-gray-50 flex flex-col sm:flex-row-reverse gap-3">
-          <Link 
-            to="/pricing" 
+          <a
+            href="https://faithtalkai.com/pricing"
             className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blue-900 bg-yellow-400 hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors"
           >
             Upgrade Now
-          </Link>
+          </a>
           <button
             type="button"
             onClick={onClose}
