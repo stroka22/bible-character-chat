@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { supabase } from './supabase';
 
+// Stripe configuration from environment variables
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '';
 const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY ?? '';
 const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY ?? '';
@@ -50,6 +51,29 @@ class StripeEndpointError extends Error {
         super(message);
         this.statusCode = statusCode;
         this.name = 'StripeEndpointError';
+    }
+}
+
+// Load Stripe.js dynamically to ensure it's available for direct checkout
+let stripeJs = null;
+async function loadStripeJs() {
+    if (stripeJs) return stripeJs;
+    
+    if (!STRIPE_ENABLED) {
+        console.warn('[Stripe] ⚠️ Cannot load Stripe.js - Stripe is not configured');
+        return null;
+    }
+    
+    try {
+        console.log('[Stripe] 🔄 Loading Stripe.js...');
+        // Dynamic import of Stripe.js
+        const { loadStripe } = await import('@stripe/stripe-js');
+        stripeJs = await loadStripe(stripePublicKey);
+        console.log('[Stripe] ✅ Stripe.js loaded successfully');
+        return stripeJs;
+    } catch (error) {
+        console.error('[Stripe] 🔴 Failed to load Stripe.js:', error);
+        return null;
     }
 }
 
@@ -131,6 +155,62 @@ async function createCustomer(userId, email) {
     }
 }
 
+// New function for direct client-side checkout
+async function createDirectCheckoutSession(options) {
+    if (!STRIPE_ENABLED) {
+        console.warn('[Stripe] ⚠️ Cannot create direct checkout session - Stripe is not configured');
+        throw new StripeConfigurationError('Stripe is not configured. Please add VITE_STRIPE_PUBLIC_KEY to your .env file.');
+    }
+    
+    console.log('[Stripe] 🛒 Creating direct client-side checkout session', options);
+    
+    // Validate required parameters
+    if (!options.priceId || !options.successUrl || !options.cancelUrl) {
+        const missing = [];
+        if (!options.priceId) missing.push('priceId');
+        if (!options.successUrl) missing.push('successUrl');
+        if (!options.cancelUrl) missing.push('cancelUrl');
+        
+        const errorMessage = `Missing required parameters: ${missing.join(', ')}`;
+        console.error(`[Stripe] 🔴 ${errorMessage}`);
+        throw new StripeConfigurationError(errorMessage);
+    }
+    
+    try {
+        // Load Stripe.js
+        const stripeInstance = await loadStripeJs();
+        if (!stripeInstance) {
+            throw new Error('Failed to load Stripe.js');
+        }
+        
+        console.log('[Stripe] 🔄 Redirecting to Stripe Checkout...');
+        
+        // Create and redirect to checkout
+        const { error } = await stripeInstance.redirectToCheckout({
+            lineItems: [{ price: options.priceId, quantity: 1 }],
+            mode: 'subscription',
+            successUrl: options.successUrl,
+            cancelUrl: options.cancelUrl,
+            customerEmail: options.customerEmail,
+            clientReferenceId: options.metadata?.userId || '',
+            allowPromotionCodes: true,
+        });
+        
+        if (error) {
+            console.error(`[Stripe] 🔴 Redirect to checkout failed: ${error.message}`);
+            throw new Error(`Redirect to checkout failed: ${error.message}`);
+        }
+        
+        // Note: This code won't execute immediately as the user is redirected
+        console.log('[Stripe] ✅ Redirected to Stripe Checkout');
+        return { redirected: true };
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`[Stripe] 🔴 Direct checkout failed: ${errorMessage}`, error);
+        throw new Error(`Direct checkout failed: ${errorMessage}`);
+    }
+}
+
 async function createCheckoutSession(options, attemptNumber = 1) {
     if (!STRIPE_ENABLED) {
         console.warn('[Stripe] ⚠️ Cannot create checkout session - Stripe is not configured');
@@ -208,10 +288,18 @@ async function createCheckoutSession(options, attemptNumber = 1) {
             }
             const errorMessage = errorData.error || `HTTP error ${response.status}`;
             console.error(`[Stripe] 🔴 Checkout endpoint error: ${errorMessage}`);
+            
+            // If we've tried all server-side options and still failing, try direct checkout
+            if (attemptNumber >= maxAttempts || response.status === 500) {
+                console.log('[Stripe] 🔄 Server endpoints failed, falling back to direct checkout...');
+                return createDirectCheckoutSession(options);
+            }
+            
             if (attemptNumber < maxAttempts && preferEdgeFunction) {
                 console.log('[Stripe] 🔄 Retrying with alternative endpoint...');
                 return createCheckoutSession(options, attemptNumber + 1);
             }
+            
             throw new StripeEndpointError(errorMessage, response.status);
         }
         const session = await response.json();
@@ -227,6 +315,18 @@ async function createCheckoutSession(options, attemptNumber = 1) {
         if (!(error instanceof StripeConfigurationError) && !(error instanceof StripeEndpointError)) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.error(`[Stripe] 🔴 Checkout session creation failed: ${errorMessage}`, error);
+            
+            // If all server-side attempts failed, try direct checkout as last resort
+            if (attemptNumber >= maxAttempts) {
+                console.log('[Stripe] 🔄 All server endpoints failed, falling back to direct checkout...');
+                try {
+                    return await createDirectCheckoutSession(options);
+                } catch (directError) {
+                    console.error('[Stripe] 🔴 Direct checkout also failed:', directError);
+                    throw new Error(`All checkout methods failed. Last error: ${directError.message}`);
+                }
+            }
+            
             if (attemptNumber < maxAttempts) {
                 console.log('[Stripe] 🔄 Error occurred, retrying with alternative endpoint...');
                 return createCheckoutSession(options, attemptNumber + 1);
@@ -384,7 +484,9 @@ export {
   StripeEndpointError,
   createCustomer,
   createCheckoutSession,
+  createDirectCheckoutSession,
   getActiveSubscription,
   getPublicKey,
-  testStripeConfiguration
+  testStripeConfiguration,
+  loadStripeJs
 };
