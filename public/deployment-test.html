@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 800px;
+        }
+        h1 {
+            color: #ff0000;
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        .timestamp {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 24px;
+            margin-top: 30px;
+        }
+        .details {
+            margin-top: 40px;
+            text-align: left;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DEPLOYMENT TEST</h1>
+        <div class="timestamp">
+            Created: July 30, 2025 at 19:30:00
+        </div>
+        <div class="success">
+            If you can see this page, the deployment was successful!
+        </div>
+        <div class="details">
+            <p><strong>Purpose:</strong> This file was created to verify that new deployments are being correctly processed by Vercel.</p>
+            <p><strong>Expected behavior:</strong> If deployments are working correctly, this file should be accessible at your-domain.com/deployment-test.html</p>
+            <p><strong>Next steps:</strong> If you can see this page but other changes aren't appearing, there may be caching or build issues with the main application.</p>
+        </div>
+    </div>
+</body>
+</html>
