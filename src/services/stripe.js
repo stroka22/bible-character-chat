@@ -155,7 +155,7 @@ async function createCustomer(userId, email) {
     }
 }
 
-// New function for direct client-side checkout
+// Direct client-side checkout function - now our primary method
 async function createDirectCheckoutSession(options) {
     if (!STRIPE_ENABLED) {
         console.warn('[Stripe] ⚠️ Cannot create direct checkout session - Stripe is not configured');
@@ -172,6 +172,13 @@ async function createDirectCheckoutSession(options) {
         if (!options.cancelUrl) missing.push('cancelUrl');
         
         const errorMessage = `Missing required parameters: ${missing.join(', ')}`;
+        console.error(`[Stripe] 🔴 ${errorMessage}`);
+        throw new StripeConfigurationError(errorMessage);
+    }
+    
+    // Only validate live mode using test prices (ignore test mode warnings)
+    if (STRIPE_MODE === 'live' && options.priceId.includes('_test_')) {
+        const errorMessage = 'Environment Mismatch: A test price ID was used in live mode.';
         console.error(`[Stripe] 🔴 ${errorMessage}`);
         throw new StripeConfigurationError(errorMessage);
     }
@@ -211,41 +218,53 @@ async function createDirectCheckoutSession(options) {
     }
 }
 
+// Modified to try direct checkout first, then fall back to server methods
 async function createCheckoutSession(options, attemptNumber = 1) {
     if (!STRIPE_ENABLED) {
         console.warn('[Stripe] ⚠️ Cannot create checkout session - Stripe is not configured');
         throw new StripeConfigurationError('Stripe is not configured. Please add VITE_STRIPE_PUBLIC_KEY to your .env file.');
     }
-    const maxAttempts = 2;
+    
     const timestamp = new Date().toISOString();
-    console.log(`[Stripe] 🛒 [${timestamp}] Requesting checkout session (attempt ${attemptNumber}/${maxAttempts})`, options);
+    console.log(`[Stripe] 🛒 [${timestamp}] Initiating checkout session`, options);
+    
+    // Validate required parameters
+    if (!options.priceId || !options.successUrl || !options.cancelUrl) {
+        const missing = [];
+        if (!options.priceId) missing.push('priceId');
+        if (!options.successUrl) missing.push('successUrl');
+        if (!options.cancelUrl) missing.push('cancelUrl');
+        
+        const errorMessage = `Missing required parameters: ${missing.join(', ')}`;
+        console.error(`[Stripe] 🔴 ${errorMessage}`);
+        throw new StripeConfigurationError(errorMessage);
+    }
+    
+    // Only validate live mode using test prices (ignore test mode warnings)
     if (STRIPE_MODE === 'live' && options.priceId.includes('_test_')) {
         const errorMessage = 'Environment Mismatch: A test price ID was used in live mode.';
         console.error(`[Stripe] 🔴 ${errorMessage}`);
         throw new StripeConfigurationError(errorMessage);
     }
-    if (STRIPE_MODE === 'test' &&
-        !options.priceId.includes('_test_') &&
-        !options.priceId.includes('monthly_fallback') &&
-        !options.priceId.includes('yearly_fallback')) {
-        console.warn('[Stripe] 🟡 Environment Warning: A non-test price ID was used in test mode.');
+    
+    // Try direct checkout first
+    try {
+        console.log('[Stripe] 🔄 Attempting direct client-side checkout first...');
+        return await createDirectCheckoutSession(options);
+    } catch (directError) {
+        console.warn(`[Stripe] 🟡 Direct checkout failed, falling back to server methods: ${directError.message}`);
+        // Continue to server-side methods if direct checkout fails
     }
-    if (!options.priceId || !options.successUrl || !options.cancelUrl) {
-        const missing = [];
-        if (!options.priceId)
-            missing.push('priceId');
-        if (!options.successUrl)
-            missing.push('successUrl');
-        if (!options.cancelUrl)
-            missing.push('cancelUrl');
-        const errorMessage = `Missing required parameters: ${missing.join(', ')}`;
-        console.error(`[Stripe] 🔴 ${errorMessage}`);
-        throw new StripeConfigurationError(errorMessage);
-    }
+    
+    // Fall back to server-side methods
+    const maxAttempts = 2;
+    console.log(`[Stripe] 🔄 Attempting server-side checkout (attempt ${attemptNumber}/${maxAttempts})`);
+    
     try {
         const preferEdgeFunction = attemptNumber === 1;
         const apiRoute = getCheckoutEndpoint(preferEdgeFunction);
         console.log(`[Stripe] 🔄 Calling checkout endpoint: ${apiRoute}`);
+        
         let accessToken;
         try {
             const { data: { session } } = await supabase.auth.getSession();
@@ -260,6 +279,7 @@ async function createCheckoutSession(options, attemptNumber = 1) {
         catch (authError) {
             console.error('[Stripe] 🟡 Failed to get auth token:', authError);
         }
+        
         const headers = {
             'Content-Type': 'application/json',
         };
@@ -269,6 +289,7 @@ async function createCheckoutSession(options, attemptNumber = 1) {
         headers['X-Client-Timestamp'] = timestamp;
         headers['X-Client-Mode'] = STRIPE_MODE;
         headers['X-Client-Attempt'] = String(attemptNumber);
+        
         const startTime = performance.now();
         const response = await fetch(apiRoute, {
             method: 'POST',
@@ -278,6 +299,7 @@ async function createCheckoutSession(options, attemptNumber = 1) {
         const endTime = performance.now();
         const duration = Math.round(endTime - startTime);
         console.log(`[Stripe] ⏱️ Checkout request completed in ${duration}ms with status ${response.status}`);
+        
         if (!response.ok) {
             let errorData = { error: `HTTP error ${response.status}` };
             try {
@@ -289,50 +311,50 @@ async function createCheckoutSession(options, attemptNumber = 1) {
             const errorMessage = errorData.error || `HTTP error ${response.status}`;
             console.error(`[Stripe] 🔴 Checkout endpoint error: ${errorMessage}`);
             
-            // If we've tried all server-side options and still failing, try direct checkout
-            if (attemptNumber >= maxAttempts || response.status === 500) {
-                console.log('[Stripe] 🔄 Server endpoints failed, falling back to direct checkout...');
-                return createDirectCheckoutSession(options);
-            }
-            
-            if (attemptNumber < maxAttempts && preferEdgeFunction) {
-                console.log('[Stripe] 🔄 Retrying with alternative endpoint...');
+            // If first server attempt fails, try the other server endpoint
+            if (attemptNumber < maxAttempts) {
+                console.log('[Stripe] 🔄 Retrying with alternative server endpoint...');
                 return createCheckoutSession(options, attemptNumber + 1);
             }
             
-            throw new StripeEndpointError(errorMessage, response.status);
+            // If all server attempts fail, try direct checkout again with more aggressive error handling
+            console.log('[Stripe] 🔄 All server endpoints failed, trying direct checkout again...');
+            try {
+                return await createDirectCheckoutSession(options);
+            } catch (finalError) {
+                console.error('[Stripe] 🔴 All checkout methods failed:', finalError);
+                throw new Error(`All checkout methods failed. Last error: ${finalError.message}`);
+            }
         }
+        
         const session = await response.json();
         console.log(`[Stripe] ✅ Checkout session created: ${session.id}`);
         if (!session.url) {
             const error = 'Checkout session URL is missing from response';
             console.error(`[Stripe] 🔴 ${error}`);
-            throw new StripeEndpointError(error);
+            
+            // Try direct checkout as last resort if server response is invalid
+            console.log('[Stripe] 🔄 Invalid server response, falling back to direct checkout...');
+            return createDirectCheckoutSession(options);
         }
+        
         return { id: session.id, url: session.url };
     }
     catch (error) {
-        if (!(error instanceof StripeConfigurationError) && !(error instanceof StripeEndpointError)) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error(`[Stripe] 🔴 Checkout session creation failed: ${errorMessage}`, error);
-            
-            // If all server-side attempts failed, try direct checkout as last resort
-            if (attemptNumber >= maxAttempts) {
-                console.log('[Stripe] 🔄 All server endpoints failed, falling back to direct checkout...');
-                try {
-                    return await createDirectCheckoutSession(options);
-                } catch (directError) {
-                    console.error('[Stripe] 🔴 Direct checkout also failed:', directError);
-                    throw new Error(`All checkout methods failed. Last error: ${directError.message}`);
-                }
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`[Stripe] 🔴 All checkout methods failed: ${errorMessage}`, error);
+        
+        // One final attempt at direct checkout if we haven't tried it again already
+        if (error.message && !error.message.includes('All checkout methods failed')) {
+            console.log('[Stripe] 🔄 Final attempt with direct checkout...');
+            try {
+                return await createDirectCheckoutSession(options);
+            } catch (lastError) {
+                console.error('[Stripe] 🔴 Final direct checkout attempt failed:', lastError);
+                throw new Error(`All checkout attempts exhausted. Last error: ${lastError.message}`);
             }
-            
-            if (attemptNumber < maxAttempts) {
-                console.log('[Stripe] 🔄 Error occurred, retrying with alternative endpoint...');
-                return createCheckoutSession(options, attemptNumber + 1);
-            }
-            throw new Error(`Failed to create checkout session: ${errorMessage}`);
         }
+        
         throw error;
     }
 }
@@ -417,62 +439,86 @@ async function testStripeConfiguration() {
         endpoints: {
             vercelEndpoint: false,
             edgeFunctionEndpoint: false,
+            directCheckoutAvailable: false,
         },
         message: '',
     };
+    
     if (!results.environment.publicKeyValid) {
         results.message = 'Missing or invalid Stripe public key';
         console.warn(`[Stripe] ⚠️ ${results.message}`);
         return results;
     }
+    
     if (!results.environment.priceIdsValid) {
         results.message = 'Missing or invalid Stripe price IDs';
         console.warn(`[Stripe] ⚠️ ${results.message}`);
         return results;
     }
+    
+    // Test direct checkout availability
     try {
-        const vercelResponse = await fetch('/api/create-checkout-session', {
-            method: 'HEAD',
-            headers: { 'Content-Type': 'application/json' },
-        });
-        results.endpoints.vercelEndpoint = vercelResponse.status !== 404;
-        console.log(`[Stripe] ${results.endpoints.vercelEndpoint ? '✅' : '❌'} Vercel endpoint check: ${vercelResponse.status}`);
+        const stripeInstance = await loadStripeJs();
+        results.endpoints.directCheckoutAvailable = !!stripeInstance;
+        console.log(`[Stripe] ${results.endpoints.directCheckoutAvailable ? '✅' : '❌'} Direct checkout available: ${results.endpoints.directCheckoutAvailable}`);
+    } catch (error) {
+        console.error('[Stripe] 🔴 Direct checkout check failed:', error);
     }
-    catch (error) {
-        console.error('[Stripe] 🔴 Vercel endpoint check failed:', error);
-    }
-    if (results.environment.edgeFunctionConfigured) {
+    
+    // Only check server endpoints if direct checkout isn't available
+    if (!results.endpoints.directCheckoutAvailable) {
         try {
-            const edgeResponse = await fetch(edgeFunctionUrl, {
-                method: 'OPTIONS',
+            const vercelResponse = await fetch('/api/create-checkout-session', {
+                method: 'HEAD',
                 headers: { 'Content-Type': 'application/json' },
             });
-            results.endpoints.edgeFunctionEndpoint = edgeResponse.status === 204 || edgeResponse.status === 200;
-            console.log(`[Stripe] ${results.endpoints.edgeFunctionEndpoint ? '✅' : '❌'} Edge Function check: ${edgeResponse.status}`);
+            results.endpoints.vercelEndpoint = vercelResponse.status !== 404;
+            console.log(`[Stripe] ${results.endpoints.vercelEndpoint ? '✅' : '❌'} Vercel endpoint check: ${vercelResponse.status}`);
         }
         catch (error) {
-            console.error('[Stripe] 🔴 Edge Function check failed:', error);
+            console.error('[Stripe] 🔴 Vercel endpoint check failed:', error);
+        }
+        
+        if (results.environment.edgeFunctionConfigured) {
+            try {
+                const edgeResponse = await fetch(edgeFunctionUrl, {
+                    method: 'OPTIONS',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                results.endpoints.edgeFunctionEndpoint = edgeResponse.status === 204 || edgeResponse.status === 200;
+                console.log(`[Stripe] ${results.endpoints.edgeFunctionEndpoint ? '✅' : '❌'} Edge Function check: ${edgeResponse.status}`);
+            }
+            catch (error) {
+                console.error('[Stripe] 🔴 Edge Function check failed:', error);
+            }
+        }
+        else {
+            console.log('[Stripe] ℹ️ Edge Function not configured, skipping check');
         }
     }
-    else {
-        console.log('[Stripe] ℹ️ Edge Function not configured, skipping check');
-    }
+    
     results.success = results.environment.publicKeyValid &&
         results.environment.priceIdsValid &&
-        (results.endpoints.vercelEndpoint || results.endpoints.edgeFunctionEndpoint);
+        (results.endpoints.directCheckoutAvailable || 
+         results.endpoints.vercelEndpoint || 
+         results.endpoints.edgeFunctionEndpoint);
+    
     if (results.success) {
         results.message = 'Stripe configuration test passed';
         console.log(`[Stripe] ✅ ${results.message}`);
     }
     else {
-        if (!results.endpoints.vercelEndpoint && !results.endpoints.edgeFunctionEndpoint) {
-            results.message = 'No payment endpoints are accessible';
+        if (!results.endpoints.directCheckoutAvailable && 
+            !results.endpoints.vercelEndpoint && 
+            !results.endpoints.edgeFunctionEndpoint) {
+            results.message = 'No payment methods are available';
         }
         else {
             results.message = 'Configuration test failed with partial success';
         }
         console.warn(`[Stripe] ⚠️ ${results.message}`);
     }
+    
     return results;
 }
 
