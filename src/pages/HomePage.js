@@ -15,6 +15,12 @@ const HomePage = () => {
             setResumed(false);
         }
     }, [character, messages]);
+    
+    // Handler for upgrade button click
+    const handleUpgradeClick = () => {
+        window.location.href = "https://faithtalkai.com/pricing";
+    };
+    
     /* ------------------------------------------------------------------
      * Layout: full-screen dark gradient + floating glass container
      * ------------------------------------------------------------------ */
@@ -30,9 +36,9 @@ const HomePage = () => {
             /* Free-tier badge (always visible for now) */
             _jsx("div", { className: "absolute top-4 left-1/2 -translate-x-1/2 z-40 select-none", children: _jsx("span", { className: "rounded-full bg-yellow-400/90 px-4 py-1 text-xs font-semibold text-blue-900 shadow", children: "Free Chat (Limited)" }) }),
 
-            /* Upgrade button */
-            _jsx("a", { 
-              href: "https://faithtalkai.com/pricing",
+            /* Upgrade button - completely rewritten with direct window.location approach */
+            _jsx("button", { 
+              onClick: handleUpgradeClick,
               className: "absolute top-4 right-4 z-40 inline-flex justify-center items-center px-6 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-blue-900 bg-yellow-400 hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 whitespace-nowrap transition-colors",
               children: "Unlock All Characters – Upgrade to Premium"
             }),
