@@ -33,8 +33,8 @@ const HomePage = () => {
             /* Upgrade button */
             _jsx(Link, { 
               to: "/pricing",
-              className: "absolute top-4 right-4 z-40 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-blue-900 bg-yellow-400 hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors",
-              children: "Upgrade to Premium"
+              className: "absolute top-4 right-4 z-40 inline-flex justify-center items-center px-6 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-blue-900 bg-yellow-400 hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 whitespace-nowrap transition-colors",
+              children: "Unlock All Characters – Upgrade to Premium"
             }),
 
             /* Glass container wrapping either selection or chat */
