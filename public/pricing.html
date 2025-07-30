@@ -438,7 +438,7 @@
     
     <div class="container">
         <!-- Back to home link -->
-        <a href="/" class="back-link">
+        <a href="https://faithtalkai.com/" class="back-link">
             <svg class="back-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -538,7 +538,7 @@
                 </div>
                 <div class="card-footer">
                     <!-- Default to monthly checkout; JS will overwrite if user toggles -->
-                    <a id="upgrade-btn" href="/pricing?checkout=true&period=monthly" class="btn btn-premium">
+                    <a id="upgrade-btn" href="https://faithtalkai.com/pricing?checkout=true&period=monthly" class="btn btn-premium">
                         Upgrade to Premium
                     </a>
                 </div>
@@ -599,14 +599,14 @@
                 monthlyToggle.classList.add('active');
                 yearlyToggle.classList.remove('active');
                 premiumPrice.innerHTML = '$9.97<span class="price-period">/month</span>';
-                if (upgradeBtn) upgradeBtn.href = '/pricing?checkout=true&period=monthly';
+                if (upgradeBtn) upgradeBtn.href = 'https://faithtalkai.com/pricing?checkout=true&period=monthly';
             });
             
             yearlyToggle.addEventListener('click', function() {
                 yearlyToggle.classList.add('active');
                 monthlyToggle.classList.remove('active');
                 premiumPrice.innerHTML = '$97.97<span class="price-period">/year</span>';
-                if (upgradeBtn) upgradeBtn.href = '/pricing?checkout=true&period=yearly';
+                if (upgradeBtn) upgradeBtn.href = 'https://faithtalkai.com/pricing?checkout=true&period=yearly';
             });
             
             // Set auth bypass flag for easy testing
