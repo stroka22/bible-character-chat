@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { characterRepository } from '../repositories/characterRepository';
 import { groupRepository } from '../repositories/groupRepository';
@@ -27,6 +28,7 @@ const BIBLE_BOOKS = {
 };
 const ScalableCharacterSelection = () => {
     console.log('⚡ ScalableCharacterSelection RENDER START ⚡');
+    const navigate = useNavigate();
     const [characters, setCharacters] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -554,7 +556,7 @@ const ScalableCharacterSelection = () => {
                                     alt: featuredCharacter.name, 
                                     className: "w-full h-full object-cover" 
                                 }) 
-                            })] }), _jsx("h2", { className: "text-2xl font-bold text-white mb-2", style: { fontFamily: 'Cinzel, serif' }, children: featuredCharacter.name }), _jsx("p", { className: "text-blue-100 max-w-md text-center mb-4", children: featuredCharacter.description }), _jsxs("button", { onClick: () => handleSelectCharacter(featuredCharacter.id), className: "bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105 active:scale-95", children: ["Chat with ", featuredCharacter.name, " \uD83D\uDE4F"] }), _jsx("p", { className: "mt-6 text-blue-100 text-sm", children: "Or select another character below" })] })), _jsx("div", { className: "mb-8 flex justify-center", children: _jsx("button", { onClick: () => (window.location.href = 'https://faithtalkai.com/pricing'), className: "animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200", children: "\uD83D\uDD13 Unlock all characters \u00A0\u2013\u00A0 Upgrade to Premium" }) }), _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6", children: _jsxs("div", { className: "flex flex-col md:flex-row gap-4 items-center", children: [_jsx("div", { className: "w-full md:flex-1", children: _jsx("input", { type: "text", placeholder: "Search characters...", value: searchQuery, onChange: (e) => {
+                            })] }), _jsx("h2", { className: "text-2xl font-bold text-white mb-2", style: { fontFamily: 'Cinzel, serif' }, children: featuredCharacter.name }), _jsx("p", { className: "text-blue-100 max-w-md text-center mb-4", children: featuredCharacter.description }), _jsxs("button", { onClick: () => handleSelectCharacter(featuredCharacter.id), className: "bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105 active:scale-95", children: ["Chat with ", featuredCharacter.name, " \uD83D\uDE4F"] }), _jsx("p", { className: "mt-6 text-blue-100 text-sm", children: "Or select another character below" })] })), _jsx("div", { className: "mb-8 flex justify-center", children: _jsx("button", { onClick: () => navigate('/pricing'), className: "animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200", children: "\uD83D\uDD13 Unlock all characters \u00A0\u2013\u00A0 Upgrade to Premium" }) }), _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6", children: _jsxs("div", { className: "flex flex-col md:flex-row gap-4 items-center", children: [_jsx("div", { className: "w-full md:flex-1", children: _jsx("input", { type: "text", placeholder: "Search characters...", value: searchQuery, onChange: (e) => {
                                             setSearchQuery(e.target.value);
                                             setCurrentPage(1);
                                         }, className: "w-full bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-yellow-400/50" }) }), _jsxs("div", { className: "flex gap-2", children: [_jsx("button", { onClick: () => {
