@@ -11,8 +11,36 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*\\.(html|css|js|png|jpg|svg|ico|txt|json))$",
-      "destination": "/$1"
+      "source": "/test-static-serving.html",
+      "destination": "/test-static-serving.html"
+    },
+    {
+      "source": "/pricing.html",
+      "destination": "/pricing.html"
+    },
+    {
+      "source": "/(.*).css",
+      "destination": "/$1.css"
+    },
+    {
+      "source": "/(.*).js",
+      "destination": "/$1.js"
+    },
+    {
+      "source": "/(.*).png",
+      "destination": "/$1.png"
+    },
+    {
+      "source": "/(.*).jpg",
+      "destination": "/$1.jpg"
+    },
+    {
+      "source": "/(.*).svg",
+      "destination": "/$1.svg"
+    },
+    {
+      "source": "/(.*).ico",
+      "destination": "/$1.ico"
     },
     {
       "source": "/(.*)",
@@ -21,7 +49,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*\\.html)$",
+      "source": "/(.*).html",
       "headers": [
         {
           "key": "Cache-Control",
