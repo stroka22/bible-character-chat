@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static File Serving Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #4CAF50; /* Distinctive green background */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            backdrop-filter: blur(5px);
+            border: 2px solid white;
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .timestamp {
+            font-size: 20px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        .success-badge {
+            background-color: #FFD700;
+            color: #333;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 30px 0;
+            animation: pulse 2s infinite;
+        }
+        .details {
+            margin-top: 30px;
+            text-align: left;
+            background-color: rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            background-color: white;
+            color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .back-link:hover {
+            background-color: #333;
+            color: white;
+            transform: translateY(-2px);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>STATIC FILE SERVING TEST</h1>
+        <div class="timestamp">
+            Created: July 31, 2025 at 14:30:00
+        </div>
+        <div class="success-badge">
+            SUCCESS: Direct Static File Serving!
+        </div>
+        <div class="details">
+            <p><strong>What this means:</strong> If you can see this page with its green background, Vercel is correctly serving static HTML files directly without redirecting to the React SPA.</p>
+            
+            <p><strong>Technical explanation:</strong> This HTML file is being served directly from the /public folder through Vercel's file serving system, bypassing the React router and SPA architecture.</p>
+            
+            <p><strong>How to test:</strong></p>
+            <ol>
+                <li>You should see a green background with this message</li>
+                <li>The URL should end with <code>/test-static-serving.html</code></li>
+                <li>View page source should show this raw HTML (not React-generated DOM)</li>
+                <li>If instead you see the Bible Character Chat app interface, static serving is still broken</li>
+            </ol>
+            
+            <p><strong>Next steps:</strong> If this page displays correctly but pricing.html doesn't, there may be specific routing or caching issues with that file.</p>
+        </div>
+        
+        <a href="/" class="back-link">Return to Bible Character Chat App</a>
+    </div>
+</body>
+</html>
