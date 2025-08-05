@@ -201,7 +201,22 @@ export const characterRepository = {
                 .single();
 
             if (error) {
+                // ------------------------------------------------------------------
+                //  Provide richer diagnostics so we can see exactly why Supabase
+                //  rejected the update (field validation, RLS, etc.)
+                // ------------------------------------------------------------------
                 console.error('🚨 [DEBUG] Update failed:', error);
+                console.error('🚨 [DEBUG] Error message:', error.message);
+                console.error('🚨 [DEBUG] Error code:', error.code);
+                console.error('🚨 [DEBUG] Error details:', error.details);
+                console.error('🚨 [DEBUG] Error hint:', error.hint);
+                // Error objects from PostgREST can contain circular refs—stringify
+                // defensively inside a try/catch.
+                try {
+                    console.error('🚨 [DEBUG] Full error object:', JSON.stringify(error, null, 2));
+                } catch (stringifyErr) {
+                    console.error('🚨 [DEBUG] Unable to stringify full error object:', stringifyErr);
+                }
                 throw error;
             }
 
