@@ -154,91 +154,62 @@ export const characterRepository = {
         try {
             console.log('🚨 [DEBUG] Starting character update process');
             console.log(`🚨 [DEBUG] Character ID: ${id}`);
-            console.log('🚨 [DEBUG] Update payload:', JSON.stringify(updates, null, 2));
-            
-            // ATTEMPT 1: Try the simplest possible update - just name
-            let simpleUpdate = {};
-            if (updates.name) {
-                simpleUpdate.name = updates.name;
-            } else {
-                simpleUpdate.description = updates.description || 'Updated description';
-            }
-            
-            // Add timestamp
-            simpleUpdate.updated_at = new Date().toISOString();
-            
-            console.log('🚨 [DEBUG] Trying minimal update with just:', JSON.stringify(simpleUpdate, null, 2));
-            
-            try {
-                const { data, error } = await supabase
-                    .from('characters')
-                    .update(simpleUpdate)
-                    .eq('id', id)
-                    .select('*')
-                    .single();
-                    
-                if (error) {
-                    console.error('🚨 [DEBUG] FIRST ATTEMPT FAILED:', error);
-                    console.error('🚨 [DEBUG] Error details:', JSON.stringify(error, null, 2));
-                    console.error('🚨 [DEBUG] Supabase response:', error.response ? JSON.stringify(error.response, null, 2) : 'No response data');
-                    // Don't throw yet, we'll try another approach
-                } else {
-                    console.log('🚨 [DEBUG] Minimal update succeeded!', data);
-                    return this.sanitizeCharacter(data);
+            console.log('🚨 [DEBUG] Incoming payload:', JSON.stringify(updates, null, 2));
+
+            /* ------------------------------------------------------------
+             * Build update object with ONLY defined fields
+             * ------------------------------------------------------------ */
+            const updateData = { updated_at: new Date().toISOString() };
+
+            const allowedFields = [
+                'name',
+                'description',
+                'avatar_url',
+                'feature_image_url',
+                'short_biography',
+                'bible_book',
+                'opening_line',
+                'persona_prompt',
+                'scriptural_context',
+                'is_visible',
+                // Character insights
+                'timeline_period',
+                'historical_context',
+                'geographic_location',
+                'key_scripture_references',
+                'theological_significance',
+                'relationships',
+                'study_questions'
+            ];
+
+            allowedFields.forEach((field) => {
+                if (updates[field] !== undefined) {
+                    updateData[field] = updates[field];
                 }
-            } catch (firstError) {
-                console.error('🚨 [DEBUG] Exception in first attempt:', firstError);
+            });
+
+            console.log('🚨 [DEBUG] Attempting full update with:', JSON.stringify(updateData, null, 2));
+
+            /* ------------------------------------------------------------
+             * Perform the update
+             * ------------------------------------------------------------ */
+            const { data, error } = await supabase
+                .from('characters')
+                .update(updateData)
+                .eq('id', id)
+                .select('*')
+                .single();
+
+            if (error) {
+                console.error('🚨 [DEBUG] Update failed:', error);
+                throw error;
             }
-            
-            // If we're here, the first attempt failed. Let's try a different approach.
-            console.log('🚨 [DEBUG] Trying a different approach - using UPSERT instead of UPDATE');
-            
-            try {
-                // Get the current character first
-                const { data: currentChar, error: fetchError } = await supabase
-                    .from('characters')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-                    
-                if (fetchError) {
-                    console.error('🚨 [DEBUG] Failed to fetch current character:', fetchError);
-                    throw fetchError;
-                }
-                
-                console.log('🚨 [DEBUG] Current character data:', currentChar);
-                
-                // Create a minimal update with just a few fields
-                const minimalUpdate = {
-                    id: id, // needed for upsert
-                    name: updates.name || currentChar.name,
-                    description: updates.description || currentChar.description,
-                    updated_at: new Date().toISOString()
-                };
-                
-                console.log('🚨 [DEBUG] Trying upsert with:', JSON.stringify(minimalUpdate, null, 2));
-                
-                const { data: upsertData, error: upsertError } = await supabase
-                    .from('characters')
-                    .upsert(minimalUpdate)
-                    .select('*')
-                    .single();
-                    
-                if (upsertError) {
-                    console.error('🚨 [DEBUG] UPSERT ATTEMPT FAILED:', upsertError);
-                    console.error('🚨 [DEBUG] Upsert error details:', JSON.stringify(upsertError, null, 2));
-                    throw upsertError;
-                }
-                
-                console.log('🚨 [DEBUG] Upsert succeeded!', upsertData);
-                return this.sanitizeCharacter(upsertData);
-            } catch (secondError) {
-                console.error('🚨 [DEBUG] Exception in second attempt:', secondError);
-                throw new Error('Failed to update character after multiple attempts. Please try again later.');
-            }
+
+            console.log('🚨 [DEBUG] Update succeeded!', data);
+            return this.sanitizeCharacter(data);
+
         } catch (error) {
-            console.error(`🚨 [DEBUG] Overall error in updateCharacter for ${id}:`, error);
-            console.error('🚨 [DEBUG] Stack trace:', error.stack);
+            console.error(`🚨 [DEBUG] Error in updateCharacter for ${id}:`, error);
             throw new Error('Failed to update character. Please try again later.');
         }
     },
