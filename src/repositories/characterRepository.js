@@ -166,7 +166,6 @@ export const characterRepository = {
                 'description',
                 'avatar_url',
                 'feature_image_url',
-                'short_biography',
                 'bible_book',
                 'opening_line',
                 'persona_prompt',
