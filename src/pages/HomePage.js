@@ -2,7 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext.jsx';
-import ScalableCharacterSelection from '../components/ScalableCharacterSelection';
+import ScalableCharacterSelection from '../components/ScalableCharacterSelection.jsx';
 import ChatInterface from '../components/chat/ChatInterface';
 const HomePage = () => {
     const { character, messages, chatId } = useChat();

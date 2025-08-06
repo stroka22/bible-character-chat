@@ -680,7 +680,6 @@ const ScalableCharacterSelection = () => {
                 _jsxs("button", { onClick: () => handleSelectCharacter(featuredCharacter.id), className: "bg-yellow-500 hover:bg-yellow-600 text-blue-900 font-bold py-3 px-8 rounded-full shadow-lg transform transition-all hover:scale-105 active:scale-95", children: ["Chat with ", featuredCharacter.name, " \uD83D\uDE4F"] }), 
                 _jsx("p", { className: "mt-6 text-blue-100 text-sm", children: "Or select another character below" })
             ] })), 
-                    character?.id || `character-${index}`)) })
             _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6", children: _jsxs("div", { className: "flex flex-col md:flex-row gap-4 items-center", children: [
                 _jsx("div", { className: "w-full md:flex-1", children: _jsx("input", { type: "text", placeholder: "Search characters...", value: searchQuery, onChange: (e) => {
                     setSearchQuery(e.target.value);
