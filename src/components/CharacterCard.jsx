@@ -112,7 +112,7 @@ const CharacterCard = ({
                                                 }),
                                                 _jsx("h3", {
                                                     className: "text-lg font-semibold text-blue-800",
-                                                    children: "Featured in Scripture"
+                                                    children: "Found in Scripture in the Books of..."
                                                 })
                                             ]
                                         }),
@@ -189,12 +189,12 @@ const CharacterCard = ({
 
                 _jsxs(motion.div, {
                     /* ------------------------------------------------------------------
-                     * Simplified/clean card container
+                     * Simplified/clean card container with reduced height
                      * ------------------------------------------------------------------ */
                     className: `
                         relative flex flex-col items-center gap-3
                         rounded-xl bg-white shadow-md w-full p-4
-                        h-[360px]                                   /* uniform height */
+                        h-[280px]                                   /* reduced height */
                         border-2 border-yellow-300                   /* thin yellow border */
                         hover:border-4 hover:border-yellow-400       /* thicker on hover */
                         hover:shadow-lg transition-all
@@ -254,17 +254,41 @@ const CharacterCard = ({
                             })
                         }),
 
+                        /* ------------------------------------------------------------------
+                         * Featured 📌 button (top-middle)
+                         * ------------------------------------------------------------------ */
+                        _jsx("button", {
+                            onClick: (e) => {
+                                e.stopPropagation();
+                                if (typeof onSetAsFeatured === 'function') {
+                                    onSetAsFeatured(character);
+                                }
+                            },
+                            className: `
+                                absolute top-3 left-12 z-20 rounded-full p-1.5
+                                ${isFeatured
+                                    ? 'bg-yellow-500 text-blue-900 shadow-md'
+                                    : 'bg-white/80 text-gray-400 hover:text-yellow-500 hover:bg-white'}
+                                transition-colors
+                            `,
+                            title: isFeatured ? 'Current featured character' : 'Set as featured character',
+                            children: _jsx("svg", {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                viewBox: "0 0 20 20",
+                                fill: isFeatured ? "currentColor" : "none",
+                                stroke: "currentColor",
+                                strokeWidth: isFeatured ? "0" : "1.5",
+                                className: "h-5 w-5",
+                                children: _jsx("path", {
+                                    d: "M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"
+                                })
+                            })
+                        }),
+
                         /* Info button - positioned in top right corner */
                         _jsx("button", {
                             "aria-label": "Show full description",
                             onClick: toggleDescription,
-                            /*  SUPER-OBVIOUS   ⓘ   BUTTON
-                                ----------------------------------------------------
-                                • Blue background with white icon  
-                                • Blue ring on focus  
-                                • Larger icon (h-7 w-7) and padding  
-                                • Slight drop-shadow for depth  
-                            */
                             className: `
                                 absolute top-3 right-3 z-20 rounded-full p-2
                                 bg-blue-600 text-white shadow-lg
@@ -274,7 +298,7 @@ const CharacterCard = ({
                             `,
                             children: _jsx("svg", {
                                 xmlns: "http://www.w3.org/2000/svg",
-                                className: "h-7 w-7",
+                                className: "h-5 w-5",
                                 viewBox: "0 0 20 20",
                                 fill: "currentColor",
                                 children: _jsx("path", {
@@ -286,90 +310,42 @@ const CharacterCard = ({
                         }),
                         
                         /* Avatar */
-                        _jsxs("div", {
-                            className: "relative w-[150px] h-[150px] flex-shrink-0",
+                        _jsx("div", {
+                            className: "relative w-[120px] h-[120px] flex-shrink-0 mt-4",
+                            children: _jsx("img", {
+                                src: avatarUrl,
+                                alt: character.name,
+                                className: `w-[120px] h-[120px] object-cover rounded-full border-2 ${isSelected ? 'border-yellow-400' : 'border-white/40'}`,
+                                onError: (e) => {
+                                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
+                                }
+                            })
+                        }),
+                        
+                        /* Chat with Character Name button */
+                        _jsx("button", {
+                            className: "mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center",
+                            onClick: (e) => {
+                                e.stopPropagation();
+                                onSelect(character);
+                            },
                             children: [
-                                _jsx("div", {
-                                    className: "absolute inset-0 bg-gradient-to-t from-blue-900/40 to-transparent rounded-full"
+                                _jsx("svg", {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    className: "h-4 w-4 mr-2",
+                                    viewBox: "0 0 20 20",
+                                    fill: "currentColor",
+                                    children: _jsx("path", {
+                                        fillRule: "evenodd",
+                                        d: "M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z",
+                                        clipRule: "evenodd"
+                                    })
                                 }),
-                                _jsx("img", {
-                                    src: avatarUrl,
-                                    alt: character.name,
-                                    className: `w-[150px] h-[150px] object-cover rounded-full border-2 ${isSelected ? 'border-yellow-400' : 'border-white/40'}`,
-                                    onError: (e) => {
-                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
-                                    }
-                                }),
-                                bibleBook && _jsx("div", {
-                                    className: "absolute bottom-1 left-1 bg-blue-900/60 text-white text-xs px-2 py-0.5 rounded backdrop-blur-sm",
-                                    children: bibleBook
-                                })
+                                `Chat with ${character.name}`
                             ]
                         }),
                         
-                        /* Content */
-                        _jsxs("div", {
-                            className: "flex flex-col items-center text-center px-2",
-                            children: [
-                                _jsx("h3", {
-                                    className: "mb-1 text-lg font-bold text-blue-900",
-                                    children: character.name
-                                }),
-                                _jsx("div", {
-                                    className: "h-0.5 w-8 bg-yellow-400 rounded-full mb-2"
-                                })
-                            ]
-                        }),
-
-                        /* Bible Books Section - Fill the bottom area */
-                        _jsxs("div", {
-                            className: "mt-auto w-full px-2",
-                            children: [
-                                bibleBooks.length > 0 && _jsxs("div", {
-                                    className: "text-center",
-                                    children: [
-                                        _jsxs("div", {
-                                            className: "flex items-center justify-center mb-1",
-                                            children: [
-                                                _jsx("svg", {
-                                                    xmlns: "http://www.w3.org/2000/svg",
-                                                    className: "h-4 w-4 text-blue-700 mr-1",
-                                                    viewBox: "0 0 20 20",
-                                                    fill: "currentColor",
-                                                    children: _jsx("path", {
-                                                        d: "M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"
-                                                    })
-                                                }),
-                                                _jsx("span", {
-                                                    className: "text-sm font-semibold text-blue-800",
-                                                    children: "Featured in:"
-                                                })
-                                            ]
-                                        }),
-                                        _jsx("div", {
-                                            className: "flex flex-wrap justify-center gap-1 mt-1",
-                                            children: bibleBooks.length > 0 ? (
-                                                bibleBooks.map((book, index) => (
-                                                    _jsx("span", {
-                                                        className: "bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full",
-                                                        children: book
-                                                    }, index)
-                                                ))
-                                            ) : (
-                                                _jsx("span", {
-                                                    className: "text-gray-500 text-xs",
-                                                    children: "No specific books mentioned"
-                                                })
-                                            )
-                                        })
-                                    ]
-                                })
-                            ]
-                        }),
-
-                        /* ------------------------------------------------------------------
-                         * Featured badge
-                         * ------------------------------------------------------------------ */
+                        /* Featured badge - if needed */
                         isFeatured && _jsx("span", {
                             className: "absolute bottom-3 right-3 text-xs bg-yellow-500/90 text-blue-900 font-semibold px-2 py-0.5 rounded-full shadow",
                             children: "Featured"
