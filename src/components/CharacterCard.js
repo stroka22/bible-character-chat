@@ -23,20 +23,28 @@ const CharacterCard = ({
         _jsxs("div", {
             className: "relative",
             children: [
-                /* Simplified tooltip (debug) ---------------------------------------------- */
+                /* DEBUG INDICATOR - Shows if hover state is active */
+                _jsx("div", {
+                    className: "absolute -top-8 left-0 right-0 text-center bg-red-600 text-white font-bold py-1 px-2 rounded-t-lg z-50",
+                    children: `HOVERED: ${isHovered ? 'TRUE' : 'FALSE'}`
+                }),
+                
+                /* Bright debug tooltip - very obvious */
                 isHovered && _jsx("div", {
-                    className: "absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 bg-black text-white text-sm rounded-md p-2 shadow-lg max-w-xs",
+                    className: "absolute left-1/2 -translate-x-1/2 top-0 -mt-16 z-50 bg-red-500 text-white text-sm rounded-md p-4 shadow-lg max-w-xs border-4 border-yellow-400",
                     children: character.description
                 }),
 
                 _jsxs(motion.div, {
                     className: `
                         relative flex flex-col sm:flex-row items-center gap-4 
-                        rounded-xl border-2 bg-white/90 shadow-lg
+                        rounded-xl border-4 bg-white/90 shadow-lg
                         w-full
-                        ${isSelected
-                            ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
-                            : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
+                        ${isHovered 
+                            ? 'border-red-500 ring-4 ring-red-300' 
+                            : isSelected
+                                ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
+                                : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
                     `,
                     whileHover: {
                         scale: 1.02,
