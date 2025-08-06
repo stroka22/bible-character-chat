@@ -140,7 +140,7 @@ const CharacterCard = ({
                                 e.stopPropagation();
                                 setIsExpanded(prev => !prev);
                             },
-                            className: "text-xs text-blue-600 hover:underline mb-4 self-start focus:outline-none",
+                            className: "text-xs text-blue-600 hover:underline mb-2 self-start focus:outline-none",
                             "aria-label": isExpanded ? 'Collapse description' : 'Expand description',
                             children: isExpanded ? 'Read less' : 'Read more'
                         }))
