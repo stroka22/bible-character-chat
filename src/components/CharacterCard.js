@@ -17,39 +17,63 @@ const CharacterCard = ({
     const avatarUrl = character.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
     const bibleBook = character.bible_book || '';
-    const [isHovered, setIsHovered] = useState(false);
+    const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
+
+    // Function to toggle description visibility and stop event propagation
+    const toggleDescription = (e) => {
+        e.stopPropagation();
+        setIsDescriptionVisible(!isDescriptionVisible);
+    };
 
     return (
         _jsxs("div", {
             className: "relative",
-            onMouseEnter: () => setIsHovered(true),
-            onMouseLeave: () => setIsHovered(false),
             children: [
-                /* JavaScript-controlled tooltip that appears on hover - positioned above card */
-                isHovered && _jsx("div", {
-                    /* ------------------------------------------------------------------
-                     *  DEBUG / VISIBILITY BOOST
-                     * ------------------------------------------------------------------
-                     *  • Bright red background, yellow text, thick border,
-                     *    larger font, and slight scale to pop above card.
-                     *  • Using JavaScript hover state instead of CSS group-hover
-                     *  • Positioned above the card with high z-index
-                     * ------------------------------------------------------------------ */
-                    className: "absolute left-1/2 -translate-x-1/2 bottom-full mb-4 z-50 " +
-                               "pointer-events-none transform-gpu scale-100 " +
-                               "transition-all duration-200",
-                    children: _jsxs("div", {
-                        className: "bg-red-700 border-4 border-yellow-300 text-yellow-200 " +
-                                   "text-base font-semibold rounded-xl p-4 shadow-2xl max-w-sm",
-                        children: [
-                            character.description,
-                            _jsx("div", {
-                                className: "absolute h-4 w-4 bg-red-700 border-l-4 border-b-4 border-yellow-300 " +
-                                           "transform rotate-45 left-1/2 -translate-x-1/2 -bottom-2",
-                                "aria-hidden": "true"
-                            })
-                        ]
-                    })
+                /* Click-based description modal/tooltip - shown when info button is clicked */
+                isDescriptionVisible && _jsxs("div", {
+                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
+                    onClick: toggleDescription,
+                    children: [
+                        _jsxs("div", {
+                            className: "relative bg-white rounded-xl p-6 m-4 max-w-md max-h-[80vh] overflow-y-auto shadow-2xl",
+                            onClick: (e) => e.stopPropagation(),
+                            children: [
+                                /* Close button */
+                                _jsx("button", {
+                                    className: "absolute top-2 right-2 text-gray-500 hover:text-gray-700",
+                                    onClick: toggleDescription,
+                                    "aria-label": "Close description",
+                                    children: _jsx("svg", {
+                                        xmlns: "http://www.w3.org/2000/svg",
+                                        className: "h-6 w-6",
+                                        fill: "none",
+                                        viewBox: "0 0 24 24",
+                                        stroke: "currentColor",
+                                        children: _jsx("path", {
+                                            strokeLinecap: "round",
+                                            strokeLinejoin: "round",
+                                            strokeWidth: 2,
+                                            d: "M6 18L18 6M6 6l12 12"
+                                        })
+                                    })
+                                }),
+                                /* Character name and book */
+                                _jsx("h3", {
+                                    className: "text-xl font-bold text-blue-900 mb-2",
+                                    children: character.name
+                                }),
+                                bibleBook && _jsx("div", {
+                                    className: "mb-4 text-sm text-blue-600 font-medium",
+                                    children: bibleBook
+                                }),
+                                /* Full description */
+                                _jsx("p", {
+                                    className: "text-gray-700",
+                                    children: character.description
+                                })
+                            ]
+                        })
+                    ]
                 }),
 
                 _jsxs(motion.div, {
@@ -127,6 +151,24 @@ const CharacterCard = ({
                             )
                         }),
                         
+                        /* Info button - positioned in top right corner */
+                        _jsx("button", {
+                            "aria-label": "Show full description",
+                            onClick: toggleDescription,
+                            className: "absolute top-2 right-2 z-10 rounded-full p-1.5 bg-blue-100 text-blue-600 hover:bg-blue-200 shadow-md",
+                            children: _jsx("svg", {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                className: "h-5 w-5",
+                                viewBox: "0 0 20 20",
+                                fill: "currentColor",
+                                children: _jsx("path", {
+                                    fillRule: "evenodd",
+                                    d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z",
+                                    clipRule: "evenodd"
+                                })
+                            })
+                        }),
+                        
                         /* Avatar */
                         _jsxs("div", {
                             className: "relative w-[150px] h-[150px] flex-shrink-0",
@@ -160,10 +202,9 @@ const CharacterCard = ({
                                 _jsx("div", {
                                     className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2"
                                 }),
-                                /* Fixed-height description with line clamp and title attribute for native tooltip */
+                                /* Fixed-height description with line clamp */
                                 _jsx("p", {
                                     className: "text-sm text-gray-700 line-clamp-3",
-                                    title: character.description, // Added title attribute for native browser tooltip as fallback
                                     children: character.description
                                 })
                             ]
@@ -190,7 +231,7 @@ const CharacterCard = ({
                         
                         /* Selected indicator */
                         isSelected && _jsx("div", {
-                            className: "absolute top-2 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-10",
+                            className: "absolute top-10 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-yellow-500 text-blue-900 shadow-md z-10",
                             children: _jsx("svg", {
                                 xmlns: "http://www.w3.org/2000/svg",
                                 viewBox: "0 0 24 24",

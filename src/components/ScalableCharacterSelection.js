@@ -551,13 +551,15 @@ const ScalableCharacterSelection = () => {
                        without cutting off the last letters on shorter screens. */
                     position: 'fixed',
                     right: '20px',
-                    top: '100px',
+                    /* Start a little higher so the bottom letters get more room */
+                    top: '80px',
                     zIndex: 40,
-                    maxHeight: 'calc(100vh - 120px)',
+                    /* Give the list an extra 30 px of breathing room */
+                    maxHeight: 'calc(100vh - 150px)',
                 },
                 /* Reduce Tailwind max-height to 70vh to give the tooltip a bit
                    more breathing room and match the inline maxHeight above. */
-                className: "hidden md:flex flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[70vh] overflow-y-auto", 
+                className: "hidden md:flex flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[60vh] overflow-y-auto", 
                 children: [
                     _jsx("button", { 
                         onClick: () => {
