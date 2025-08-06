@@ -25,22 +25,33 @@ const CharacterCard = ({
         setIsDescriptionVisible(!isDescriptionVisible);
     };
 
+    // Parse Bible books into an array if multiple books are present
+    const bibleBooks = bibleBook ? bibleBook.split(',').map(book => book.trim()) : [];
+
     return (
         _jsxs("div", {
             className: "relative",
             children: [
                 /* Click-based description modal/tooltip - shown when info button is clicked */
                 isDescriptionVisible && _jsxs("div", {
-                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
+                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60",
                     onClick: toggleDescription,
                     children: [
                         _jsxs("div", {
-                            className: "relative bg-white rounded-xl p-6 m-4 max-w-md max-h-[80vh] overflow-y-auto shadow-2xl",
+                            className: "relative bg-gradient-to-br from-blue-50 to-white rounded-xl p-8 m-4 max-w-lg max-h-[80vh] overflow-y-auto shadow-2xl border-2 border-blue-200",
                             onClick: (e) => e.stopPropagation(),
                             children: [
+                                /* Decorative elements */
+                                _jsx("div", {
+                                    className: "absolute top-0 right-0 w-32 h-32 bg-yellow-300/20 rounded-full -mr-10 -mt-10 z-0"
+                                }),
+                                _jsx("div", {
+                                    className: "absolute bottom-0 left-0 w-40 h-40 bg-blue-300/20 rounded-full -ml-10 -mb-10 z-0"
+                                }),
+                                
                                 /* Close button */
                                 _jsx("button", {
-                                    className: "absolute top-2 right-2 text-gray-500 hover:text-gray-700",
+                                    className: "absolute top-3 right-3 text-gray-500 hover:text-red-500 bg-white rounded-full p-1 shadow-md z-10 transition-colors",
                                     onClick: toggleDescription,
                                     "aria-label": "Close description",
                                     children: _jsx("svg", {
@@ -57,19 +68,119 @@ const CharacterCard = ({
                                         })
                                     })
                                 }),
-                                /* Character name and book */
-                                _jsx("h3", {
-                                    className: "text-xl font-bold text-blue-900 mb-2",
-                                    children: character.name
+                                
+                                /* Character avatar */
+                                _jsx("div", {
+                                    className: "w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-yellow-400 shadow-lg",
+                                    children: _jsx("img", {
+                                        src: avatarUrl,
+                                        alt: character.name,
+                                        className: "w-full h-full object-cover"
+                                    })
                                 }),
-                                bibleBook && _jsx("div", {
-                                    className: "mb-4 text-sm text-blue-600 font-medium",
-                                    children: bibleBook
+                                
+                                /* Character name with decorative elements */
+                                _jsxs("div", {
+                                    className: "text-center mb-6 relative z-10",
+                                    children: [
+                                        _jsx("h2", {
+                                            className: "text-2xl font-bold text-blue-900 mb-1",
+                                            style: { fontFamily: 'Cinzel, serif' },
+                                            children: character.name
+                                        }),
+                                        _jsx("div", {
+                                            className: "h-1 w-20 bg-yellow-400 rounded-full mx-auto mb-2"
+                                        })
+                                    ]
                                 }),
-                                /* Full description */
-                                _jsx("p", {
-                                    className: "text-gray-700",
-                                    children: character.description
+                                
+                                /* Bible Books Section */
+                                bibleBooks.length > 0 && _jsxs("div", {
+                                    className: "bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 relative z-10",
+                                    children: [
+                                        _jsxs("div", {
+                                            className: "flex items-center mb-2",
+                                            children: [
+                                                _jsx("svg", {
+                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                    className: "h-5 w-5 text-blue-700 mr-2",
+                                                    viewBox: "0 0 20 20",
+                                                    fill: "currentColor",
+                                                    children: _jsx("path", {
+                                                        d: "M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"
+                                                    })
+                                                }),
+                                                _jsx("h3", {
+                                                    className: "text-lg font-semibold text-blue-800",
+                                                    children: "Featured in Scripture"
+                                                })
+                                            ]
+                                        }),
+                                        _jsx("div", {
+                                            className: "flex flex-wrap gap-2",
+                                            children: bibleBooks.map((book, index) => (
+                                                _jsx("span", {
+                                                    className: "bg-blue-600/90 text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm",
+                                                    children: book
+                                                }, index)
+                                            ))
+                                        })
+                                    ]
+                                }),
+                                
+                                /* Description Section */
+                                _jsxs("div", {
+                                    className: "relative z-10",
+                                    children: [
+                                        _jsxs("div", {
+                                            className: "flex items-center mb-3",
+                                            children: [
+                                                _jsx("svg", {
+                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                    className: "h-5 w-5 text-blue-700 mr-2",
+                                                    viewBox: "0 0 20 20",
+                                                    fill: "currentColor",
+                                                    children: _jsx("path", {
+                                                        fillRule: "evenodd",
+                                                        d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z",
+                                                        clipRule: "evenodd"
+                                                    })
+                                                }),
+                                                _jsx("h3", {
+                                                    className: "text-lg font-semibold text-blue-800",
+                                                    children: "About this Character"
+                                                })
+                                            ]
+                                        }),
+                                        _jsx("p", {
+                                            className: "text-gray-700 leading-relaxed",
+                                            children: character.description
+                                        })
+                                    ]
+                                }),
+                                
+                                /* Action Button */
+                                _jsx("button", {
+                                    onClick: (e) => {
+                                        e.stopPropagation();
+                                        onSelect(character);
+                                        setIsDescriptionVisible(false);
+                                    },
+                                    className: "mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center",
+                                    children: [
+                                        _jsx("svg", {
+                                            xmlns: "http://www.w3.org/2000/svg",
+                                            className: "h-5 w-5 mr-2",
+                                            viewBox: "0 0 20 20",
+                                            fill: "currentColor",
+                                            children: _jsx("path", {
+                                                fillRule: "evenodd",
+                                                d: "M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z",
+                                                clipRule: "evenodd"
+                                            })
+                                        }),
+                                        `Chat with ${character.name}`
+                                    ]
                                 })
                             ]
                         })
@@ -206,9 +317,53 @@ const CharacterCard = ({
                                 }),
                                 _jsx("div", {
                                     className: "h-0.5 w-8 bg-yellow-400 rounded-full mb-2"
-                                }),
-                                /* Fixed-height description with line clamp */
-                                null /* description removed – info button now handles it */
+                                })
+                            ]
+                        }),
+
+                        /* Bible Books Section - Fill the bottom area */
+                        _jsxs("div", {
+                            className: "mt-auto w-full px-2",
+                            children: [
+                                bibleBooks.length > 0 && _jsxs("div", {
+                                    className: "text-center",
+                                    children: [
+                                        _jsxs("div", {
+                                            className: "flex items-center justify-center mb-1",
+                                            children: [
+                                                _jsx("svg", {
+                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                    className: "h-4 w-4 text-blue-700 mr-1",
+                                                    viewBox: "0 0 20 20",
+                                                    fill: "currentColor",
+                                                    children: _jsx("path", {
+                                                        d: "M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"
+                                                    })
+                                                }),
+                                                _jsx("span", {
+                                                    className: "text-sm font-semibold text-blue-800",
+                                                    children: "Featured in:"
+                                                })
+                                            ]
+                                        }),
+                                        _jsx("div", {
+                                            className: "flex flex-wrap justify-center gap-1 mt-1",
+                                            children: bibleBooks.length > 0 ? (
+                                                bibleBooks.map((book, index) => (
+                                                    _jsx("span", {
+                                                        className: "bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full",
+                                                        children: book
+                                                    }, index)
+                                                ))
+                                            ) : (
+                                                _jsx("span", {
+                                                    className: "text-gray-500 text-xs",
+                                                    children: "No specific books mentioned"
+                                                })
+                                            )
+                                        })
+                                    ]
+                                })
                             ]
                         }),
 
@@ -218,8 +373,7 @@ const CharacterCard = ({
                         isFeatured && _jsx("span", {
                             className: "absolute bottom-3 right-3 text-xs bg-yellow-500/90 text-blue-900 font-semibold px-2 py-0.5 rounded-full shadow",
                             children: "Featured"
-                        }),
-                        /* Entire card is clickable */
+                        })
                     ]
                 })
             ]
