@@ -204,8 +204,9 @@ const CharacterCard = ({
                                             children: bibleBooks.map((book, index) => (
                                                 _jsx("span", {
                                                     className: "bg-indigo-600/90 text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm",
-                                                    children: book
-                                                }, index)
+                                                    children: book,
+                                                    key: `book-${index}-${book}`
+                                                })
                                             ))
                                         })
                                     ]
@@ -243,11 +244,11 @@ const CharacterCard = ({
                                 }),
                                 
                                 /* Action Button */
-                                _jsx("button", {
+                                _jsxs("button", {
                                     onClick: handleModalChatClick,
                                     className: "mt-6 w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center",
                                     children: [
-                                        _jsx(ChatIcon),
+                                        _jsx(ChatIcon, { key: "modal-chat-icon" }),
                                         `Chat with ${character.name}`
                                     ]
                                 })
@@ -353,11 +354,11 @@ const CharacterCard = ({
                         }),
                         
                         /* Chat with Character Name button - darker indigo to match website theme */
-                        _jsx("button", {
+                        _jsxs("button", {
                             className: "mt-4 bg-indigo-700 hover:bg-indigo-800 text-white font-medium py-2 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center",
                             onClick: handleChatClick,
                             children: [
-                                _jsx(ChatIcon),
+                                _jsx(ChatIcon, { key: "card-chat-icon" }),
                                 `Chat with ${character.name}`
                             ]
                         }),
