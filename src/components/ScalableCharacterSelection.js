@@ -538,13 +538,17 @@ const ScalableCharacterSelection = () => {
          * ------------------------------------------------------------------ */
         return (
             _jsxs("div", { 
+                /* ------------------------------------------------------------------
+                 * Simplified, reliable positioning:
+                 *  - Fixed so it always stays visible while scrolling
+                 *  - Placed lower (top: 200px) and to the far right (right: 20px)
+                 *    to avoid overlapping the horizontal selector on mobile/tablet.
+                 * ------------------------------------------------------------------ */
                 style: {
-                    position: 'sticky',
-                    top: '120px',
-                    float: 'right',
-                    marginRight: '20px',
-                    marginTop: '80px',
-                    zIndex: 40
+                    position: 'fixed',
+                    right: '20px',
+                    top: '200px',
+                    zIndex: 40,
                 },
                 className: "hidden md:flex flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
                 children: [
