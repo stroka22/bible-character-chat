@@ -69,6 +69,24 @@ const CharacterCard = ({
     onSetAsFeatured,
 }) => {
     /* ------------------------------------------------------------------ */
+    /*  Safety checks to avoid undefined property errors                  */
+    /* ------------------------------------------------------------------ */
+    if (!character) {
+        console.warn('CharacterCard: character prop is undefined');
+        return null;
+    }
+
+    if (!character.id) {
+        console.warn('CharacterCard: character.id is undefined', character);
+        return null;
+    }
+
+    if (!character.name) {
+        console.warn('CharacterCard: character.name is undefined', character);
+        return null;
+    }
+
+    /* ------------------------------------------------------------------ */
     /*  Derived values & local UI state                                   */
     /* ------------------------------------------------------------------ */
     const avatarUrl = character.avatar_url ||
