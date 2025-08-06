@@ -796,7 +796,7 @@ const ScalableCharacterSelection = () => {
                 _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg", children: viewMode === 'grid' ? (
                     _jsx("div", { style: { height: '600px' }, children: _jsx(VirtuosoGrid, { totalCount: paginatedCharacters.length, overscan: 200, listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6", itemClassName: "character-card-container", itemContent: index => renderCharacterItem(index) }) })
                 ) : (
-                    _jsx("div", { className: "space-y-4", children: paginatedCharacters.map((character, index) => _jsx("div", { children: renderCharacterItem(index) }, character.id)) })
+                    _jsx("div", { className: "space-y-4", children: paginatedCharacters.map((character, index) => _jsx("div", { children: renderCharacterItem(index) }, character?.id || `character-${index}`)) })
                 ) })
             ] })), 
             renderPagination()
