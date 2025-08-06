@@ -600,14 +600,14 @@ const ChatInterfaceWithConversations = () => {
                                 children: [
                                     messages
                                         .filter((m) => m.content && m.content.trim() !== '')
-                                        .map((message) => (
+                                        .map((message, index) => (
                                             _jsx(ChatBubble, { 
                                                 message: message, 
                                                 characterName: character.name, 
                                                 characterAvatar: character.avatar_url, 
                                                 isTyping: isTyping && message === messages[messages.length - 1] && 
                                                         message.role === 'assistant' && message.content === '' 
-                                            }, message.id)
+                                            }, message?.id || `message-${index}`)
                                         )),
                                     
                                     isTyping && messages.length > 0 && messages[messages.length - 1].role === 'user' && (
