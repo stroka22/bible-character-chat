@@ -587,8 +587,9 @@ const ScalableCharacterSelection = () => {
                                     ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
                                     : 'text-white hover:bg-white/20'
                             }`, 
-                            children: letter 
-                        }, letter)
+                            children: letter,
+                            key: letter
+                        })
                     ))
                 ] 
             })
@@ -630,8 +631,9 @@ const ScalableCharacterSelection = () => {
                                         ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
                                         : 'text-white hover:bg-white/20'
                                 }`, 
-                                children: letter 
-                            }, letter)
+                                children: letter,
+                                key: letter
+                            })
                         ))
                     ]
                 })
@@ -695,8 +697,8 @@ const ScalableCharacterSelection = () => {
                     setCurrentPage(1);
                 }, className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50", children: [
                     _jsx("option", { value: "all", children: "All Books" }), 
-                    _jsx("optgroup", { label: "Old Testament", children: BIBLE_BOOKS.oldTestament.map(book => (_jsx("option", { value: book, children: book }, book))) }), 
-                    _jsx("optgroup", { label: "New Testament", children: BIBLE_BOOKS.newTestament.map(book => (_jsx("option", { value: book, children: book }, book))) })
+                    _jsx("optgroup", { label: "Old Testament", children: BIBLE_BOOKS.oldTestament.map(book => (_jsx("option", { value: book, children: book, key: book }, book))) }), 
+                    _jsx("optgroup", { label: "New Testament", children: BIBLE_BOOKS.newTestament.map(book => (_jsx("option", { value: book, children: book, key: book }, book))) })
                 ] }) }), 
                 _jsx("div", { className: "w-full md:w-auto", children: _jsxs("select", { value: groupFilter, onChange: (e) => {
                     setGroupFilter(e.target.value);
@@ -707,7 +709,7 @@ const ScalableCharacterSelection = () => {
                     _jsx("option", { value: "Apostles", children: "Apostles" }), 
                     _jsx("option", { value: "Kings", children: "Kings" }), 
                     _jsx("option", { value: "Women", children: "Women of the Bible" }), 
-                    groups.map(group => (_jsx("option", { value: group.name, children: group.name }, group.id)))
+                    groups.map(group => (_jsx("option", { value: group.name, children: group.name, key: group.id }, group.id)))
                 ] }) }), 
                 
                 // Favorites toggle button
@@ -749,7 +751,7 @@ const ScalableCharacterSelection = () => {
                 activeFilters.map((filter, index) => (_jsxs("div", { className: "flex items-center gap-1 bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full border border-yellow-400/50", children: [
                     _jsx("span", { children: filter.value }), 
                     _jsx("button", { onClick: () => removeFilter(filter.type), className: "w-5 h-5 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20", children: "\u00D7" })
-                ] }, index))), 
+                ], key: `filter-${index}-${filter.type}` }))), 
                 _jsx("button", { onClick: () => {
                     setTestament('all');
                     setBookFilter('all');
@@ -780,7 +782,7 @@ const ScalableCharacterSelection = () => {
                 _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg", children: viewMode === 'grid' ? (
                     _jsx("div", { style: { height: '600px' }, children: _jsx(VirtuosoGrid, { totalCount: paginatedCharacters.length, overscan: 200, listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6", itemClassName: "character-card-container", itemContent: index => renderCharacterItem(index) }) })
                 ) : (
-                    _jsx("div", { className: "space-y-4", children: paginatedCharacters.map((_, index) => renderCharacterItem(index)) })
+                    _jsx("div", { className: "space-y-4", children: paginatedCharacters.map((character, index) => _jsx("div", { children: renderCharacterItem(index) }, character.id)) })
                 ) })
             ] })), 
             renderPagination()
