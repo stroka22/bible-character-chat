@@ -776,16 +776,6 @@ const ScalableCharacterSelection = () => {
             filteredCharacters.length > 0 && (_jsxs("div", { className: "relative", children: [
                 // Mobile alphabet selector placed directly above character cards
                 renderMobileAlphaNav(),
-                /* ------------------------------------------------------------------
-                 * QUICK-TEST BANNER
-                 * ------------------------------------------------------------------
-                 *  •  Helps verify that JSX injected right before the card grid
-                 *     is actually rendered in the browser.
-                 *  •  Remove once the red info buttons become visible.
-                 * ------------------------------------------------------------------ */
-                _jsx("div", { className: "mb-4 rounded-xl bg-red-600/90 text-yellow-200 font-extrabold text-center py-3 shadow-2xl",
-                    children: "TEST: Character cards should have red info buttons" }),
-
                 _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg", children: viewMode === 'grid' ? (
                     _jsx("div", { style: { height: '600px' }, children: _jsx(VirtuosoGrid, { totalCount: paginatedCharacters.length, overscan: 200, listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6", itemClassName: "character-card-container", itemContent: index => renderCharacterItem(index) }) })
                 ) : (
