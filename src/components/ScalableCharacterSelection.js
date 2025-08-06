@@ -552,8 +552,8 @@ const ScalableCharacterSelection = () => {
                     position: 'fixed',
                     /* Move slightly farther right to create visual breathing room */
                     right: '30px',
-                    /* Lower the selector so it sits further down the page */
-                    top: '120px',
+                    /* Lower the selector so it aligns with the beginning of the character cards */
+                    top: '300px',            /* << Adjusted from 120px to 300px */
                     zIndex: 40,
                     /* Give the list an extra 30 px of breathing room */
                     maxHeight: 'calc(100vh - 150px)',

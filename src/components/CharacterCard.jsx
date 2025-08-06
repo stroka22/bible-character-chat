@@ -83,7 +83,10 @@ const CharacterCard = ({
                     className: `
                         relative flex flex-col items-center gap-3
                         rounded-xl bg-white shadow-md w-full p-4
-                        hover:shadow-lg transition-shadow
+                        h-[360px]                                   /* uniform height */
+                        border-2 border-yellow-300                   /* thin yellow border */
+                        hover:border-4 hover:border-yellow-400       /* thicker on hover */
+                        hover:shadow-lg transition-all
                     `,
                     whileHover: {
                         scale: 1.02,
@@ -109,6 +112,37 @@ const CharacterCard = ({
                             className: "absolute -inset-0.5 bg-yellow-300 opacity-20 blur-md rounded-xl animate-pulse"
                         }),
                         
+                        /* ------------------------------------------------------------------
+                         * Favorite  ⭐  button  (top-left)
+                         * ------------------------------------------------------------------ */
+                        _jsx("button", {
+                            onClick: (e) => {
+                                e.stopPropagation();
+                                if (typeof onToggleFavorite === 'function') {
+                                    onToggleFavorite();
+                                }
+                            },
+                            className: `
+                                absolute top-3 left-3 z-20 rounded-full p-1.5
+                                ${isFavorite
+                                    ? 'bg-yellow-300 text-blue-900 shadow-md'
+                                    : 'bg-white/80 text-gray-400 hover:text-yellow-500 hover:bg-white'}
+                                transition-colors
+                            `,
+                            title: isFavorite ? 'Remove from favorites' : 'Add to favorites',
+                            children: _jsx("svg", {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                viewBox: "0 0 20 20",
+                                fill: isFavorite ? "currentColor" : "none",
+                                stroke: "currentColor",
+                                strokeWidth: isFavorite ? "0" : "1.5",
+                                className: "h-5 w-5",
+                                children: _jsx("path", {
+                                    d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                                })
+                            })
+                        }),
+
                         /* Info button - positioned in top right corner */
                         _jsx("button", {
                             "aria-label": "Show full description",
@@ -174,11 +208,16 @@ const CharacterCard = ({
                                     className: "h-0.5 w-8 bg-yellow-400 rounded-full mb-2"
                                 }),
                                 /* Fixed-height description with line clamp */
-                                _jsx("p", {
-                                    className: "text-sm text-gray-700 line-clamp-3",
-                                    children: character.description
-                                })
+                                null /* description removed – info button now handles it */
                             ]
+                        }),
+
+                        /* ------------------------------------------------------------------
+                         * Featured badge
+                         * ------------------------------------------------------------------ */
+                        isFeatured && _jsx("span", {
+                            className: "absolute bottom-3 right-3 text-xs bg-yellow-500/90 text-blue-900 font-semibold px-2 py-0.5 rounded-full shadow",
+                            children: "Featured"
                         }),
                         /* Entire card is clickable */
                     ]
