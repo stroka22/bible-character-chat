@@ -536,7 +536,7 @@ const ScalableCharacterSelection = () => {
                     overlaying content.  right-4 on normal screens, relax to
                     right-8 on xl screens.  Constrain width so it never covers
                     more than 52 px. */
-                className: "hidden md:flex fixed right-4 xl:right-8 top-20 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] max-w-[52px] overflow-y-auto", 
+                className: "hidden md:flex fixed right-16 top-20 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
                 children: [
                     _jsx("button", { 
                         onClick: () => {
@@ -754,7 +754,7 @@ const ScalableCharacterSelection = () => {
                 // Mobile alphabet selector placed directly above character cards
                 renderMobileAlphaNav(),
                 _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg", children: viewMode === 'grid' ? (
-                    _jsx("div", { style: { height: '600px' }, children: _jsx(VirtuosoGrid, { totalCount: paginatedCharacters.length, overscan: 200, listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6", itemClassName: "character-card-container", itemContent: index => renderCharacterItem(index) }) })
+                    _jsx("div", { style: { height: 'auto', minHeight: '600px' }, children: _jsx(VirtuosoGrid, { totalCount: paginatedCharacters.length, overscan: 200, listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6", itemClassName: "character-card-container", itemContent: index => renderCharacterItem(index) }) })
                 ) : (
                     _jsx("div", { className: "space-y-4", children: paginatedCharacters.map((_, index) => renderCharacterItem(index)) })
                 ) })
