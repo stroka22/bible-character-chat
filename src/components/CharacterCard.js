@@ -1,6 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { motion } from 'framer-motion';
-import { useState } from 'react';
 
 const CharacterCard = ({
     character,
@@ -17,18 +16,14 @@ const CharacterCard = ({
     const avatarUrl = character.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
     const bibleBook = character.bible_book || '';
-    const [isHovered, setIsHovered] = useState(false);
 
     return (
         _jsxs("div", {
-            className: "relative",
-            // Move hover detection to outer container to bypass motion.div event blocking
-            onMouseEnter: () => setIsHovered(true),
-            onMouseLeave: () => setIsHovered(false),
+            className: "relative group", // Added group class for CSS-only tooltip
             children: [
-                /* Tooltip that appears on hover - positioned above card */
-                isHovered && _jsx("div", {
-                    className: "absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50",
+                /* CSS-only tooltip that appears on hover - positioned above card */
+                _jsx("div", {
+                    className: "absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
                     children: _jsxs("div", {
                         className: "bg-gray-900 text-white text-sm rounded-md p-3 shadow-lg max-w-xs",
                         children: [
@@ -64,7 +59,6 @@ const CharacterCard = ({
                             onSelect(character);
                         }
                     },
-                    // Removed hover handlers from here - they're now on the outer div
                     "aria-label": `Chat with ${character.name}${bibleBook ? ` from ${bibleBook}` : ''}`,
                     children: [
                         /* Background and selection indicator */
@@ -150,9 +144,10 @@ const CharacterCard = ({
                                 _jsx("div", {
                                     className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2"
                                 }),
-                                /* Fixed-height description with line clamp */
+                                /* Fixed-height description with line clamp and title attribute for native tooltip */
                                 _jsx("p", {
                                     className: "text-sm text-gray-700 line-clamp-3",
+                                    title: character.description, // Added title attribute for native browser tooltip as fallback
                                     children: character.description
                                 })
                             ]
