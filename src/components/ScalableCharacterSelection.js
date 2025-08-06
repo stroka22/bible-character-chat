@@ -550,9 +550,10 @@ const ScalableCharacterSelection = () => {
                        `calc(100vh - 120px)` ensures the entire list is scrollable
                        without cutting off the last letters on shorter screens. */
                     position: 'fixed',
-                    right: '20px',
-                    /* Start a little higher so the bottom letters get more room */
-                    top: '80px',
+                    /* Move slightly farther right to create visual breathing room */
+                    right: '30px',
+                    /* Lower the selector so it sits further down the page */
+                    top: '120px',
                     zIndex: 40,
                     /* Give the list an extra 30 px of breathing room */
                     maxHeight: 'calc(100vh - 150px)',
