@@ -369,7 +369,7 @@ const ScalableCharacterSelection = () => {
                         isFeatured,
                         onSetAsFeatured: () => handleSetAsFeatured(character),
                     }),
-                }, character.id)
+                }, character?.id || `character-item-${index}`)
             );
         }
 
@@ -399,7 +399,7 @@ const ScalableCharacterSelection = () => {
                             className: "w-full h-full object-cover",
                         }),
                     }),
-
+                ], character?.id || `character-item-${index}`)
                     /* Details ------------------------------------------------ */
                     _jsxs("div", {
                         className: "flex-1",
@@ -502,7 +502,7 @@ const ScalableCharacterSelection = () => {
                         children: selectedCharacter?.id === character.id ? 'Continue' : 'Chat',
                     }),
                 ],
-            }, character.id)
+            }, character?.id || `character-item-${index}`)
         );
     }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite, featuredCharacter, handleSetAsFeatured]);
     
