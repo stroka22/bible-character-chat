@@ -541,7 +541,7 @@ const ScalableCharacterSelection = () => {
          * ------------------------------------------------------------------ */
         return (
             _jsxs("div", { 
-                className: "hidden md:flex fixed right-4 top-40 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
+                className: "hidden md:flex absolute right-4 top-40 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
                 children: [
                     _jsx("button", { 
                         onClick: () => {

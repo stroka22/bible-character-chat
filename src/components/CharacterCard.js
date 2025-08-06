@@ -23,21 +23,10 @@ const CharacterCard = ({
         _jsxs("div", {
             className: "relative",
             children: [
-                /* Tooltip that appears on hover - outside the motion.div to avoid animation issues */
-                isHovered && _jsxs("div", {
-                    className: "absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50",
-                    children: [
-                        _jsxs("div", {
-                            className: "bg-gray-900 text-white text-sm rounded-md p-3 shadow-lg max-w-xs",
-                            children: [
-                                character.description,
-                                _jsx("div", {
-                                    className: "absolute h-3 w-3 bg-gray-900 transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5",
-                                    "aria-hidden": "true"
-                                })
-                            ]
-                        })
-                    ]
+                /* Simplified tooltip (debug) ---------------------------------------------- */
+                isHovered && _jsx("div", {
+                    className: "absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 bg-black text-white text-sm rounded-md p-2 shadow-lg max-w-xs",
+                    children: character.description
                 }),
 
                 _jsxs(motion.div, {
