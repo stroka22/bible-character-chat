@@ -134,10 +134,16 @@ const CharacterCard = ({
 
                 /* Hover tooltip with full description -------------------------------------- */
                 _jsx("div", {
-                    className: "pointer-events-none absolute left-4 right-4 -top-2 translate-y-[-100%] z-20 opacity-0 group-hover:opacity-100 transition-opacity",
-                    children: _jsx("div", {
-                        className: "bg-gray-900 text-white text-xs rounded-md p-3 shadow-lg max-w-xs mx-auto",
-                        children: character.description
+                    className: "pointer-events-none absolute left-1/2 -translate-x-1/2 -top-4 translate-y-[-100%] z-50 opacity-0 group-hover:opacity-100 transition-opacity",
+                    children: _jsxs("div", {
+                        className: "bg-black text-white text-sm rounded-md p-3 shadow-lg max-w-xs mx-auto relative",
+                        children: [
+                            character.description,
+                            _jsx("div", {
+                                className: "absolute h-3 w-3 bg-black transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5",
+                                "aria-hidden": "true"
+                            })
+                        ]
                     })
                 }),
                 
