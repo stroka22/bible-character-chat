@@ -528,20 +528,25 @@ const ScalableCharacterSelection = () => {
     const renderAlphaNav = () => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         
-        // Desktop version (md and up screens) - vertical on right side
-        // Changed right-4 to right-24 to avoid covering view mode buttons
         /* ------------------------------------------------------------------
-         * Desktop alphabet selector
+         * Desktop alphabet selector - COMPLETELY NEW POSITIONING APPROACH
          * ------------------------------------------------------------------
-         * - Use `fixed` so the bar remains visible while scrolling.
-         * - `right-4` keeps it flush with the content gutter without
-         *   overlapping the horizontal selector.
-         * - `top-40` pushes it down a little further so it no longer collides with the
-         *   header / horizontal selector row.
+         * - Using margin instead of absolute/fixed positioning
+         * - Floating the selector to the right with margin
+         * - Setting a specific margin-top to avoid overlapping the horizontal selector
+         * - Using sticky positioning so it stays visible while scrolling
          * ------------------------------------------------------------------ */
         return (
             _jsxs("div", { 
-                className: "hidden md:flex absolute right-4 top-40 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
+                style: {
+                    position: 'sticky',
+                    top: '120px',
+                    float: 'right',
+                    marginRight: '20px',
+                    marginTop: '80px',
+                    zIndex: 40
+                },
+                className: "hidden md:flex flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
                 children: [
                     _jsx("button", { 
                         onClick: () => {
