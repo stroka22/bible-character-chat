@@ -533,10 +533,11 @@ const ScalableCharacterSelection = () => {
         return (
             _jsxs("div", { 
                 /*  Desktop alphabet selector: stick to the far-right edge without
-                    overlaying content.  right-4 on normal screens, relax to
-                    right-8 on xl screens.  Constrain width so it never covers
-                    more than 52 px. */
-                className: "hidden md:flex fixed right-16 top-20 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
+                    overlaying content.  right-16 keeps it inside card area while
+                    still aligned to the right gutter.  Use `absolute` so it
+                    scrolls with the content instead of staying pinned to the
+                    viewport. */
+                className: "hidden md:flex absolute right-16 top-20 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
                 children: [
                     _jsx("button", { 
                         onClick: () => {
