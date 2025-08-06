@@ -286,7 +286,7 @@ const CharacterSelection = () => {
                                     setSearchQuery('');
                                     setCurrentLetter('all');
                                     setCurrentPage(1);
-                                }, className: "text-yellow-400 hover:text-yellow-300 font-medium", children: "Clear all filters" })] })), filteredCharacters.length > 0 && (_jsx("div", { className: viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4', children: paginatedCharacters.map(character => (viewMode === 'grid' ? (_jsx(CharacterCard, { character: character, onSelect: handleSelectCharacter, isSelected: selectedCharacter?.id === character.id }, character.id)) : (_jsxs("div", { className: `
+                                }, className: "text-yellow-400 hover:text-yellow-300 font-medium", children: "Clear all filters" })] })), filteredCharacters.length > 0 && (_jsx("div", { className: viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4', children: paginatedCharacters.map((character, index) => (viewMode === 'grid' ? (_jsx(CharacterCard, { character: character, onSelect: handleSelectCharacter, isSelected: selectedCharacter?.id === character.id }, character?.id || `character-grid-${index}`)) : (_jsxs("div", { className: `
                     flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15
                     transition-all duration-300 hover:bg-white/15 cursor-pointer
                     ${selectedCharacter?.id === character.id ? 'border-yellow-400 ring-2 ring-yellow-400/30' : ''}
@@ -298,6 +298,6 @@ const CharacterSelection = () => {
                       ${selectedCharacter?.id === character.id
                                         ? 'bg-yellow-400 text-blue-900'
                                         : 'bg-white/10 text-white hover:bg-white/20'}
-                    `, children: selectedCharacter?.id === character.id ? 'Continue' : 'Chat' })] }, character.id)))) })), renderPagination()] })] }));
+                    `, children: selectedCharacter?.id === character.id ? 'Continue' : 'Chat' })] }, character?.id || `character-list-${index}`))))) })), renderPagination()] })] }));
 };
 export default CharacterSelection;
