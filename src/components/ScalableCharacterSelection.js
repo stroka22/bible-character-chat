@@ -338,6 +338,20 @@ const ScalableCharacterSelection = () => {
     
     const renderCharacterItem = useCallback((index) => {
         const character = paginatedCharacters[index];
+
+        // ------------------------------------------------------------------
+        // Safety checks – prevent runtime errors if character data is missing
+        // ------------------------------------------------------------------
+        if (!character) {
+            console.warn(`renderCharacterItem: character at index ${index} is undefined`);
+            return null;
+        }
+
+        if (!character.id) {
+            console.warn(`renderCharacterItem: character.id is undefined at index ${index}`, character);
+            return null;
+        }
+
         const isFavorite = favoriteCharacters.includes(character.id);
         const isFeatured = featuredCharacter?.id === character.id;
 
