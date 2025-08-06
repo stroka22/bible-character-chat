@@ -545,12 +545,19 @@ const ScalableCharacterSelection = () => {
                  *    to avoid overlapping the horizontal selector on mobile/tablet.
                  * ------------------------------------------------------------------ */
                 style: {
+                    /* Keep the selector fixed but start it higher so it does not
+                       overlap the horizontal selector and remains fully visible.
+                       `calc(100vh - 120px)` ensures the entire list is scrollable
+                       without cutting off the last letters on shorter screens. */
                     position: 'fixed',
                     right: '20px',
-                    top: '200px',
+                    top: '100px',
                     zIndex: 40,
+                    maxHeight: 'calc(100vh - 120px)',
                 },
-                className: "hidden md:flex flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
+                /* Reduce Tailwind max-height to 70vh to give the tooltip a bit
+                   more breathing room and match the inline maxHeight above. */
+                className: "hidden md:flex flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[70vh] overflow-y-auto", 
                 children: [
                     _jsx("button", { 
                         onClick: () => {

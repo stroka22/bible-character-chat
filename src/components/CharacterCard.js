@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 const CharacterCard = ({
     character,
@@ -16,28 +17,27 @@ const CharacterCard = ({
     const avatarUrl = character.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
     const bibleBook = character.bible_book || '';
+    const [isHovered, setIsHovered] = useState(false);
 
     return (
         _jsxs("div", {
-            className: "relative group", // Added group class for CSS-only tooltip
+            className: "relative",
+            onMouseEnter: () => setIsHovered(true),
+            onMouseLeave: () => setIsHovered(false),
             children: [
-                /* CSS-only tooltip that appears on hover - positioned above card */
-                _jsx("div", {
+                /* JavaScript-controlled tooltip that appears on hover - positioned above card */
+                isHovered && _jsx("div", {
                     /* ------------------------------------------------------------------
                      *  DEBUG / VISIBILITY BOOST
                      * ------------------------------------------------------------------
-                     *  • Make tooltip impossible to miss so we can confirm
-                     *    whether the group-hover class is being applied.
-                     *  •  Bright red background, yellow text, thick border,
-                     *     larger font, and slight scale to pop above card.
-                     *  •  If you still don't see this tooltip on hover the
-                     *     issue is that the `group-hover` state is not being
-                     *     triggered (likely because the parent does not get
-                     *     hover events inside the virtualised list).
+                     *  • Bright red background, yellow text, thick border,
+                     *    larger font, and slight scale to pop above card.
+                     *  • Using JavaScript hover state instead of CSS group-hover
+                     *  • Positioned above the card with high z-index
                      * ------------------------------------------------------------------ */
                     className: "absolute left-1/2 -translate-x-1/2 bottom-full mb-4 z-50 " +
-                               "pointer-events-none transform-gpu scale-90 group-hover:scale-100 " +
-                               "opacity-0 group-hover:opacity-100 transition-all duration-200",
+                               "pointer-events-none transform-gpu scale-100 " +
+                               "transition-all duration-200",
                     children: _jsxs("div", {
                         className: "bg-red-700 border-4 border-yellow-300 text-yellow-200 " +
                                    "text-base font-semibold rounded-xl p-4 shadow-2xl max-w-sm",
