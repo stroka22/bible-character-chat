@@ -155,10 +155,23 @@ const CharacterCard = ({
                         _jsx("button", {
                             "aria-label": "Show full description",
                             onClick: toggleDescription,
-                            className: "absolute top-2 right-2 z-10 rounded-full p-1.5 bg-blue-100 text-blue-600 hover:bg-blue-200 shadow-md",
+                            /*  SUPER-OBVIOUS   ⓘ   BUTTON
+                                ----------------------------------------------------
+                                • Bright red background with white icon  
+                                • Thick yellow ring on hover / focus  
+                                • Larger icon (h-7 w-7) and padding  
+                                • Slight drop-shadow for depth  
+                            */
+                            className: `
+                                absolute top-3 right-3 z-20 rounded-full p-2
+                                bg-red-600 text-white shadow-lg
+                                hover:bg-red-700 focus:outline-none
+                                focus:ring-4 focus:ring-yellow-300
+                                transition-colors
+                            `,
                             children: _jsx("svg", {
                                 xmlns: "http://www.w3.org/2000/svg",
-                                className: "h-5 w-5",
+                                className: "h-7 w-7",
                                 viewBox: "0 0 20 20",
                                 fill: "currentColor",
                                 children: _jsx("path", {
