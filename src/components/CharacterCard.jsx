@@ -29,16 +29,6 @@ const CharacterCard = ({
         _jsxs("div", {
             className: "relative",
             children: [
-                /* ------------------------------------------------------------------
-                 * TEST BANNER – helps verify that the CharacterCard component
-                 * is rendering the most recent code in the browser.
-                 * Remove once red info buttons are visible.
-                 * ------------------------------------------------------------------ */
-                _jsx("div", {
-                    className: "mb-2 rounded-md bg-red-600 text-yellow-200 font-extrabold text-center py-1 shadow-lg",
-                    children: "CHARACTERCARD TEST – RED BUTTON SHOULD BE BELOW"
-                }),
-
                 /* Click-based description modal/tooltip - shown when info button is clicked */
                 isDescriptionVisible && _jsxs("div", {
                     className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
@@ -167,16 +157,16 @@ const CharacterCard = ({
                             onClick: toggleDescription,
                             /*  SUPER-OBVIOUS   ⓘ   BUTTON
                                 ----------------------------------------------------
-                                • Bright red background with white icon  
-                                • Thick yellow ring on hover / focus  
+                                • Blue background with white icon  
+                                • Blue ring on focus  
                                 • Larger icon (h-7 w-7) and padding  
                                 • Slight drop-shadow for depth  
                             */
                             className: `
                                 absolute top-3 right-3 z-20 rounded-full p-2
-                                bg-red-600 text-white shadow-lg
-                                hover:bg-red-700 focus:outline-none
-                                focus:ring-4 focus:ring-yellow-300
+                                bg-blue-600 text-white shadow-lg
+                                hover:bg-blue-700 focus:outline-none
+                                focus:ring-4 focus:ring-blue-300
                                 transition-colors
                             `,
                             children: _jsx("svg", {
