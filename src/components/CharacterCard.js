@@ -23,13 +23,29 @@ const CharacterCard = ({
             children: [
                 /* CSS-only tooltip that appears on hover - positioned above card */
                 _jsx("div", {
-                    className: "absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
+                    /* ------------------------------------------------------------------
+                     *  DEBUG / VISIBILITY BOOST
+                     * ------------------------------------------------------------------
+                     *  • Make tooltip impossible to miss so we can confirm
+                     *    whether the group-hover class is being applied.
+                     *  •  Bright red background, yellow text, thick border,
+                     *     larger font, and slight scale to pop above card.
+                     *  •  If you still don't see this tooltip on hover the
+                     *     issue is that the `group-hover` state is not being
+                     *     triggered (likely because the parent does not get
+                     *     hover events inside the virtualised list).
+                     * ------------------------------------------------------------------ */
+                    className: "absolute left-1/2 -translate-x-1/2 bottom-full mb-4 z-50 " +
+                               "pointer-events-none transform-gpu scale-90 group-hover:scale-100 " +
+                               "opacity-0 group-hover:opacity-100 transition-all duration-200",
                     children: _jsxs("div", {
-                        className: "bg-gray-900 text-white text-sm rounded-md p-3 shadow-lg max-w-xs",
+                        className: "bg-red-700 border-4 border-yellow-300 text-yellow-200 " +
+                                   "text-base font-semibold rounded-xl p-4 shadow-2xl max-w-sm",
                         children: [
                             character.description,
                             _jsx("div", {
-                                className: "absolute h-3 w-3 bg-gray-900 transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1.5",
+                                className: "absolute h-4 w-4 bg-red-700 border-l-4 border-b-4 border-yellow-300 " +
+                                           "transform rotate-45 left-1/2 -translate-x-1/2 -bottom-2",
                                 "aria-hidden": "true"
                             })
                         ]
