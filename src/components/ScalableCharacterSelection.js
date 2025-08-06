@@ -525,33 +525,93 @@ const ScalableCharacterSelection = () => {
     };
     const renderAlphaNav = () => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        /* ------------------------------------------------------------------
-         *  Redesigned vertical alphabet selector
-         *  - High z-index so it's never hidden
-         *  - Solid backdrop & yellow border for contrast
-         *  - Subtle shadow for depth
-         *  - Slightly bigger gap between letters for touch devices
-         * ------------------------------------------------------------------ */
-        /* make bar usable on short screens: stick near top & scroll when needed */
-        /* ------------------------------------------------------------------
-         *  Container:
-         *  - z-40 (so dropdowns can appear above if needed)
-         *  - md+: stick right-side vertically (original design)
-         *  - <md: move to bottom-center & horizontal for mobile
-         * ------------------------------------------------------------------ */
-        return (_jsxs("div", { className: "fixed z-40 bg-blue-800/90 backdrop-blur-md border-2 border-yellow-400/50 shadow-2xl \
-md:right-4 md:top-20 md:translate-y-0 md:rounded-xl md:flex-col md:py-5 md:px-3 md:max-h-[80vh] md:overflow-y-auto \
-left-1/2 -translate-x-1/2 bottom-4 flex flex-row gap-2 px-4 py-2 rounded-full", children: [_jsx("button", { onClick: () => {
-                        setCurrentLetter('all');
-                        setCurrentPage(1);
-                    }, "aria-label": "Show all characters", className: `w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === 'all'
-                        ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
-                        : 'text-white hover:bg-white/20'}`, children: "All" }), letters.map(letter => (_jsx("button", { onClick: () => {
-                        setCurrentLetter(letter);
-                        setCurrentPage(1);
-                    }, "aria-label": `Show characters starting with ${letter}`, className: `w-10 h-10 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-medium ${currentLetter === letter
-                        ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
-                        : 'text-white hover:bg-white/20'}`, children: letter }, letter)))] }));
+        
+        // Desktop version (md and up screens) - vertical on right side
+        const desktopAlphaNav = (
+            _jsxs("div", { 
+                className: "hidden md:flex fixed right-4 top-20 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
+                children: [
+                    _jsx("button", { 
+                        onClick: () => {
+                            setCurrentLetter('all');
+                            setCurrentPage(1);
+                        }, 
+                        "aria-label": "Show all characters", 
+                        className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                            currentLetter === 'all'
+                                ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
+                                : 'text-white hover:bg-white/20'
+                        }`, 
+                        children: "All" 
+                    }),
+                    letters.map(letter => (
+                        _jsx("button", { 
+                            onClick: () => {
+                                setCurrentLetter(letter);
+                                setCurrentPage(1);
+                            }, 
+                            "aria-label": `Show characters starting with ${letter}`, 
+                            className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                                currentLetter === letter
+                                    ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
+                                    : 'text-white hover:bg-white/20'
+                            }`, 
+                            children: letter 
+                        }, letter)
+                    ))
+                ] 
+            })
+        );
+        
+        // Mobile version (below md screens) - horizontal at top with scrolling
+        const mobileAlphaNav = (
+            _jsx("div", { 
+                className: "md:hidden sticky top-0 z-40 bg-blue-800/90 backdrop-blur-md border-b-2 border-yellow-400/50 shadow-lg mb-4 py-2 px-2 overflow-x-auto", 
+                children: _jsxs("div", {
+                    className: "flex flex-row gap-1 min-w-max px-2",
+                    children: [
+                        _jsx("button", { 
+                            onClick: () => {
+                                setCurrentLetter('all');
+                                setCurrentPage(1);
+                            }, 
+                            "aria-label": "Show all characters", 
+                            className: `w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                                currentLetter === 'all'
+                                    ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
+                                    : 'text-white hover:bg-white/20'
+                            }`, 
+                            children: "All" 
+                        }),
+                        letters.map(letter => (
+                            _jsx("button", { 
+                                onClick: () => {
+                                    setCurrentLetter(letter);
+                                    setCurrentPage(1);
+                                }, 
+                                "aria-label": `Show characters starting with ${letter}`, 
+                                className: `w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
+                                    currentLetter === letter
+                                        ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
+                                        : 'text-white hover:bg-white/20'
+                                }`, 
+                                children: letter 
+                            }, letter)
+                        ))
+                    ]
+                })
+            })
+        );
+        
+        // Return both versions - responsive design will handle which one is displayed
+        return (
+            _jsxs(_Fragment, {
+                children: [
+                    desktopAlphaNav,
+                    mobileAlphaNav
+                ]
+            })
+        );
     };
     if (isLoading) {
         return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]", children: _jsxs("div", { className: "text-center", children: [_jsxs("div", { className: "relative mb-6", children: [_jsx("div", { className: "absolute inset-0 rounded-full bg-yellow-300 blur-xl opacity-30 animate-pulse" }), _jsx("div", { className: "relative h-16 w-16 mx-auto animate-spin rounded-full border-4 border-yellow-200 border-t-yellow-400" }), _jsx("div", { className: "absolute inset-0 flex items-center justify-center", children: _jsx("span", { className: "text-white text-xl", children: "\u271D" }) })] }), _jsx("p", { className: "text-white text-lg font-light", style: { fontFamily: 'Cinzel, serif' }, children: "Loading Bible characters..." })] }) }));
@@ -559,7 +619,7 @@ left-1/2 -translate-x-1/2 bottom-4 flex flex-row gap-2 px-4 py-2 rounded-full", 
     if (error) {
         return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]", children: _jsxs("div", { className: "max-w-md rounded-lg bg-white bg-opacity-90 p-8 text-center shadow-2xl", children: [_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-16 w-16 mx-auto text-red-500 mb-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" }) }), _jsx("h3", { className: "mb-2 text-xl font-semibold text-red-800", style: { fontFamily: 'Cinzel, serif' }, children: "Error" }), _jsx("p", { className: "text-red-700 mb-4", children: error }), _jsx("button", { onClick: () => window.location.reload(), className: "rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition-colors shadow-md", children: "Try Again" })] }) }));
     }
-    return (_jsxs("div", { className: "min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6 pb-24 md:pb-10", children: [renderAlphaNav(), _jsxs("div", { className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl", children: [_jsx("h1", { className: "text-4xl md:text-5xl font-extrabold text-center text-yellow-400 mb-8 tracking-tight drop-shadow-lg", style: { fontFamily: 'Cinzel, serif' }, children: "Choose Your Biblical Guide" }), featuredCharacter && (_jsxs("div", { className: "mb-12 flex flex-col items-center", children: [_jsxs("div", { className: "relative mb-4", children: [_jsx("div", { className: "absolute -inset-4 rounded-full bg-yellow-300 blur-xl opacity-30" }), _jsx("div", { className: "relative w-32 h-32 rounded-full overflow-hidden border-4 border-yellow-300 shadow-xl bg-blue-50", children: _jsx("img", { 
+    return (_jsxs("div", { className: "min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6", children: [renderAlphaNav(), _jsxs("div", { className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl", children: [_jsx("h1", { className: "text-4xl md:text-5xl font-extrabold text-center text-yellow-400 mb-8 tracking-tight drop-shadow-lg", style: { fontFamily: 'Cinzel, serif' }, children: "Choose Your Biblical Guide" }), featuredCharacter && (_jsxs("div", { className: "mb-12 flex flex-col items-center", children: [_jsxs("div", { className: "relative mb-4", children: [_jsx("div", { className: "absolute -inset-4 rounded-full bg-yellow-300 blur-xl opacity-30" }), _jsx("div", { className: "relative w-32 h-32 rounded-full overflow-hidden border-4 border-yellow-300 shadow-xl bg-blue-50", children: _jsx("img", { 
                                     src: featuredCharacter.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`, 
                                     alt: featuredCharacter.name, 
                                     className: "w-full h-full object-cover" 
