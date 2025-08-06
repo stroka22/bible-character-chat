@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 const CharacterCard = ({
     character,
@@ -8,16 +9,21 @@ const CharacterCard = ({
     isFavorite = false,
     onToggleFavorite,
 }) => {
+    /* ------------------------------------------------------------------ */
+    /*  Derived values & local UI state                                   */
+    /* ------------------------------------------------------------------ */
     const avatarUrl = character.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
     const bibleBook = character.bible_book || '';
+    const [isExpanded, setIsExpanded] = useState(false);
+    const isLongDescription = (character.description || '').length > 140;
 
     return (
         _jsxs(motion.div, {
             className: `
                 relative flex flex-col sm:flex-row items-center gap-4 
                 rounded-xl border-2 bg-white/90 shadow-lg
-                h-[320px] sm:h-[200px] w-full
+                w-full
                 ${isSelected
                     ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
                     : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
@@ -121,10 +127,23 @@ const CharacterCard = ({
                         _jsx("div", {
                             className: "h-0.5 w-12 bg-yellow-400 rounded-full mb-2"
                         }),
+                        /* Description with expand/collapse ---------------------------------- */
                         _jsx("p", {
-                            className: "text-sm text-gray-700 line-clamp-2 mb-4",
-                            children: character.description
-                        })
+                            className: "text-sm text-gray-700 mb-2",
+                            children: isExpanded || !isLongDescription
+                                ? character.description
+                                : `${character.description.slice(0, 140)}…`
+                        }),
+                        /* Toggle button (only if the description is long) */
+                        isLongDescription && (_jsx("button", {
+                            onClick: (e) => {
+                                e.stopPropagation();
+                                setIsExpanded(prev => !prev);
+                            },
+                            className: "text-xs text-blue-600 hover:underline mb-4 self-start focus:outline-none",
+                            "aria-label": isExpanded ? 'Collapse description' : 'Expand description',
+                            children: isExpanded ? 'Read less' : 'Read more'
+                        }))
                     ]
                 }),
                 
