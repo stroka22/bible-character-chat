@@ -532,7 +532,11 @@ const ScalableCharacterSelection = () => {
         // Changed right-4 to right-24 to avoid covering view mode buttons
         return (
             _jsxs("div", { 
-                className: "hidden md:flex fixed right-24 top-20 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] overflow-y-auto", 
+                /*  Desktop alphabet selector: stick to the far-right edge without
+                    overlaying content.  right-4 on normal screens, relax to
+                    right-8 on xl screens.  Constrain width so it never covers
+                    more than 52 px. */
+                className: "hidden md:flex fixed right-4 xl:right-8 top-20 z-40 flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[80vh] max-w-[52px] overflow-y-auto", 
                 children: [
                     _jsx("button", { 
                         onClick: () => {
