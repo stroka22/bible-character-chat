@@ -29,6 +29,16 @@ const CharacterCard = ({
         _jsxs("div", {
             className: "relative",
             children: [
+                /* ------------------------------------------------------------------
+                 * TEST BANNER – helps verify that the CharacterCard component
+                 * is rendering the most recent code in the browser.
+                 * Remove once red info buttons are visible.
+                 * ------------------------------------------------------------------ */
+                _jsx("div", {
+                    className: "mb-2 rounded-md bg-red-600 text-yellow-200 font-extrabold text-center py-1 shadow-lg",
+                    children: "CHARACTERCARD TEST – RED BUTTON SHOULD BE BELOW"
+                }),
+
                 /* Click-based description modal/tooltip - shown when info button is clicked */
                 isDescriptionVisible && _jsxs("div", {
                     className: "fixed inset-0 z-50 flex items-center justify-center bg-black/50",
