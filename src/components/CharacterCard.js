@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const CharacterCard = ({
     character,
@@ -18,30 +18,47 @@ const CharacterCard = ({
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
     const bibleBook = character.bible_book || '';
     const [isHovered, setIsHovered] = useState(false);
+    
+    // Log hover state changes to console for debugging
+    useEffect(() => {
+        console.log(`Card ${character.name} hover state: ${isHovered}`);
+    }, [isHovered, character.name]);
+
+    // Function to handle mouse enter with console logging
+    const handleMouseEnter = () => {
+        console.log(`Mouse ENTER on ${character.name}`);
+        setIsHovered(true);
+    };
+    
+    // Function to handle mouse leave with console logging
+    const handleMouseLeave = () => {
+        console.log(`Mouse LEAVE on ${character.name}`);
+        setIsHovered(false);
+    };
 
     return (
         _jsxs("div", {
             className: "relative",
             children: [
-                /* DEBUG INDICATOR - Shows if hover state is active */
+                /* SUPER OBVIOUS DEBUG INDICATOR - Always visible */
                 _jsx("div", {
-                    className: "absolute -top-8 left-0 right-0 text-center bg-red-600 text-white font-bold py-1 px-2 rounded-t-lg z-50",
-                    children: `HOVERED: ${isHovered ? 'TRUE' : 'FALSE'}`
+                    className: "fixed top-0 left-0 right-0 text-center bg-red-600 text-white text-xl font-bold py-2 px-4 shadow-lg z-[9999]",
+                    children: `HOVER STATE: ${isHovered ? 'ACTIVE' : 'INACTIVE'} - ${character.name}`
                 }),
                 
-                /* Bright debug tooltip - very obvious */
+                /* SIMPLIFIED TOOLTIP - Fixed position for maximum visibility */
                 isHovered && _jsx("div", {
-                    className: "absolute left-1/2 -translate-x-1/2 top-0 -mt-16 z-50 bg-red-500 text-white text-sm rounded-md p-4 shadow-lg max-w-xs border-4 border-yellow-400",
+                    className: "fixed top-10 left-0 right-0 mx-auto w-3/4 bg-red-500 text-white text-lg rounded-md p-6 shadow-lg border-8 border-yellow-400 z-[9999]",
                     children: character.description
                 }),
 
                 _jsxs(motion.div, {
                     className: `
                         relative flex flex-col sm:flex-row items-center gap-4 
-                        rounded-xl border-4 bg-white/90 shadow-lg
+                        rounded-xl border-8 bg-white/90 shadow-lg
                         w-full
                         ${isHovered 
-                            ? 'border-red-500 ring-4 ring-red-300' 
+                            ? 'border-red-500 ring-8 ring-red-300 bg-red-100' 
                             : isSelected
                                 ? 'border-yellow-400 ring-2 ring-yellow-300/50 shadow-xl'
                                 : 'border-white/60 hover:border-yellow-300/70 hover:shadow-xl'}
@@ -60,8 +77,8 @@ const CharacterCard = ({
                             onSelect(character);
                         }
                     },
-                    onMouseEnter: () => setIsHovered(true),
-                    onMouseLeave: () => setIsHovered(false),
+                    onMouseEnter: handleMouseEnter,
+                    onMouseLeave: handleMouseLeave,
                     "aria-label": `Chat with ${character.name}${bibleBook ? ` from ${bibleBook}` : ''}`,
                     children: [
                         /* Background and selection indicator */
