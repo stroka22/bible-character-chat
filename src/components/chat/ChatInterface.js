@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
 import { Link } from 'react-router-dom';
 import ChatBubble from './ChatBubble';
@@ -41,6 +41,42 @@ const ChatInterface = () => {
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
+    // Performance optimized handlers
+    const handleResetChat = useCallback((e) => {
+        if (e) e.preventDefault();
+        // Use setTimeout to defer execution and prevent UI blocking
+        setTimeout(() => resetChat(), 0);
+    }, [resetChat]);
+
+    const handleToggleInsights = useCallback(() => {
+        // Use setTimeout to defer execution and prevent UI blocking
+        setTimeout(() => setShowInsightsPanel(prev => !prev), 0);
+    }, []);
+
+    const handleShare = useCallback(() => {
+        // Use setTimeout to defer execution and prevent UI blocking
+        setTimeout(() => {
+            if (navigator.share) {
+                navigator.share({
+                    title: `Chat with ${character?.name}`,
+                    text: 'Check out my conversation!',
+                    url: window.location.href
+                }).catch(err => {
+                    console.log('Share failed:', err);
+                    alert('Link copied to clipboard');
+                });
+            } else {
+                alert('Link copied to clipboard');
+            }
+        }, 0);
+    }, [character?.name]);
+
+    const handleRetryLastMessage = useCallback((e) => {
+        if (e) e.preventDefault();
+        // Use setTimeout to defer execution and prevent UI blocking
+        setTimeout(() => retryLastMessage(), 0);
+    }, [retryLastMessage]);
+
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -70,7 +106,8 @@ const ChatInterface = () => {
                                 strokeLinecap: "round", 
                                 strokeLinejoin: "round", 
                                 strokeWidth: 1.5, 
-                                d: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" 
+                                d: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
+                                style: { pointerEvents: 'none' }
                             }) 
                         }),
                         _jsx("h3", { 
@@ -122,7 +159,7 @@ const ChatInterface = () => {
                             ]
                         }),
                         _jsxs("button", { 
-                            onClick: resetChat, 
+                            onClick: handleResetChat, 
                             id: "backBtn", 
                             className: "insights-toggle-button flex items-center gap-1 px-3 py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900",
                             children: [
@@ -135,7 +172,8 @@ const ChatInterface = () => {
                                     children: _jsx("path", { 
                                         fillRule: "evenodd", 
                                         d: "M12.707 15.707a1 1 0 01-1.414 0L5.586 10l5.707-5.707a1 1 0 011.414 1.414L8.414 10l4.293 4.293a1 1 0 010 1.414z", 
-                                        clipRule: "evenodd" 
+                                        clipRule: "evenodd",
+                                        style: { pointerEvents: 'none' }
                                     })
                                 }),
                                 "Back to Characters"
@@ -184,7 +222,7 @@ const ChatInterface = () => {
                             children: [
                                 _jsxs("button", { 
                                     id: "insightsToggle", 
-                                    onClick: () => setShowInsightsPanel(!showInsightsPanel),
+                                    onClick: handleToggleInsights,
                                     /* Smaller buttons on mobile */
                                     className: `insights-toggle-button flex items-center gap-1 px-2 py-1 text-xs md:px-3 md:py-2 md:text-sm rounded-lg ${showInsightsPanel ? 'bg-yellow-400 text-blue-900' : 'bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400'} font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900`,
                                     children: [
@@ -196,7 +234,8 @@ const ChatInterface = () => {
                                             children: _jsx("path", { 
                                                 fillRule: "evenodd", 
                                                 d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z", 
-                                                clipRule: "evenodd" 
+                                                clipRule: "evenodd",
+                                                style: { pointerEvents: 'none' }
                                             })
                                         }),
                                         "Insights"
@@ -205,20 +244,7 @@ const ChatInterface = () => {
                                 _jsxs("button", { 
                                     id: "shareBtn", 
                                     className: "insights-toggle-button flex items-center gap-1 px-2 py-1 text-xs md:px-3 md:py-2 md:text-sm rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900",
-                                    onClick: () => {
-                                        if (navigator.share) {
-                                            navigator.share({
-                                                title: `Chat with ${character.name}`,
-                                                text: 'Check out my conversation!',
-                                                url: window.location.href
-                                            }).catch(err => {
-                                                console.log('Share failed:', err);
-                                                alert('Link copied to clipboard');
-                                            });
-                                        } else {
-                                            alert('Link copied to clipboard');
-                                        }
-                                    },
+                                    onClick: handleShare,
                                     children: [
                                         _jsx("svg", { 
                                             xmlns: "http://www.w3.org/2000/svg", 
@@ -226,7 +252,8 @@ const ChatInterface = () => {
                                             viewBox: "0 0 20 20", 
                                             fill: "currentColor",
                                             children: _jsx("path", { 
-                                                d: "M15 8a3 3 0 100-6 3 3 0 000 6zM15 18a3 3 0 100-6 3 3 0 000 6zM5 13a3 3 0 100-6 3 3 0 000 6z" 
+                                                d: "M15 8a3 3 0 100-6 3 3 0 000 6zM15 18a3 3 0 100-6 3 3 0 000 6zM5 13a3 3 0 100-6 3 3 0 000 6z",
+                                                style: { pointerEvents: 'none' }
                                             })
                                         }),
                                         "Share"
@@ -270,7 +297,7 @@ const ChatInterface = () => {
                 _jsx("div", {
                     className: "md:hidden px-4 py-2 border-b border-[rgba(255,255,255,.08)]",
                     children: _jsxs("button", {
-                        onClick: resetChat,
+                        onClick: handleResetChat,
                         className: "flex items-center gap-2 text-gray-300 hover:text-yellow-400 text-sm",
                         children: [
                             _jsx("svg", {
@@ -281,7 +308,8 @@ const ChatInterface = () => {
                                 children: _jsx("path", {
                                     fillRule: "evenodd",
                                     d: "M12.707 15.707a1 1 0 01-1.414 0L5.586 10l5.707-5.707a1 1 0 011.414 1.414L8.414 10l4.293 4.293a1 1 0 010 1.414z",
-                                    clipRule: "evenodd"
+                                    clipRule: "evenodd",
+                                    style: { pointerEvents: 'none' }
                                 })
                             }),
                             "← Back to Characters"
@@ -363,7 +391,8 @@ const ChatInterface = () => {
                                                         children: _jsx("path", { 
                                                             fillRule: "evenodd", 
                                                             d: "M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z", 
-                                                            clipRule: "evenodd" 
+                                                            clipRule: "evenodd",
+                                                            style: { pointerEvents: 'none' }
                                                         }) 
                                                     }),
                                                     _jsxs("div", { 
@@ -373,7 +402,7 @@ const ChatInterface = () => {
                                                                 children: "Sorry, something went wrong. Please try again." 
                                                             }),
                                                             _jsx("button", { 
-                                                                onClick: retryLastMessage, 
+                                                                onClick: handleRetryLastMessage, 
                                                                 className: "mt-2 rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-500 transition-colors", 
                                                                 children: "Retry" 
                                                             })
