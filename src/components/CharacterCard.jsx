@@ -364,7 +364,10 @@ const CharacterCard = ({
                                     className: "mt-4 w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-medium py-2 px-4 rounded-md shadow-md transition-colors flex items-center justify-center relative z-10",
                                     children: [
                                         _jsx(ChatIcon, {}),
-                                        `Chat with ${character.name}`
+                                        _jsx("span", {
+                                            className: "ml-2 text-sm md:text-base truncate",
+                                            children: `Chat with ${character.name}`
+                                        })
                                     ]
                                 })
                             ]
