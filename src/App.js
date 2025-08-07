@@ -21,20 +21,66 @@ import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 
 class ErrorBoundary extends React.Component {
-    constructor() {
-        super(...arguments);
-        this.state = { hasError: false };
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null, errorInfo: null };
     }
-    static getDerivedStateFromError() {
+
+    static getDerivedStateFromError(error) {
+        // Update state so the next render shows the fallback UI.
         return { hasError: true };
     }
-    componentDidCatch(error) {
+
+    componentDidCatch(error, errorInfo) {
+        // You can also log the error to an error reporting service
         console.error('[ErrorBoundary] Rendering error:', error);
+        console.error('[ErrorBoundary] Error info:', errorInfo);
+        console.error('[ErrorBoundary] Error stack:', error.stack);
+        console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+
+        this.setState({
+            error,
+            errorInfo,
+        });
     }
+
     render() {
         if (this.state.hasError) {
-            return (_jsx("div", { className: "flex items-center justify-center min-h-screen bg-blue-900 text-white", children: _jsxs("div", { className: "text-center space-y-4", children: [_jsx("h1", { className: "text-2xl font-bold", children: "Something went wrong." }), _jsx("p", { children: "Please refresh the page to try again." }), _jsx("button", { onClick: () => window.location.reload(), className: "bg-amber-400 text-blue-900 font-semibold px-4 py-2 rounded-lg", children: "Reload" })] }) }));
+            return (
+                _jsx("div", {
+                    className: "flex items-center justify-center min-h-screen bg-blue-900 text-white p-4",
+                    children: _jsxs("div", {
+                        className: "text-center space-y-4 max-w-2xl",
+                        children: [
+                            _jsx("h1", { className: "text-2xl font-bold", children: "Something went wrong." }),
+                            _jsx("p", { children: "Please refresh the page to try again." }),
+                            _jsx("button", {
+                                onClick: () => window.location.reload(),
+                                className: "bg-amber-400 text-blue-900 font-semibold px-4 py-2 rounded-lg",
+                                children: "Reload",
+                            }),
+                            process.env.NODE_ENV === 'development' &&
+                                this.state.error && (
+                                    _jsxs("details", {
+                                        className: "mt-4 text-left",
+                                        children: [
+                                            _jsx("summary", {
+                                                className: "cursor-pointer text-yellow-400",
+                                                children: "Debug Info (Development)",
+                                            }),
+                                            _jsx("pre", {
+                                                className: "mt-2 p-2 bg-black/50 rounded text-xs overflow-auto max-h-40",
+                                                children: `${this.state.error.toString()}\n\n${this.state.errorInfo?.componentStack}`,
+                                            }),
+                                        ],
+                                    })
+                                ),
+                        ],
+                    }),
+                })
+            );
         }
+
         return this.props.children;
     }
 }
