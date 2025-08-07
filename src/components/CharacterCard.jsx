@@ -181,25 +181,28 @@ const CharacterCard = ({
                     onClick: handleInfoClick,
                     children: [
                         _jsxs("div", {
-                            className: "relative bg-gradient-to-br from-indigo-50 via-blue-50 to-white rounded-xl p-8 m-4 max-w-lg max-h-[80vh] overflow-y-auto shadow-2xl border-2 border-indigo-200",
+                            /* ------------------------------------------------------------------
+                             * COMPACT MODAL
+                             * ------------------------------------------------------------------ */
+                            className: "relative bg-gradient-to-br from-indigo-50 via-blue-50 to-white rounded-lg p-6 m-4 max-w-md max-h-[70vh] overflow-y-auto shadow-xl border border-indigo-200",
                             onClick: (e) => e.stopPropagation(),
                             children: [
                                 /* Decorative background elements */
                                 _jsx("div", {
-                                    className: "absolute top-0 right-0 w-32 h-32 bg-yellow-300/20 rounded-full -mr-10 -mt-10 z-0"
+                                    className: "absolute top-0 right-0 w-20 h-20 bg-yellow-300/15 rounded-full -mr-6 -mt-6 z-0"
                                 }),
                                 _jsx("div", {
-                                    className: "absolute bottom-0 left-0 w-40 h-40 bg-indigo-300/20 rounded-full -ml-10 -mb-10 z-0"
+                                    className: "absolute bottom-0 left-0 w-24 h-24 bg-indigo-300/15 rounded-full -ml-6 -mb-6 z-0"
                                 }),
 
                                 /* Close button */
                                 _jsx("button", {
-                                    className: "absolute top-3 right-3 text-gray-500 hover:text-red-500 bg-white rounded-full p-1 shadow-md z-10 transition-colors",
+                                    className: "absolute top-2 right-2 text-gray-500 hover:text-red-500 bg-white rounded-full p-1 shadow-sm z-10 transition-colors",
                                     onClick: handleInfoClick,
                                     "aria-label": "Close description",
                                     children: _jsx("svg", {
                                         xmlns: "http://www.w3.org/2000/svg",
-                                        className: "h-6 w-6",
+                                        className: "h-5 w-5",
                                         fill: "none",
                                         viewBox: "0 0 24 24",
                                         stroke: "currentColor",
@@ -214,7 +217,7 @@ const CharacterCard = ({
 
                                 /* Character avatar */
                                 _jsx("div", {
-                                    className: "w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-yellow-400 shadow-lg relative z-10",
+                                    className: "w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-3 border-yellow-400 shadow-md relative z-10",
                                     children: _jsx("img", {
                                         src: avatarUrl,
                                         alt: character.name,
@@ -224,29 +227,29 @@ const CharacterCard = ({
 
                                 /* Character name */
                                 _jsxs("div", {
-                                    className: "text-center mb-6 relative z-10",
+                                    className: "text-center mb-4 relative z-10",
                                     children: [
                                         _jsx("h2", {
-                                            className: "text-2xl font-bold text-indigo-900 mb-1",
+                                            className: "text-xl font-bold text-indigo-900 mb-1",
                                             style: { fontFamily: 'Cinzel, serif' },
                                             children: character.name
                                         }),
                                         _jsx("div", {
-                                            className: "h-1 w-20 bg-yellow-400 rounded-full mx-auto mb-2"
+                                            className: "h-0.5 w-16 bg-yellow-400 rounded-full mx-auto"
                                         })
                                     ]
                                 }),
 
                                 /* Bible books section */
                                 character.bible_book && _jsxs("div", {
-                                    className: "bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 relative z-10",
+                                    className: "bg-indigo-50 border border-indigo-200 rounded-md p-3 mb-4 relative z-10",
                                     children: [
                                         _jsxs("div", {
                                             className: "flex items-center mb-2",
                                             children: [
                                                 _jsx("svg", {
                                                     xmlns: "http://www.w3.org/2000/svg",
-                                                    className: "h-5 w-5 text-indigo-700 mr-2",
+                                                    className: "h-4 w-4 text-indigo-700 mr-1",
                                                     viewBox: "0 0 20 20",
                                                     fill: "currentColor",
                                                     children: _jsx("path", {
@@ -254,16 +257,16 @@ const CharacterCard = ({
                                                     })
                                                 }),
                                                 _jsx("h3", {
-                                                    className: "text-lg font-semibold text-indigo-800",
-                                                    children: "Found in Scripture"
+                                                    className: "text-sm font-semibold text-indigo-800",
+                                                    children: "Scripture"
                                                 })
                                             ]
                                         }),
                                         _jsx("div", {
-                                            className: "flex flex-wrap gap-2",
+                                            className: "flex flex-wrap gap-1",
                                             children: character.bible_book.split(',').map((book, index) => (
                                                 _jsx("span", {
-                                                    className: "bg-indigo-600/90 text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm",
+                                                    className: "bg-indigo-600/90 text-white px-2 py-0.5 rounded-full text-xs font-medium shadow-sm",
                                                     children: book.trim()
                                                 }, `book-${index}-${book.trim()}`)
                                             ))
@@ -276,11 +279,11 @@ const CharacterCard = ({
                                     className: "relative z-10",
                                     children: [
                                         _jsxs("div", {
-                                            className: "flex items-center mb-3",
+                                            className: "flex items-center mb-2",
                                             children: [
                                                 _jsx("svg", {
                                                     xmlns: "http://www.w3.org/2000/svg",
-                                                    className: "h-5 w-5 text-indigo-700 mr-2",
+                                                    className: "h-4 w-4 text-indigo-700 mr-1",
                                                     viewBox: "0 0 20 20",
                                                     fill: "currentColor",
                                                     children: _jsx("path", {
@@ -290,13 +293,13 @@ const CharacterCard = ({
                                                     })
                                                 }),
                                                 _jsx("h3", {
-                                                    className: "text-lg font-semibold text-indigo-800",
-                                                    children: "About this Character"
+                                                    className: "text-sm font-semibold text-indigo-800",
+                                                    children: "About"
                                                 })
                                             ]
                                         }),
                                         _jsx("p", {
-                                            className: "text-gray-700 leading-relaxed",
+                                            className: "text-gray-700 text-sm leading-relaxed",
                                             children: character.description
                                         })
                                     ]
@@ -309,7 +312,7 @@ const CharacterCard = ({
                                         onSelect(character);
                                         setIsDescriptionVisible(false);
                                     },
-                                    className: "mt-6 w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center relative z-10",
+                                    className: "mt-4 w-full bg-indigo-700 hover:bg-indigo-800 text-white font-medium py-2 px-4 rounded-md shadow-md transition-colors flex items-center justify-center relative z-10",
                                     children: [
                                         _jsx(ChatIcon, {}),
                                         `Chat with ${character.name}`
