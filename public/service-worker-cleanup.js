@@ -234,14 +234,8 @@
     // Clear caches
     const cacheResult = await clearAllCaches();
     
-    // Show notification once DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        showNotification(swResult);
-      });
-    } else {
-      showNotification(swResult);
-    }
+    // UI notification disabled to prevent user confusion
+    // showNotification(swResult);
     
     // Expose stats for debugging
     window.__swCleanup = {
