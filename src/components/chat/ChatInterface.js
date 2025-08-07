@@ -92,8 +92,13 @@ const ChatInterface = () => {
             className: `flex h-full w-full flex-col ${showInsightsPanel ? 'panel-open' : ''}`, 
             children: [
                 // Breadcrumb + Back button
+                /* ------------------------------------------------------------------
+                 * Breadcrumb / back-to-characters bar
+                 * • Hidden on small screens to free up vertical space
+                 * • Displays from md breakpoint upwards
+                 * ------------------------------------------------------------------ */
                 _jsxs("div", { 
-                    className: "flex items-center justify-between px-4 py-2 text-sm bg-[rgba(255,255,255,.03)] border-b border-[rgba(255,255,255,.08)]",
+                    className: "hidden md:flex items-center justify-between px-4 py-2 text-sm bg-[rgba(255,255,255,.03)] border-b border-[rgba(255,255,255,.08)]",
                     children: [
                         _jsxs("div", { 
                             className: "breadcrumb space-x-1",
@@ -140,8 +145,13 @@ const ChatInterface = () => {
                 }),
                 
                 // Chat header with character info and action buttons
+                /* ------------------------------------------------------------------
+                 * Chat header
+                 * • Stacks vertically on small screens to avoid overlapping
+                 * • Switches to row layout from md breakpoint
+                 * ------------------------------------------------------------------ */
                 _jsxs("div", { 
-                    className: "chat-header flex items-center justify-between p-4 border-b border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)]",
+                    className: "chat-header flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 border-b border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)]",
                     children: [
                         _jsxs("div", { 
                             className: "flex items-center",
@@ -161,8 +171,13 @@ const ChatInterface = () => {
                                 })
                             ]
                         }),
+                        /* ------------------------------------------------------------------
+                         * Action buttons
+                         * • Stack vertically on mobile (w-full) so they don't cover title
+                         * • Horizontal layout from sm breakpoint
+                         * ------------------------------------------------------------------ */
                         _jsxs("div", { 
-                            className: "flex space-x-2",
+                            className: "flex flex-col sm:flex-row gap-2 w-full md:w-auto",
                             children: [
                                 _jsxs("button", { 
                                     id: "insightsToggle", 
@@ -247,9 +262,32 @@ const ChatInterface = () => {
                     ]
                 })),
 
+                // Mobile-only back button (breadcrumb is hidden on small screens)
+                _jsx("div", {
+                    className: "md:hidden px-4 py-2 border-b border-[rgba(255,255,255,.08)]",
+                    children: _jsxs("button", {
+                        onClick: resetChat,
+                        className: "flex items-center gap-2 text-gray-300 hover:text-yellow-400 text-sm",
+                        children: [
+                            _jsx("svg", {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                className: "h-4 w-4",
+                                viewBox: "0 0 20 20",
+                                fill: "currentColor",
+                                children: _jsx("path", {
+                                    fillRule: "evenodd",
+                                    d: "M12.707 15.707a1 1 0 01-1.414 0L5.586 10l5.707-5.707a1 1 0 011.414 1.414L8.414 10l4.293 4.293a1 1 0 010 1.414z",
+                                    clipRule: "evenodd"
+                                })
+                            }),
+                            "← Back to Characters"
+                        ]
+                    })
+                }),
+
                 // Chat messages area
                 _jsxs("div", { 
-                    className: "chat-messages flex-grow overflow-y-auto p-5 flex flex-col gap-4",
+                    className: "chat-messages flex-grow overflow-y-auto p-3 md:p-5 flex flex-col gap-4",
                     children: [
                         messages.length === 0 ? (
                             _jsx("div", { 
