@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import CharacterCard from '../components/CharacterCard';
+import CharacterCard from '../components/CharacterCard.jsx';
 
 /**
  * FavoritesPage Component

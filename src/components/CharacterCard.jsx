@@ -220,14 +220,11 @@ const CharacterCard = ({
                     className: "fixed inset-0 z-50 bg-black/60",
                     style: {
                         position: 'fixed',
-                        top: '0',
-                        left: '0',
+                        top: 0,
+                        left: 0,
                         width: '100vw',
                         height: '100vh',
                         zIndex: 9999,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
                         padding: '1rem'
                     },
                     onClick: handleInfoClick,
@@ -243,11 +240,17 @@ const CharacterCard = ({
                                 const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
                                 const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
                                 const modalW = 400;               // same as max-width
-                                const modalH = 300;               // approximate initial height
+                                const modalH = 400;               // estimated height
+                                // Position horizontally centered to card
                                 const desiredLeft = clickPosition.x - modalW / 2;
-                                const desiredTop = clickPosition.y - modalH / 2;
+                                // Try to show 20px above the card centre
+                                const desiredTop = clickPosition.y - modalH - 20;
                                 const clampedLeft = Math.min(Math.max(desiredLeft, margin), vw - modalW - margin);
-                                const clampedTop = Math.min(Math.max(desiredTop, margin), vh - modalH - margin);
+                                let clampedTop = desiredTop;
+                                // if goes above viewport, display 20px below the card
+                                if (clampedTop < margin) {
+                                    clampedTop = Math.min(clickPosition.y + 20, vh - modalH - margin);
+                                }
                                 return {
                                     maxHeight: '90vh',
                                     overflowY: 'auto',
