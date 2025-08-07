@@ -151,21 +151,24 @@ const ChatInterface = () => {
                  * • Switches to row layout from md breakpoint
                  * ------------------------------------------------------------------ */
                 _jsxs("div", { 
-                    className: "chat-header flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 border-b border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)]",
+                    /* Compact header on mobile : smaller gaps & padding */
+                    className: "chat-header flex flex-col md:flex-row items-start md:items-center justify-between gap-2 p-2 md:p-4 border-b border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)]",
                     children: [
                         _jsxs("div", { 
                             className: "flex items-center",
                             children: [
+                                /* Smaller avatar on mobile */
                                 _jsx("img", { 
                                     src: getSafeAvatarUrl(character.name, character.avatar_url), 
                                     alt: character.name, 
-                                    className: "h-12 w-12 rounded-full object-cover border-2 border-yellow-400 mr-3",
+                                    className: "h-8 w-8 md:h-12 md:w-12 rounded-full object-cover border-2 border-yellow-400 mr-2 md:mr-3",
                                     onError: (e) => {
                                         e.target.src = generateFallbackAvatar(character.name);
                                     }
                                 }),
+                                /* Smaller title on mobile */
                                 _jsx("h2", { 
-                                    className: "text-xl font-bold text-yellow-400", 
+                                    className: "text-lg md:text-xl font-bold text-yellow-400", 
                                     style: { fontFamily: 'Cinzel, serif' },
                                     children: `Chat with ${character.name}` 
                                 })
@@ -182,7 +185,8 @@ const ChatInterface = () => {
                                 _jsxs("button", { 
                                     id: "insightsToggle", 
                                     onClick: () => setShowInsightsPanel(!showInsightsPanel),
-                                    className: `insights-toggle-button flex items-center gap-1 px-3 py-2 rounded-lg ${showInsightsPanel ? 'bg-yellow-400 text-blue-900' : 'bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400'} font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900`,
+                                    /* Smaller buttons on mobile */
+                                    className: `insights-toggle-button flex items-center gap-1 px-2 py-1 text-xs md:px-3 md:py-2 md:text-sm rounded-lg ${showInsightsPanel ? 'bg-yellow-400 text-blue-900' : 'bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400'} font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900`,
                                     children: [
                                         _jsx("svg", { 
                                             xmlns: "http://www.w3.org/2000/svg", 
@@ -200,7 +204,7 @@ const ChatInterface = () => {
                                 }),
                                 _jsxs("button", { 
                                     id: "shareBtn", 
-                                    className: "insights-toggle-button flex items-center gap-1 px-3 py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900",
+                                    className: "insights-toggle-button flex items-center gap-1 px-2 py-1 text-xs md:px-3 md:py-2 md:text-sm rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900",
                                     onClick: () => {
                                         if (navigator.share) {
                                             navigator.share({
