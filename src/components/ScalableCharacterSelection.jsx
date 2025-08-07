@@ -679,25 +679,213 @@ const ScalableCharacterSelection = () => {
                             children: "Choose Your Biblical Guide"
                         }),
 
-                        /* Simple Search ------------------------------------------- */
+                        /* Advanced Search and Filters ----------------------------- */
                         _jsx("div", {
                             className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6",
-                            children: _jsx("input", {
-                                type: "text",
-                                placeholder: "Search characters...",
-                                value: searchQuery,
-                                onChange: (e) => {
-                                    setSearchQuery(e.target.value);
-                                    setCurrentPage(1);
-                                },
-                                className: "w-full bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+                            children: _jsxs("div", {
+                                className: "flex flex-col md:flex-row gap-4 items-center",
+                                children: [
+                                    _jsx("div", {
+                                        className: "w-full md:flex-1",
+                                        children: _jsx("input", {
+                                            type: "text",
+                                            placeholder: "Search characters...",
+                                            value: searchQuery,
+                                            onChange: (e) => {
+                                                setSearchQuery(e.target.value);
+                                                setCurrentPage(1);
+                                            },
+                                            className: "w-full bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+                                        })
+                                    }),
+                                    _jsxs("div", {
+                                        className: "flex gap-2",
+                                        children: [
+                                            _jsx("button", {
+                                                onClick: () => {
+                                                    setTestament('all');
+                                                    setCurrentPage(1);
+                                                },
+                                                className: `px-4 py-2 rounded-full ${testament === 'all'
+                                                    ? 'bg-yellow-400 text-blue-900 font-bold'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'}`,
+                                                children: "All"
+                                            }),
+                                            _jsx("button", {
+                                                onClick: () => {
+                                                    setTestament('old');
+                                                    setCurrentPage(1);
+                                                },
+                                                className: `px-4 py-2 rounded-full ${testament === 'old'
+                                                    ? 'bg-yellow-400 text-blue-900 font-bold'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'}`,
+                                                children: "Old"
+                                            }),
+                                            _jsx("button", {
+                                                onClick: () => {
+                                                    setTestament('new');
+                                                    setCurrentPage(1);
+                                                },
+                                                className: `px-4 py-2 rounded-full ${testament === 'new'
+                                                    ? 'bg-yellow-400 text-blue-900 font-bold'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'}`,
+                                                children: "New"
+                                            })
+                                        ]
+                                    }),
+                                    _jsx("div", {
+                                        className: "w-full md:w-auto",
+                                        children: _jsxs("select", {
+                                            value: bookFilter,
+                                            onChange: (e) => {
+                                                setBookFilter(e.target.value);
+                                                setCurrentPage(1);
+                                            },
+                                            className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
+                                            children: [
+                                                _jsx("option", { value: "all", children: "All Books" }),
+                                                _jsx("optgroup", {
+                                                    label: "Old Testament",
+                                                    children: BIBLE_BOOKS.oldTestament.map(book => 
+                                                        _jsx("option", { value: book, children: book }, book)
+                                                    )
+                                                }),
+                                                _jsx("optgroup", {
+                                                    label: "New Testament", 
+                                                    children: BIBLE_BOOKS.newTestament.map(book => 
+                                                        _jsx("option", { value: book, children: book }, book)
+                                                    )
+                                                })
+                                            ]
+                                        })
+                                    }),
+                                    _jsx("div", {
+                                        className: "w-full md:w-auto",
+                                        children: _jsxs("select", {
+                                            value: groupFilter,
+                                            onChange: (e) => {
+                                                setGroupFilter(e.target.value);
+                                                setCurrentPage(1);
+                                            },
+                                            className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
+                                            children: [
+                                                _jsx("option", { value: "all", children: "All Groups" }),
+                                                _jsx("option", { value: "Prophets", children: "Prophets" }),
+                                                _jsx("option", { value: "Apostles", children: "Apostles" }),
+                                                _jsx("option", { value: "Kings", children: "Kings" }),
+                                                _jsx("option", { value: "Women", children: "Women of the Bible" }),
+                                                groups.map(group => 
+                                                    _jsx("option", { value: group.name, children: group.name }, group.id)
+                                                )
+                                            ]
+                                        })
+                                    }),
+                                    // Favorites toggle button
+                                    _jsx("button", {
+                                        onClick: () => {
+                                            setShowOnlyFavorites(prev => !prev);
+                                            setCurrentPage(1);
+                                        },
+                                        className: `px-4 py-2 rounded-full flex items-center gap-1 ${
+                                            showOnlyFavorites
+                                                ? 'bg-yellow-400 text-blue-900 font-bold'
+                                                : 'bg-white/10 text-white hover:bg-white/20'
+                                        }`,
+                                        children: [
+                                            _jsx("svg", {
+                                                xmlns: "http://www.w3.org/2000/svg",
+                                                className: "h-4 w-4 mr-1",
+                                                viewBox: "0 0 20 20",
+                                                fill: "currentColor",
+                                                children: _jsx("path", {
+                                                    d: "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                                                })
+                                            }),
+                                            "Favorites"
+                                        ]
+                                    })
+                                ]
                             })
+                        }),
+
+                        /* Active Filters Display ----------------------------------- */
+                        activeFilters.length > 0 && _jsxs("div", {
+                            className: "flex flex-wrap gap-2 mb-6 bg-white/5 p-3 rounded-lg",
+                            children: [
+                                _jsx("span", {
+                                    className: "text-white/70 text-sm",
+                                    children: "Active Filters:"
+                                }),
+                                activeFilters.map((filter, index) => 
+                                    _jsxs("div", {
+                                        className: "flex items-center gap-1 bg-yellow-400/20 text-yellow-300 px-3 py-1 rounded-full border border-yellow-400/50",
+                                        children: [
+                                            _jsx("span", { children: filter.value }),
+                                            _jsx("button", {
+                                                onClick: () => removeFilter(filter.type),
+                                                className: "w-5 h-5 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20",
+                                                children: "×"
+                                            })
+                                        ]
+                                    }, `filter-${index}-${filter.type}`)
+                                ),
+                                _jsx("button", {
+                                    onClick: () => {
+                                        setTestament('all');
+                                        setBookFilter('all');
+                                        setGroupFilter('all');
+                                        setSearchQuery('');
+                                        setCurrentLetter('all');
+                                        setShowOnlyFavorites(false);
+                                        setCurrentPage(1);
+                                    },
+                                    className: "text-sm text-blue-300 hover:text-blue-200 ml-auto",
+                                    children: "Clear All"
+                                })
+                            ]
                         }),
 
                         /* Character Counter --------------------------------------- */
                         _jsx("div", {
                             className: "text-center text-white/80 mb-6",
                             children: `Showing ${paginatedCharacters.length} of ${filteredCharacters.length} characters`
+                        }),
+
+                        /* Empty State --------------------------------------------- */
+                        filteredCharacters.length === 0 && _jsxs("div", {
+                            className: "bg-white/5 backdrop-blur-sm rounded-xl p-8 text-center",
+                            children: [
+                                _jsx("svg", {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    className: "h-16 w-16 mx-auto text-white/50 mb-4",
+                                    fill: "none",
+                                    viewBox: "0 0 24 24",
+                                    stroke: "currentColor",
+                                    children: _jsx("path", {
+                                        strokeLinecap: "round",
+                                        strokeLinejoin: "round",
+                                        strokeWidth: 2,
+                                        d: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                    })
+                                }),
+                                _jsx("p", {
+                                    className: "text-xl text-white mb-4",
+                                    children: "No characters found matching your criteria."
+                                }),
+                                _jsx("button", {
+                                    onClick: () => {
+                                        setTestament('all');
+                                        setBookFilter('all');
+                                        setGroupFilter('all');
+                                        setSearchQuery('');
+                                        setCurrentLetter('all');
+                                        setShowOnlyFavorites(false);
+                                        setCurrentPage(1);
+                                    },
+                                    className: "text-yellow-400 hover:text-yellow-300 font-medium",
+                                    children: "Clear all filters"
+                                })
+                            ]
                         }),
 
                         /* Character Grid with Mobile Alphabet -------------------- */
