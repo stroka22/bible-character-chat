@@ -137,8 +137,11 @@ const CharactersPage = () => {
       <p className="mb-6">These characters are hardcoded and don't require API access.</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {characters.map(character => (
-          <div key={character.id} className="border rounded-lg p-4 shadow-md">
+        {characters.map((character, index) => (
+          <div
+            key={character?.id || `character-${index}`}
+            className="border rounded-lg p-4 shadow-md"
+          >
             <h2 className="text-xl font-bold mb-2">{character.name}</h2>
             <p>{character.description}</p>
             <button 

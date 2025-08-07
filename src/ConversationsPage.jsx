@@ -181,9 +181,9 @@ const FavoritesPage = () => {
         {/* Grid of favorite characters */}
         {favoriteCharacters.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {favoriteCharacters.map(character => (
+            {favoriteCharacters.map((character, index) => (
               <CharacterCard
-                key={character.id}
+                key={character?.id || `character-${index}`}
                 character={character}
                 onSelect={(char) => window.location.href = `/chat?character=${char.id}`}
                 isFavorite={true}
