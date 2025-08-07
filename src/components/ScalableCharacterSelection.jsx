@@ -895,37 +895,75 @@ const ScalableCharacterSelection = () => {
                                 // Mobile alphabet selector placed directly above character cards
                                 renderMobileAlphaNav(),
                                 
+                                // Add view mode toggles right before the character grid
+                                _jsxs("div", {
+                                    className: "flex gap-2 mb-4 justify-center",
+                                    children: [
+                                        _jsx("button", {
+                                            onClick: () => setViewMode('grid'),
+                                            className: `w-10 h-10 rounded-lg flex items-center justify-center ${viewMode === 'grid'
+                                                ? 'bg-yellow-400 text-blue-900'
+                                                : 'bg-white/10 text-white hover:bg-white/20'}`,
+                                            "aria-label": "Grid view",
+                                            children: _jsx("svg", {
+                                                xmlns: "http://www.w3.org/2000/svg",
+                                                className: "h-5 w-5",
+                                                viewBox: "0 0 20 20",
+                                                fill: "currentColor",
+                                                children: _jsx("path", {
+                                                    d: "M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                                                })
+                                            })
+                                        }),
+                                        _jsx("button", {
+                                            onClick: () => setViewMode('list'),
+                                            className: `w-10 h-10 rounded-lg flex items-center justify-center ${viewMode === 'list'
+                                                ? 'bg-yellow-400 text-blue-900'
+                                                : 'bg-white/10 text-white hover:bg-white/20'}`,
+                                            "aria-label": "List view",
+                                            children: _jsx("svg", {
+                                                xmlns: "http://www.w3.org/2000/svg",
+                                                className: "h-5 w-5",
+                                                viewBox: "0 0 20 20",
+                                                fill: "currentColor",
+                                                children: _jsx("path", {
+                                                    fillRule: "evenodd",
+                                                    d: "M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z",
+                                                    clipRule: "evenodd"
+                                                })
+                                            })
+                                        })
+                                    ]
+                                }),
+
+                                // Replace the simple grid with advanced CharacterCard rendering
                                 _jsx("div", {
                                     className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg",
-                                    children: _jsx("div", {
-                                        className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6",
-                                        children: paginatedCharacters.map((character, index) =>
-                                            character ? _jsx("div", {
-                                                className: "bg-white/10 p-4 rounded-lg hover:bg-white/15 transition-colors",
-                                                children: _jsxs("div", {
-                                                    children: [
-                                                        _jsx("h3", {
-                                                            className: "font-bold text-lg text-yellow-400 mb-2",
-                                                            style: { fontFamily: 'Cinzel, serif' },
-                                                            children: character?.name || "Unknown"
-                                                        }),
-                                                        _jsx("p", {
-                                                            className: "text-sm text-white/80 mb-3 line-clamp-3",
-                                                            children: character?.description || "No description"
-                                                        }),
-                                                        _jsx("button", {
-                                                            onClick: () => handleSelectCharacter(character),
-                                                            className: "w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-2 px-4 rounded-lg transition-colors",
-                                                            children: "Select Character"
-                                                        })
-                                                    ]
-                                                })
-                                            }, character?.id || `char-${index}`) : null
-                                        )
-                                    })
+                                    children: viewMode === 'grid' ? (
+                                        _jsx("div", {
+                                            className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6",
+                                            children: paginatedCharacters.map((character, index) =>
+                                                character ? _jsx("div", {
+                                                    className: "character-card-container",
+                                                    children: renderCharacterItem(index)
+                                                }, character?.id || `character-${index}`) : null
+                                            )
+                                        })
+                                    ) : (
+                                        _jsx("div", {
+                                            className: "space-y-4",
+                                            children: paginatedCharacters.map((character, index) =>
+                                                _jsx("div", {
+                                                    children: renderCharacterItem(index)
+                                                }, character?.id || `character-${index}`)
+                                            )
+                                        })
+                                    )
                                 })
                             ]
-                        })
+                        }),
+                        
+                        renderPagination()
                     ]
                 })
             ]
