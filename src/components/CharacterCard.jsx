@@ -109,10 +109,23 @@ const CharacterCard = ({
     // ------------------------------------------------------------------
     return (
         _jsxs("div", {
-            className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer ${isHovered ? 'hover:bg-white/20 transform scale-105' : 'hover:bg-white/15'}`,
+            /* ------------------------------------------------------------------
+             * When the modal is open (isDescriptionVisible === true) we suppress
+             * all hover/transform effects so the background card stays still
+             * behind the overlay.  This prevents the “screen shaking” users
+             * experienced when moving the mouse between the card and the modal.
+             * ------------------------------------------------------------------ */
+            className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer ${
+                isDescriptionVisible
+                    ? 'bg-white/15'                       /* fixed state */
+                    : isHovered
+                        ? 'hover:bg-white/20 transform scale-105'
+                        : 'hover:bg-white/15'
+            }`,
             onClick: () => onSelect(character),
-            onMouseEnter: handleMouseEnter,
-            onMouseLeave: handleMouseLeave,
+            /* Disable hover handlers while the modal is open to avoid jitter */
+            onMouseEnter: !isDescriptionVisible ? handleMouseEnter : undefined,
+            onMouseLeave: !isDescriptionVisible ? handleMouseLeave : undefined,
             children: [
                 _jsx("img", {
                     src: avatarUrl,
