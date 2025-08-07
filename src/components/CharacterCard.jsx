@@ -115,7 +115,7 @@ const CharacterCard = ({
              * behind the overlay.  This prevents the “screen shaking” users
              * experienced when moving the mouse between the card and the modal.
              * ------------------------------------------------------------------ */
-            className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer h-72 flex flex-col justify-between ${
+            className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer h-72 flex flex-col justify-between border-2 border-yellow-400/50 hover:border-yellow-400 ${
                 isDescriptionVisible
                     ? 'bg-white/15'                       /* fixed state */
                     : isHovered
@@ -136,8 +136,8 @@ const CharacterCard = ({
                     }
                 }),
                 _jsx("h3", {
-                    /* Increase front-of-card character name for better readability */
-                    className: "font-bold text-xl text-yellow-400 text-center mb-2",
+                    /* Further increase character name for better readability */
+                    className: "font-bold text-2xl text-yellow-400 text-center mb-2",
                     style: { fontFamily: 'Cinzel, serif' },
                     children: character.name
                 }),
@@ -180,9 +180,18 @@ const CharacterCard = ({
                  * Complex modal / overlay with full character info
                  * ------------------------------------------------------------------ */
                 isDescriptionVisible && _jsxs("div", {
-                    /* Keep modal always centered and visible (simpler approach) */
-                    className: "fixed inset-0 z-50 bg-black/60 p-4 flex items-center justify-center",
-                    style: { alignItems: 'center', justifyContent: 'center' },
+                    /* Keep modal always centered and within viewport */
+                    className: "fixed top-0 left-0 w-full h-full z-50 bg-black/60 flex items-center justify-center p-4",
+                    style: {
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    },
                     onClick: handleInfoClick,
                     children: [
                         _jsxs("div", {
