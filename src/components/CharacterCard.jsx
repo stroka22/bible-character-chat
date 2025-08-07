@@ -173,6 +173,7 @@ const CharacterCard = ({
                             className: `text-gray-400 hover:text-yellow-400 p-1 ${isFavorite ? 'text-yellow-400' : ''}`,
                             "aria-label": "Toggle favorite",
                             title: isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                            "data-tooltip": isFavorite ? "Remove from Favorites" : "Add to Favorites",
                             children: _jsx(StarIcon, { isFilled: isFavorite })
                         }),
                         _jsx("button", {
@@ -180,6 +181,7 @@ const CharacterCard = ({
                             className: `text-gray-400 hover:text-yellow-400 p-1 ${isFeatured ? 'text-yellow-400' : ''}`,
                             "aria-label": "Set as featured",
                             title: isFeatured ? "Currently Featured" : "Set as Featured",
+                            "data-tooltip": isFeatured ? "Currently Featured" : "Set as Featured",
                             children: _jsx(BookmarkIcon, { isFilled: isFeatured })
                         }),
                         _jsx("button", {
@@ -187,6 +189,7 @@ const CharacterCard = ({
                             className: "text-gray-400 hover:text-blue-400 p-1",
                             "aria-label": "Toggle description",
                             title: "Info",
+                            "data-tooltip": "Info",
                             children: _jsx(InfoIcon, {})
                         }),
                         _jsx("button", {
@@ -194,6 +197,7 @@ const CharacterCard = ({
                             className: "text-gray-400 hover:text-green-400 p-1",
                             "aria-label": "Chat with character",
                             title: "Chat",
+                            "data-tooltip": "Chat",
                             children: _jsx(ChatIcon, {})
                         })
                     ]
@@ -203,17 +207,19 @@ const CharacterCard = ({
                  * Complex modal / overlay with full character info
                  * ------------------------------------------------------------------ */
                 isDescriptionVisible && _jsxs("div", {
-                    /* Keep modal always centered and within viewport */
-                    className: "fixed top-0 left-0 w-full h-full z-50 bg-black/60 flex items-center justify-center p-4",
+                    /* bullet-proof centering – never off-screen */
+                    className: "fixed inset-0 z-50 bg-black/60",
                     style: {
                         position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
+                        top: '0',
+                        left: '0',
+                        width: '100vw',
+                        height: '100vh',
+                        zIndex: 9999,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        padding: '1rem'
                     },
                     onClick: handleInfoClick,
                     children: [
@@ -221,7 +227,12 @@ const CharacterCard = ({
                             /* ------------------------------------------------------------------
                              * DARK MODAL - Matches website theme
                              * ------------------------------------------------------------------ */
-                            className: "relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-lg p-6 w-full max-w-md max-h-[85vh] overflow-y-auto mx-auto my-auto shadow-xl border border-yellow-400",
+                            className: "relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-lg p-6 w-full max-w-md shadow-xl border border-yellow-400",
+                            style: {
+                                maxHeight: '90vh',
+                                overflowY: 'auto',
+                                margin: 'auto'
+                            },
                             onClick: (e) => e.stopPropagation(),
                             children: [
                                 /* Decorative background elements */
@@ -364,7 +375,10 @@ const CharacterCard = ({
                 _jsx("button", {
                     onClick: handleChatClick,
                     className: "w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-2 px-4 rounded-lg transition-colors",
-                    children: "Chat Now"
+                    children: _jsx("span", {
+                        className: "text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis",
+                        children: "Chat Now"
+                    })
                 })
             ]
         })
