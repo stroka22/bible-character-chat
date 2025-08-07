@@ -148,22 +148,28 @@ const CharacterCard = ({
                             onClick: handleFavoriteClick,
                             className: `text-gray-400 hover:text-yellow-400 p-1 ${isFavorite ? 'text-yellow-400' : ''}`,
                             "aria-label": "Toggle favorite",
+                            title: isFavorite ? "Remove from Favorites" : "Add to Favorites",
                             children: _jsx(StarIcon, { isFilled: isFavorite })
                         }),
                         _jsx("button", {
                             onClick: handleSetFeatured,
                             className: `text-gray-400 hover:text-yellow-400 p-1 ${isFeatured ? 'text-yellow-400' : ''}`,
                             "aria-label": "Set as featured",
+                            title: isFeatured ? "Currently Featured" : "Set as Featured",
                             children: _jsx(BookmarkIcon, { isFilled: isFeatured })
                         }),
                         _jsx("button", {
                             onClick: handleInfoClick,
                             className: "text-gray-400 hover:text-blue-400 p-1",
                             "aria-label": "Toggle description",
+                            title: "Info",
                             children: _jsx(InfoIcon, {})
                         }),
-                        _jsx("div", {
-                            className: "text-gray-400",
+                        _jsx("button", {
+                            onClick: handleChatClick,
+                            className: "text-gray-400 hover:text-green-400 p-1",
+                            "aria-label": "Chat with character",
+                            title: "Chat",
                             children: _jsx(ChatIcon, {})
                         })
                     ]
@@ -173,7 +179,7 @@ const CharacterCard = ({
                  * Complex modal / overlay with full character info
                  * ------------------------------------------------------------------ */
                 isDescriptionVisible && _jsxs("div", {
-                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4",
+                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto",
                     onClick: handleInfoClick,
                     children: [
                         _jsxs("div", {
