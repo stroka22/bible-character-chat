@@ -175,9 +175,9 @@ const AdminFeaturedCharacter = () => {
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {filteredCharacters.map((character) => (
+                  {filteredCharacters.map((character, index) => (
                     <label 
-                      key={character.id}
+                      key={character?.id || `character-${index}`}
                       className={`flex items-center p-3 rounded-lg cursor-pointer transition-colors ${
                         selectedCharacterId === character.id 
                           ? 'bg-yellow-100 border border-yellow-300' 
