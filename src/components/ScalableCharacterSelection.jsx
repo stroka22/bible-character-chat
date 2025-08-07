@@ -538,85 +538,13 @@ const ScalableCharacterSelection = () => {
         return (_jsx("div", { className: "flex items-center justify-center gap-2 mt-8", children: pages }));
     };
     
-    // Render only the desktop alphabet selector in the renderAlphaNav function
+    // Unified alphabet selector (now used for all screen sizes)
     const renderAlphaNav = () => {
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        
-        /* ------------------------------------------------------------------
-         * Desktop alphabet selector - COMPLETELY NEW POSITIONING APPROACH
-         * ------------------------------------------------------------------
-         * - Using margin instead of absolute/fixed positioning
-         * - Floating the selector to the right with margin
-         * - Setting a specific margin-top to avoid overlapping the horizontal selector
-         * - Using sticky positioning so it stays visible while scrolling
-         * ------------------------------------------------------------------ */
-        return (
-            _jsxs("div", { 
-                /* ------------------------------------------------------------------
-                 * Simplified, reliable positioning:
-                 *  - Fixed so it always stays visible while scrolling
-                 *  - Placed lower (top: 200px) and to the far right (right: 20px)
-                 *    to avoid overlapping the horizontal selector on mobile/tablet.
-                 * ------------------------------------------------------------------ */
-                style: {
-                    /* Keep the selector fixed but start it higher so it does not
-                       overlap the horizontal selector and remains fully visible.
-                       `calc(100vh - 120px)` ensures the entire list is scrollable
-                       without cutting off the last letters on shorter screens. */
-                    position: 'fixed',
-                    /* Move slightly farther right to create visual breathing room */
-                    right: '30px',
-                    /* Lower the selector so it aligns with the beginning of the character cards */
-                    top: '300px',            /* << Adjusted from 120px to 300px */
-                    zIndex: 40,
-                    /* Give the list an extra 30 px of breathing room */
-                    maxHeight: 'calc(100vh - 150px)',
-                },
-                /* Reduce Tailwind max-height to 70vh to give the tooltip a bit
-                   more breathing room and match the inline maxHeight above. */
-                className: "hidden md:flex flex-col gap-1.5 bg-blue-800/90 backdrop-blur-md rounded-xl py-5 px-3 border-2 border-yellow-400/50 shadow-2xl max-h-[60vh] overflow-y-auto", 
-                children: [
-                    _jsx("button", { 
-                        onClick: () => {
-                            setCurrentLetter('all');
-                            setCurrentPage(1);
-                        }, 
-                        "aria-label": "Show all characters", 
-                        className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                            currentLetter === 'all'
-                                ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
-                                : 'text-white hover:bg-white/20'
-                        }`, 
-                        children: "All" 
-                    }),
-                    letters.map(letter => (
-                        _jsx("button", { 
-                            onClick: () => {
-                                setCurrentLetter(letter);
-                                setCurrentPage(1);
-                            }, 
-                            "aria-label": `Show characters starting with ${letter}`, 
-                            className: `w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                                currentLetter === letter
-                                    ? 'bg-yellow-400 text-blue-900 font-bold shadow-md'
-                                    : 'text-white hover:bg-white/20'
-                            }`, 
-                            children: letter,
-                            key: letter
-                        })
-                    ))
-                ] 
-            })
-        );
-    };
-    
-    // Create the mobile alphabet selector component to be placed directly above character cards
-    const renderMobileAlphaNav = () => {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
         
         return (
             _jsx("div", { 
-                className: "md:hidden bg-blue-800/90 backdrop-blur-md border-b-2 border-yellow-400/50 shadow-lg mb-4 py-2 px-2 overflow-x-auto rounded-t-xl", 
+                className: "bg-blue-800/90 backdrop-blur-md border-b-2 border-yellow-400/50 shadow-lg mb-4 py-2 px-2 overflow-x-auto rounded-t-xl", 
                 children: _jsxs("div", {
                     className: "flex flex-row gap-1 min-w-max px-2",
                     children: [
@@ -666,9 +594,6 @@ const ScalableCharacterSelection = () => {
         _jsxs("div", {
             className: "relative min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6",
             children: [
-                // Desktop alphabet selector
-                renderAlphaNav(),
-                
                 _jsxs("div", {
                     className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl",
                     children: [
@@ -892,8 +817,8 @@ const ScalableCharacterSelection = () => {
                         _jsxs("div", {
                             className: "relative",
                             children: [
-                                // Mobile alphabet selector placed directly above character cards
-                                renderMobileAlphaNav(),
+                                // Alphabet selector placed directly above character cards
+                                renderAlphaNav(),
                                 
                                 // Add view mode toggles right before the character grid
                                 _jsxs("div", {
