@@ -8,6 +8,10 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // receive the same provider instance.
 import { ChatProvider } from './contexts/ChatContext.jsx';
 import { ConversationProvider } from './contexts/ConversationContext.jsx';
+/* ------------------------------------------------------------------
+ * Global styles
+ * ------------------------------------------------------------------ */
+import './styles/tooltips.css'; // Custom tooltip system
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
