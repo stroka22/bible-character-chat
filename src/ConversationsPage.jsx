@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import CharacterCard from '../components/CharacterCard';
+// Always use the optimised JSX implementation (the .js version has been
+// deprecated and can cause mobile-overflow issues).
+import CharacterCard from '../components/CharacterCard.jsx';
 
 const FavoritesPage = () => {
   const { user, loading, isAuthenticated } = useAuth();
