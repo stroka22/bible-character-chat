@@ -136,7 +136,8 @@ const CharacterCard = ({
                     }
                 }),
                 _jsx("h3", {
-                    className: "font-bold text-lg text-yellow-400 text-center mb-2",
+                    /* Increase front-of-card character name for better readability */
+                    className: "font-bold text-xl text-yellow-400 text-center mb-2",
                     style: { fontFamily: 'Cinzel, serif' },
                     children: character.name
                 }),
@@ -179,14 +180,16 @@ const CharacterCard = ({
                  * Complex modal / overlay with full character info
                  * ------------------------------------------------------------------ */
                 isDescriptionVisible && _jsxs("div", {
-                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto",
+                    /* Keep modal always centered and visible (simpler approach) */
+                    className: "fixed inset-0 z-50 bg-black/60 p-4 flex items-center justify-center",
+                    style: { alignItems: 'center', justifyContent: 'center' },
                     onClick: handleInfoClick,
                     children: [
                         _jsxs("div", {
                             /* ------------------------------------------------------------------
                              * COMPACT MODAL
                              * ------------------------------------------------------------------ */
-                            className: "relative bg-gradient-to-br from-indigo-50 via-blue-50 to-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl border border-indigo-200",
+                            className: "relative bg-gradient-to-br from-indigo-50 via-blue-50 to-white rounded-lg p-6 w-full max-w-md max-h-[85vh] overflow-y-auto mx-auto my-auto shadow-xl border border-indigo-200",
                             onClick: (e) => e.stopPropagation(),
                             children: [
                                 /* Decorative background elements */
@@ -259,7 +262,7 @@ const CharacterCard = ({
                                                     })
                                                 }),
                                                 _jsx("h3", {
-                                                    className: "text-sm font-semibold text-indigo-800",
+                    className: "font-bold text-xl text-yellow-400 text-center mb-2",
                                                     children: "Scripture"
                                                 })
                                             ]
