@@ -6,7 +6,8 @@ import MessageList from '../messages/MessageList.jsx';
 import MessageInput from '../messages/MessageInput.jsx';
 import ChatHeader from './ChatHeader.jsx';
 import ChatActions from './ChatActions.js';
-import CharacterSelection from '../characters/CharacterSelection.jsx';
+/* Use the main, optimized character selector (single implementation) */
+import CharacterSelection from '../ScalableCharacterSelection.jsx';
 
 const Chat = () => {
   const { id: conversationId } = useParams();
