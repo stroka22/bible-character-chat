@@ -160,9 +160,151 @@ const CharacterCard = ({
                     ]
                 }),
 
-                isDescriptionVisible && _jsx("div", {
-                    className: "bg-blue-900/60 p-2 rounded mb-2 text-xs text-white text-center",
-                    children: `Debug: ${character.name} • Hovered: ${isHovered ? 'yes' : 'no'}`
+                /* ------------------------------------------------------------------
+                 * Complex modal / overlay with full character info
+                 * ------------------------------------------------------------------ */
+                isDescriptionVisible && _jsxs("div", {
+                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60",
+                    onClick: handleInfoClick,
+                    children: [
+                        _jsxs("div", {
+                            className: "relative bg-gradient-to-br from-indigo-50 via-blue-50 to-white rounded-xl p-8 m-4 max-w-lg max-h-[80vh] overflow-y-auto shadow-2xl border-2 border-indigo-200",
+                            onClick: (e) => e.stopPropagation(),
+                            children: [
+                                /* Decorative background elements */
+                                _jsx("div", {
+                                    className: "absolute top-0 right-0 w-32 h-32 bg-yellow-300/20 rounded-full -mr-10 -mt-10 z-0"
+                                }),
+                                _jsx("div", {
+                                    className: "absolute bottom-0 left-0 w-40 h-40 bg-indigo-300/20 rounded-full -ml-10 -mb-10 z-0"
+                                }),
+
+                                /* Close button */
+                                _jsx("button", {
+                                    className: "absolute top-3 right-3 text-gray-500 hover:text-red-500 bg-white rounded-full p-1 shadow-md z-10 transition-colors",
+                                    onClick: handleInfoClick,
+                                    "aria-label": "Close description",
+                                    children: _jsx("svg", {
+                                        xmlns: "http://www.w3.org/2000/svg",
+                                        className: "h-6 w-6",
+                                        fill: "none",
+                                        viewBox: "0 0 24 24",
+                                        stroke: "currentColor",
+                                        children: _jsx("path", {
+                                            strokeLinecap: "round",
+                                            strokeLinejoin: "round",
+                                            strokeWidth: 2,
+                                            d: "M6 18L18 6M6 6l12 12"
+                                        })
+                                    })
+                                }),
+
+                                /* Character avatar */
+                                _jsx("div", {
+                                    className: "w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden border-4 border-yellow-400 shadow-lg relative z-10",
+                                    children: _jsx("img", {
+                                        src: avatarUrl,
+                                        alt: character.name,
+                                        className: "w-full h-full object-cover"
+                                    })
+                                }),
+
+                                /* Character name */
+                                _jsxs("div", {
+                                    className: "text-center mb-6 relative z-10",
+                                    children: [
+                                        _jsx("h2", {
+                                            className: "text-2xl font-bold text-indigo-900 mb-1",
+                                            style: { fontFamily: 'Cinzel, serif' },
+                                            children: character.name
+                                        }),
+                                        _jsx("div", {
+                                            className: "h-1 w-20 bg-yellow-400 rounded-full mx-auto mb-2"
+                                        })
+                                    ]
+                                }),
+
+                                /* Bible books section */
+                                character.bible_book && _jsxs("div", {
+                                    className: "bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 relative z-10",
+                                    children: [
+                                        _jsxs("div", {
+                                            className: "flex items-center mb-2",
+                                            children: [
+                                                _jsx("svg", {
+                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                    className: "h-5 w-5 text-indigo-700 mr-2",
+                                                    viewBox: "0 0 20 20",
+                                                    fill: "currentColor",
+                                                    children: _jsx("path", {
+                                                        d: "M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"
+                                                    })
+                                                }),
+                                                _jsx("h3", {
+                                                    className: "text-lg font-semibold text-indigo-800",
+                                                    children: "Found in Scripture"
+                                                })
+                                            ]
+                                        }),
+                                        _jsx("div", {
+                                            className: "flex flex-wrap gap-2",
+                                            children: character.bible_book.split(',').map((book, index) => (
+                                                _jsx("span", {
+                                                    className: "bg-indigo-600/90 text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm",
+                                                    children: book.trim()
+                                                }, `book-${index}-${book.trim()}`)
+                                            ))
+                                        })
+                                    ]
+                                }),
+
+                                /* Description section */
+                                _jsxs("div", {
+                                    className: "relative z-10",
+                                    children: [
+                                        _jsxs("div", {
+                                            className: "flex items-center mb-3",
+                                            children: [
+                                                _jsx("svg", {
+                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                    className: "h-5 w-5 text-indigo-700 mr-2",
+                                                    viewBox: "0 0 20 20",
+                                                    fill: "currentColor",
+                                                    children: _jsx("path", {
+                                                        fillRule: "evenodd",
+                                                        d: "M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z",
+                                                        clipRule: "evenodd"
+                                                    })
+                                                }),
+                                                _jsx("h3", {
+                                                    className: "text-lg font-semibold text-indigo-800",
+                                                    children: "About this Character"
+                                                })
+                                            ]
+                                        }),
+                                        _jsx("p", {
+                                            className: "text-gray-700 leading-relaxed",
+                                            children: character.description
+                                        })
+                                    ]
+                                }),
+
+                                /* Action button within modal */
+                                _jsxs("button", {
+                                    onClick: (e) => {
+                                        e.stopPropagation();
+                                        onSelect(character);
+                                        setIsDescriptionVisible(false);
+                                    },
+                                    className: "mt-6 w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center relative z-10",
+                                    children: [
+                                        _jsx(ChatIcon, {}),
+                                        `Chat with ${character.name}`
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
                 }),
 
                 _jsx("button", {
