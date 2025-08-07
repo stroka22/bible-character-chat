@@ -51,7 +51,8 @@ const HomePage = () => {
                         character
                             ? _jsx("main", { className: "flex-1 overflow-hidden", children: _jsx(ChatInterface, {}) })
                             : _jsx("div", { className: "flex-1 overflow-y-auto", children: _jsx(ScalableCharacterSelection, {}) }),
-                        resumed && (_jsxs("div", { className: "absolute bottom-2 left-2 z-20 rounded-md bg-blue-100/90 px-3 py-1 text-xs text-blue-800 shadow", children: ["Resumed conversation ", chatId ? `(ID: ${chatId})` : '(local)'] }))
+                        /*  The “Resumed conversation” debug badge has been removed
+                            to avoid confusing end-users with technical details. */
                     ] }) })
         ] }));
 };
