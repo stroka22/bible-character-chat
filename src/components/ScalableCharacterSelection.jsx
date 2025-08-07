@@ -662,57 +662,77 @@ const ScalableCharacterSelection = () => {
         return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]", children: _jsxs("div", { className: "max-w-md rounded-lg bg-white bg-opacity-90 p-8 text-center shadow-2xl", children: [_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-16 w-16 mx-auto text-red-500 mb-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" }) }), _jsx("h3", { className: "mb-2 text-xl font-semibold text-red-800", style: { fontFamily: 'Cinzel, serif' }, children: "Error" }), _jsx("p", { className: "text-red-700 mb-4", children: error }), _jsx("button", { onClick: () => window.location.reload(), className: "rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition-colors shadow-md", children: "Try Again" })] }) }));
     }
     
+    /* ------------------------------------------------------------------
+     *  BASIC LAYOUT – no advanced components (VirtuosoGrid, etc.)
+     * ------------------------------------------------------------------ */
     return (
-        _jsx("div", {
-            className: "min-h-screen bg-blue-900 text-white p-8",
-            children: _jsxs("div", {
-                className: "max-w-4xl mx-auto",
-                children: [
-                    _jsx("h1", {
-                        className: "text-3xl font-bold text-center mb-8",
-                        children: "Bible Characters (Debug Mode)"
-                    }),
-                    _jsx("p", {
-                        className: "text-center mb-4",
-                        children: `Showing ${paginatedCharacters.length} characters`
-                    }),
-                    _jsx("div", {
-                        className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
-                        children: paginatedCharacters.map((character, index) =>
-                            character
-                                ? _jsx(
-                                      "div",
-                                      {
-                                          className: "bg-white/10 p-4 rounded-lg",
-                                          children: _jsxs("div", {
-                                              children: [
-                                                  _jsx("h3", {
-                                                      className: "font-bold text-lg",
-                                                      children: character?.name || "Unknown",
-                                                  }),
-                                                  _jsx("p", {
-                                                      className: "text-sm text-white/80",
-                                                      children:
-                                                          character?.description ||
-                                                          "No description",
-                                                  }),
-                                                  _jsx("button", {
-                                                      onClick: () =>
-                                                          handleSelectCharacter(character),
-                                                      className:
-                                                          "mt-2 bg-yellow-400 text-blue-900 px-4 py-2 rounded",
-                                                      children: "Select",
-                                                  }),
-                                              ],
-                                          }),
-                                      },
-                                      character?.id || `char-${index}`
-                                  )
-                                : null
-                        ),
-                    }),
-                ],
-            }),
+        _jsxs("div", {
+            className: "relative min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6",
+            children: [
+                _jsxs("div", {
+                    className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl",
+                    children: [
+                        /* Title ----------------------------------------------------- */
+                        _jsx("h1", {
+                            className: "text-4xl md:text-5xl font-extrabold text-center text-yellow-400 mb-8 tracking-tight drop-shadow-lg",
+                            style: { fontFamily: 'Cinzel, serif' },
+                            children: "Choose Your Biblical Guide"
+                        }),
+
+                        /* Simple Search ------------------------------------------- */
+                        _jsx("div", {
+                            className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6",
+                            children: _jsx("input", {
+                                type: "text",
+                                placeholder: "Search characters...",
+                                value: searchQuery,
+                                onChange: (e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                },
+                                className: "w-full bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white placeholder-blue-100 focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+                            })
+                        }),
+
+                        /* Character Counter --------------------------------------- */
+                        _jsx("div", {
+                            className: "text-center text-white/80 mb-6",
+                            children: `Showing ${paginatedCharacters.length} of ${filteredCharacters.length} characters`
+                        }),
+
+                        /* Simple Character Grid ----------------------------------- */
+                        _jsx("div", {
+                            className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg",
+                            children: _jsx("div", {
+                                className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6",
+                                children: paginatedCharacters.map((character, index) =>
+                                    character ? _jsx("div", {
+                                        className: "bg-white/10 p-4 rounded-lg hover:bg-white/15 transition-colors",
+                                        children: _jsxs("div", {
+                                            children: [
+                                                _jsx("h3", {
+                                                    className: "font-bold text-lg text-yellow-400 mb-2",
+                                                    style: { fontFamily: 'Cinzel, serif' },
+                                                    children: character?.name || "Unknown"
+                                                }),
+                                                _jsx("p", {
+                                                    className: "text-sm text-white/80 mb-3 line-clamp-3",
+                                                    children: character?.description || "No description"
+                                                }),
+                                                _jsx("button", {
+                                                    onClick: () => handleSelectCharacter(character),
+                                                    className: "w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-2 px-4 rounded-lg transition-colors",
+                                                    children: "Select Character"
+                                                })
+                                            ]
+                                        })
+                                    }, character?.id || `char-${index}`) : null
+                                )
+                            })
+                        })
+                    ]
+                })
+            ]
         })
     );
 };
