@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { motion } from 'framer-motion';
+// Temporarily disable framer-motion to test if it is the crash source
+// import { motion } from 'framer-motion';
 import { useState, useCallback, memo } from 'react';
 
 // Memoized SVG components to improve performance
@@ -275,7 +276,7 @@ const CharacterCard = ({
                     ]
                 }),
 
-                _jsxs(motion.div, {
+                _jsxs("div", {
                     /* ------------------------------------------------------------------
                      * Enhanced card container with gradient background and thicker border
                      * ------------------------------------------------------------------ */
@@ -288,11 +289,7 @@ const CharacterCard = ({
                         hover:shadow-lg transition-all
                         bg-gradient-to-br from-indigo-50 via-white to-blue-50
                     `,
-                    whileHover: {
-                        scale: 1.02,
-                        transition: { duration: 0.2 }
-                    },
-                    whileTap: { scale: 0.98 },
+                    /* framer-motion props removed: whileHover / whileTap */
                     onClick: () => onSelect(character),
                     role: "button",
                     tabIndex: 0,
