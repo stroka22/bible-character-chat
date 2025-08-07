@@ -793,24 +793,23 @@ const ScalableCharacterSelection = () => {
                 // Mobile alphabet selector placed directly above character cards
                 renderMobileAlphaNav(),
                 _jsx("div", { className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 shadow-lg", children: viewMode === 'grid' ? (
-                    _jsx("div", { style: { height: '600px' }, children: _jsx(VirtuosoGrid, {
-                        totalCount: paginatedCharacters?.length || 0,
-                        overscan: 200,
-                        listClassName: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6",
-                        itemClassName: "character-card-container",
-                        itemContent: (index) => {
-                            try {
-                                if (!paginatedCharacters || index >= paginatedCharacters.length) {
-                                    console.warn(`VirtuosoGrid: Invalid index ${index}, array length: ${paginatedCharacters?.length || 0}`);
-                                    return null;
-                                }
-                                return renderCharacterItem(index);
-                            } catch (error) {
-                                console.error(`VirtuosoGrid itemContent error at index ${index}:`, error);
-                                return null;
-                            }
-                        }
-                    }) })
+                    /* ------------------------------------------------------------------
+                     * TEMPORARY: Replace VirtuosoGrid with simple static rendering
+                     * to verify if VirtuosoGrid was the source of the rendering error.
+                     * ------------------------------------------------------------------ */
+                    _jsx("div", {
+                        className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6",
+                        children: paginatedCharacters.map((character, index) =>
+                            _jsx(
+                                "div",
+                                {
+                                    className: "character-card-container",
+                                    children: renderCharacterItem(index),
+                                },
+                                character?.id || `character-${index}`
+                            )
+                        ),
+                    })
                 ) : (
                     _jsx("div", { className: "space-y-4", children: paginatedCharacters.map((character, index) => _jsx("div", { children: renderCharacterItem(index) }, character?.id || `character-${index}`)) })
                 ) })
