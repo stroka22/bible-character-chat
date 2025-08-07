@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { memo } from 'react';
+import { memo, useState, useCallback } from 'react';
 
 // Test: Add back memoized SVG components
 const StarIcon = memo(({ isFilled }) => (
@@ -67,18 +67,52 @@ const CharacterCard = ({
     isFeatured = false,
     onSetAsFeatured,
 }) => {
-    // Basic safety check
-    if (!character || !character.id || !character.name) {
-        return null;
-    }
+    // ------------------------------------------------------------------
+    // Safety check
+    // ------------------------------------------------------------------
+    if (!character || !character.id || !character.name) return null;
 
-    const avatarUrl = character.avatar_url || 
+    // ------------------------------------------------------------------
+    // Local state & memoised callbacks
+    // ------------------------------------------------------------------
+    const [isHovered, setIsHovered] = useState(false);
+    const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
+
+    const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+    const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+
+    const handleInfoClick = useCallback((e) => {
+        e.stopPropagation();
+        setIsDescriptionVisible((prev) => !prev);
+    }, []);
+
+    const handleFavoriteClick = useCallback((e) => {
+        e.stopPropagation();
+        if (typeof onToggleFavorite === 'function') onToggleFavorite();
+    }, [onToggleFavorite]);
+
+    const handleSetFeatured = useCallback((e) => {
+        e.stopPropagation();
+        if (typeof onSetAsFeatured === 'function') onSetAsFeatured(character);
+    }, [onSetAsFeatured, character]);
+
+    const handleChatClick = useCallback((e) => {
+        e.stopPropagation();
+        onSelect(character);
+    }, [onSelect, character]);
+
+    const avatarUrl = character.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
 
+    // ------------------------------------------------------------------
+    // Render
+    // ------------------------------------------------------------------
     return (
         _jsxs("div", {
-            className: "bg-white/10 p-4 rounded-lg hover:bg-white/15 transition-colors cursor-pointer",
+            className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer ${isHovered ? 'hover:bg-white/20 transform scale-105' : 'hover:bg-white/15'}`,
             onClick: () => onSelect(character),
+            onMouseEnter: handleMouseEnter,
+            onMouseLeave: handleMouseLeave,
             children: [
                 _jsx("img", {
                     src: avatarUrl,
@@ -97,21 +131,26 @@ const CharacterCard = ({
                     className: "text-sm text-white/80 text-center mb-3 line-clamp-2",
                     children: character.description || "No description"
                 }),
-                
-                // Test: Display the SVG icons (but don't use them functionally yet)
+
                 _jsxs("div", {
                     className: "flex justify-center gap-2 mb-3",
                     children: [
-                        _jsx("div", {
-                            className: "text-gray-400",
-                            children: _jsx(StarIcon, { isFilled: false })
+                        _jsx("button", {
+                            onClick: handleFavoriteClick,
+                            className: `text-gray-400 hover:text-yellow-400 p-1 ${isFavorite ? 'text-yellow-400' : ''}`,
+                            "aria-label": "Toggle favorite",
+                            children: _jsx(StarIcon, { isFilled: isFavorite })
                         }),
-                        _jsx("div", {
-                            className: "text-gray-400", 
-                            children: _jsx(BookmarkIcon, { isFilled: false })
+                        _jsx("button", {
+                            onClick: handleSetFeatured,
+                            className: `text-gray-400 hover:text-yellow-400 p-1 ${isFeatured ? 'text-yellow-400' : ''}`,
+                            "aria-label": "Set as featured",
+                            children: _jsx(BookmarkIcon, { isFilled: isFeatured })
                         }),
-                        _jsx("div", {
-                            className: "text-gray-400",
+                        _jsx("button", {
+                            onClick: handleInfoClick,
+                            className: "text-gray-400 hover:text-blue-400 p-1",
+                            "aria-label": "Toggle description",
                             children: _jsx(InfoIcon, {})
                         }),
                         _jsx("div", {
@@ -120,12 +159,14 @@ const CharacterCard = ({
                         })
                     ]
                 }),
-                
+
+                isDescriptionVisible && _jsx("div", {
+                    className: "bg-blue-900/60 p-2 rounded mb-2 text-xs text-white text-center",
+                    children: `Debug: ${character.name} • Hovered: ${isHovered ? 'yes' : 'no'}`
+                }),
+
                 _jsx("button", {
-                    onClick: (e) => {
-                        e.stopPropagation();
-                        onSelect(character);
-                    },
+                    onClick: handleChatClick,
                     className: "w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-2 px-4 rounded-lg transition-colors",
                     children: "Chat Now"
                 })
