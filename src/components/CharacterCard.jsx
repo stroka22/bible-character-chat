@@ -115,7 +115,7 @@ const CharacterCard = ({
              * behind the overlay.  This prevents the “screen shaking” users
              * experienced when moving the mouse between the card and the modal.
              * ------------------------------------------------------------------ */
-            className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer ${
+            className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer h-72 flex flex-col justify-between ${
                 isDescriptionVisible
                     ? 'bg-white/15'                       /* fixed state */
                     : isHovered
@@ -139,10 +139,6 @@ const CharacterCard = ({
                     className: "font-bold text-lg text-yellow-400 text-center mb-2",
                     style: { fontFamily: 'Cinzel, serif' },
                     children: character.name
-                }),
-                _jsx("p", {
-                    className: "text-sm text-white/80 text-center mb-3 line-clamp-2",
-                    children: character.description || "No description"
                 }),
 
                 _jsxs("div", {
@@ -177,14 +173,14 @@ const CharacterCard = ({
                  * Complex modal / overlay with full character info
                  * ------------------------------------------------------------------ */
                 isDescriptionVisible && _jsxs("div", {
-                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60",
+                    className: "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4",
                     onClick: handleInfoClick,
                     children: [
                         _jsxs("div", {
                             /* ------------------------------------------------------------------
                              * COMPACT MODAL
                              * ------------------------------------------------------------------ */
-                            className: "relative bg-gradient-to-br from-indigo-50 via-blue-50 to-white rounded-lg p-6 m-4 max-w-md max-h-[70vh] overflow-y-auto shadow-xl border border-indigo-200",
+                            className: "relative bg-gradient-to-br from-indigo-50 via-blue-50 to-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl border border-indigo-200",
                             onClick: (e) => e.stopPropagation(),
                             children: [
                                 /* Decorative background elements */
