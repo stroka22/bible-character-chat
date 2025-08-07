@@ -399,7 +399,7 @@ const ScalableCharacterSelection = () => {
                             className: "w-full h-full object-cover",
                         }),
                     }),
-                ], character?.id || `character-item-${index}`)
+                    
                     /* Details ------------------------------------------------ */
                     _jsxs("div", {
                         className: "flex-1",
