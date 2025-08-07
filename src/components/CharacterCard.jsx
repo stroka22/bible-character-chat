@@ -99,6 +99,8 @@ const CharacterCard = ({
     // ------------------------------------------------------------------
     const [isHovered, setIsHovered] = useState(false);
     const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
+    /* store the click coordinates so we can open the modal near the cursor */
+    const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
 
     // Debounced handlers to improve performance
     const handleMouseEnter = useDebounce(() => setIsHovered(true), 50);
@@ -106,6 +108,13 @@ const CharacterCard = ({
 
     const handleInfoClick = useCallback((e) => {
         e.stopPropagation();
+        /* capture centre of the clicked element for smarter positioning */
+        if (e?.currentTarget) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            setClickPosition({ x, y });
+        }
         setIsDescriptionVisible((prev) => !prev);
     }, []);
 
@@ -228,11 +237,27 @@ const CharacterCard = ({
                              * DARK MODAL - Matches website theme
                              * ------------------------------------------------------------------ */
                             className: "relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-lg p-6 w-full max-w-md shadow-xl border border-yellow-400",
-                            style: {
-                                maxHeight: '90vh',
-                                overflowY: 'auto',
-                                margin: 'auto'
-                            },
+                            style: (() => {
+                                /* Calculate left/top ensuring modal stays within viewport with 16px margin */
+                                const margin = 16;
+                                const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+                                const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+                                const modalW = 400;               // same as max-width
+                                const modalH = 300;               // approximate initial height
+                                const desiredLeft = clickPosition.x - modalW / 2;
+                                const desiredTop = clickPosition.y - modalH / 2;
+                                const clampedLeft = Math.min(Math.max(desiredLeft, margin), vw - modalW - margin);
+                                const clampedTop = Math.min(Math.max(desiredTop, margin), vh - modalH - margin);
+                                return {
+                                    maxHeight: '90vh',
+                                    overflowY: 'auto',
+                                    position: 'absolute',
+                                    left: `${clampedLeft}px`,
+                                    top: `${clampedTop}px`,
+                                    width: '400px',
+                                    maxWidth: 'calc(100vw - 32px)'
+                                };
+                            })(),
                             onClick: (e) => e.stopPropagation(),
                             children: [
                                 /* Decorative background elements */

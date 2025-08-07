@@ -4,7 +4,9 @@ import { characterRepository } from '../repositories/characterRepository';
 import { groupRepository } from '../repositories/groupRepository';
 // Ensure we always import the unified JSX version of the context
 import { useChat } from '../contexts/ChatContext.jsx';
-import CharacterCard from './CharacterCard';
+/* Always import the optimised JSX component to avoid loading the outdated
+ * mobile-overflow version. */
+import CharacterCard from './CharacterCard.jsx';
 const BIBLE_BOOKS = {
     oldTestament: [
         'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy',
