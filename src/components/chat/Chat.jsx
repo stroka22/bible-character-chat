@@ -63,8 +63,14 @@ const Chat = () => {
   // Handle character selection
   const handleCharacterSelect = (selectedCharacter) => {
     console.log('Character selected:', selectedCharacter);
-    console.log('Character ID type:', typeof selectedCharacter.id);
-    console.log('Character ID value:', selectedCharacter.id);
+    console.log(
+      'Character ID type:',
+      selectedCharacter ? typeof selectedCharacter.id : 'undefined character'
+    );
+    console.log(
+      'Character ID value:',
+      selectedCharacter ? selectedCharacter.id : 'undefined character'
+    );
     console.log('Full character object:', JSON.stringify(selectedCharacter, null, 2));
     
     selectCharacter(selectedCharacter);

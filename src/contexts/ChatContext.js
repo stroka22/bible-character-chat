@@ -112,7 +112,7 @@ export function ChatProvider({ children }) {
             // We accumulate the assistant's response so we can persist it later
             let assistantContent = '';
 
-            await streamCharacterResponse(character.name, character.persona_prompt, messageHistory, (chunk) => {
+            await streamCharacterResponse(character?.name || 'Unknown', character?.persona_prompt || '', messageHistory, (chunk) => {
                 setCurrentResponse(prev => prev + chunk);
                 setMessages(prev => {
                     const updated = [...prev];
@@ -200,7 +200,7 @@ export function ChatProvider({ children }) {
             return;
         try {
             if (user) {
-                const newChat = await chatRepository.createChat(user.id, character.id, title);
+                const newChat = await chatRepository.createChat(user.id, character?.id || 0, title);
                 setChatId(newChat.id);
                 setIsFavorite(newChat.is_favorite ?? false);
                 for (const m of messages) {
@@ -211,7 +211,7 @@ export function ChatProvider({ children }) {
                 const stored = JSON.parse(localStorage.getItem('savedChats') || '[]');
                 stored.push({
                     id: `local-${Date.now()}`,
-                    character_name: character?.name,
+                    character_name: character?.name || 'Unknown',
                     conversation_title: title,
                     messages: messages.map(({ id, role, content, created_at }) => ({
                         id,

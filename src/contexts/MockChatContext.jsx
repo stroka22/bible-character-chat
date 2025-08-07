@@ -303,7 +303,10 @@ export const ChatProvider = ({ children }) => {
     
     try {
       // Create a new conversation
-      const newConversation = await createConversation(character.id, title);
+      const newConversation = await createConversation(
+        character?.id || 0,
+        title
+      );
       
       if (!newConversation) {
         throw new Error('Failed to create conversation');
