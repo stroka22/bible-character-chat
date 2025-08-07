@@ -34,10 +34,7 @@ const CharacterCard = ({
                  * is rendering the most recent code in the browser.
                  * Remove once red info buttons are visible.
                  * ------------------------------------------------------------------ */
-                _jsx("div", {
-                    className: "mb-2 rounded-md bg-red-600 text-yellow-200 font-extrabold text-center py-1 shadow-lg",
-                    children: "CHARACTERCARD TEST – RED BUTTON SHOULD BE BELOW"
-                }),
+                /* Test banner removed – production build */,
 
                 /* Click-based description modal/tooltip - shown when info button is clicked */
                 isDescriptionVisible && _jsxs("div", {
@@ -227,7 +224,7 @@ const CharacterCard = ({
                                 }),
                                 /* Fixed-height description with line clamp */
                                 _jsx("p", {
-                                    className: "text-sm text-gray-700 line-clamp-3",
+                                    className: "text-sm text-gray-700 line-clamp-3 overflow-hidden",
                                     children: character.description
                                 })
                             ]
@@ -235,7 +232,7 @@ const CharacterCard = ({
                         
                         /* FIXED ACTION BUTTON - positioned completely outside the flow */
                         _jsx("div", {
-                            className: "absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-auto",
+                            className: "absolute bottom-2 left-2 right-2 sm:left-auto sm:right-4 sm:w-auto",
                             children: _jsx("button", {
                                 onClick: (e) => {
                                     e.stopPropagation();
@@ -248,7 +245,10 @@ const CharacterCard = ({
                                         : 'bg-blue-600 text-white hover:bg-blue-700'}
                                 `,
                                 "aria-label": `Start chat with ${character.name}`,
-                                children: isSelected ? 'Continue Chat' : 'Start Chat'
+                                children: _jsx("span", {
+                                    className: "text-xs sm:text-sm whitespace-nowrap overflow-hidden text-ellipsis",
+                                    children: isSelected ? 'Continue' : 'Chat'
+                                })
                             })
                         }),
                         
