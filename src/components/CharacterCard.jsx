@@ -334,6 +334,23 @@ const CharacterCard = ({
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
 
     /* ------------------------------------------------------------------
+     * Prevent background page from scrolling while modal is open.
+     * Especially important on mobile where body scroll + fixed overlay
+     * can create “rubber-band” effects or move the underlying content.
+     * ------------------------------------------------------------------ */
+    useEffect(() => {
+        if (!isDescriptionVisible) return;
+        const prevOverflow = document.body.style.overflow;
+        const prevTouchAction = document.body.style.touchAction;
+        document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            document.body.style.touchAction = prevTouchAction;
+        };
+    }, [isDescriptionVisible]);
+
+    /* ------------------------------------------------------------------
      * Pre-build the info modal portal so the JSX below stays tidy.
      * ------------------------------------------------------------------ */
     const infoPortal = isDescriptionVisible ? createPortal(
