@@ -588,15 +588,21 @@ const ScalableCharacterSelection = () => {
     };
     
     if (isLoading) {
-        return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]", children: _jsxs("div", { className: "text-center", children: [_jsxs("div", { className: "relative mb-6", children: [_jsx("div", { className: "absolute inset-0 rounded-full bg-yellow-300 blur-xl opacity-30 animate-pulse" }), _jsx("div", { className: "relative h-16 w-16 mx-auto animate-spin rounded-full border-4 border-yellow-200 border-t-yellow-400" }), _jsx("div", { className: "absolute inset-0 flex items-center justify-center", children: _jsx("span", { className: "text-white text-xl", children: "\u271D" }) })] }), _jsx("p", { className: "text-white text-lg font-light", style: { fontFamily: 'Cinzel, serif' }, children: "Loading Bible characters..." })] }) }));
+        return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-blue-950 via-indigo-900 to-indigo-800", children: _jsxs("div", { className: "text-center", children: [_jsxs("div", { className: "relative mb-6", children: [_jsx("div", { className: "absolute inset-0 rounded-full bg-yellow-300 blur-xl opacity-30 animate-pulse" }), _jsx("div", { className: "relative h-16 w-16 mx-auto animate-spin rounded-full border-4 border-yellow-200 border-t-yellow-400" }), _jsx("div", { className: "absolute inset-0 flex items-center justify-center", children: _jsx("span", { className: "text-white text-xl", children: "\u271D" }) })] }), _jsx("p", { className: "text-white text-lg font-light", style: { fontFamily: 'Cinzel, serif' }, children: "Loading Bible characters..." })] }) }));
     }
     if (error) {
-        return (_jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a]", children: _jsxs("div", { className: "max-w-md rounded-lg bg-white bg-opacity-90 p-8 text-center shadow-2xl", children: [_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-16 w-16 mx-auto text-red-500 mb-4", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z", style: { pointerEvents: 'none' } }) }) }), _jsx("h3", { className: "mb-2 text-xl font-semibold text-red-800", style: { fontFamily: 'Cinzel, serif' }, children: "Error" }), _jsx("p", { className: "text-red-700 mb-4", children: error }), _jsx("button", { onClick: () => window.location.reload(), className: "rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition-colors shadow-md", children: "Try Again" })] }) }));
+        return (
+            _jsx("div", { className: "flex h-full w-full items-center justify-center bg-gradient-to-b from-blue-950 via-indigo-900 to-indigo-800", children: _jsxs("div", { className: "max-w-md rounded-lg bg-white bg-opacity-90 p-8 text-center shadow-2xl", children: [
+                _jsx("h3", { className: "mb-2 text-xl font-semibold text-red-800", style: { fontFamily: 'Cinzel, serif' }, children: "Error" }),
+                _jsx("p", { className: "text-red-700 mb-4", children: String(error) }),
+                _jsx("button", { onClick: () => window.location.reload(), className: "rounded-md bg-red-600 px-6 py-2 text-white hover:bg-red-700 transition-colors shadow-md", children: "Try Again" })
+            ] }) })
+        );
     }
     
     return (
         _jsxs("div", {
-            className: "relative min-h-screen bg-gradient-to-b from-[#0a0a2a] via-[#1a1a4a] to-[#2a2a6a] py-10 px-4 md:px-6",
+            className: "relative min-h-screen bg-gradient-to-b from-blue-950 via-indigo-900 to-indigo-800 py-10 px-4 md:px-6",
             children: [
                 _jsxs("div", {
                     className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl",
