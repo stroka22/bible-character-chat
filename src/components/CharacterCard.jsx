@@ -103,6 +103,39 @@ const CharacterCard = ({
     const modalRef = useRef(null);
     const [modalPos, setModalPos] = useState({ left: 0, top: 0 });
 
+    /* ------------------------------------------------------------------
+     * Utility that measures card & modal then updates modalPos so the
+     * popup is centred over the card but kept inside the viewport.
+     * ------------------------------------------------------------------ */
+    const measureAndPosition = useCallback(() => {
+        if (!cardRef.current || !modalRef.current) return;
+
+        const rect = cardRef.current.getBoundingClientRect();
+        const modalRect = modalRef.current.getBoundingClientRect();
+
+        // If the modal hasn’t rendered its dimensions yet, try again shortly
+        if (modalRect.width === 0 || modalRect.height === 0) {
+            setTimeout(measureAndPosition, 50);
+            return;
+        }
+
+        const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+        const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+        const margin = 12;
+
+        // Centre horizontally over the card then clamp
+        let left = rect.left + rect.width / 2 - modalRect.width / 2;
+        left = Math.min(Math.max(margin, left), vw - modalRect.width - margin);
+
+        // Prefer 12px above card, fallback below if not enough space
+        let top = rect.top - modalRect.height - margin;
+        if (top < margin) {
+            top = Math.min(rect.bottom + margin, vh - modalRect.height - margin);
+        }
+
+        setModalPos({ left, top });
+    }, []);
+
     // Debounced handlers to improve performance
     const handleMouseEnter = useDebounce(() => setIsHovered(true), 50);
     const handleMouseLeave = useDebounce(() => setIsHovered(false), 50);
@@ -110,20 +143,8 @@ const CharacterCard = ({
     const handleOpenInfo = useCallback((e) => {
         e.stopPropagation();
         setIsDescriptionVisible(true);
-        // Measure after render
-        setTimeout(() => {
-            if (!cardRef.current || !modalRef.current) return;
-            const rect = cardRef.current.getBoundingClientRect();
-            const { width: mw, height: mh } = modalRef.current.getBoundingClientRect();
-            const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
-            const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
-            const m = 12;
-            let left = rect.left + rect.width / 2 - mw / 2;
-            left = Math.min(Math.max(m, left), vw - mw - m);
-            let top = rect.top - mh - 12; // try above
-            if (top < m) top = Math.min(rect.bottom + 12, vh - mh - m); // fallback below
-            setModalPos({ left, top });
-        }, 0);
+        // Measure after modal has appeared in the DOM
+        setTimeout(measureAndPosition, 0);
     }, []);
 
     const handleCloseInfo = useCallback((e) => {
@@ -145,6 +166,25 @@ const CharacterCard = ({
         e.stopPropagation();
         onSelect(character);
     }, [onSelect, character]);
+
+    /* ------------------------------------------------------------------
+     * Re-measure modal position on window resize / scroll while visible
+     * ------------------------------------------------------------------ */
+    useEffect(() => {
+        if (!isDescriptionVisible) return;
+
+        // Initial delayed measure in case images/fonts load later
+        const timeoutId = setTimeout(measureAndPosition, 50);
+
+        window.addEventListener('resize', measureAndPosition);
+        window.addEventListener('scroll', measureAndPosition, true);
+
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('resize', measureAndPosition);
+            window.removeEventListener('scroll', measureAndPosition, true);
+        };
+    }, [isDescriptionVisible, measureAndPosition]);
 
     const avatarUrl = character.avatar_url ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
