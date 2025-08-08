@@ -128,10 +128,12 @@ const CharacterCard = ({
         left = Math.min(Math.max(margin, left), vw - modalRect.width - margin);
 
         // Prefer 12px above card, fallback below if not enough space
-        let top = rect.top - modalRect.height - margin;
+        let top = rect.top - modalRect.height - margin;        // try above
         if (top < margin) {
-            top = Math.min(rect.bottom + margin, vh - modalRect.height - margin);
+            top = rect.bottom + margin;                        // fallback below
         }
+        // Clamp to viewport
+        top = Math.min(Math.max(margin, top), vh - modalRect.height - margin);
 
         setModalPos({ left, top });
     }, []);
@@ -179,10 +181,18 @@ const CharacterCard = ({
         window.addEventListener('resize', measureAndPosition);
         window.addEventListener('scroll', measureAndPosition, true);
 
+        // Re-measure if modal’s own size changes (e.g., fonts/images load)
+        let ro;
+        if (modalRef.current && typeof ResizeObserver !== 'undefined') {
+            ro = new ResizeObserver(measureAndPosition);
+            ro.observe(modalRef.current);
+        }
+
         return () => {
             clearTimeout(timeoutId);
             window.removeEventListener('resize', measureAndPosition);
             window.removeEventListener('scroll', measureAndPosition, true);
+            if (ro) ro.disconnect();
         };
     }, [isDescriptionVisible, measureAndPosition]);
 
