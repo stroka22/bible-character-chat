@@ -104,6 +104,30 @@ const CharacterCard = ({
     const [modalPos, setModalPos] = useState({ left: 0, top: 0 });
 
     /* ------------------------------------------------------------------
+     * Helper: return all scrollable ancestors (plus window) so we can
+     * re-measure when any of them scroll.
+     * ------------------------------------------------------------------ */
+    const getScrollableParents = (el) => {
+        const parents = [];
+        if (!el) return parents;
+        let node = el.parentElement;
+        while (node && node !== document.body) {
+            const style = window.getComputedStyle(node);
+            const oy = style.overflowY;
+            const ox = style.overflowX;
+            if (
+                (oy && (oy.includes('auto') || oy.includes('scroll'))) ||
+                (ox && (ox.includes('auto') || ox.includes('scroll')))
+            ) {
+                parents.push(node);
+            }
+            node = node.parentElement;
+        }
+        parents.push(window);
+        return parents;
+    };
+
+    /* ------------------------------------------------------------------
      * Utility that measures card & modal then updates modalPos so the
      * popup is centred over the card but kept inside the viewport.
      * ------------------------------------------------------------------ */
@@ -119,21 +143,31 @@ const CharacterCard = ({
             return;
         }
 
-        const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
-        const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+        // Prefer the VisualViewport API when available (mobile browsers).
+        const vv = typeof window !== 'undefined' && window.visualViewport ? window.visualViewport : null;
+        const vw = vv ? vv.width : window.innerWidth;
+        const vh = vv ? vv.height : window.innerHeight;
+        const vx = vv ? vv.offsetLeft : 0;
+        const vy = vv ? vv.offsetTop : 0;
         const margin = 12;
 
         // Centre horizontally over the card then clamp
         let left = rect.left + rect.width / 2 - modalRect.width / 2;
-        left = Math.min(Math.max(margin, left), vw - modalRect.width - margin);
+        left = Math.min(
+            Math.max(vx + margin, left),
+            vx + vw - modalRect.width - margin
+        );
 
         // Prefer 12px above card, fallback below if not enough space
         let top = rect.top - modalRect.height - margin;        // try above
         if (top < margin) {
             top = rect.bottom + margin;                        // fallback below
         }
-        // Clamp to viewport
-        top = Math.min(Math.max(margin, top), vh - modalRect.height - margin);
+        // Clamp to viewport/visual viewport
+        top = Math.min(
+            Math.max(vy + margin, top),
+            vy + vh - modalRect.height - margin
+        );
 
         setModalPos({ left, top });
     }, []);
@@ -181,6 +215,29 @@ const CharacterCard = ({
         window.addEventListener('resize', measureAndPosition);
         window.addEventListener('scroll', measureAndPosition, true);
 
+        // Track scroll on all scrollable ancestors
+        const scrollParents = getScrollableParents(cardRef.current);
+        scrollParents.forEach((p) =>
+            p.addEventListener('scroll', measureAndPosition, true)
+        );
+
+        // Listen to visualViewport changes if supported
+        let vvHandlers = [];
+        if (typeof window !== 'undefined' && window.visualViewport) {
+            const vv = window.visualViewport;
+            vv.addEventListener('resize', measureAndPosition);
+            vv.addEventListener('scroll', measureAndPosition);
+            vvHandlers = [vv];
+        }
+
+        // rAF loop to continually validate position (cheap)
+        let raf;
+        const rafLoop = () => {
+            measureAndPosition();
+            raf = requestAnimationFrame(rafLoop);
+        };
+        raf = requestAnimationFrame(rafLoop);
+
         // Re-measure if modal’s own size changes (e.g., fonts/images load)
         let ro;
         if (modalRef.current && typeof ResizeObserver !== 'undefined') {
@@ -193,6 +250,14 @@ const CharacterCard = ({
             window.removeEventListener('resize', measureAndPosition);
             window.removeEventListener('scroll', measureAndPosition, true);
             if (ro) ro.disconnect();
+            scrollParents.forEach((p) =>
+                p.removeEventListener('scroll', measureAndPosition, true)
+            );
+            vvHandlers.forEach((vv) => {
+                vv.removeEventListener('resize', measureAndPosition);
+                vv.removeEventListener('scroll', measureAndPosition);
+            });
+            if (raf) cancelAnimationFrame(raf);
         };
     }, [isDescriptionVisible, measureAndPosition]);
 
