@@ -363,14 +363,14 @@ const CharacterCard = ({
                              * DARK MODAL - Matches website theme
                              * ------------------------------------------------------------------ */
                             ref: modalRef,
-                            className: "relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-lg p-6 w-full max-w-md shadow-xl border border-yellow-400",
+                            className: "relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-lg p-3 w-full max-w-xs shadow-xl border border-yellow-400",
                             style: {
                                 position: 'fixed',
                                 left: `${modalPos.left}px`,
                                 top: `${modalPos.top}px`,
-                                maxHeight: '80vh',
+                                maxHeight: '60vh',
                                 overflowY: 'auto',
-                                width: 'min(400px, calc(100vw - 32px))',
+                                width: 'min(300px, calc(100vw - 24px))',
                                 zIndex: 10000,
                             },
                             onClick: (e) => e.stopPropagation(),
@@ -406,7 +406,7 @@ const CharacterCard = ({
 
                                 /* Character avatar */
                                 _jsx("div", {
-                                    className: "w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden border-3 border-yellow-400 shadow-md relative z-10",
+                                    className: "w-12 h-12 mx-auto mb-2 rounded-full overflow-hidden border-3 border-yellow-400 shadow-md relative z-10",
                                     children: _jsx("img", {
                                         src: avatarUrl,
                                         alt: character.name,
@@ -419,7 +419,7 @@ const CharacterCard = ({
                                     className: "text-center mb-4 relative z-10",
                                     children: [
                                         _jsx("h2", {
-                                            className: "text-xl font-bold text-yellow-400 mb-1",
+                                            className: "text-lg font-bold text-yellow-400 mb-1",
                                             style: { fontFamily: 'Cinzel, serif' },
                                             children: character.name
                                         }),
@@ -431,7 +431,7 @@ const CharacterCard = ({
 
                                 /* Bible books section */
                                 character.bible_book && _jsxs("div", {
-                                    className: "bg-blue-800/50 border border-yellow-400/30 rounded-md p-3 mb-4 relative z-10",
+                                    className: "bg-blue-800/50 border border-yellow-400/30 rounded-md p-3 mb-3 relative z-10",
                                     children: [
                                         _jsxs("div", {
                                             className: "flex items-center mb-2",
@@ -446,7 +446,7 @@ const CharacterCard = ({
                                                     })
                                                 }),
                                                 _jsx("h3", {
-                                                    className: "text-lg font-semibold text-yellow-300",
+                                                    className: "text-base font-semibold text-yellow-300",
                                                     children: "Scripture"
                                                 })
                                             ]
@@ -482,13 +482,13 @@ const CharacterCard = ({
                                                     })
                                                 }),
                                                 _jsx("h3", {
-                                                    className: "text-lg font-semibold text-yellow-300",
+                                                className: "text-base font-semibold text-yellow-300",
                                                     children: "About"
                                                 })
                                             ]
                                         }),
                                         _jsx("p", {
-                                            className: "text-white/90 text-sm leading-relaxed",
+                                            className: "text-white/90 text-xs leading-relaxed",
                                             children: character.description
                                         })
                                     ]
