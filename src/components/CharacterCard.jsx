@@ -102,6 +102,10 @@ const CharacterCard = ({
     const cardRef = useRef(null);
     const modalRef = useRef(null);
     const [modalPos, setModalPos] = useState({ left: 0, top: 0 });
+    /* Store the coordinates of the click that opened the popup so we
+       can anchor the modal close to the info-icon rather than the whole
+       card. Default to {0,0}. */
+    const lastClickPos = useRef({ x: 0, y: 0 });
 
     /* ------------------------------------------------------------------
      * Helper: return all scrollable ancestors (plus window) so we can
@@ -151,6 +155,35 @@ const CharacterCard = ({
         const vy = vv ? vv.offsetTop : 0;
         const margin = 12;
 
+        /* ------------------------------------------------------------------
+         * If we have the exact click/touch coordinate that opened the popup,
+         * anchor the modal around that point instead of the card centre.
+         * ------------------------------------------------------------------ */
+        if (
+            (lastClickPos.current.x || lastClickPos.current.y) &&
+            typeof lastClickPos.current.x === 'number' &&
+            typeof lastClickPos.current.y === 'number'
+        ) {
+            let left = lastClickPos.current.x - modalRect.width / 2;
+            left = Math.min(
+                Math.max(vx + margin, left),
+                vx + vw - modalRect.width - margin
+            );
+
+            // Try to place above the click; if not enough space, place below.
+            let top = lastClickPos.current.y - modalRect.height - margin;
+            if (top < vy + margin) {
+                top = lastClickPos.current.y + margin;
+            }
+            top = Math.min(
+                Math.max(vy + margin, top),
+                vy + vh - modalRect.height - margin
+            );
+
+            setModalPos({ left, top });
+            return; // anchored positioning handled
+        }
+
         // Centre horizontally over the card then clamp
         let left = rect.left + rect.width / 2 - modalRect.width / 2;
         left = Math.min(
@@ -178,6 +211,22 @@ const CharacterCard = ({
 
     const handleOpenInfo = useCallback((e) => {
         e.stopPropagation();
+
+        /* ------------------------------------------------------------------
+         * Record where the user clicked / touched so the modal can appear
+         * near the icon rather than centred on the card.
+         * ------------------------------------------------------------------ */
+        let x = e.clientX;
+        let y = e.clientY;
+        // Touch events (mobile)
+        if ((!x || !y) && e.touches && e.touches[0]) {
+            x = e.touches[0].clientX;
+            y = e.touches[0].clientY;
+        }
+        if (typeof x === 'number' && typeof y === 'number') {
+            lastClickPos.current = { x, y };
+        }
+
         setIsDescriptionVisible(true);
         // Measure after modal has appeared in the DOM
         setTimeout(measureAndPosition, 0);
