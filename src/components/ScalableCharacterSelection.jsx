@@ -416,11 +416,11 @@ const ScalableCharacterSelection = () => {
                                     
                                     /* Favorite button */
                                     _jsx("button", {
-                                        onClick: useCallback((e) => {
+                                        onClick: (e) => {
                                             e.stopPropagation();
                                             // Use setTimeout to defer execution and prevent UI blocking
                                             setTimeout(() => handleToggleFavorite(character.id), 0);
-                                        }, [character.id, handleToggleFavorite]),
+                                        },
                                         className: `ml-2 ${isFavorite
                                             ? 'text-yellow-400'
                                             : 'text-gray-400 hover:text-yellow-300'}`,
@@ -441,11 +441,11 @@ const ScalableCharacterSelection = () => {
                                     
                                     /* Set as Featured button */
                                     _jsx("button", {
-                                        onClick: useCallback((e) => {
+                                        onClick: (e) => {
                                             e.stopPropagation();
                                             // Use setTimeout to defer execution and prevent UI blocking
                                             setTimeout(() => handleSetAsFeatured(character), 0);
-                                        }, [character, handleSetAsFeatured]),
+                                        },
                                         className: `ml-2 ${isFeatured
                                             ? 'text-yellow-500'
                                             : 'text-gray-400 hover:text-yellow-300'}`,
