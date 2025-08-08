@@ -266,7 +266,7 @@ const ChatInterface = () => {
                 
                 // Feature image banner (if available)
                 character.feature_image_url && (_jsxs("div", {
-                    className: "relative w-full h-48 md:h-64 overflow-hidden border-b border-[rgba(255,255,255,.1)]",
+                    className: "hidden md:block relative w-full h-64 overflow-hidden border-b border-[rgba(255,255,255,.1)]",
                     children: [
                         _jsx("img", {
                             src: getSafeAvatarUrl(character.name, character.feature_image_url),
@@ -295,10 +295,10 @@ const ChatInterface = () => {
 
                 // Mobile-only back button (breadcrumb is hidden on small screens)
                 _jsx("div", {
-                    className: "md:hidden px-4 py-2 border-b border-[rgba(255,255,255,.08)]",
+                    className: "md:hidden sticky top-0 z-30 px-4 py-2 bg-blue-900/80 backdrop-blur border-b border-[rgba(255,255,255,.15)]",
                     children: _jsxs("button", {
                         onClick: handleResetChat,
-                        className: "flex items-center gap-2 text-gray-300 hover:text-yellow-400 text-sm",
+                        className: "flex items-center gap-2 text-yellow-300 hover:text-yellow-200 text-base font-semibold",
                         children: [
                             _jsx("svg", {
                                 xmlns: "http://www.w3.org/2000/svg",
@@ -319,7 +319,7 @@ const ChatInterface = () => {
 
                 // Chat messages area
                 _jsxs("div", { 
-                    className: "chat-messages flex-grow overflow-y-auto p-3 md:p-5 flex flex-col gap-4",
+                    className: "chat-messages flex-grow overflow-y-auto p-2 md:p-5 flex flex-col gap-3 md:gap-4",
                     children: [
                         messages.length === 0 ? (
                             _jsx("div", { 
@@ -428,7 +428,7 @@ const ChatInterface = () => {
                 
                 // Chat input area
                 _jsx("div", { 
-                    className: "chat-input-area border-t border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)] p-4",
+                    className: "chat-input-area border-t border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)] p-2 md:p-4 pb-[max(env(safe-area-inset-bottom),0.5rem)]",
                     children: _jsx(ChatInput, { 
                         onSendMessage: sendMessage,
                         disabled: isLoading, 
@@ -437,8 +437,8 @@ const ChatInterface = () => {
                     })
                 }),
                 
-                // Chat actions (if needed)
-                _jsx(ChatActions, {})
+                // Chat actions (hidden on mobile)
+                _jsx("div", { className: "hidden md:block", children: _jsx(ChatActions, {}) })
             ] 
         })
     );
