@@ -45,8 +45,32 @@ const ScalableCharacterSelection = () => {
     const [isSelecting, setIsSelecting] = useState(false);
     const [favoriteCharacters, setFavoriteCharacters] = useState([]);
     const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+    /* -------------------------------------------------------------
+     * Responsive: detect if we are on a small (<768px) screen.
+     * ----------------------------------------------------------- */
+    const [isMobile, setIsMobile] = useState(false);
+
     const itemsPerPage = 20;
     const { selectCharacter, character: selectedCharacter } = useChat();
+
+    /* -------------------------------------------------------------
+     * Watch viewport changes and update isMobile.
+     * ----------------------------------------------------------- */
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.matchMedia) return;
+        const mq = window.matchMedia('(max-width: 767px)');
+        const update = () => setIsMobile(mq.matches);
+        update();
+        mq.addEventListener('change', update);
+        return () => mq.removeEventListener('change', update);
+    }, []);
+
+    /* Ensure list view is disabled on mobile screens */
+    useEffect(() => {
+        if (isMobile && viewMode !== 'grid') {
+            setViewMode('grid');
+        }
+    }, [isMobile, viewMode]);
     
     // Load saved favorites from localStorage on component mount
     useEffect(() => {
@@ -853,25 +877,27 @@ const ScalableCharacterSelection = () => {
                                                 })
                                             })
                                         }),
-                                        _jsx("button", {
-                                            onClick: () => setViewMode('list'),
-                                            className: `w-10 h-10 rounded-lg flex items-center justify-center ${viewMode === 'list'
-                                                ? 'bg-yellow-400 text-blue-900'
-                                                : 'bg-white/10 text-white hover:bg-white/20'}`,
-                                            "aria-label": "List view",
-                                            children: _jsx("svg", {
-                                                xmlns: "http://www.w3.org/2000/svg",
-                                                className: "h-5 w-5",
-                                                viewBox: "0 0 20 20",
-                                                fill: "currentColor",
-                                                children: _jsx("path", {
-                                                    fillRule: "evenodd",
-                                                    d: "M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z",
-                                                    clipRule: "evenodd",
-                                                    style: { pointerEvents: 'none' }
+                                        !isMobile && (
+                                            _jsx("button", {
+                                                onClick: () => setViewMode('list'),
+                                                className: `w-10 h-10 rounded-lg flex items-center justify-center ${viewMode === 'list'
+                                                    ? 'bg-yellow-400 text-blue-900'
+                                                    : 'bg-white/10 text-white hover:bg-white/20'}`,
+                                                "aria-label": "List view",
+                                                children: _jsx("svg", {
+                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                    className: "h-5 w-5",
+                                                    viewBox: "0 0 20 20",
+                                                    fill: "currentColor",
+                                                    children: _jsx("path", {
+                                                        fillRule: "evenodd",
+                                                        d: "M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z",
+                                                        clipRule: "evenodd",
+                                                        style: { pointerEvents: 'none' }
+                                                    })
                                                 })
                                             })
-                                        })
+                                        )
                                     ]
                                 }),
 
