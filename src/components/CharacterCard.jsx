@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { memo, useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 // Debounce function to improve performance
 const useDebounce = (callback, delay) => {
@@ -412,7 +413,8 @@ const CharacterCard = ({
                 /* ------------------------------------------------------------------
                  * Complex modal / overlay with full character info
                  * ------------------------------------------------------------------ */
-                isDescriptionVisible && _jsxs("div", {
+                {isDescriptionVisible && createPortal(
+                  _jsxs("div", {
                     /* bullet-proof centering – never off-screen */
                     className: "fixed inset-0 z-50 bg-black/60",
                     style: {
@@ -579,9 +581,11 @@ const CharacterCard = ({
                                     ]
                                 })
                             ]
-                        })
-                    ]
-                }),
+                        }),
+                    ],
+                  },
+                  document.body
+                )},
 
                 _jsx("button", {
                     onClick: handleChatClick,
