@@ -141,7 +141,7 @@ const CharacterCard = ({
         const rect = cardRef.current.getBoundingClientRect();
         const modalRect = modalRef.current.getBoundingClientRect();
 
-        // If the modal hasn’t rendered its dimensions yet, try again shortly
+        // If the modal hasn't rendered its dimensions yet, try again shortly
         if (modalRect.width === 0 || modalRect.height === 0) {
             setTimeout(measureAndPosition, 50);
             return;
@@ -180,8 +180,15 @@ const CharacterCard = ({
                 vy + vh - modalRect.height - margin
             );
 
+            const onScreen =
+                left >= vx + margin && left + modalRect.width <= vx + vw - margin &&
+                top >= vy + margin && top + modalRect.height <= vy + vh - margin;
+            if (!onScreen) {
+                left = vx + (vw - modalRect.width) / 2;
+                top = vy + (vh - modalRect.height) / 2;
+            }
             setModalPos({ left, top });
-            return; // anchored positioning handled
+            return;
         }
 
         // Centre horizontally over the card then clamp
@@ -202,6 +209,13 @@ const CharacterCard = ({
             vy + vh - modalRect.height - margin
         );
 
+        const onScreen =
+            left >= vx + margin && left + modalRect.width <= vx + vw - margin &&
+            top >= vy + margin && top + modalRect.height <= vy + vh - margin;
+        if (!onScreen) {
+            left = vx + (vw - modalRect.width) / 2;
+            top = vy + (vh - modalRect.height) / 2;
+        }
         setModalPos({ left, top });
     }, []);
 
@@ -211,6 +225,11 @@ const CharacterCard = ({
 
     const handleOpenInfo = useCallback((e) => {
         e.stopPropagation();
+
+        if (e.currentTarget && typeof e.currentTarget.getBoundingClientRect === 'function') {
+            const br = e.currentTarget.getBoundingClientRect();
+            lastClickPos.current = { x: br.left + br.width / 2, y: br.top + br.height / 2 };
+        }
 
         /* ------------------------------------------------------------------
          * Record where the user clicked / touched so the modal can appear
@@ -287,7 +306,7 @@ const CharacterCard = ({
         };
         raf = requestAnimationFrame(rafLoop);
 
-        // Re-measure if modal’s own size changes (e.g., fonts/images load)
+        // Re-measure if modal's own size changes (e.g., fonts/images load)
         let ro;
         if (modalRef.current && typeof ResizeObserver !== 'undefined') {
             ro = new ResizeObserver(measureAndPosition);
