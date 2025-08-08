@@ -99,23 +99,36 @@ const CharacterCard = ({
     // ------------------------------------------------------------------
     const [isHovered, setIsHovered] = useState(false);
     const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
-    /* store the click coordinates so we can open the modal near the cursor */
-    const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 });
+    const cardRef = useRef(null);
+    const modalRef = useRef(null);
+    const [modalPos, setModalPos] = useState({ left: 0, top: 0 });
 
     // Debounced handlers to improve performance
     const handleMouseEnter = useDebounce(() => setIsHovered(true), 50);
     const handleMouseLeave = useDebounce(() => setIsHovered(false), 50);
 
-    const handleInfoClick = useCallback((e) => {
+    const handleOpenInfo = useCallback((e) => {
         e.stopPropagation();
-        /* capture centre of the clicked element for smarter positioning */
-        if (e?.currentTarget) {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = rect.left + rect.width / 2;
-            const y = rect.top + rect.height / 2;
-            setClickPosition({ x, y });
-        }
-        setIsDescriptionVisible((prev) => !prev);
+        setIsDescriptionVisible(true);
+        // Measure after render
+        setTimeout(() => {
+            if (!cardRef.current || !modalRef.current) return;
+            const rect = cardRef.current.getBoundingClientRect();
+            const { width: mw, height: mh } = modalRef.current.getBoundingClientRect();
+            const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+            const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
+            const m = 12;
+            let left = rect.left + rect.width / 2 - mw / 2;
+            left = Math.min(Math.max(m, left), vw - mw - m);
+            let top = rect.top - mh - 12; // try above
+            if (top < m) top = Math.min(rect.bottom + 12, vh - mh - m); // fallback below
+            setModalPos({ left, top });
+        }, 0);
+    }, []);
+
+    const handleCloseInfo = useCallback((e) => {
+        e.stopPropagation();
+        setIsDescriptionVisible(false);
     }, []);
 
     const handleFavoriteClick = useCallback((e) => {
@@ -147,6 +160,7 @@ const CharacterCard = ({
              * behind the overlay.  This prevents the "screen shaking" users
              * experienced when moving the mouse between the card and the modal.
              * ------------------------------------------------------------------ */
+            ref: cardRef,
             className: `bg-white/10 p-4 rounded-lg transition-colors cursor-pointer h-72 flex flex-col justify-between border-2 border-yellow-400/50 hover:border-yellow-400 ${
                 isDescriptionVisible
                     ? 'bg-white/15'                       /* fixed state */
@@ -194,7 +208,7 @@ const CharacterCard = ({
                             children: _jsx(BookmarkIcon, { isFilled: isFeatured })
                         }),
                         _jsx("button", {
-                            onClick: handleInfoClick,
+                            onClick: handleOpenInfo,
                             className: "text-gray-400 hover:text-blue-400 p-1",
                             "aria-label": "Toggle description",
                             title: "Info",
@@ -227,40 +241,23 @@ const CharacterCard = ({
                         zIndex: 9999,
                         padding: '1rem'
                     },
-                    onClick: handleInfoClick,
+                    onClick: handleCloseInfo,
                     children: [
                         _jsxs("div", {
                             /* ------------------------------------------------------------------
                              * DARK MODAL - Matches website theme
                              * ------------------------------------------------------------------ */
+                            ref: modalRef,
                             className: "relative bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 rounded-lg p-6 w-full max-w-md shadow-xl border border-yellow-400",
-                            style: (() => {
-                                /* Calculate left/top ensuring modal stays within viewport with 16px margin */
-                                const margin = 16;
-                                const vw = typeof window !== 'undefined' ? window.innerWidth : 1024;
-                                const vh = typeof window !== 'undefined' ? window.innerHeight : 768;
-                                const modalW = 400;               // same as max-width
-                                const modalH = 400;               // estimated height
-                                // Position horizontally centered to card
-                                const desiredLeft = clickPosition.x - modalW / 2;
-                                // Try to show 20px above the card centre
-                                const desiredTop = clickPosition.y - modalH - 20;
-                                const clampedLeft = Math.min(Math.max(desiredLeft, margin), vw - modalW - margin);
-                                let clampedTop = desiredTop;
-                                // if goes above viewport, display 20px below the card
-                                if (clampedTop < margin) {
-                                    clampedTop = Math.min(clickPosition.y + 20, vh - modalH - margin);
-                                }
-                                return {
-                                    maxHeight: '90vh',
-                                    overflowY: 'auto',
-                                    position: 'absolute',
-                                    left: `${clampedLeft}px`,
-                                    top: `${clampedTop}px`,
-                                    width: '400px',
-                                    maxWidth: 'calc(100vw - 32px)'
-                                };
-                            })(),
+                            style: {
+                                position: 'fixed',
+                                left: `${modalPos.left}px`,
+                                top: `${modalPos.top}px`,
+                                maxHeight: '80vh',
+                                overflowY: 'auto',
+                                width: 'min(400px, calc(100vw - 32px))',
+                                zIndex: 10000,
+                            },
                             onClick: (e) => e.stopPropagation(),
                             children: [
                                 /* Decorative background elements */
@@ -274,7 +271,7 @@ const CharacterCard = ({
                                 /* Close button */
                                 _jsx("button", {
                                     className: "absolute top-2 right-2 text-white hover:text-red-400 bg-blue-700 rounded-full p-1 shadow-sm z-10 transition-colors",
-                                    onClick: handleInfoClick,
+                                    onClick: handleCloseInfo,
                                     "aria-label": "Close description",
                                     title: "Close",
                                     children: _jsx("svg", {
