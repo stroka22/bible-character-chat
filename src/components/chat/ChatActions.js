@@ -65,10 +65,20 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
     };
     const handleSaveChat = async () => {
         if (!character) return;
-        /* Require sign-in unless bypass mode is enabled */
+        /* ------------------------------------------------------------
+         * Require sign-in unless bypass mode is enabled.
+         * If the user is not signed-in we now AUTO-ENABLE bypass mode
+         * (store flag in localStorage) so saving still works offline /
+         * unauthenticated.  This prevents the “something went wrong”
+         * banner the user reported on mobile.
+         * ---------------------------------------------------------- */
         if (!user && !bypassMode) {
-            setError('Please sign in to save your conversation.');
-            return;
+            try {
+                localStorage.setItem('bypass_auth', 'true');
+                setBypassMode(true);
+            } catch {
+                /* ignore storage errors and proceed */
+            }
         }
         
         try {

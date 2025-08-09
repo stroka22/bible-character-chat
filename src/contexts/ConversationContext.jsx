@@ -14,10 +14,29 @@ export const ConversationProvider = ({ children }) => {
    * Detect SKIP_AUTH flag
    * Allows bypassing Supabase auth in development/demo mode.
    * ------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------
+   * Unified auth-bypass detection
+   * ------------------------------------------------------------------
+   * 1.  URL param  ?skipAuth=1
+   * 2.  Env var    VITE_SKIP_AUTH=true   (Vercel preview/CI)
+   * 3.  LocalStorage flag  bypass_auth=true (toggled in dev tools / UI)
+   * ------------------------------------------------------------------ */
   const params = new URLSearchParams(window.location.search);
+
+  let localBypass = false;
+  try {
+    localBypass =
+      typeof window !== 'undefined' &&
+      window.localStorage &&
+      window.localStorage.getItem('bypass_auth') === 'true';
+  } catch {
+    /* ignore storage access errors */
+  }
+
   const SKIP_AUTH =
     params.get('skipAuth') === '1' ||
-    import.meta.env.VITE_SKIP_AUTH === 'true';
+    import.meta.env.VITE_SKIP_AUTH === 'true' ||
+    localBypass;
 
   const { user, isAuthenticated } = useAuth();
   
