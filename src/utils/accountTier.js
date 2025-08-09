@@ -11,12 +11,39 @@
  * @returns {Object} Account tier settings with defaults if not found
  */
 export function loadAccountTierSettings() {
-  // Default settings
+  /* ------------------------------------------------------------------
+   * Build defaults from environment variables so that admins can control
+   * global “free” limits without touching localStorage on every client.
+   * These env values are injected at build-time by Vite / Vercel.
+   * ---------------------------------------------------------------- */
+  const env =
+    typeof import !== 'undefined' &&
+    typeof import.meta !== 'undefined' &&
+    import.meta.env
+      ? import.meta.env
+      : {};
+
+  const parseIntSafe = (val) => {
+    const n = parseInt(val, 10);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const envFreeMsgLimit = parseIntSafe(env.VITE_FREE_MESSAGE_LIMIT);
+  const envFreeCharLimit = parseIntSafe(env.VITE_FREE_CHARACTER_LIMIT);
+
+  const envFreeIds =
+    typeof env.VITE_FREE_CHARACTER_IDS === 'string'
+      ? env.VITE_FREE_CHARACTER_IDS.split(',')
+          .map((s) => parseIntSafe(s.trim()))
+          .filter((n) => Number.isFinite(n))
+      : [];
+
+  // Final default baseline (env values > hard-coded fallbacks)
   const defaults = {
-    freeMessageLimit: 5,
-    freeCharacterLimit: 10,
-    freeCharacters: [],
-    lastUpdated: null
+    freeMessageLimit: envFreeMsgLimit ?? 5,
+    freeCharacterLimit: envFreeCharLimit ?? 10,
+    freeCharacters: envFreeIds,
+    lastUpdated: null,
   };
 
   // SSR safety check
@@ -30,14 +57,29 @@ export function loadAccountTierSettings() {
       return defaults;
     }
 
-    const settings = JSON.parse(savedSettings);
-    
-    // Ensure all required properties exist
+    let parsed;
+    try {
+      parsed = JSON.parse(savedSettings);
+    } catch (err) {
+      console.error('Failed to parse accountTierSettings from localStorage:', err);
+      return defaults;
+    }
+
+    // Ensure all required properties exist and fall back to defaults/env
+    const freeChars =
+      Array.isArray(parsed.freeCharacters) && parsed.freeCharacters.length > 0
+        ? parsed.freeCharacters
+            .map((n) => parseIntSafe(n))
+            .filter((n) => Number.isFinite(n))
+        : defaults.freeCharacters;
+
     return {
-      freeMessageLimit: settings.freeMessageLimit || defaults.freeMessageLimit,
-      freeCharacterLimit: settings.freeCharacterLimit || defaults.freeCharacterLimit,
-      freeCharacters: Array.isArray(settings.freeCharacters) ? settings.freeCharacters : defaults.freeCharacters,
-      lastUpdated: settings.lastUpdated || defaults.lastUpdated
+      freeMessageLimit:
+        parseIntSafe(parsed.freeMessageLimit) ?? defaults.freeMessageLimit,
+      freeCharacterLimit:
+        parseIntSafe(parsed.freeCharacterLimit) ?? defaults.freeCharacterLimit,
+      freeCharacters: freeChars,
+      lastUpdated: parsed.lastUpdated || defaults.lastUpdated,
     };
   } catch (error) {
     console.error('Failed to load account tier settings:', error);
@@ -61,8 +103,15 @@ export function isCharacterFree(characterId, settings = null) {
   // Use provided settings or load from localStorage
   const tierSettings = settings || loadAccountTierSettings();
   
+  // Defensive: ensure freeCharacters array consists of numbers
+  const freeIds = Array.isArray(tierSettings.freeCharacters)
+    ? tierSettings.freeCharacters
+        .map((n) => (typeof n === 'string' ? parseInt(n, 10) : n))
+        .filter((n) => Number.isFinite(n))
+    : [];
+
   // Check if the character is in the free characters list
-  return tierSettings.freeCharacters.includes(id);
+  return freeIds.includes(id);
 }
 
 /**
