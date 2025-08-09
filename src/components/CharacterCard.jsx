@@ -520,20 +520,7 @@ const CharacterCard = ({
             onMouseEnter: !isDescriptionVisible ? handleMouseEnter : undefined,
             onMouseLeave: !isDescriptionVisible ? handleMouseLeave : undefined,
             children: [
-                /* Premium lock badge */
-                !canChat && _jsxs("div", {
-                    className: "absolute -top-2 -left-2 bg-yellow-400 text-blue-900 text-xs font-bold px-2 py-0.5 rounded shadow z-20 flex items-center gap-1",
-                    children: [
-                        _jsx("svg", {
-                            xmlns: "http://www.w3.org/2000/svg",
-                            className: "h-3 w-3",
-                            viewBox: "0 0 20 20",
-                            fill: "currentColor",
-                            children: _jsx("path", { d: "M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zM8 6a2 2 0 114 0v2H8V6z" })
-                        }),
-                        "Premium"
-                    ]
-                }),
+
                 _jsx("img", {
                     src: avatarUrl,
                     alt: character.name,
