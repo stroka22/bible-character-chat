@@ -36,6 +36,14 @@ const HomePage: React.FC = () => {
         <div className="absolute bottom-1/4 left-1/3 w-72 h-28 bg-white rounded-full blur-3xl opacity-10 animate-float-slow"></div>
       </div>
 
+      {/* Upgrade CTA ----------------------------------------------------- */}
+      <button
+        onClick={() => (window.location.href = 'https://faithtalkai.com/pricing')}
+        className="fixed top-4 right-4 z-50 inline-flex justify-center items-center px-6 py-2 border-2 border-white text-sm font-medium rounded-full shadow-sm text-white bg-green-500 hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300 whitespace-nowrap transition-colors animate-pulse"
+      >
+        Unlock All Characters – Upgrade to Premium
+      </button>
+
       {character ? (
         /* Chat view – mt-32 (~128 px) accounts for banner + header */
         <div className="relative flex h-screen w-full mt-32">
