@@ -10,7 +10,7 @@ import CharacterCard from './CharacterCard.jsx';
 /* ---------------- Premium / subscription helpers ------------------- */
 import { usePremium } from '../hooks/usePremium';
 import { loadAccountTierSettings, isCharacterFree } from '../utils/accountTier';
-import UpgradeModal from './UpgradeModal.jsx';
+import UpgradeModal from './modals/UpgradeModal.jsx';
 import { useAuth } from '../contexts/AuthContext';
 console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
 const BIBLE_BOOKS = {
@@ -963,10 +963,9 @@ const ScalableCharacterSelection = () => {
                         ,
                         /* ---------------- Upgrade Modal ------------------- */
                         _jsx(UpgradeModal, {
-                            open: showUpgrade,
+                            isOpen: showUpgrade,
                             onClose: () => setShowUpgrade(false),
-                            title: upgradeCharacter ? `Chat with ${upgradeCharacter.name}` : undefined,
-                            message: "Upgrade to Premium to chat with this character and unlock unlimited conversations."
+                            characterName: upgradeCharacter ? upgradeCharacter.name : ''
                         })
                     ]
                 })
