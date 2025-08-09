@@ -31,11 +31,13 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
         const title = `Conversation with ${character.name}\n`;
         const date = `Date: ${new Date().toLocaleDateString()}\n\n`;
         const formattedMessages = messages.map((message) => {
-            /* ------------------------------------------------------------
-             * Robust timestamp handling – some messages may lack or have
-             * malformed created_at which previously produced “Invalid date”.
-             * ---------------------------------------------------------- */
-            const dt = message && message.created_at ? new Date(message.created_at) : null;
+            /* ----------------------------------------------------------------
+             * Robust timestamp handling
+             * • Prefer message.timestamp (local prop), then created_at.
+             * • If parsing fails, omit timestamp to avoid “Invalid date”.
+             * ---------------------------------------------------------------- */
+            const rawTs = message?.timestamp || message?.created_at || null;
+            const dt = rawTs ? new Date(rawTs) : null;
             const timestamp = dt && !isNaN(dt) ? dt.toLocaleTimeString() : '';
             const tsPrefix = timestamp ? `[${timestamp}] ` : '';
 
@@ -170,6 +172,13 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
     };
     if (compact) {
         return (_jsxs("div", { className: `flex items-center space-x-2 ${className}`, children: [
+                /* ----------------------------------------------------------------
+                 * Tiny floating toast notifications (mobile / compact only)
+                 * ---------------------------------------------------------------- */
+                error && (_jsx("div", { className: "fixed bottom-20 right-4 z-50 rounded-md bg-red-600 text-white text-xs px-2 py-1 shadow", children: typeof error === 'string' ? error : 'Something went wrong' })),
+                showCopySuccess && (_jsx("div", { className: "fixed bottom-20 right-4 z-50 rounded-md bg-green-600 text-white text-xs px-2 py-1 shadow", children: "Copied!" })),
+                showSaveSuccess && (_jsx("div", { className: "fixed bottom-20 right-4 z-50 rounded-md bg-green-600 text-white text-xs px-2 py-1 shadow", children: "Saved!" })),
+
                 /* Copy conversation */
                 _jsx("button", { onClick: handleExportConversation, disabled: isLoading, className: "rounded-full p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors", "aria-label": "Copy conversation to clipboard", title: "Copy conversation to clipboard", children: _jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-4 w-4", viewBox: "0 0 20 20", fill: "currentColor", children: [_jsx("path", { d: "M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" }), _jsx("path", { d: "M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" })] }) }),
                 /* Toggle favorite */
