@@ -59,6 +59,26 @@ const ScalableCharacterSelection = () => {
     const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [upgradeCharacter, setUpgradeCharacter] = useState(null);
+
+    /* -------------------------------------------------------------
+     * Keep tierSettings in-sync with changes made in other tabs or
+     * by the admin interface that writes to localStorage.
+     * ----------------------------------------------------------- */
+    // Refresh once on mount (covers env-default fallback)
+    useEffect(() => {
+        setTierSettings(loadAccountTierSettings());
+    }, []);
+
+    // Listen for cross-tab localStorage updates
+    useEffect(() => {
+        const onStorage = (e) => {
+            if (e.key === 'accountTierSettings') {
+                setTierSettings(loadAccountTierSettings());
+            }
+        };
+        window.addEventListener('storage', onStorage);
+        return () => window.removeEventListener('storage', onStorage);
+    }, []);
     /* -------------------------------------------------------------
      * Responsive: detect if we are on a small (<768px) screen.
      * ----------------------------------------------------------- */

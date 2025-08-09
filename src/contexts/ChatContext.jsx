@@ -34,8 +34,26 @@ export const ChatProvider = ({ children }) => {
    * ------------------------------------------------------------------ */
   const { user } = useAuth();
   const { isPremium } = usePremium();
-  // Load tier settings once – they live in localStorage and rarely change
-  const tierSettings = useRef(loadAccountTierSettings()).current;
+  /* -------------------------------------------------------------
+   * Tier settings – keep in sync with localStorage + env defaults
+   * ----------------------------------------------------------- */
+  const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
+
+  /* Refresh on mount (covers env-default fallback) */
+  useEffect(() => {
+    setTierSettings(loadAccountTierSettings());
+  }, []);
+
+  /* Listen for cross-tab/local changes made by admin interface */
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === 'accountTierSettings') {
+        setTierSettings(loadAccountTierSettings());
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
   
   // Conversation persistence helpers (may be no-ops when user isn't authenticated)
   let conversationContext;
