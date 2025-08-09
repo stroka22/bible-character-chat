@@ -16,10 +16,9 @@ export function loadAccountTierSettings() {
    * global “free” limits without touching localStorage on every client.
    * These env values are injected at build-time by Vite / Vercel.
    * ---------------------------------------------------------------- */
+  // Grab Vite env object (safe during SSR and build)
   const env =
-    typeof import !== 'undefined' &&
-    typeof import.meta !== 'undefined' &&
-    import.meta.env
+    typeof import.meta !== 'undefined' && import.meta && import.meta.env
       ? import.meta.env
       : {};
 
