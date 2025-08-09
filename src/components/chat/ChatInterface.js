@@ -38,6 +38,8 @@ const ChatInterface = () => {
         sendMessage           // <-- needed for ChatInput
     } = useChat();
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
+    /* Compact actions pop-up on mobile */
+    const [showMobileActions, setShowMobileActions] = useState(false);
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
@@ -82,6 +84,11 @@ const ChatInterface = () => {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [messages.length, isTyping]);
+
+    /* Close mobile actions when messages list changes (e.g., send/receive). */
+    useEffect(() => {
+        setShowMobileActions(false);
+    }, [messages.length]);
 
     useEffect(() => {
         if (isResumed) {
@@ -437,6 +444,31 @@ const ChatInterface = () => {
                     })
                 }),
                 
+                /* ------------------------------------------------------------
+                 * Mobile compact ChatActions toggle (floating bottom-right)
+                 * ---------------------------------------------------------- */
+                _jsxs("div", { 
+                    className: "md:hidden fixed right-3 bottom-24 z-40 flex flex-col items-end",
+                    children: [
+                        _jsx("button", { 
+                            onClick: () => setShowMobileActions(v => !v),
+                            "aria-label": "Conversation actions",
+                            className: "rounded-full p-2 bg-blue-800/80 backdrop-blur border border-yellow-400/30 text-yellow-200 shadow-md hover:bg-blue-700/80 transition-colors",
+                            children: _jsx("svg", { 
+                                xmlns: "http://www.w3.org/2000/svg", 
+                                className: "h-5 w-5", 
+                                viewBox: "0 0 20 20", 
+                                fill: "currentColor",
+                                children: _jsx("path", { d: "M10 3a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4z" })
+                            })
+                        }),
+                        showMobileActions && _jsx("div", { 
+                            className: "mt-2 rounded-lg bg-blue-900/90 backdrop-blur border border-yellow-400/30 p-1 shadow-xl",
+                            children: _jsx(ChatActions, { compact: true, basicOnly: true })
+                        })
+                    ]
+                }),
+
                 // Chat actions (hidden on mobile)
                 _jsx("div", { className: "hidden md:block", children: _jsx(ChatActions, {}) })
             ] 
