@@ -89,6 +89,9 @@ const CharacterCard = ({
     onToggleFavorite,
     isFeatured = false,
     onSetAsFeatured,
+    /* New premium-gating props */
+    canChat = true,
+    onRequireUpgrade
 }) => {
     // ------------------------------------------------------------------
     // Safety check
@@ -269,7 +272,12 @@ const CharacterCard = ({
 
     const handleChatClick = useCallback((e) => {
         e.stopPropagation();
-        onSelect(character);
+        /* Gate by canChat flag */
+        if (canChat) {
+            onSelect(character);
+        } else if (typeof onRequireUpgrade === 'function') {
+            onRequireUpgrade(character);
+        }
     }, [onSelect, character]);
 
     /* ------------------------------------------------------------------
@@ -512,6 +520,20 @@ const CharacterCard = ({
             onMouseEnter: !isDescriptionVisible ? handleMouseEnter : undefined,
             onMouseLeave: !isDescriptionVisible ? handleMouseLeave : undefined,
             children: [
+                /* Premium lock badge */
+                !canChat && _jsxs("div", {
+                    className: "absolute -top-2 -left-2 bg-yellow-400 text-blue-900 text-xs font-bold px-2 py-0.5 rounded shadow z-20 flex items-center gap-1",
+                    children: [
+                        _jsx("svg", {
+                            xmlns: "http://www.w3.org/2000/svg",
+                            className: "h-3 w-3",
+                            viewBox: "0 0 20 20",
+                            fill: "currentColor",
+                            children: _jsx("path", { d: "M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zM8 6a2 2 0 114 0v2H8V6z" })
+                        }),
+                        "Premium"
+                    ]
+                }),
                 _jsx("img", {
                     src: avatarUrl,
                     alt: character.name,
@@ -570,10 +592,23 @@ const CharacterCard = ({
 
                 _jsx("button", {
                     onClick: handleChatClick,
-                    className: "w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-2 px-4 rounded-lg transition-colors",
-                    children: _jsx("span", {
-                        className: "text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis",
-                        children: "Chat Now"
+                    className: `w-full flex items-center justify-center font-bold py-2 px-4 rounded-lg transition-colors ${
+                        canChat
+                            ? 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
+                            : 'bg-gray-400 text-gray-800 cursor-pointer hover:bg-gray-400'
+                    }`,
+                    children: _jsxs("span", {
+                        className: "flex items-center gap-1 text-sm md:text-base whitespace-nowrap overflow-hidden text-ellipsis",
+                        children: [
+                            !canChat && _jsx("svg", {
+                                xmlns: "http://www.w3.org/2000/svg",
+                                className: "h-4 w-4",
+                                viewBox: "0 0 20 20",
+                                fill: "currentColor",
+                                children: _jsx("path", { d: "M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zM8 6a2 2 0 114 0v2H8V6z" })
+                            }),
+                            canChat ? "Chat Now" : "Upgrade to Chat"
+                        ]
                     })
                 })
             ]
