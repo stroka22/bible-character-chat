@@ -559,16 +559,6 @@ const ScalableCharacterSelection: React.FC = () => {
           </div>
         )}
         
-        {/* Premium upgrade button */}
-        <div className="mb-8 flex justify-center">
-          <button
-            onClick={() => (window.location.href = '/pricing.html')}
-            className="animate-pulse rounded-full bg-yellow-400 px-6 py-3 text-lg font-extrabold tracking-wide text-blue-900 shadow-lg ring-2 ring-yellow-300 hover:bg-yellow-300 focus:outline-none focus:ring-4 focus:ring-yellow-200"
-          >
-            🔓 Unlock all characters &nbsp;–&nbsp; Upgrade to Premium
-          </button>
-        </div>
-        
         {/* Filter section */}
         <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-center">
