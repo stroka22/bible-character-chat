@@ -235,24 +235,13 @@ export const ChatProvider = ({ children }) => {
 
       console.log('[ChatContext] Final resolved characterId:', characterId);
 
-      console.log('[ChatContext] Creating conversation with character:', {
-        rawId: character.id,
-        finalId: characterId,
-        idType: typeof character.id,
-        name: character.name,
-      });
-
-      // Pass ONLY the numeric ID as character_id, not an object
-      const createParams = {
-        character_id: characterId, // Just the number
-        title: `Conversation with ${character?.name ?? 'Unknown'} - ${new Date().toLocaleDateString()}`,
-        is_favorite: false,
-      };
-
-      console.log('[ChatContext] Calling createConversation with params:', createParams);
+      console.log('[ChatContext] Creating conversation via ConversationContext');
 
       // 1️⃣  Create conversation
-      const newConversation = await createConversation(createParams);
+      const title = `Conversation with ${
+        character?.name ?? 'Unknown'
+      } - ${new Date().toLocaleDateString()}`;
+      const newConversation = await createConversation(characterId, title);
 
       console.log('[ChatContext] Conversation created:', newConversation);
 
@@ -271,11 +260,7 @@ export const ChatProvider = ({ children }) => {
       for (const msg of messages) {
         if (typeof addMessage === 'function') {
           try {
-            await addMessage({
-              conversation_id: newConversation.id,
-              role: msg.role,
-              content: msg.content,
-            });
+            await addMessage(msg.content, msg.role);
           } catch (msgErr) {
             console.error('[ChatContext] Error adding message:', msgErr);
           }
