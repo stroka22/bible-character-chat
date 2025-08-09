@@ -30,10 +30,17 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
             return '';
         const title = `Conversation with ${character.name}\n`;
         const date = `Date: ${new Date().toLocaleDateString()}\n\n`;
-        const formattedMessages = messages.map(message => {
-            const timestamp = new Date(message.created_at).toLocaleTimeString();
+        const formattedMessages = messages.map((message) => {
+            /* ------------------------------------------------------------
+             * Robust timestamp handling – some messages may lack or have
+             * malformed created_at which previously produced “Invalid date”.
+             * ---------------------------------------------------------- */
+            const dt = message && message.created_at ? new Date(message.created_at) : null;
+            const timestamp = dt && !isNaN(dt) ? dt.toLocaleTimeString() : '';
+            const tsPrefix = timestamp ? `[${timestamp}] ` : '';
+
             const speaker = message.role === 'user' ? 'You' : character.name;
-            return `[${timestamp}] ${speaker}:\n${message.content}\n`;
+            return `${tsPrefix}${speaker}:\n${message.content}\n`;
         }).join('\n');
         return `${title}${date}${formattedMessages}`;
     };
@@ -56,6 +63,11 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
     };
     const handleSaveChat = async () => {
         if (!character) return;
+        /* Require sign-in unless bypass mode is enabled */
+        if (!user && !bypassMode) {
+            setError('Please sign in to save your conversation.');
+            return;
+        }
         
         try {
             setIsLoading(true);
@@ -98,6 +110,12 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
      * If the backend / repository call fails we roll back the change.
      */
     const handleToggleFavorite = async () => {
+        /* Require sign-in for new chats unless bypassing auth */
+        if (!user && !bypassMode && !chatId) {
+            setError('Please sign in to add favorites.');
+            return;
+        }
+
         const newFavoriteState = !localFavorite;
 
         // Optimistic UI update
