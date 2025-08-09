@@ -7,6 +7,11 @@ import { groupRepository } from '../repositories/groupRepository';
 // Use the mock chat context so we don't hit the real Supabase APIs
 import { useChat } from '../contexts/ChatContext.jsx';
 import CharacterCard from './CharacterCard.jsx';
+/* ---------------- Premium / subscription helpers ------------------- */
+import { usePremium } from '../hooks/usePremium';
+import { loadAccountTierSettings, isCharacterFree } from '../utils/accountTier';
+import UpgradeModal from './UpgradeModal.jsx';
+import { useAuth } from '../contexts/AuthContext';
 console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
 const BIBLE_BOOKS = {
     oldTestament: [
@@ -45,6 +50,15 @@ const ScalableCharacterSelection = () => {
     const [isSelecting, setIsSelecting] = useState(false);
     const [favoriteCharacters, setFavoriteCharacters] = useState([]);
     const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
+    /* -------------------------------------------------------------
+     * Premium / tier gating state
+     * ----------------------------------------------------------- */
+    const { isPremium } = usePremium();
+    const { user } = useAuth();
+    const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
+    const [showUpgrade, setShowUpgrade] = useState(false);
+    const [upgradeCharacter, setUpgradeCharacter] = useState(null);
     /* -------------------------------------------------------------
      * Responsive: detect if we are on a small (<768px) screen.
      * ----------------------------------------------------------- */
@@ -207,6 +221,17 @@ const ScalableCharacterSelection = () => {
                         characters.map((c) => c.id)
                     );
                     throw new Error('Character not found');
+                }
+
+                /* --------------------------------------------------
+                 * Premium gating – block if character is premium
+                 * and user does not have premium subscription.
+                 * ------------------------------------------------ */
+                const canChatWith = isPremium || isCharacterFree(characterObj.id, tierSettings);
+                if (!canChatWith) {
+                    setUpgradeCharacter(characterObj);
+                    setShowUpgrade(true);
+                    return;
                 }
 
                 await selectCharacter(characterObj);
@@ -378,6 +403,7 @@ const ScalableCharacterSelection = () => {
 
         const isFavorite = favoriteCharacters.includes(character.id);
         const isFeatured = featuredCharacter?.id === character.id;
+        const canChat = isPremium || isCharacterFree(character.id, tierSettings);
 
         /* ---------- GRID VIEW ---------- */
         if (viewMode === 'grid') {
@@ -392,6 +418,11 @@ const ScalableCharacterSelection = () => {
                         onToggleFavorite: () => handleToggleFavorite(character.id),
                         isFeatured,
                         onSetAsFeatured: () => handleSetAsFeatured(character),
+                        canChat: canChat,
+                        onRequireUpgrade: () => {
+                            setUpgradeCharacter(character);
+                            setShowUpgrade(true);
+                        }
                     }),
                 }, character?.id || `character-item-${index}`)
             );
@@ -532,7 +563,7 @@ const ScalableCharacterSelection = () => {
                 ],
             }, character?.id || `character-item-${index}`)
         );
-    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite, featuredCharacter, handleSetAsFeatured]);
+    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite, featuredCharacter, handleSetAsFeatured, isPremium, tierSettings]);
     
     const renderPagination = () => {
         if (totalPages <= 1)
@@ -929,6 +960,14 @@ const ScalableCharacterSelection = () => {
                         }),
                         
                         renderPagination()
+                        ,
+                        /* ---------------- Upgrade Modal ------------------- */
+                        _jsx(UpgradeModal, {
+                            open: showUpgrade,
+                            onClose: () => setShowUpgrade(false),
+                            title: upgradeCharacter ? `Chat with ${upgradeCharacter.name}` : undefined,
+                            message: "Upgrade to Premium to chat with this character and unlock unlimited conversations."
+                        })
                     ]
                 })
             ]
