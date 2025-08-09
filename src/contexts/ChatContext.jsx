@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { generateCharacterResponse } from '../services/openai';
 import { useConversation } from './ConversationContext.jsx';
+import { useAuth } from './AuthContext';
+import { usePremium } from '../hooks/usePremium';
+import {
+  loadAccountTierSettings,
+  isCharacterFree,
+  hasReachedMessageLimit,
+} from '../utils/accountTier';
 
 // Create the chat context
 const ChatContext = createContext();
@@ -22,6 +29,13 @@ export const ChatProvider = ({ children }) => {
   // Refs
   const messageIdCounter = useRef(1);
   const typingTimeoutRef = useRef(null);
+  /* ------------------------------------------------------------------
+   * Premium / subscription state
+   * ------------------------------------------------------------------ */
+  const { user } = useAuth();
+  const { isPremium } = usePremium();
+  // Load tier settings once – they live in localStorage and rarely change
+  const tierSettings = useRef(loadAccountTierSettings()).current;
   
   // Conversation persistence helpers (may be no-ops when user isn't authenticated)
   let conversationContext;
@@ -106,6 +120,28 @@ export const ChatProvider = ({ children }) => {
   const sendMessage = useCallback(async (content) => {
     if (!content || !character) return;
 
+    /* --------------------------------------------------------------
+     *  Premium gating
+     * ------------------------------------------------------------ */
+    // 1) Character access
+    if (
+      character &&
+      !isPremium &&
+      !isCharacterFree(character.id, tierSettings)
+    ) {
+      setError('This is a premium character. Please upgrade to chat.');
+      return;
+    }
+
+    // 2) Message limit for free users
+    const userMessageCount = messages.filter((m) => m.role === 'user').length;
+    if (!isPremium && hasReachedMessageLimit(userMessageCount, tierSettings)) {
+      setError(
+        'Message limit reached for free tier. Please upgrade to continue.'
+      );
+      return;
+    }
+
     // 1. append user message
     const userMessage = {
       id: generateMessageId(),
@@ -160,7 +196,7 @@ export const ChatProvider = ({ children }) => {
 
     return userMessage;
   // include messages to ensure latest history is sent
-  }, [character, messages, generateMessageId]);
+  }, [character, messages, generateMessageId, isPremium, tierSettings]);
 
   /**
    * Retry the last message (regenerate response)
