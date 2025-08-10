@@ -12,24 +12,11 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   /* ------------------------------------------------------------------
-   * Safely obtain auth context (header should never crash if provider
-   * is missing).  If the hook throws, fall back to a “guest” context.
+   * Auth state
    * ------------------------------------------------------------------ */
-  let user = null;
-  let isAuthenticated = false;
-  let loading = false;
-  let logout = () => {};
+  const { user, loading, signOut, isAdmin } = useAuth();
+  const isAuthenticated = !!user;
 
-  try {
-    const auth = useAuth();
-    user = auth?.user ?? null;
-    isAuthenticated = auth?.isAuthenticated ?? false;
-    loading = auth?.loading ?? false;
-    logout = auth?.logout ?? (() => {});
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[Header] AuthContext unavailable – rendering guest header.', err);
-  }
   const location = useLocation();
 
   // Handle scroll effect for header
@@ -59,7 +46,7 @@ const Header = () => {
   // Handle logout
   const handleLogout = async () => {
     try {
-      await logout();
+      await (signOut?.());
       // Redirect to home page after logout
       window.location.href = '/';
     } catch (error) {
@@ -190,7 +177,7 @@ const Header = () => {
                   >
                     Settings
                   </Link>
-                  {user?.is_admin && (
+                  {isAdmin && isAdmin() && (
                     <Link 
                       to="/admin" 
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -204,8 +191,9 @@ const Header = () => {
                   >
                     Sign Out
                   </button>
-                </div>
               </div>
+            </div>
+            {/* Close relative group wrapper */}
             </div>
           ) : (
             <>
