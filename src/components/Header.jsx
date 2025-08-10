@@ -351,7 +351,7 @@ const Header = () => {
                     Settings
                   </Link>
                 </div>
-                {user?.is_admin && (
+                {isAdmin && isAdmin() && (
                   <Link 
                     to="/admin" 
                     className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors"
