@@ -133,7 +133,8 @@ export async function getMyProfile() {
     .from('profiles')
     .select(`
       id,
-      role
+      role,
+      owner_slug
     `)
     .eq('id', user.id)
     .maybeSingle();
@@ -149,7 +150,8 @@ export async function getMyProfile() {
       })
       .select(`
         id,
-        role
+        role,
+        owner_slug
       `)
       .single();
 
