@@ -23,6 +23,9 @@ const AccountTierManagement = () => {
    * UI helpers
    * ---------------------------------------------------------------- */
   const [query, setQuery] = useState('');
+  /* Pagination */
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [stripeConfig, setStripeConfig] = useState({
     publicKey: '',
     monthlyPrice: '',
@@ -189,9 +192,27 @@ const AccountTierManagement = () => {
     );
   }, [characters, query]);
 
+  /* ------------------------------------------------------------
+   * Paging slice
+   * ---------------------------------------------------------- */
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCharacters.length / pageSize),
+  );
+  const startIdx = (page - 1) * pageSize;
+  const pagedCharacters = useMemo(
+    () => filteredCharacters.slice(startIdx, startIdx + pageSize),
+    [filteredCharacters, startIdx, pageSize],
+  );
+
+  /* Reset page when query or pageSize changes */
+  useEffect(() => {
+    setPage(1);
+  }, [query, pageSize]);
+
   /* Toggle free/premium just for the currently visible set */
   const invertVisible = () => {
-    const visibleIds = new Set(filteredCharacters.map((c) => c.id));
+    const visibleIds = new Set(pagedCharacters.map((c) => c.id));
     setFreeCharacters((prev) => {
       const next = new Set(prev);
       visibleIds.forEach((id) => {
@@ -200,6 +221,17 @@ const AccountTierManagement = () => {
       });
       return Array.from(next);
     });
+  };
+
+  /* Select / deselect only currently visible page */
+  const selectVisible = () => {
+    const ids = pagedCharacters.map((c) => c.id);
+    setFreeCharacters((prev) => Array.from(new Set([...prev, ...ids])));
+  };
+
+  const deselectVisible = () => {
+    const visible = new Set(pagedCharacters.map((c) => c.id));
+    setFreeCharacters((prev) => prev.filter((id) => !visible.has(id)));
   };
 
   return (
@@ -322,6 +354,22 @@ const AccountTierManagement = () => {
               <span className="text-sm text-gray-600 whitespace-nowrap">
                 Showing: {filteredCharacters.length}
               </span>
+              {/* Page size selector */}
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(parseInt(e.target.value, 10) || 25);
+                  setPage(1);
+                }}
+                className="px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value={25}>25 / page</option>
+                <option value={50}>50 / page</option>
+                <option value={100}>100 / page</option>
+              </select>
+              <span className="text-sm text-gray-600 whitespace-nowrap">
+                Page {page} of {totalPages}
+              </span>
             </div>
 
             {/* Bulk controls */}
@@ -347,6 +395,20 @@ const AccountTierManagement = () => {
               >
                 Invert Visible
               </button>
+              <button
+                type="button"
+                onClick={selectVisible}
+                className="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50"
+              >
+                Select Visible
+              </button>
+              <button
+                type="button"
+                onClick={deselectVisible}
+                className="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50"
+              >
+                Deselect Visible
+              </button>
               <span className="ml-auto text-sm text-gray-600">
                 Selected: {freeCharacters.length} / {characters.length}
               </span>
@@ -354,7 +416,7 @@ const AccountTierManagement = () => {
 
             {/* Character list with checkboxes */}
             <div className="border rounded-md divide-y overflow-hidden">
-              {filteredCharacters.map((character) => {
+              {pagedCharacters.map((character) => {
                 const checked = freeCharacters.includes(character.id);
                 return (
                   <label
@@ -392,6 +454,65 @@ const AccountTierManagement = () => {
                   </label>
                 );
               })}
+            </div>
+
+            {/* Pagination controls */}
+            <div className="flex items-center justify-between mt-3">
+              <div className="text-sm text-gray-600">
+                Showing {filteredCharacters.length === 0 ? 0 : startIdx + 1}
+                –{startIdx + pagedCharacters.length} of{' '}
+                {filteredCharacters.length}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                  className={`px-2 py-1 text-sm rounded border ${
+                    page === 1
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  First
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className={`px-2 py-1 text-sm rounded border ${
+                    page === 1
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  Prev
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className={`px-2 py-1 text-sm rounded border ${
+                    page === totalPages
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  Next
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                  className={`px-2 py-1 text-sm rounded border ${
+                    page === totalPages
+                      ? 'bg-gray-100 text-gray-400'
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  Last
+                </button>
+              </div>
             </div>
           </div>
 
