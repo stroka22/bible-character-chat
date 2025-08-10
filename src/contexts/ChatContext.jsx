@@ -52,8 +52,20 @@ export const ChatProvider = ({ children }) => {
         setTierSettings(loadAccountTierSettings());
       }
     };
+    /* Same-tab updates (AccountTierManagement dispatches a custom
+       event because the native 'storage' event does **not** fire in
+       the tab that called localStorage.setItem). */
+    const handleCustomEvent = () => {
+      setTierSettings(loadAccountTierSettings());
+    };
+
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener('accountTierSettingsChanged', handleCustomEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('accountTierSettingsChanged', handleCustomEvent);
+    };
   }, []);
   
   // Conversation persistence helpers (may be no-ops when user isn't authenticated)
@@ -146,7 +158,7 @@ export const ChatProvider = ({ children }) => {
     if (
       character &&
       !isPremium &&
-      !isCharacterFree(character.id, tierSettings)
+      !isCharacterFree(character, tierSettings)
     ) {
       setError('This is a premium character. Please upgrade to chat.');
       return;
