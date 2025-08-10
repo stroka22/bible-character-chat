@@ -74,8 +74,7 @@ const SuperadminUsersPage = () => {
           owner_slug,
           signup_source,
           created_at,
-          updated_at,
-          owners(display_name)
+          updated_at
         `, { count: 'exact' });
       
       // Apply filters

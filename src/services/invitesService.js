@@ -145,9 +145,37 @@ export async function getMyProfile() {
       updated_at
     `)
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
 
-  return { data, error };
+  /* If no profile row yet, create one with sane defaults */
+  if (!data) {
+    const insertRes = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email,
+        role: 'user',
+        signup_source: 'public'
+      })
+      .select(`
+        id,
+        email,
+        display_name,
+        avatar_url,
+        role,
+        owner_slug,
+        referred_by_user_id,
+        signup_source,
+        created_at,
+        updated_at
+      `)
+      .single();
+
+    return insertRes;
+  }
+
+  /* Row existed */
+  return { data, error: null };
 }
 
 /**
