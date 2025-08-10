@@ -19,8 +19,7 @@ export async function listInvites({ ownerSlug } = {}) {
     used_at,
     used_by,
     created_at,
-    updated_at,
-    owners(display_name)
+    updated_at
   `).order('created_at', { ascending: false });
 
   // Filter by owner slug if provided
@@ -134,15 +133,7 @@ export async function getMyProfile() {
     .from('profiles')
     .select(`
       id,
-      email,
-      display_name,
-      avatar_url,
-      role,
-      owner_slug,
-      referred_by_user_id,
-      signup_source,
-      created_at,
-      updated_at
+      role
     `)
     .eq('id', user.id)
     .maybeSingle();
@@ -154,28 +145,20 @@ export async function getMyProfile() {
       .insert({
         id: user.id,
         email: user.email,
-        role: 'user',
-        signup_source: 'public'
+        role: 'user'
       })
       .select(`
         id,
-        email,
-        display_name,
-        avatar_url,
-        role,
-        owner_slug,
-        referred_by_user_id,
-        signup_source,
-        created_at,
-        updated_at
+        role
       `)
       .single();
 
+    // insertRes already in { data, error } shape
     return insertRes;
   }
 
   /* Row existed */
-  return { data, error: null };
+  return { data, error };
 }
 
 /**
