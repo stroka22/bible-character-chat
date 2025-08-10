@@ -142,8 +142,7 @@ export async function getMyProfile() {
       referred_by_user_id,
       signup_source,
       created_at,
-      updated_at,
-      owners(display_name)
+      updated_at
     `)
     .eq('id', user.id)
     .single();
