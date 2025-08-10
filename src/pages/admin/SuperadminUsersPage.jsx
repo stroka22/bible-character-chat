@@ -7,6 +7,7 @@ const SuperadminUsersPage = () => {
   // State for current user profile
   const [currentProfile, setCurrentProfile] = useState(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   
   // State for users list
@@ -41,13 +42,16 @@ const SuperadminUsersPage = () => {
         
         setCurrentProfile(data);
         setIsSuperAdmin(data.role === 'superadmin');
+        setIsAdmin(data.role === 'admin' || data.role === 'superadmin');
         
-        // If superadmin, load data
+        // Load data based on role
         if (data.role === 'superadmin') {
           await Promise.all([
             loadProfiles(),
             loadOwners()
           ]);
+        } else if (data.role === 'admin') {
+          await loadProfiles();
         }
       } catch (error) {
         console.error('Error checking superadmin status:', error);
@@ -69,7 +73,11 @@ const SuperadminUsersPage = () => {
         .select(`
           id,
           email,
-          role
+          role,
+          owner_slug,
+          display_name,
+          created_at,
+          signup_source
         `, { count: 'exact' });
       
       // Apply filters
@@ -79,6 +87,15 @@ const SuperadminUsersPage = () => {
       
       if (filters.role !== 'all') {
         query = query.eq('role', filters.role);
+      }
+
+      // Owner slug filter logic
+      if (isSuperAdmin) {
+        if (filters.ownerSlug !== 'all') {
+          query = query.eq('owner_slug', filters.ownerSlug);
+        }
+      } else if (isAdmin && currentProfile?.owner_slug) {
+        query = query.eq('owner_slug', currentProfile.owner_slug);
       }
       
       // Apply pagination
@@ -130,10 +147,10 @@ const SuperadminUsersPage = () => {
   
   // Apply filters when they change
   useEffect(() => {
-    if (isSuperAdmin) {
+    if (isAdmin) {
       loadProfiles();
     }
-  }, [filters, isSuperAdmin]);
+  }, [filters, isAdmin]);
   
   // Handle changing user role
   const handleRoleChange = async (userId, newRole) => {
@@ -238,7 +255,7 @@ const SuperadminUsersPage = () => {
   }
   
   // If not superadmin, show access denied
-  if (!isSuperAdmin) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-blue-900 text-white p-8">
         <div className="max-w-4xl mx-auto bg-red-800 rounded-lg p-8 text-center">
@@ -322,6 +339,7 @@ const SuperadminUsersPage = () => {
             </div>
             
             {/* Owner Filter */}
+            {isSuperAdmin && (
             <div>
               <label className="block text-sm font-medium mb-2">
                 Organization
@@ -343,6 +361,7 @@ const SuperadminUsersPage = () => {
                 )}
               </select>
             </div>
+            )}
           </div>
         </div>
         
@@ -435,7 +454,7 @@ const SuperadminUsersPage = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleRoleChange(profile.id, 'user')}
-                                disabled={profile.role === 'superadmin' || profile.role === 'user' || actionInProgress === profile.id}
+                                disabled={profile.role === 'superadmin' || profile.role === 'user' || actionInProgress === profile.id || !isSuperAdmin}
                                 className={`px-2 py-1 text-xs rounded ${
                                   profile.role === 'superadmin' || profile.role === 'user' || actionInProgress === profile.id
                                     ? 'bg-gray-600 cursor-not-allowed'
@@ -446,7 +465,7 @@ const SuperadminUsersPage = () => {
                               </button>
                               <button
                                 onClick={() => handleRoleChange(profile.id, 'admin')}
-                                disabled={profile.role === 'superadmin' || profile.role === 'admin' || actionInProgress === profile.id}
+                                disabled={profile.role === 'superadmin' || profile.role === 'admin' || actionInProgress === profile.id || !isSuperAdmin}
                                 className={`px-2 py-1 text-xs rounded ${
                                   profile.role === 'superadmin' || profile.role === 'admin' || actionInProgress === profile.id
                                     ? 'bg-gray-600 cursor-not-allowed'
@@ -461,7 +480,7 @@ const SuperadminUsersPage = () => {
                             <select
                               value={profile.owner_slug || ''}
                               onChange={(e) => handleOwnerChange(profile.id, e.target.value)}
-                              disabled={profile.role === 'superadmin' || actionInProgress === profile.id}
+                              disabled={profile.role === 'superadmin' || actionInProgress === profile.id || !isSuperAdmin}
                               className={`px-2 py-1 text-xs rounded ${
                                 profile.role === 'superadmin' || actionInProgress === profile.id
                                   ? 'bg-gray-600 cursor-not-allowed'
