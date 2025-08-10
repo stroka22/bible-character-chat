@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getActiveSubscription } from '../services/stripe';
+import { getActiveSubscription } from '../services/stripe-safe';
 
 /**
  * Hook to determine if the current user has premium status
