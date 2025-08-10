@@ -163,6 +163,17 @@ const AccountTierManagement = () => {
   // Check if we've exceeded the free character limit
   const isFreeLimitExceeded = freeCharacters.length > freeCharacterLimit;
 
+  /* ------------------------------------------------------------------
+   * Bulk-selection helpers
+   * ---------------------------------------------------------------- */
+  const selectAll = () => {
+    setFreeCharacters(characters.map((c) => c.id));
+  };
+
+  const deselectAll = () => {
+    setFreeCharacters([]);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-blue-900 mb-6">
@@ -264,50 +275,74 @@ const AccountTierManagement = () => {
 
           {/* Character Selection */}
           <div className="mb-8">
-            <h3 className="text-xl font-semibold text-blue-800 mb-4">Character Access Settings</h3>
+            <h3 className="text-xl font-semibold text-blue-800 mb-2">
+              Character Access Settings
+            </h3>
             <p className="text-sm text-gray-600 mb-4">
               Select which characters are available to free users. All other characters will require a premium subscription.
             </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {characters.map(character => (
-                <div 
-                  key={character.id}
-                  className={`
-                    border rounded-lg p-4 flex items-center space-x-3 cursor-pointer transition-all
-                    ${freeCharacters.includes(character.id) 
-                      ? 'bg-blue-50 border-blue-300' 
-                      : 'bg-purple-50 border-purple-300'}
-                  `}
-                  onClick={() => toggleCharacterStatus(character.id)}
-                >
-                  <div className="flex-shrink-0">
-                    <img 
-                      src={character.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}`}
-                      alt={character.name}
-                      className="h-10 w-10 rounded-full object-cover"
+
+            {/* Bulk controls */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <button
+                type="button"
+                onClick={selectAll}
+                className="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50"
+              >
+                Select All ({characters.length})
+              </button>
+              <button
+                type="button"
+                onClick={deselectAll}
+                className="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50"
+              >
+                Deselect All
+              </button>
+              <span className="ml-auto text-sm text-gray-600">
+                Selected: {freeCharacters.length} / {characters.length}
+              </span>
+            </div>
+
+            {/* Character list with checkboxes */}
+            <div className="border rounded-md divide-y overflow-hidden">
+              {characters.map((character) => {
+                const checked = freeCharacters.includes(character.id);
+                return (
+                  <label
+                    key={character.id}
+                    className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                      checked={checked}
+                      onChange={() => toggleCharacterStatus(character.id)}
                     />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <img
+                      src={
+                        character.avatar_url ||
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          character.name,
+                        )}`
+                      }
+                      alt={character.name}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                    <span className="flex-1 truncate text-sm text-gray-900">
                       {character.name}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {freeCharacters.includes(character.id) ? 'Free' : 'Premium Only'}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <span className={`
-                      inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${freeCharacters.includes(character.id) 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-purple-100 text-purple-800'}
-                    `}>
-                      {freeCharacters.includes(character.id) ? 'Free' : 'Premium'}
                     </span>
-                  </div>
-                </div>
-              ))}
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        checked
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-purple-100 text-purple-800'
+                      }`}
+                    >
+                      {checked ? 'Free' : 'Premium'}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </div>
 
