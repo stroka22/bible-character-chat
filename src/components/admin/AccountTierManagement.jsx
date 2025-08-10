@@ -77,13 +77,37 @@ const AccountTierManagement = () => {
   const saveSettings = () => {
     setIsSaving(true);
     try {
+      /* ------------------------------------------------------------------
+       * Build the list of free character **names** that correspond to the
+       * currently-selected freeCharacters IDs.  This name-based fallback
+       * helps the client match premium/free status even when ID types
+       * (number vs string/UUID) differ across data sources.
+       * ---------------------------------------------------------------- */
+      const freeNames = characters
+        .filter(char => freeCharacters.includes(char.id))
+        .map(char => char.name);
+
       const settings = {
         freeMessageLimit,
         freeCharacterLimit,
         freeCharacters,
+        freeCharacterNames: freeNames,
         lastUpdated: new Date().toISOString()
       };
       localStorage.setItem('accountTierSettings', JSON.stringify(settings));
+
+      /* --------------------------------------------------------------
+       * Notify other components (same tab) that tier settings changed.
+       * This allows contexts listening for the event to update instantly
+       * without relying on the cross-tab "storage" event (which does not
+       * fire in the origin tab where setItem is called).
+       * ------------------------------------------------------------ */
+      try {
+        window.dispatchEvent(new Event('accountTierSettingsChanged'));
+      } catch (_) {
+        /* no-op – older browsers may throw, ignore */
+      }
+
       setSaveMessage({
         type: 'success',
         text: 'Settings saved successfully!'
