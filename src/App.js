@@ -108,6 +108,23 @@ const ProtectedRoute = ({ redirectPath = '/login' }) => {
     return _jsx(Outlet, {});
 };
 
+// Admin Route component that checks both authentication and admin role
+const AdminRoute = ({ redirectPath = '/' }) => {
+    const { user, loading, isAdmin } = useAuth();
+    const location = useLocation();
+
+    if (loading) {
+        return _jsx("div", { className: "flex items-center justify-center min-h-screen bg-blue-900 text-white", children: _jsxs("div", { className: "text-center", children: [_jsx("div", { className: "animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4" }), _jsx("p", { children: "Loading..." })] }) });
+    }
+
+    // If user not authenticated or not admin, redirect
+    if (!user || !isAdmin()) {
+        return _jsx(Navigate, { to: redirectPath, state: { from: location }, replace: true });
+    }
+
+    return _jsx(Outlet, {});
+};
+
 function App() {
     const params = new URLSearchParams(window.location.search);
     const DIRECT_RENDER = params.get('direct') === '1' ||
@@ -154,7 +171,7 @@ function App() {
 
         // Protected routes
         _jsx(Route, { element: _jsx(ProtectedRoute, { redirectPath: "/login" }), children: [
-            _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
+            _jsx(Route, { element: _jsx(AdminRoute, { redirectPath: "/login" }), children: _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }) }),
             _jsx(Route, { path: "/conversations", element: _jsx(ConversationsPage, {}) }),
             _jsx(Route, { path: "/favorites", element: _jsx(FavoritesPage, {}) })
         ]}),

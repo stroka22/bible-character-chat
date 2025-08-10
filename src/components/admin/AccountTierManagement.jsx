@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { characterRepository } from '../../repositories/characterRepository';
 import { getPublicKey, SUBSCRIPTION_PRICES } from '../../services/stripe';
+import { getSettings as getTierSettings, setSettings as setTierSettings, getOwnerSlug } from '../../services/tierSettingsService';
 
 /**
  * Account Tier Management Component
@@ -32,6 +33,8 @@ const AccountTierManagement = () => {
     yearlyPrice: '',
     isConfigured: false
   });
+  /* Owner slug for multi-tenant settings */
+  const [ownerSlug, setOwnerSlug] = useState('default');
 
   // Load characters and settings on mount
   useEffect(() => {
@@ -51,20 +54,40 @@ const AccountTierManagement = () => {
           isConfigured: publicKey !== 'pk_missing_key'
         });
 
-        // Load saved settings from localStorage
-        const savedSettings = localStorage.getItem('accountTierSettings');
-        if (savedSettings) {
-          const settings = JSON.parse(savedSettings);
-          setFreeMessageLimit(settings.freeMessageLimit || 5);
-          setFreeCharacterLimit(settings.freeCharacterLimit || 10);
-          setFreeCharacters(settings.freeCharacters || []);
+        // Get the current owner slug
+        const slug = getOwnerSlug();
+        setOwnerSlug(slug);
+
+        // Try to load settings from Supabase first
+        const supabaseSettings = await getTierSettings(slug);
+        if (supabaseSettings) {
+          setFreeMessageLimit(supabaseSettings.freeMessageLimit || 5);
+          setFreeCharacterLimit(supabaseSettings.freeCharacterLimit || 10);
+          setFreeCharacters(supabaseSettings.freeCharacters || []);
+          
+          // If freeCharacters is empty but we have characters, set defaults
+          if (supabaseSettings.freeCharacters.length === 0 && allCharacters.length > 0) {
+            const defaultFreeCharacters = allCharacters
+              .slice(0, 5)
+              .map(char => char.id);
+            setFreeCharacters(defaultFreeCharacters);
+          }
         } else {
-          // Set defaults if no settings exist
-          // By default, make the first 5 characters free
-          const defaultFreeCharacters = allCharacters
-            .slice(0, 5)
-            .map(char => char.id);
-          setFreeCharacters(defaultFreeCharacters);
+          // Fall back to localStorage if Supabase settings not found
+          const savedSettings = localStorage.getItem('accountTierSettings');
+          if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            setFreeMessageLimit(settings.freeMessageLimit || 5);
+            setFreeCharacterLimit(settings.freeCharacterLimit || 10);
+            setFreeCharacters(settings.freeCharacters || []);
+          } else {
+            // Set defaults if no settings exist
+            // By default, make the first 5 characters free
+            const defaultFreeCharacters = allCharacters
+              .slice(0, 5)
+              .map(char => char.id);
+            setFreeCharacters(defaultFreeCharacters);
+          }
         }
       } catch (error) {
         console.error('Failed to load data:', error);
@@ -72,6 +95,19 @@ const AccountTierManagement = () => {
           type: 'error',
           text: 'Failed to load configuration data'
         });
+        
+        // Try to load from localStorage as fallback on error
+        try {
+          const savedSettings = localStorage.getItem('accountTierSettings');
+          if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            setFreeMessageLimit(settings.freeMessageLimit || 5);
+            setFreeCharacterLimit(settings.freeCharacterLimit || 10);
+            setFreeCharacters(settings.freeCharacters || []);
+          }
+        } catch (e) {
+          console.error('Failed to load from localStorage fallback:', e);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -80,8 +116,8 @@ const AccountTierManagement = () => {
     loadData();
   }, []);
 
-  // Save settings to localStorage
-  const saveSettings = () => {
+  // Save settings to Supabase and localStorage
+  const saveSettings = async () => {
     setIsSaving(true);
     try {
       /* ------------------------------------------------------------------
@@ -101,6 +137,11 @@ const AccountTierManagement = () => {
         freeCharacterNames: freeNames,
         lastUpdated: new Date().toISOString()
       };
+      
+      // Save to Supabase via tierSettingsService
+      const saveSuccess = await setTierSettings(settings, ownerSlug);
+      
+      // Also save to localStorage for compatibility/offline mode
       localStorage.setItem('accountTierSettings', JSON.stringify(settings));
 
       /* --------------------------------------------------------------
@@ -116,8 +157,10 @@ const AccountTierManagement = () => {
       }
 
       setSaveMessage({
-        type: 'success',
-        text: 'Settings saved successfully!'
+        type: saveSuccess ? 'success' : 'warning',
+        text: saveSuccess 
+          ? 'Settings saved successfully to Supabase and localStorage!' 
+          : 'Settings saved to localStorage only. Supabase update failed.'
       });
       
       // Clear success message after 3 seconds
@@ -261,6 +304,9 @@ const AccountTierManagement = () => {
                 </p>
                 <p className="text-sm text-gray-700">
                   <span className="font-medium">Yearly Price ID:</span> {stripeConfig.yearlyPrice}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Owner Slug:</span> {ownerSlug}
                 </p>
                 <p className="text-sm text-gray-700 mt-2">
                   These values are configured in your .env file and can be updated there.
@@ -530,7 +576,8 @@ const AccountTierManagement = () => {
               {saveMessage.text && (
                 <div className={`text-sm ${
                   saveMessage.type === 'success' ? 'text-green-600' :
-                  saveMessage.type === 'error' ? 'text-red-600' : 'text-blue-600'
+                  saveMessage.type === 'error' ? 'text-red-600' : 
+                  saveMessage.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
                 }`}>
                   {saveMessage.text}
                 </div>
