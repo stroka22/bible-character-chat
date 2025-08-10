@@ -69,12 +69,7 @@ const SuperadminUsersPage = () => {
         .select(`
           id,
           email,
-          display_name,
-          role,
-          owner_slug,
-          signup_source,
-          created_at,
-          updated_at
+          role
         `, { count: 'exact' });
       
       // Apply filters
@@ -86,14 +81,10 @@ const SuperadminUsersPage = () => {
         query = query.eq('role', filters.role);
       }
       
-      if (filters.ownerSlug !== 'all') {
-        query = query.eq('owner_slug', filters.ownerSlug);
-      }
-      
       // Apply pagination
       const from = (filters.page - 1) * filters.pageSize;
       const to = from + filters.pageSize - 1;
-      query = query.range(from, to).order('created_at', { ascending: false });
+      query = query.range(from, to).order('email', { ascending: true });
       
       // Execute query
       const { data, error, count } = await query;
