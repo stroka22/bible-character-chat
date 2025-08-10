@@ -20,6 +20,8 @@ import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
 import FavoritesPage from './pages/FavoritesPage.jsx';
 import FAQPage from './pages/FAQPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
@@ -172,6 +174,8 @@ function App() {
         // Protected routes
         _jsx(Route, { element: _jsx(ProtectedRoute, { redirectPath: "/login" }), children: [
             _jsx(Route, { element: _jsx(AdminRoute, { redirectPath: "/login" }), children: _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }) }),
+            _jsx(Route, { path: "/profile", element: _jsx(ProfilePage, {}) }),
+            _jsx(Route, { path: "/settings", element: _jsx(SettingsPage, {}) }),
             _jsx(Route, { path: "/conversations", element: _jsx(ConversationsPage, {}) }),
             _jsx(Route, { path: "/favorites", element: _jsx(FavoritesPage, {}) })
         ]}),
