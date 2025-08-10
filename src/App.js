@@ -22,6 +22,8 @@ import FavoritesPage from './pages/FavoritesPage.jsx';
 import FAQPage from './pages/FAQPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
+import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
@@ -173,7 +175,11 @@ function App() {
 
         // Protected routes
         _jsx(Route, { element: _jsx(ProtectedRoute, { redirectPath: "/login" }), children: [
-            _jsx(Route, { element: _jsx(AdminRoute, { redirectPath: "/login" }), children: _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }) }),
+            _jsx(Route, { element: _jsx(AdminRoute, { redirectPath: "/login" }), children: _jsxs(React.Fragment, { children: [
+                _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
+                _jsx(Route, { path: "/admin/invites", element: _jsx(AdminInvitesPage, {}) }),
+                _jsx(Route, { path: "/admin/users", element: _jsx(SuperadminUsersPage, {}) })
+            ] }) }),
             _jsx(Route, { path: "/profile", element: _jsx(ProfilePage, {}) }),
             _jsx(Route, { path: "/settings", element: _jsx(SettingsPage, {}) }),
             _jsx(Route, { path: "/conversations", element: _jsx(ConversationsPage, {}) }),
