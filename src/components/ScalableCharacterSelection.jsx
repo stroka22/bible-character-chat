@@ -69,15 +69,27 @@ const ScalableCharacterSelection = () => {
         // Refresh once on mount (covers env default fallback)
         setTierSettings(loadAccountTierSettings());
 
+        // Handler function for both events
+        const handleTierSettingsChange = () => {
+            setTierSettings(loadAccountTierSettings());
+        };
+
         // Listener for cross-tab updates
         const handleStorage = (e) => {
             if (e.key === 'accountTierSettings') {
-                setTierSettings(loadAccountTierSettings());
+                handleTierSettingsChange();
             }
         };
 
+        // Add both event listeners
         window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
+        window.addEventListener('accountTierSettingsChanged', handleTierSettingsChange);
+        
+        // Clean up both listeners
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+            window.removeEventListener('accountTierSettingsChanged', handleTierSettingsChange);
+        };
     }, []);
     /* -------------------------------------------------------------
      * Responsive: detect if we are on a small (<768px) screen.
@@ -247,7 +259,7 @@ const ScalableCharacterSelection = () => {
                  * Premium gating – block if character is premium
                  * and user does not have premium subscription.
                  * ------------------------------------------------ */
-                const canChatWith = isPremium || isCharacterFree(characterObj.id, tierSettings);
+                const canChatWith = isPremium || isCharacterFree(characterObj, tierSettings);
                 if (!canChatWith) {
                     setUpgradeCharacter(characterObj);
                     setShowUpgrade(true);
@@ -423,7 +435,7 @@ const ScalableCharacterSelection = () => {
 
         const isFavorite = favoriteCharacters.includes(character.id);
         const isFeatured = featuredCharacter?.id === character.id;
-        const canChat = isPremium || isCharacterFree(character.id, tierSettings);
+        const canChat = isPremium || isCharacterFree(character, tierSettings);
 
         /* ---------- GRID VIEW ---------- */
         if (viewMode === 'grid') {
