@@ -291,6 +291,10 @@ export function AuthProvider({ children }) {
         }
     };
     const isAdmin = () => role === 'admin';
+    // Superadmin helper
+    const isSuperadmin = () => role === 'superadmin';
+    // Update admin check to include superadmin
+    const isAdminOrSuperadmin = () => role === 'admin' || role === 'superadmin';
     const isPastor = () => role === 'pastor' || role === 'admin';
     const value = {
         session,
@@ -299,7 +303,9 @@ export function AuthProvider({ children }) {
         role,
         loading,
         error,
-        isAdmin,
+        // Role helpers
+        isAdmin: isAdminOrSuperadmin,
+        isSuperadmin,
         isPastor,
         signIn,
         signUp,
