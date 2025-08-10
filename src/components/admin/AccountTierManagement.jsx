@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { characterRepository } from '../../repositories/characterRepository';
 import { getPublicKey, SUBSCRIPTION_PRICES } from '../../services/stripe';
 
@@ -19,6 +19,10 @@ const AccountTierManagement = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
+  /* ------------------------------------------------------------------
+   * UI helpers
+   * ---------------------------------------------------------------- */
+  const [query, setQuery] = useState('');
   const [stripeConfig, setStripeConfig] = useState({
     publicKey: '',
     monthlyPrice: '',
@@ -174,6 +178,30 @@ const AccountTierManagement = () => {
     setFreeCharacters([]);
   };
 
+  /* ------------------------------------------------------------
+   * Derived filtered list based on search query
+   * ---------------------------------------------------------- */
+  const filteredCharacters = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return characters;
+    return characters.filter((c) =>
+      (c.name || '').toLowerCase().includes(q),
+    );
+  }, [characters, query]);
+
+  /* Toggle free/premium just for the currently visible set */
+  const invertVisible = () => {
+    const visibleIds = new Set(filteredCharacters.map((c) => c.id));
+    setFreeCharacters((prev) => {
+      const next = new Set(prev);
+      visibleIds.forEach((id) => {
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+      });
+      return Array.from(next);
+    });
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-blue-900 mb-6">
@@ -282,6 +310,20 @@ const AccountTierManagement = () => {
               Select which characters are available to free users. All other characters will require a premium subscription.
             </p>
 
+            {/* Search */}
+            <div className="mb-3 flex items-center gap-3">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search characters..."
+                className="w-full md:w-80 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-600 whitespace-nowrap">
+                Showing: {filteredCharacters.length}
+              </span>
+            </div>
+
             {/* Bulk controls */}
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <button
@@ -298,6 +340,13 @@ const AccountTierManagement = () => {
               >
                 Deselect All
               </button>
+              <button
+                type="button"
+                onClick={invertVisible}
+                className="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-50"
+              >
+                Invert Visible
+              </button>
               <span className="ml-auto text-sm text-gray-600">
                 Selected: {freeCharacters.length} / {characters.length}
               </span>
@@ -305,7 +354,7 @@ const AccountTierManagement = () => {
 
             {/* Character list with checkboxes */}
             <div className="border rounded-md divide-y overflow-hidden">
-              {characters.map((character) => {
+              {filteredCharacters.map((character) => {
                 const checked = freeCharacters.includes(character.id);
                 return (
                   <label
