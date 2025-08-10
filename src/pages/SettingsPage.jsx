@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
+import { redeemInvite } from '../services/invitesService';
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -10,6 +11,13 @@ const SettingsPage = () => {
   const [resetMessage, setResetMessage] = useState({ text: '', type: '' });
   const [isResetting, setIsResetting] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
+
+  /* ------------------------------------------------------------------
+   * Invite-code redemption
+   * ------------------------------------------------------------------ */
+  const [inviteCode, setInviteCode] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemMessage, setRedeemMessage] = useState({ text: '', type: '' });
 
   // Load preferences from localStorage on mount
   useEffect(() => {
@@ -26,6 +34,29 @@ const SettingsPage = () => {
       }
     }
   }, []);
+
+  // Handle redeeming invite code
+  const handleRedeemCode = async () => {
+    if (!inviteCode.trim()) return;
+    setRedeeming(true);
+    setRedeemMessage({ text: '', type: '' });
+
+    const { data, error } = await redeemInvite(inviteCode.trim());
+    if (error || !data || data.success === false) {
+      setRedeemMessage({
+        text: error?.message || data?.error || 'Invalid or expired invite code',
+        type: 'error',
+      });
+    } else {
+      setRedeemMessage({
+        text: `Success! You are now ${data.role} of “${data.owner_slug}”. Reloading…`,
+        type: 'success',
+      });
+      // Give user feedback then refresh
+      setTimeout(() => window.location.reload(), 2500);
+    }
+    setRedeeming(false);
+  };
 
   // Handle notifications toggle
   const handleNotificationsToggle = () => {
@@ -197,6 +228,47 @@ const SettingsPage = () => {
                 We'll send a password reset link to your email address
               </p>
             </div>
+          </div>
+
+          {/* Invite Code Section */}
+          <div className="bg-blue-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Invite Code</h2>
+
+            {redeemMessage.text && (
+              <div
+                className={`mb-4 p-3 rounded ${
+                  redeemMessage.type === 'success'
+                    ? 'bg-green-700 text-white'
+                    : 'bg-red-700 text-white'
+                }`}
+              >
+                {redeemMessage.text}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <input
+                type="text"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                placeholder="XXXX-XXXX-XXXX"
+                className="flex-1 px-3 py-2 bg-blue-700 border border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 uppercase tracking-widest"
+              />
+              <button
+                onClick={handleRedeemCode}
+                disabled={redeeming || !inviteCode.trim()}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  redeeming || !inviteCode.trim()
+                    ? 'bg-gray-500 cursor-not-allowed'
+                    : 'bg-yellow-400 text-blue-900 hover:bg-yellow-300 transition-colors'
+                }`}
+              >
+                {redeeming ? 'Redeeming…' : 'Redeem'}
+              </button>
+            </div>
+            <p className="text-sm text-gray-300 mt-2">
+              Enter an invite code provided by an organization or pastor to gain access.
+            </p>
           </div>
 
           {/* Account Management Section */}
