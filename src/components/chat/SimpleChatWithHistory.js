@@ -1,12 +1,13 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
 import CharacterInsightsPanel from './CharacterInsightsPanel';
+import { characterRepository } from '../../repositories/characterRepository';
 
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
@@ -28,14 +29,54 @@ const getSafeAvatarUrl = (name, url) => {
 };
 
 const SimpleChatWithHistory = () => {
-    const navigate = useNavigate();
+    const navigate   = useNavigate();
+    const location   = useLocation();
     const { user, isAuthenticated } = useAuth();
-    const { character, messages, isLoading, error, isTyping, retryLastMessage, resetChat, chatId, isChatSaved, saveChat, sendMessage } = useChat();
+    const { 
+        character, 
+        messages, 
+        isLoading, 
+        error, 
+        isTyping, 
+        retryLastMessage, 
+        resetChat, 
+        chatId, 
+        isChatSaved, 
+        saveChat, 
+        sendMessage,
+        selectCharacter
+    } = useChat();
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [conversationTitle, setConversationTitle] = useState('');
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
+
+    /* ------------------------------------------------------------------
+     * Auto-select character from query string (?character=<id>)
+     * ----------------------------------------------------------------*/
+    useEffect(() => {
+        (async () => {
+            // Already have a character selected -> nothing to do
+            if (character) return;
+
+            const params = new URLSearchParams(location.search);
+            const charId = params.get('character');
+            if (!charId) return;
+
+            try {
+                const fetched = await characterRepository.getById(charId);
+                if (fetched) {
+                    selectCharacter(fetched);
+                } else {
+                    console.warn(`[SimpleChatWithHistory] Character id ${charId} not found`);
+                }
+            } catch (err) {
+                console.warn('[SimpleChatWithHistory] Failed to fetch character from query param:', err);
+            }
+        })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.search, character]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
