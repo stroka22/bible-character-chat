@@ -3,6 +3,7 @@ import { generateCharacterResponse } from '../services/openai';
 import { useConversation } from './ConversationContext.jsx';
 import { useAuth } from './AuthContext';
 import { usePremium } from '../hooks/usePremium';
+import { characterRepository } from '../repositories/characterRepository';
 import {
   loadAccountTierSettings,
   isCharacterFree,
@@ -407,13 +408,37 @@ export const ChatProvider = ({ children }) => {
 
     try {
       // 1️⃣  Character (prefer embedded characters object)
-      const convCharacter =
+      let convCharacter =
         conversation.characters ||
         (conversation.character_id
           ? { id: conversation.character_id, name: 'Unknown' }
           : null);
 
       setCharacter(convCharacter);
+
+      /* ----------------------------------------------------------------
+       * If the embedded character data is missing or still “Unknown”,
+       * attempt to fetch the full character details from repository.
+       * This fixes cases where Isaiah is restored but defaults to Moses.
+       * ----------------------------------------------------------------*/
+      if (
+        (!convCharacter || !convCharacter.name || convCharacter.name === 'Unknown') &&
+        conversation.character_id
+      ) {
+        characterRepository
+          .getById(conversation.character_id)
+          .then((fetched) => {
+            if (fetched) {
+              setCharacter(fetched);
+            }
+          })
+          .catch((err) =>
+            console.warn(
+              '[ChatContext] Unable to fetch character during hydration:',
+              err,
+            ),
+          );
+      }
 
       // 2️⃣  Messages – normalise to ChatContext shape
       const normalisedMessages =
