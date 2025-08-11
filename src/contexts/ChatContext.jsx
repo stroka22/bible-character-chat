@@ -398,6 +398,48 @@ export const ChatProvider = ({ children }) => {
   );
 
   /**
+   * Hydrate ChatContext state from an already-saved conversation
+   * (used by /chat/:conversationId route when ConversationProvider
+   *  has fetched a conversation with its messages)
+   */
+  const hydrateFromConversation = useCallback((conversation) => {
+    if (!conversation) return;
+
+    try {
+      // 1️⃣  Character (prefer embedded characters object)
+      const convCharacter =
+        conversation.characters ||
+        (conversation.character_id
+          ? { id: conversation.character_id, name: 'Unknown' }
+          : null);
+
+      setCharacter(convCharacter);
+
+      // 2️⃣  Messages – normalise to ChatContext shape
+      const normalisedMessages =
+        (conversation.messages || []).map((m) => ({
+          id: m.id || generateMessageId(),
+          role: m.role,
+          content: m.content,
+          timestamp: m.created_at || new Date().toISOString(),
+        })) || [];
+
+      setMessages(normalisedMessages);
+
+      // 3️⃣  Meta flags
+      setChatId(conversation.id);
+      setIsChatSaved(true);
+      setIsFavorite(!!conversation.is_favorite);
+
+      // Clear residual error
+      setError(null);
+    } catch (err) {
+      console.error('[ChatContext] Failed to hydrate from conversation:', err);
+      setError('Unable to load conversation. Please try again.');
+    }
+  }, [generateMessageId]);
+
+  /**
    * Toggle favorite status of the current conversation
    */
   const toggleFavorite = useCallback(
@@ -524,7 +566,8 @@ export const ChatProvider = ({ children }) => {
     deleteCurrentChat,
     
     // Helper methods
-    clearError: () => setError(null)
+    clearError: () => setError(null),
+    hydrateFromConversation,
   };
 
   return (

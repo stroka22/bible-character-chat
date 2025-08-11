@@ -1,8 +1,9 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useConversation } from '../../contexts/ConversationContext.jsx';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
@@ -44,13 +45,26 @@ const SimpleChatWithHistory = () => {
         isChatSaved, 
         saveChat, 
         sendMessage,
-        selectCharacter
+        selectCharacter,
+        hydrateFromConversation
     } = useChat();
+
+    /* ------------------------------------------------------------------
+     * Conversation context – for fetching existing conversations
+     * ----------------------------------------------------------------*/
+    const {
+        fetchConversationWithMessages,
+        isLoading: convLoading,
+        error: convError
+    } = useConversation();
+
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [conversationTitle, setConversationTitle] = useState('');
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
+
+    const { conversationId } = useParams();
 
     /* ------------------------------------------------------------------
      * Auto-select character from query string (?character=<id>)
@@ -59,6 +73,9 @@ const SimpleChatWithHistory = () => {
         (async () => {
             // Already have a character selected -> nothing to do
             if (character) return;
+
+            // If we are restoring by conversationId, skip auto-selection
+            if (conversationId) return;
 
             const params = new URLSearchParams(location.search);
             const charId = params.get('character');
@@ -76,7 +93,27 @@ const SimpleChatWithHistory = () => {
             }
         })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search, character]);
+    }, [location.search, character, conversationId]);
+
+    /* ------------------------------------------------------------------
+     * Load existing conversation when /chat/:conversationId route used
+     * ----------------------------------------------------------------*/
+    useEffect(() => {
+        const loadExisting = async () => {
+            if (!conversationId) return;
+
+            try {
+                const conv = await fetchConversationWithMessages(conversationId);
+                if (conv) {
+                    hydrateFromConversation(conv);
+                }
+            } catch (err) {
+                console.error('[SimpleChatWithHistory] Failed to load conversation:', err);
+            }
+        };
+        loadExisting();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [conversationId]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -147,6 +184,8 @@ const SimpleChatWithHistory = () => {
         navigate('/conversations');
     };
 
+    const loadingConversation = convLoading && !character;
+
     return (
         _jsxs("div", {
             className: "relative min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700",
@@ -167,7 +206,13 @@ const SimpleChatWithHistory = () => {
                     className: "relative z-10 flex items-start justify-center pt-24 md:pt-32 pb-10", 
                     children: _jsx("div", { 
                         className: "chat-container w-full max-w-6xl h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", 
-                        children: !character ? (
+                        children: loadingConversation ? (
+                            /* Simple loading state */
+                            _jsx("div", {
+                                className: "flex h-full w-full items-center justify-center text-yellow-300 text-lg",
+                                children: "Loading conversation..."
+                            })
+                        ) : !character ? (
                             /* Empty state - no character selected */
                             _jsxs("div", { 
                                 className: "flex h-full w-full flex-col items-center justify-center p-4 text-white", 
