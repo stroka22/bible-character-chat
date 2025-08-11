@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { characterRepository } from '../../repositories/characterRepository';
-import { getPublicKey, SUBSCRIPTION_PRICES } from '../../services/stripe';
 import { getSettings as getTierSettings, setSettings as setTierSettings, getOwnerSlug } from '../../services/tierSettingsService';
 
 /**
@@ -27,12 +26,6 @@ const AccountTierManagement = () => {
   /* Pagination */
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [stripeConfig, setStripeConfig] = useState({
-    publicKey: '',
-    monthlyPrice: '',
-    yearlyPrice: '',
-    isConfigured: false
-  });
   /* Owner slug for multi-tenant settings */
   const [ownerSlug, setOwnerSlug] = useState('default');
 
@@ -44,15 +37,6 @@ const AccountTierManagement = () => {
         // Load characters
         const allCharacters = await characterRepository.getAll();
         setCharacters(allCharacters);
-
-        // Load Stripe configuration
-        const publicKey = getPublicKey();
-        setStripeConfig({
-          publicKey: publicKey,
-          monthlyPrice: SUBSCRIPTION_PRICES.MONTHLY,
-          yearlyPrice: SUBSCRIPTION_PRICES.YEARLY,
-          isConfigured: publicKey !== 'pk_missing_key'
-        });
 
         // Get the current owner slug
         const slug = getOwnerSlug();
@@ -289,36 +273,7 @@ const AccountTierManagement = () => {
         </div>
       ) : (
         <>
-          {/* Stripe Configuration Status */}
-          <div className={`mb-6 p-4 rounded-lg ${stripeConfig.isConfigured ? 'bg-green-100' : 'bg-yellow-100'}`}>
-            <h3 className="font-semibold text-lg mb-2">
-              {stripeConfig.isConfigured ? 'Stripe Configuration' : 'Stripe Not Configured'}
-            </h3>
-            {stripeConfig.isConfigured ? (
-              <div className="space-y-1">
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Public Key:</span> {stripeConfig.publicKey.substring(0, 10)}...
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Monthly Price ID:</span> {stripeConfig.monthlyPrice}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Yearly Price ID:</span> {stripeConfig.yearlyPrice}
-                </p>
-                <p className="text-sm text-gray-700">
-                  <span className="font-medium">Owner Slug:</span> {ownerSlug}
-                </p>
-                <p className="text-sm text-gray-700 mt-2">
-                  These values are configured in your .env file and can be updated there.
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-700">
-                Stripe is not configured. Add your Stripe public key and price IDs to the .env file to enable payment processing.
-              </p>
-            )}
-          </div>
-
+          {/* Free Account Limits */}
           {/* Free Account Limits */}
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-blue-800 mb-4">Free Account Limits</h3>
