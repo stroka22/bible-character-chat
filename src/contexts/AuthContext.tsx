@@ -16,6 +16,8 @@ interface AuthContextType {
   role: UserRole;
   loading: boolean;
   error: string | null;
+  /** `true` when `user` is non-null */
+  isAuthenticated: boolean;
   /** Returns true for admin role */
   isAdmin: () => boolean;
   /** Returns true for pastor (or admin) role */
@@ -416,6 +418,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     role,
     loading,
     error,
+    isAuthenticated: !!user,
     isAdmin,
     isPastor,
     signIn,

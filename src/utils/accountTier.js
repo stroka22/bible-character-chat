@@ -6,6 +6,9 @@
  * and message limits for free users.
  */
 
+// Import owner-slug helper to scope cache keys
+import { getOwnerSlug } from '../services/tierSettingsService';
+
 /**
  * Load account tier settings from localStorage
  * @returns {Object} Account tier settings with defaults if not found
@@ -27,6 +30,13 @@ const normalizeId = (raw) =>
  */
 const normalizeName = (name) =>
   name === undefined || name === null ? '' : String(name).trim().toLowerCase();
+
+/**
+ * Build the per-organisation cache key so each org has isolated settings.
+ * Kept here (duplicate of tierSettingsService) to avoid circular deps.
+ * @param {string} slug
+ */
+const getCacheKey = (slug) => `accountTierSettings:${slug}`;
 
 export function loadAccountTierSettings() {
   /* ------------------------------------------------------------------
@@ -69,8 +79,15 @@ export function loadAccountTierSettings() {
     return defaults;
   }
 
+  // Determine which org we belong to (falls back to 'default')
+  const ownerSlug = getOwnerSlug();
+
   try {
-    const savedSettings = localStorage.getItem('accountTierSettings');
+    // Prefer the scoped key; fallback to legacy global key for BC
+    let savedSettings = localStorage.getItem(getCacheKey(ownerSlug));
+    if (!savedSettings) {
+      savedSettings = localStorage.getItem('accountTierSettings');
+    }
     if (!savedSettings) {
       return defaults;
     }
@@ -176,13 +193,27 @@ export function saveAccountTierSettings(settings) {
     return false;
   }
 
+  const ownerSlug = getOwnerSlug();
+
   try {
     const updatedSettings = {
       ...settings,
       lastUpdated: new Date().toISOString()
     };
-    
-    localStorage.setItem('accountTierSettings', JSON.stringify(updatedSettings));
+
+    // Write to per-org key
+    localStorage.setItem(
+      getCacheKey(ownerSlug),
+      JSON.stringify(updatedSettings),
+    );
+
+    /* Notify listeners in the same tab (AccountTierManagement dispatches
+       the same event; we mirror that for callers using this util). */
+    try {
+      window.dispatchEvent(new Event('accountTierSettingsChanged'));
+    } catch (_) {
+      /* ignore older browsers */
+    }
     return true;
   } catch (error) {
     console.error('Failed to save account tier settings:', error);
