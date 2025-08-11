@@ -61,6 +61,49 @@ const ConversationsPage = () => {
   }, []);
 
   /* ------------------------------------------------------------------
+   * Toggle a character in the favourites list (and persist to storage)
+   * ------------------------------------------------------------------ */
+  const handleToggleFavoriteCharacter = (charId) => {
+    setFavoriteCharacters((prev) => {
+      let updated;
+      if (prev.some((c) => c.id === charId)) {
+        // remove
+        updated = prev.filter((c) => c.id !== charId);
+      } else {
+        // add – find character details from repository-loaded list first
+        const charObj =
+          favoriteCharacters.find((c) => c.id === charId) ||
+          null; /* fallback if not in current list */;
+        if (charObj) {
+          updated = [...prev, charObj];
+        } else {
+          // character not present locally – leave list unchanged
+          updated = prev;
+        }
+      }
+
+      // Persist ID list (not full objects) to localStorage
+      try {
+        localStorage.setItem(
+          'favoriteCharacters',
+          JSON.stringify(updated.map((c) => c.id)),
+        );
+        /* Manual StorageEvent for cross-tab sync */
+        window.dispatchEvent(
+          new StorageEvent('storage', {
+            key: 'favoriteCharacters',
+            newValue: JSON.stringify(updated.map((c) => c.id)),
+          }),
+        );
+      } catch (e) {
+        console.error('Failed to update favoriteCharacters in localStorage', e);
+      }
+
+      return updated;
+    });
+  };
+
+  /* ------------------------------------------------------------------
    * Delete conversation helper
    * ------------------------------------------------------------------ */
   const handleDeleteConversation = async (conversationId) => {
@@ -232,7 +275,7 @@ const ConversationsPage = () => {
                   onSelect={(c) => (window.location.href = `/chat?character=${c.id}`)}
                   isFavorite={true}
                   /* dummy handlers to satisfy props */
-                  onToggleFavorite={() => {}}
+                  onToggleFavorite={() => handleToggleFavoriteCharacter(char.id)}
                   isFeatured={false}
                   onSetAsFeatured={() => {}}
                 />
