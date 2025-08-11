@@ -1,46 +1,11 @@
 import supabase from '../supabase/client';
+// Use the central character repository so we always respect whatever
+// ID type (string / UUID / number) the rest of the app supplies.
+import { characterRepository } from './characterRepository';
 
-// Mock data for characters – keys and IDs now align with the numeric IDs
-// defined in src/data/mockCharacters.js so that conversations reference
-// the same identifier scheme across the entire app.
-const MOCK_CHARACTERS = {
-  1: {
-    id: 1,
-    name: 'Moses',
-    avatar_url: '/characters/moses.jpg',
-    testament: 'old',
-    bible_book: 'Exodus'
-  },
-  2: {
-    id: 2,
-    name: 'David',
-    avatar_url: '/characters/david.jpg',
-    testament: 'old',
-    bible_book: '1 Samuel'
-  },
-  5: {
-    id: 5,
-    name: 'Paul',
-    avatar_url: '/characters/paul.jpg',
-    testament: 'new',
-    bible_book: 'Acts'
-  },
-  4: {
-    id: 4,
-    name: 'Mary',
-    avatar_url: '/characters/mary.jpg',
-    testament: 'new',
-    bible_book: 'Luke'
-  }
-};
-
-// ---------------------------------------------------------------------------
-// Extra diagnostics – helps trace problems where a character name
-// does not appear because the ID coming in does not match the keys here.
-// ---------------------------------------------------------------------------
 /* eslint-disable no-console */
-console.log('[MOCK] Available characters loaded in repository:', Object.keys(MOCK_CHARACTERS));
-/* eslint-enable  no-console */
+console.log('[MOCK] Conversation repository initialised (character IDs now resolved on-demand)');
+/* eslint-enable no-console */
 
 // In-memory storage for mock data
 const mockStorage = {
@@ -131,100 +96,18 @@ export const conversationRepository = {
       });
 
       /* --------------------------------------------------------------
-       * Character name resolution - MOST AGGRESSIVE APPROACH
-       * ------------------------------------------------------------*/
-      const idStr = String(character_id).trim();      // unified string form
-      let characterName = 'Unknown';
-
-      // Debug EVERYTHING
-      console.log('EXTREME DEBUG INFO:');
-      console.log('Character ID received:', character_id);
-      console.log('Character ID type:', typeof character_id);
-      console.log('Character ID toString():', character_id?.toString());
-      console.log('Character ID as string variable:', idStr);
-      console.log('All MOCK_CHARACTERS keys:', Object.keys(MOCK_CHARACTERS));
-      console.log('MOCK_CHARACTERS direct access test:');
-      console.log('- MOCK_CHARACTERS[1]:', MOCK_CHARACTERS[1]?.name);
-      console.log('- MOCK_CHARACTERS[2]:', MOCK_CHARACTERS[2]?.name);
-      console.log('- MOCK_CHARACTERS[4]:', MOCK_CHARACTERS[4]?.name);
-      console.log('- MOCK_CHARACTERS[5]:', MOCK_CHARACTERS[5]?.name);
-
-      // Import the actual character data to use as a lookup table
-      try {
-        // If we can access the mock character data, let's use it directly
-        const mockCharacterDataModule = require('../data/mockCharacters.js');
-        const MOCK_CHARACTER_LIST = mockCharacterDataModule.mockCharacterData.characters;
-        console.log('Imported direct character data array - length:', MOCK_CHARACTER_LIST.length);
-        
-        // Find character by ID in the array (more reliable than object property lookup)
-        const foundCharacter = MOCK_CHARACTER_LIST.find(c => String(c.id) === idStr);
-        if (foundCharacter) {
-          characterName = foundCharacter.name;
-          console.log(`Found character ${characterName} by direct array lookup with ID ${idStr}`);
-        }
-      } catch (err) {
-        console.warn('Could not import mockCharacters.js:', err);
-      }
-
-      // HARDCODED FALLBACK (most reliable)
-      if (characterName === 'Unknown') {
-        if (idStr === '1') characterName = 'Moses';
-        else if (idStr === '2') characterName = 'David';
-        else if (idStr === '4') characterName = 'Mary';
-        else if (idStr === '5') characterName = 'Paul';
-        else if (idStr === '3') characterName = 'Esther';
-        else if (idStr === '6') characterName = 'Peter';
-        else if (idStr === '7') characterName = 'Abraham';
-        else if (idStr === '8') characterName = 'John';
-        else if (idStr === '9') characterName = 'Ruth';
-        else if (idStr === '10') characterName = 'Daniel';
-        
-        if (characterName !== 'Unknown') {
-          console.log(`Set character name using hardcoded fallback: ${characterName}`);
-        }
-      }
-
-      // THE NUCLEAR OPTION - if all else fails, just hack the ID directly
-      console.log('NUCLEAR OPTION CHECK - Character ID:', idStr);
-      // Directly map character IDs to names as a last-resort backup
-      if (characterName === 'Unknown') {
-        switch (idStr) {
-          case '1': characterName = 'Moses'; break;
-          case '2': characterName = 'David'; break;
-          case '3': characterName = 'Esther'; break;
-          case '4': characterName = 'Mary'; break;
-          case '5': characterName = 'Paul'; break;
-          case '6': characterName = 'Peter'; break;
-          case '7': characterName = 'Abraham'; break;
-          case '8': characterName = 'John'; break;
-          case '9': characterName = 'Ruth'; break;
-          case '10': characterName = 'Daniel'; break;
-        }
-        
-        console.log(`NUCLEAR OPTION RESULT: ${characterName}`);
-      }
-
-      // ABSOLUTELY LAST RESORT: If ID is a stringified number, force-use "Moses"
-      if (characterName === 'Unknown' && !isNaN(Number(idStr))) {
-        console.log('FINAL BACKUP: Using default character "Moses" for ID:', idStr);
-        characterName = 'Moses';
-      }
-
-      console.log(`[MOCK] FINAL CHARACTER NAME: "${characterName}" for ID "${character_id}"`);
-
-      /* --------------------------------------------------------------
        * Title generation
        * ------------------------------------------------------------*/
-      let conversationTitle;
-
-      if (typeof title === 'string' && title.trim()) {
-        // Respect explicit title
-        conversationTitle = title.trim();
-        console.log(`[MOCK] Using explicit title: "${conversationTitle}"`);
-      } else {
-        const formattedDate = new Date().toLocaleDateString();
-        conversationTitle = `Conversation with ${characterName} - ${formattedDate}`;
-        console.log(`[MOCK] Generated title: "${conversationTitle}"`);
+      let conversationTitle =
+        typeof title === 'string' && title.trim() ? title.trim() : null;
+      if (!conversationTitle) {
+        try {
+          const fetched = await characterRepository.getById(character_id);
+          const name = fetched?.name || 'Character';
+          conversationTitle = `Conversation with ${name} - ${new Date().toLocaleDateString()}`;
+        } catch {
+          conversationTitle = `Conversation - ${new Date().toLocaleDateString()}`;
+        }
       }
 
       // Create new conversation object
@@ -315,18 +198,18 @@ export const conversationRepository = {
         return true;
       });
       
-      // Add character information
-      const conversationsWithCharacters = filteredConversations.map(conv => {
-        const character = MOCK_CHARACTERS[conv.character_id];
-        console.log(`[MOCK] Adding character for conversation ${conv.id}:`, {
-          characterId: conv.character_id,
-          character
-        });
-        return {
-          ...conv,
-          characters: character
-        };
-      });
+      // Add character information by fetching on-demand
+      const conversationsWithCharacters = await Promise.all(
+        filteredConversations.map(async (conv) => {
+          let character = null;
+          try {
+            character = await characterRepository.getById(conv.character_id);
+          } catch {
+            /* ignore – character may not resolve in mock mode */
+          }
+          return { ...conv, characters: character };
+        }),
+      );
       
       // Sort by updated_at in descending order
       conversationsWithCharacters.sort((a, b) => 
@@ -375,8 +258,13 @@ export const conversationRepository = {
         throw new Error('Conversation not found');
       }
       
-      // Get the character
-      const character = MOCK_CHARACTERS[conversation.character_id];
+      // Get the character via repository (supports string/UUID or number IDs)
+      let character = null;
+      try {
+        character = await characterRepository.getById(conversation.character_id);
+      } catch {
+        character = null;
+      }
       
       // Get messages for this conversation
       const messages = mockStorage.messages
@@ -610,8 +498,13 @@ export const conversationRepository = {
         throw new Error('Shared conversation not found');
       }
       
-      // Get the character
-      const character = MOCK_CHARACTERS[conversation.character_id];
+      // Get the character via repository (supports string/UUID or number IDs)
+      let character = null;
+      try {
+        character = await characterRepository.getById(conversation.character_id);
+      } catch {
+        character = null;
+      }
       
       // Get messages for this conversation
       const messages = mockStorage.messages
