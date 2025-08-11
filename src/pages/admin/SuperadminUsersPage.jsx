@@ -77,7 +77,7 @@ const SuperadminUsersPage = () => {
           owner_slug,
           display_name,
           created_at,
-          signup_source
+          /* signup_source column removed */
         `, { count: 'exact' });
       
       // Apply filters
@@ -409,9 +409,6 @@ const SuperadminUsersPage = () => {
                         Organization
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Source
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Created
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
@@ -441,9 +438,6 @@ const SuperadminUsersPage = () => {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {profile.owners?.display_name || profile.owner_slug || 'None'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap capitalize">
-                          {profile.signup_source || 'public'}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm">
                           {formatDate(profile.created_at)}
