@@ -303,6 +303,8 @@ export function AuthProvider({ children }) {
         role,
         loading,
         error,
+        // Quick boolean for consumers
+        isAuthenticated: !!user,
         // Role helpers
         isAdmin: isAdminOrSuperadmin,
         isSuperadmin,

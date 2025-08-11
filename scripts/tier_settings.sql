@@ -34,7 +34,7 @@ CREATE POLICY tier_settings_insert_policy
     auth.role() = 'authenticated' AND
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE id = auth.uid() AND role IN ('admin','superadmin')
     )
   );
 
@@ -45,7 +45,7 @@ CREATE POLICY tier_settings_update_policy
     auth.role() = 'authenticated' AND
     EXISTS (
       SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE id = auth.uid() AND role IN ('admin','superadmin')
     )
   );
 
