@@ -8,7 +8,16 @@ import { supabase } from '../services/supabase';
 
 // Table configuration
 const TABLE_NAME = 'tier_settings';
-const CACHE_KEY = 'accountTierSettings';
+/**
+ * Build the per-organisation cache key. This keeps settings isolated
+ * for each owner while remaining backward-compatible with the original
+ * single-tenant key.
+ * @param {string} slug
+ * @returns {string}
+ */
+function getCacheKey(slug) {
+  return `accountTierSettings:${slug}`;
+}
 
 /**
  * Get the current owner slug from environment variables, localStorage, or default
@@ -59,11 +68,19 @@ function denormalizeSettings(settings) {
  * Load settings from localStorage cache
  * @returns {Object|null} The cached settings or null if not found
  */
-function loadFromCache() {
+function loadFromCache(slug) {
   try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (!cached) return null;
-    return JSON.parse(cached);
+    const key = getCacheKey(slug);
+
+    // Prefer new per-org key
+    let cached = localStorage.getItem(key);
+
+    // Fallback to legacy global key for backward compatibility
+    if (!cached) {
+      cached = localStorage.getItem('accountTierSettings');
+    }
+
+    return cached ? JSON.parse(cached) : null;
   } catch (err) {
     console.error('[tierSettingsService] Error loading from cache:', err);
     return null;
@@ -74,9 +91,10 @@ function loadFromCache() {
  * Save settings to localStorage cache
  * @param {Object} settings The settings to cache
  */
-function saveToCache(settings) {
+function saveToCache(settings, slug) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(settings));
+    const key = getCacheKey(slug);
+    localStorage.setItem(key, JSON.stringify(settings));
     
     // Dispatch custom event for same-tab updates
     // (storage event only fires in other tabs)
@@ -115,12 +133,12 @@ export async function getSettings(ownerSlug) {
     if (data) {
       // Found in Supabase, normalize and update cache
       const settings = normalizeRecord(data);
-      saveToCache(settings);
+      saveToCache(settings, slug);
       return settings;
     }
     
     // Not found in Supabase, try cache
-    const cachedSettings = loadFromCache();
+    const cachedSettings = loadFromCache(slug);
     if (cachedSettings) {
       return cachedSettings;
     }
@@ -130,7 +148,7 @@ export async function getSettings(ownerSlug) {
   } catch (err) {
     console.error('[tierSettingsService] Error fetching settings:', err);
     // Fall back to cache on any error
-    return loadFromCache() || getDefaultSettings();
+    return loadFromCache(slug) || getDefaultSettings();
   }
 }
 
@@ -175,17 +193,17 @@ export async function setSettings(data, ownerSlug) {
     if (error) {
       console.error('[tierSettingsService] Error saving settings:', error);
       // Still update cache even if Supabase fails
-      saveToCache(data);
+      saveToCache(data, slug);
       return false;
     }
     
     // Update local cache
-    saveToCache(data);
+    saveToCache(data, slug);
     return true;
   } catch (err) {
     console.error('[tierSettingsService] Unexpected error saving settings:', err);
     // Still update cache even if Supabase fails
-    saveToCache(data);
+    saveToCache(data, slug);
     return false;
   }
 }

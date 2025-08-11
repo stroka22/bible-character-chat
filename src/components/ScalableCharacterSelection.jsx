@@ -76,7 +76,8 @@ const ScalableCharacterSelection = () => {
 
         // Listener for cross-tab updates
         const handleStorage = (e) => {
-            if (e.key === 'accountTierSettings') {
+            // Support new per-org cache keys (e.g. `accountTierSettings:org1`)
+            if (e.key && e.key.startsWith('accountTierSettings')) {
                 handleTierSettingsChange();
             }
         };
