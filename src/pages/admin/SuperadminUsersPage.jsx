@@ -31,6 +31,14 @@ const SuperadminUsersPage = () => {
   // Action state
   const [actionInProgress, setActionInProgress] = useState(null);
   const [actionMessage, setActionMessage] = useState({ text: '', type: '' });
+
+  /* ─────────────────────────────────────────────
+   *  New-organization modal state (superadmin)
+   * ──────────────────────────────────────────── */
+  const [showCreateOrg, setShowCreateOrg] = useState(false);
+  const [newOrg, setNewOrg] = useState({ ownerSlug: '', displayName: '' });
+  const [savingOrg, setSavingOrg] = useState(false);
+  const [orgError, setOrgError] = useState('');
   
   // Check if current user is superadmin
   useEffect(() => {
@@ -240,6 +248,56 @@ const SuperadminUsersPage = () => {
   };
   
   // Calculate total pages
+  /* ─────────────────────────────────────────────
+   *  Helpers – create organisation (superadmin)
+   * ──────────────────────────────────────────── */
+  const slugify = (str = '') =>
+    str
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+
+  const handleCreateOrganization = async (e) => {
+    e.preventDefault();
+    if (!isSuperAdmin || savingOrg) return;
+
+    setOrgError('');
+    const slug =
+      newOrg.ownerSlug?.trim() !== ''
+        ? slugify(newOrg.ownerSlug)
+        : slugify(newOrg.displayName);
+    const name = (newOrg.displayName || '').trim();
+
+    if (!slug || !name) {
+      setOrgError('Both Display Name and Organization Slug are required.');
+      return;
+    }
+    setSavingOrg(true);
+    try {
+      const { error } = await supabase
+        .from('owners')
+        .insert({ owner_slug: slug, display_name: name });
+      if (error) throw error;
+
+      // refresh owners list, select new one
+      await loadOwners();
+      handleFilterChange('ownerSlug', slug);
+
+      setShowCreateOrg(false);
+      setNewOrg({ ownerSlug: '', displayName: '' });
+      setActionMessage({
+        text: `Organization “${name}” created`,
+        type: 'success',
+      });
+    } catch (err) {
+      setOrgError(err.message || 'Failed to create organization');
+    } finally {
+      setSavingOrg(false);
+      setTimeout(() => setActionMessage({ text: '', type: '' }), 3000);
+    }
+  };
+
   const totalPages = Math.ceil(totalProfiles / filters.pageSize);
   
   // If still loading initial check
@@ -290,6 +348,105 @@ const SuperadminUsersPage = () => {
           <h1 className="text-2xl font-bold mt-2">Manage Users</h1>
         </div>
         
+        {/* Create-org action */}
+        {isSuperAdmin && (
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => setShowCreateOrg(true)}
+              className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg hover:bg-yellow-300 transition-colors"
+            >
+              New Organization
+            </button>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────
+         *  Create-organization Modal (superadmin only)
+         * ──────────────────────────────────────────── */}
+        {showCreateOrg && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black bg-opacity-60"
+              onClick={() => !savingOrg && setShowCreateOrg(false)}
+            />
+
+            {/* Modal card */}
+            <div className="relative bg-blue-800 w-11/12 max-w-md rounded-lg shadow-xl p-6 z-10">
+              <h3 className="text-xl font-semibold mb-4">Create Organization</h3>
+
+              {orgError && (
+                <div className="mb-3 p-2 rounded bg-red-700 text-white text-sm">
+                  {orgError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateOrganization}>
+                {/* Display Name */}
+                <label className="block text-sm font-medium mb-1">
+                  Display Name
+                </label>
+                <input
+                  type="text"
+                  value={newOrg.displayName}
+                  onChange={(e) =>
+                    setNewOrg((prev) => ({
+                      ...prev,
+                      displayName: e.target.value,
+                    }))
+                  }
+                  className="w-full mb-4 px-3 py-2 bg-blue-700 border border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  placeholder="e.g. Grace Church"
+                />
+
+                {/* Slug */}
+                <label className="block text-sm font-medium mb-1">
+                  Organization Slug
+                </label>
+                <input
+                  type="text"
+                  value={newOrg.ownerSlug}
+                  onChange={(e) =>
+                    setNewOrg((prev) => ({
+                      ...prev,
+                      ownerSlug: e.target.value,
+                    }))
+                  }
+                  className="w-full mb-4 px-3 py-2 bg-blue-700 border border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  placeholder="e.g. grace-church"
+                />
+
+                {/* Actions */}
+                <div className="flex justify-end space-x-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateOrg(false)}
+                    disabled={savingOrg}
+                    className={`px-4 py-2 rounded-lg ${
+                      savingOrg
+                        ? 'bg-gray-600'
+                        : 'bg-blue-700 hover:bg-blue-600'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingOrg}
+                    className={`px-4 py-2 rounded-lg font-medium ${
+                      savingOrg
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : 'bg-yellow-400 text-blue-900 hover:bg-yellow-300'
+                    }`}
+                  >
+                    {savingOrg ? 'Creating...' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Action Message */}
         {actionMessage.text && (
           <div className={`mb-4 p-3 rounded ${
@@ -560,3 +717,9 @@ const SuperadminUsersPage = () => {
 };
 
 export default SuperadminUsersPage;
+
+/* ------------------------------------------------------------------------- */
+/*  Modal markup appended at render root – must stay outside component code  */
+/* ------------------------------------------------------------------------- */
+
+
