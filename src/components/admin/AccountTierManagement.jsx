@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { characterRepository } from '../../repositories/characterRepository';
-import { getSettings as getTierSettings, setSettings as setTierSettings, getOwnerSlug } from '../../services/tierSettingsService';
+import { supabase } from '../../services/supabase';
+import { getMyProfile } from '../../services/invitesService';
+import {
+  getSettings as getTierSettings,
+  setSettings as setTierSettings,
+  getOwnerSlug,
+} from '../../services/tierSettingsService';
+import { loadAccountTierSettings } from '../../utils/accountTier';
 
 /**
  * Account Tier Management Component
@@ -28,8 +35,41 @@ const AccountTierManagement = () => {
   const [pageSize, setPageSize] = useState(25);
   /* Owner slug for multi-tenant settings */
   const [ownerSlug, setOwnerSlug] = useState('default');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [owners, setOwners] = useState([]);
 
-  // Load characters and settings on mount
+  /**
+   * Fetch and normalise settings for provided slug
+   */
+  const fetchSettings = async (slug, allCharacters = []) => {
+    try {
+      const supabaseSettings = await getTierSettings(slug);
+      if (supabaseSettings) {
+        setFreeMessageLimit(supabaseSettings.freeMessageLimit || 5);
+        setFreeCharacterLimit(supabaseSettings.freeCharacterLimit || 10);
+        setFreeCharacters(supabaseSettings.freeCharacters || []);
+
+        // If none selected create default first-5
+        if (
+          (supabaseSettings.freeCharacters || []).length === 0 &&
+          allCharacters.length > 0
+        ) {
+          setFreeCharacters(allCharacters.slice(0, 5).map((c) => c.id));
+        }
+        return;
+      }
+
+      // Fallback to local scoped cache (utils already handles env defaults)
+      const local = loadAccountTierSettings();
+      setFreeMessageLimit(local.freeMessageLimit || 5);
+      setFreeCharacterLimit(local.freeCharacterLimit || 10);
+      setFreeCharacters(local.freeCharacters || []);
+    } catch (err) {
+      console.error('Failed to fetch tier settings:', err);
+    }
+  };
+
+  // Load characters, owners list & initial settings
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -42,37 +82,26 @@ const AccountTierManagement = () => {
         const slug = getOwnerSlug();
         setOwnerSlug(slug);
 
-        // Try to load settings from Supabase first
-        const supabaseSettings = await getTierSettings(slug);
-        if (supabaseSettings) {
-          setFreeMessageLimit(supabaseSettings.freeMessageLimit || 5);
-          setFreeCharacterLimit(supabaseSettings.freeCharacterLimit || 10);
-          setFreeCharacters(supabaseSettings.freeCharacters || []);
-          
-          // If freeCharacters is empty but we have characters, set defaults
-          if (supabaseSettings.freeCharacters.length === 0 && allCharacters.length > 0) {
-            const defaultFreeCharacters = allCharacters
-              .slice(0, 5)
-              .map(char => char.id);
-            setFreeCharacters(defaultFreeCharacters);
+        // Determine current user role
+        try {
+          const { data: profile } = await getMyProfile();
+          const superAdmin = profile?.role === 'superadmin';
+          setIsSuperAdmin(superAdmin);
+
+          // Load owners list if superadmin
+          if (superAdmin) {
+            const { data: ownersData } = await supabase
+              .from('owners')
+              .select('owner_slug, display_name')
+              .order('display_name');
+            setOwners(ownersData || []);
           }
-        } else {
-          // Fall back to localStorage if Supabase settings not found
-          const savedSettings = localStorage.getItem('accountTierSettings');
-          if (savedSettings) {
-            const settings = JSON.parse(savedSettings);
-            setFreeMessageLimit(settings.freeMessageLimit || 5);
-            setFreeCharacterLimit(settings.freeCharacterLimit || 10);
-            setFreeCharacters(settings.freeCharacters || []);
-          } else {
-            // Set defaults if no settings exist
-            // By default, make the first 5 characters free
-            const defaultFreeCharacters = allCharacters
-              .slice(0, 5)
-              .map(char => char.id);
-            setFreeCharacters(defaultFreeCharacters);
-          }
+        } catch (pErr) {
+          console.error('Error loading profile/owners:', pErr);
         }
+
+        // finally, fetch settings
+        await fetchSettings(slug, allCharacters);
       } catch (error) {
         console.error('Failed to load data:', error);
         setSaveMessage({
@@ -100,6 +129,11 @@ const AccountTierManagement = () => {
     loadData();
   }, []);
 
+  /* Reload settings whenever the selected owner changes */
+  useEffect(() => {
+    fetchSettings(ownerSlug, characters);
+  }, [ownerSlug]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Save settings to Supabase and localStorage
   const saveSettings = async () => {
     setIsSaving(true);
@@ -124,9 +158,6 @@ const AccountTierManagement = () => {
       
       // Save to Supabase via tierSettingsService
       const saveSuccess = await setTierSettings(settings, ownerSlug);
-      
-      // Also save to localStorage for compatibility/offline mode
-      localStorage.setItem('accountTierSettings', JSON.stringify(settings));
 
       /* --------------------------------------------------------------
        * Notify other components (same tab) that tier settings changed.
@@ -266,6 +297,45 @@ const AccountTierManagement = () => {
       <h2 className="text-2xl font-bold text-blue-900 mb-6">
         Account Tier Management
       </h2>
+
+      {/* ────────────────────────────────────────────────
+       *  Organisation selector (superadmin only)
+       * ──────────────────────────────────────────────── */}
+      {isSuperAdmin && (
+        <div className="mb-6">
+          <label
+            htmlFor="ownerSelector"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Organization
+          </label>
+          <select
+            id="ownerSelector"
+            value={ownerSlug}
+            onChange={(e) => {
+              const newSlug = e.target.value;
+              setOwnerSlug(newSlug);
+              try {
+                localStorage.setItem('ownerSlug', newSlug);
+              } catch (_) {
+                /* ignore */
+              }
+              setPage(1); // reset paging when org changes
+            }}
+            className="w-full md:w-96 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {/* Ensure 'default' is always present */}
+            {!owners.some((o) => o.owner_slug === 'default') && (
+              <option value="default">default</option>
+            )}
+            {owners.map((o) => (
+              <option key={o.owner_slug} value={o.owner_slug}>
+                {o.display_name || o.owner_slug} ({o.owner_slug})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center my-8">

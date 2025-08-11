@@ -48,7 +48,8 @@ export const ChatProvider = ({ children }) => {
   /* Listen for cross-tab updates made by AccountTierManagement */
   useEffect(() => {
     const handleStorage = (e) => {
-      if (e.key === 'accountTierSettings') {
+      // Support per-organisation cache keys (e.g. `accountTierSettings:org1`)
+      if (e.key && e.key.startsWith('accountTierSettings')) {
         setTierSettings(loadAccountTierSettings());
       }
     };
