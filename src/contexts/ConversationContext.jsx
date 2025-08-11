@@ -189,7 +189,13 @@ export const ConversationProvider = ({ children }) => {
    * @param {string} role - Message role ('user' or 'assistant')
    */
   const addMessage = useCallback(async (content, role) => {
-    if (!activeConversation) {
+    // Determine which conversation to append to.
+    let targetConversationId = activeConversation?.id;
+    // Fallback: the repo sets this synchronously when we create a conversation
+    if (!targetConversationId) {
+      targetConversationId = conversationRepository.activeConversationId;
+    }
+    if (!targetConversationId) {
       console.warn('Cannot add message: No active conversation');
       return null;
     }
@@ -203,20 +209,26 @@ export const ConversationProvider = ({ children }) => {
     
     try {
       const message = await conversationRepository.addMessage({
-        conversation_id: activeConversation.id,
+        conversation_id: targetConversationId,
         role,
         content
       });
       
       // Update the active conversation with the new message
       setActiveConversation(prev => {
-        if (!prev) return prev;
-        
-        const updatedMessages = prev.messages ? [...prev.messages, message] : [message];
+        // If prev is missing or refers to another conversation, build a minimal base.
+        const base =
+          prev && prev.id === targetConversationId
+            ? prev
+            : { id: targetConversationId, messages: [] };
+
+        const updatedMessages = base.messages
+          ? [...base.messages, message]
+          : [message];
         return {
-          ...prev,
+          ...base,
           messages: updatedMessages,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         };
       });
       
