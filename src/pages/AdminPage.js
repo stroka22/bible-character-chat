@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import GroupManagement from '../components/admin/GroupManagement';
@@ -10,7 +11,7 @@ import AccountTierManagement from '../components/admin/AccountTierManagement';
 // Robust CSV utilities (handles quoted commas/newlines, escaped quotes, etc.)
 import { parseCSV, tryParseJson } from '../utils/csvParser';
 const AdminPage = () => {
-    const { user } = useAuth();
+    const { user, isSuperadmin } = useAuth();
     const bypassAuth = typeof window !== 'undefined' &&
         localStorage.getItem('bypass_auth') === 'true';
     const isAdmin = true;
@@ -401,7 +402,9 @@ const AdminPage = () => {
     const filteredCharacters = characters.filter(char => char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         char.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (char.bible_book && char.bible_book.toLowerCase().includes(searchQuery.toLowerCase())));
-    return (_jsxs("div", { className: "container mx-auto px-4 py-8", children: [_jsx("h1", { className: "text-3xl font-bold text-gray-900 mb-6", children: "Admin Panel - Character Management" }), _jsx("p", { className: "text-gray-700 mb-4", children: "Welcome, Admin! Here you can manage Bible characters." }), _jsx("div", { className: "mb-8 border-b border-gray-200", children: _jsxs("nav", { className: "-mb-px flex space-x-8", "aria-label": "Admin Tabs", children: [_jsx("button", { onClick: () => setActiveTab('characters'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'characters'
+    return (_jsxs("div", { className: "container mx-auto px-4 py-8", children: [_jsx("h1", { className: "text-3xl font-bold text-gray-900 mb-6", children: "Admin Panel - Character Management" }), _jsx("p", { className: "text-gray-700 mb-4", children: "Welcome, Admin! Here you can manage Bible characters." }), 
+        isSuperadmin && (_jsx("div", { className: "mb-6", children: _jsx(Link, { to: "/admin/users", className: "inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600", children: "Superadmin: Manage Users & Organizations" }) })), 
+        _jsx("div", { className: "mb-8 border-b border-gray-200", children: _jsxs("nav", { className: "-mb-px flex space-x-8", "aria-label": "Admin Tabs", children: [_jsx("button", { onClick: () => setActiveTab('characters'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'characters'
                                 ? 'border-primary-500 text-primary-600'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`, children: "Characters" }), _jsx("button", { onClick: () => setActiveTab('groups'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'groups'
                                 ? 'border-primary-500 text-primary-600'
