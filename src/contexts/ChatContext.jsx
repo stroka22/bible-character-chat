@@ -294,15 +294,14 @@ export const ChatProvider = ({ children }) => {
 
     try {
       /* -----------------------------------------------------------
-       * Extract only the numeric ID, not the full object
+       * Preserve original character ID (can be string/UUID or number)
        * --------------------------------------------------------- */
-      const characterId = typeof character.id === 'number' 
-        ? character.id 
-        : (typeof character.id === 'string' && !isNaN(Number(character.id))) 
-          ? Number(character.id) 
-          : 1; // Default to 1 (Moses) as fallback
+      const characterId = character?.id;
+      if (!characterId) {
+        throw new Error('Character ID missing');
+      }
 
-      console.log('[ChatContext] Final resolved characterId:', characterId);
+      console.log('[ChatContext] Preserved characterId:', characterId);
 
       console.log('[ChatContext] Creating conversation via ConversationContext');
 
