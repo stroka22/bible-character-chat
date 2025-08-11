@@ -70,7 +70,7 @@ export async function createCustomer(userId, email) {
     }
     try {
         const { data: userData, error: dbError } = await supabase
-            .from('users')
+            .from('profiles')
             .select('stripe_customer_id')
             .eq('id', userId)
             .single();
@@ -94,7 +94,7 @@ export async function createCustomer(userId, email) {
         }
         const customerId = response.data.customerId;
         await supabase
-            .from('users')
+            .from('profiles')
             .update({ stripe_customer_id: customerId })
             .eq('id', userId);
         return customerId;
@@ -178,7 +178,7 @@ export async function getActiveSubscription(userId) {
     }
     try {
         const { data: userData, error: dbError } = await supabase
-            .from('users')
+            .from('profiles')
             .select('stripe_customer_id')
             .eq('id', userId)
             .single();
