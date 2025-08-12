@@ -16,6 +16,7 @@ import { loadAccountTierSettings } from '../../utils/accountTier';
  * - Character access limits for free accounts
  * - Message limits per conversation for free accounts
  * - Which characters are free vs premium-only
+ * - Featured character for the organization
  */
 const AccountTierManagement = () => {
   // Configuration state
@@ -37,6 +38,11 @@ const AccountTierManagement = () => {
   const [ownerSlug, setOwnerSlug] = useState('default');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [owners, setOwners] = useState([]);
+  /* Featured character state */
+  const [allCharacters, setAllCharacters] = useState([]);
+  const [featuredId, setFeaturedId] = useState('');
+  const [featuredSaving, setFeaturedSaving] = useState(false);
+  const [featuredSaveMessage, setFeaturedSaveMessage] = useState({ type: '', text: '' });
 
   /**
    * Fetch and normalise settings for provided slug
@@ -69,18 +75,65 @@ const AccountTierManagement = () => {
     }
   };
 
+  /**
+   * Load featured character for the given owner slug
+   */
+  const loadFeaturedCharacter = (slug) => {
+    try {
+      const key = `featuredCharacter:${slug}`;
+      const raw = localStorage.getItem(key);
+      
+      if (!raw) {
+        setFeaturedId('');
+        return;
+      }
+
+      try {
+        // Try to parse as JSON
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === 'object' && parsed !== null && parsed.id) {
+          setFeaturedId(parsed.id);
+          return;
+        }
+      } catch {
+        // Not JSON, treat as plain string
+        if (/^\d+$/.test(raw)) {
+          // If it's a numeric string, treat as ID
+          setFeaturedId(raw);
+        } else {
+          // Otherwise, try to find character by name
+          const character = allCharacters.find(c => 
+            (c.name || '').toLowerCase() === (raw || '').toLowerCase()
+          );
+          if (character) {
+            setFeaturedId(character.id);
+          } else {
+            setFeaturedId('');
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load featured character:', err);
+      setFeaturedId('');
+    }
+  };
+
   // Load characters, owners list & initial settings
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       try {
         // Load characters
-        const allCharacters = await characterRepository.getAll();
-        setCharacters(allCharacters);
+        const allChars = await characterRepository.getAll();
+        setCharacters(allChars);
+        setAllCharacters(allChars);
 
         // Get the current owner slug
         const slug = getOwnerSlug();
         setOwnerSlug(slug);
+
+        // Load featured character
+        loadFeaturedCharacter(slug);
 
         // Determine current user role
         try {
@@ -101,7 +154,7 @@ const AccountTierManagement = () => {
         }
 
         // finally, fetch settings
-        await fetchSettings(slug, allCharacters);
+        await fetchSettings(slug, allChars);
       } catch (error) {
         console.error('Failed to load data:', error);
         setSaveMessage({
@@ -132,6 +185,7 @@ const AccountTierManagement = () => {
   /* Reload settings whenever the selected owner changes */
   useEffect(() => {
     fetchSettings(ownerSlug, characters);
+    loadFeaturedCharacter(ownerSlug);
   }, [ownerSlug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Save settings to Supabase and localStorage
@@ -190,6 +244,70 @@ const AccountTierManagement = () => {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Save featured character to localStorage
+  const saveFeaturedCharacter = () => {
+    setFeaturedSaving(true);
+    try {
+      const key = `featuredCharacter:${ownerSlug}`;
+      
+      if (!featuredId) {
+        // If no character is selected, remove the featured character
+        localStorage.removeItem(key);
+        setFeaturedSaveMessage({
+          type: 'success',
+          text: 'Featured character removed'
+        });
+      } else {
+        // Find the character object
+        const character = allCharacters.find(c => c.id === featuredId);
+        if (!character) {
+          setFeaturedSaveMessage({
+            type: 'error',
+            text: 'Character not found'
+          });
+          return;
+        }
+
+        // Save as JSON with id and name
+        const data = JSON.stringify({
+          id: character.id,
+          name: character.name
+        });
+        localStorage.setItem(key, data);
+
+        // Trigger storage event for cross-tab sync
+        try {
+          window.dispatchEvent(
+            new StorageEvent('storage', {
+              key,
+              newValue: data
+            })
+          );
+        } catch (_) {
+          /* ignore */
+        }
+
+        setFeaturedSaveMessage({
+          type: 'success',
+          text: `${character.name} set as featured character`
+        });
+      }
+
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setFeaturedSaveMessage({ type: '', text: '' });
+      }, 3000);
+    } catch (error) {
+      console.error('Failed to save featured character:', error);
+      setFeaturedSaveMessage({
+        type: 'error',
+        text: 'Failed to save featured character'
+      });
+    } finally {
+      setFeaturedSaving(false);
     }
   };
 
@@ -343,7 +461,98 @@ const AccountTierManagement = () => {
         </div>
       ) : (
         <>
-          {/* Free Account Limits */}
+          {/* Featured Character Section */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-blue-800 mb-4">Featured Character</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Select a character to feature on the homepage for this organization.
+            </p>
+            
+            <div className="flex flex-col md:flex-row md:items-end gap-4">
+              <div className="flex-grow">
+                <label htmlFor="featuredCharacter" className="block text-sm font-medium text-gray-700 mb-1">
+                  Featured Character
+                </label>
+                <select
+                  id="featuredCharacter"
+                  value={featuredId}
+                  onChange={(e) => setFeaturedId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">None - No featured character</option>
+                  {allCharacters.map((char) => (
+                    <option key={char.id} value={char.id}>
+                      {char.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                {featuredSaveMessage.text && (
+                  <div className={`text-sm ${
+                    featuredSaveMessage.type === 'success' ? 'text-green-600' :
+                    featuredSaveMessage.type === 'error' ? 'text-red-600' : 
+                    featuredSaveMessage.type === 'warning' ? 'text-amber-600' : 'text-blue-600'
+                  }`}>
+                    {featuredSaveMessage.text}
+                  </div>
+                )}
+                
+                <button
+                  type="button"
+                  onClick={saveFeaturedCharacter}
+                  disabled={featuredSaving}
+                  className={`
+                    inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white 
+                    ${featuredSaving 
+                      ? 'bg-blue-300 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'}
+                  `}
+                >
+                  {featuredSaving ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </>
+                  ) : 'Save Featured Character'}
+                </button>
+              </div>
+            </div>
+            
+            {featuredId && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+                <div className="flex items-center gap-3">
+                  {allCharacters.find(c => c.id === featuredId) && (
+                    <>
+                      <img
+                        src={
+                          allCharacters.find(c => c.id === featuredId)?.avatar_url ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            allCharacters.find(c => c.id === featuredId)?.name || ''
+                          )}`
+                        }
+                        alt={allCharacters.find(c => c.id === featuredId)?.name}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-medium text-blue-900">
+                          {allCharacters.find(c => c.id === featuredId)?.name}
+                        </p>
+                        <p className="text-sm text-blue-700">
+                          Will be displayed on the homepage for {ownerSlug} organization
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Free Account Limits */}
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-blue-800 mb-4">Free Account Limits</h3>
