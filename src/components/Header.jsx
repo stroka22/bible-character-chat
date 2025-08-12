@@ -231,6 +231,8 @@ const Header = () => {
             </div>
             {/* Close relative group wrapper */}
             </div>
+            {/* Close flex container that wraps My Walk pill + user dropdown */}
+            </div>
           ) : (
             <>
               <Link 
