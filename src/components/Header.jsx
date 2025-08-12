@@ -110,26 +110,6 @@ const Header = () => {
             Characters
           </Link>
           <Link 
-            to="/conversations" 
-            className={`text-sm font-medium transition-colors ${
-              isActive('/conversations') 
-                ? 'text-yellow-400' 
-                : 'text-gray-300 hover:text-yellow-300'
-            }`}
-          >
-            My Conversations
-          </Link>
-          <Link 
-            to="/favorites" 
-            className={`text-sm font-medium transition-colors ${
-              isActive('/favorites') 
-                ? 'text-yellow-400' 
-                : 'text-gray-300 hover:text-yellow-300'
-            }`}
-          >
-            Favorites
-          </Link>
-          <Link 
             to="/pricing" 
             className={`text-sm font-medium transition-colors ${
               isActive('/pricing') 
@@ -320,26 +300,6 @@ const Header = () => {
               }`}
             >
               Characters
-            </Link>
-            <Link 
-              to="/conversations" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/conversations') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              My Conversations
-            </Link>
-            <Link 
-              to="/favorites" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/favorites') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              Favorites
             </Link>
             <Link 
               to="/pricing" 
