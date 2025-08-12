@@ -30,7 +30,7 @@ const HomePage = () => {
      * ------------------------------------------------------------------ */
     return (_jsxs(_Fragment, { children: [
             /* Background layers (stars / gradient blobs) */
-            _jsxs("div", { className: "fixed inset-0 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700", children: [
+            _jsxs("div", { className: "fixed inset-0 z-0 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700", children: [
                     _jsx("div", { className: "absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-200/20 via-transparent to-transparent opacity-30" }),
                     _jsx("div", { className: "absolute top-1/4 left-1/4 w-64 h-24 bg-white rounded-full blur-3xl opacity-15 animate-float" }),
                     _jsx("div", { className: "absolute top-1/3 right-1/4 w-80 h-32 bg-white rounded-full blur-3xl opacity-10 animate-float-delayed" }),
@@ -54,7 +54,7 @@ const HomePage = () => {
                             to avoid confusing end-users with technical details. */
                     ] }) })
             /* Site footer */
-            , _jsx(Footer, {})
+            , _jsx("div", { className: "relative z-10", children: _jsx(Footer, {}) })
         ] }));
 };
 export default HomePage;
