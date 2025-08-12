@@ -100,6 +100,16 @@ const Header = () => {
             Home
           </Link>
           <Link 
+            to="/how-it-works" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/how-it-works') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Getting&nbsp;Started
+          </Link>
+          <Link 
             to="/pricing" 
             className={`text-sm font-medium transition-colors ${
               isActive('/pricing') 
@@ -118,6 +128,16 @@ const Header = () => {
             }`}
           >
             FAQ
+          </Link>
+          <Link 
+            to="/how-it-works" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/how-it-works') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300'
+            }`}
+          >
+            Getting&nbsp;Started
           </Link>
           <Link 
             to="/contact" 
