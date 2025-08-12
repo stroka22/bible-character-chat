@@ -9,6 +9,36 @@ const HowItWorksPage = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8 pt-24">
+        {/* ------------------------------------------------------------------
+         * Hero – Getting Started
+         * ------------------------------------------------------------------ */}
+        <div className="max-w-5xl mx-auto mb-10">
+          <div className="relative overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/15 p-6 md:p-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-yellow-300 mb-3">
+              Getting Started
+            </h1>
+            <p className="text-blue-100 mb-6">
+              Pick a character, ask your questions, and save your journey
+              in&nbsp;
+              <span className="text-yellow-300 font-semibold">My&nbsp;Walk</span>.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                to="/"
+                className="px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-blue-900 rounded-lg font-semibold transition-colors text-center"
+              >
+                Start a Conversation
+              </Link>
+              <Link
+                to="/signup"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold transition-colors text-center"
+              >
+                Create an Account
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold text-yellow-300 mb-8">How It Works</h1>
           
