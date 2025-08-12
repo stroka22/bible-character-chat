@@ -19,6 +19,18 @@ const Header = () => {
 
   const location = useLocation();
 
+  /* ------------------------------------------------------------------
+   * Premium check helper (SSR-safe)
+   * ------------------------------------------------------------------ */
+  const isPremium = () => {
+    try {
+      if (typeof window === 'undefined') return false;
+      return localStorage.getItem('isPremium') === 'true';
+    } catch {
+      return false;
+    }
+  };
+
   // Handle scroll effect for header
   useEffect(() => {
     const handleScroll = () => {
@@ -117,6 +129,19 @@ const Header = () => {
           >
             Favorites
           </Link>
+          {/* My Walk (paid users, admins, super admins) */}
+          {isAuthenticated && (isPremium() || (isAdmin && isAdmin())) && (
+            <Link 
+              to="/my-walk" 
+              className={`text-sm font-medium transition-colors ${
+                isActive('/my-walk') 
+                  ? 'text-yellow-400' 
+                  : 'text-gray-300 hover:text-yellow-300'
+              }`}
+            >
+              My Walk
+            </Link>
+          )}
           <Link 
             to="/pricing" 
             className={`text-sm font-medium transition-colors ${
@@ -303,6 +328,19 @@ const Header = () => {
             >
               Favorites
             </Link>
+            {/* My Walk (mobile) */}
+            {isAuthenticated && (isPremium() || (isAdmin && isAdmin())) && (
+              <Link 
+                to="/my-walk" 
+                className={`text-sm font-medium transition-colors ${
+                  isActive('/my-walk') 
+                    ? 'text-yellow-400' 
+                    : 'text-gray-300'
+                }`}
+              >
+                My Walk
+              </Link>
+            )}
             <Link 
               to="/pricing" 
               className={`text-sm font-medium transition-colors ${

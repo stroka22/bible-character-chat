@@ -19,6 +19,7 @@ import PricingPage from './pages/PricingPage';
 import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
 import FavoritesPage from './pages/FavoritesPage.jsx';
+import MyWalkPage from './pages/MyWalkPage.jsx';
 import FAQPage from './pages/FAQPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
@@ -183,7 +184,8 @@ function App() {
             _jsx(Route, { path: "/profile", element: _jsx(ProfilePage, {}) }),
             _jsx(Route, { path: "/settings", element: _jsx(SettingsPage, {}) }),
             _jsx(Route, { path: "/conversations", element: _jsx(ConversationsPage, {}) }),
-            _jsx(Route, { path: "/favorites", element: _jsx(FavoritesPage, {}) })
+            _jsx(Route, { path: "/favorites", element: _jsx(FavoritesPage, {}) }),
+            _jsx(Route, { path: "/my-walk", element: _jsx(MyWalkPage, {}) })
         ]}),
         
         // Fallback route
