@@ -14,22 +14,10 @@ const Header = () => {
   /* ------------------------------------------------------------------
    * Auth state
    * ------------------------------------------------------------------ */
-  const { user, loading, signOut, isAdmin } = useAuth();
+  const { user, loading, signOut, isAdmin, isPremium: isPremiumUser } = useAuth();
   const isAuthenticated = !!user;
 
   const location = useLocation();
-
-  /* ------------------------------------------------------------------
-   * Premium check helper (SSR-safe)
-   * ------------------------------------------------------------------ */
-  const isPremium = () => {
-    try {
-      if (typeof window === 'undefined') return false;
-      return localStorage.getItem('isPremium') === 'true';
-    } catch {
-      return false;
-    }
-  };
 
   // Handle scroll effect for header
   useEffect(() => {
@@ -148,7 +136,7 @@ const Header = () => {
           ) : isAuthenticated ? (
             /* Desktop: My Walk pill + user dropdown */
             <div className="flex items-center space-x-3">
-              {(isPremium() || (isAdmin && isAdmin())) && (
+              {(isPremiumUser || (isAdmin && isAdmin())) && (
                 <Link
                   to="/my-walk"
                   aria-label="My Walk"
@@ -356,6 +344,7 @@ const Header = () => {
                   <span className="text-white text-sm">{user?.email || 'User'}</span>
                 </div>
                 {(isPremium() || (isAdmin && isAdmin())) && (
+                {(isPremiumUser || (isAdmin && isAdmin())) && (
                   <Link
                     to="/my-walk"
                     className="block w-full px-3 py-2 mt-3 text-sm font-semibold text-center bg-yellow-400 text-blue-900 rounded-full hover:bg-yellow-300 transition-colors"

@@ -8,6 +8,7 @@ import {
   SUBSCRIPTION_PRICES,
   testStripeConfiguration,
 } from '../services/stripe'; // Import necessary Stripe functions
+import Footer from '../components/Footer'; // ← NEW
 
 // Initialize Stripe outside of component render to avoid re-creating it
 const stripePromise = loadStripe(getPublicKey());
@@ -362,6 +363,8 @@ const PricingPage: React.FC = () => {
         </p>
       </div>
       </div>
+      {/* Site footer */}
+      <Footer />
     </>
   );
 };

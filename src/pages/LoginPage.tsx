@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Footer from '../components/Footer';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -247,6 +248,7 @@ const LoginPage: React.FC = () => {
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 text-xs text-white/70 pointer-events-none select-none">
       path: {location.pathname}
     </div>
+    <Footer />
     </>
   );
 };

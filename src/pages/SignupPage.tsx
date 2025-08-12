@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import Footer from '../components/Footer';
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ const SignupPage: React.FC = () => {
   };
 
   return (
+    <>
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-900 via-blue-600 to-blue-400 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-xl">
         <div>
@@ -185,6 +187,8 @@ const SignupPage: React.FC = () => {
         </form>
       </div>
     </div>
+    <Footer />
+    </>
   );
 };
 
