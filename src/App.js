@@ -23,6 +23,7 @@ import MyWalkPage from './pages/MyWalkPage.jsx';
 import FAQPage from './pages/FAQPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
+import ContactPage from './pages/ContactPage.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
@@ -166,6 +167,7 @@ function App() {
         _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }),
         _jsx(Route, { path: "/signup", element: _jsx(SignupPage, {}) }),
         _jsx(Route, { path: "/pricing", element: _jsx(PricingPage, {}) }),
+        _jsx(Route, { path: "/contact", element: _jsx(ContactPage, {}) }),
         _jsx(Route, { path: "/faq", element: _jsx(FAQPage, {}) }),
         _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         
