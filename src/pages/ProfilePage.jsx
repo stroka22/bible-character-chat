@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
+import Footer from '../components/Footer';
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -246,6 +247,7 @@ const ProfilePage = () => {
         )}
       </div>
     </div>
+    <Footer />
   );
 };
 

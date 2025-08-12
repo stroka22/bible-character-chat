@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { redeemInvite } from '../services/invitesService';
+import Footer from '../components/Footer';
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -300,6 +301,8 @@ const SettingsPage = () => {
           </div>
         </div>
       </div>
+      {/* Site footer */}
+      <Footer />
     </div>
   );
 };
