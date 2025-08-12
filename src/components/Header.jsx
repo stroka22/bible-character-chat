@@ -129,19 +129,6 @@ const Header = () => {
           >
             Favorites
           </Link>
-          {/* My Walk (paid users, admins, super admins) */}
-          {isAuthenticated && (isPremium() || (isAdmin && isAdmin())) && (
-            <Link 
-              to="/my-walk" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/my-walk') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300 hover:text-yellow-300'
-              }`}
-            >
-              My Walk
-            </Link>
-          )}
           <Link 
             to="/pricing" 
             className={`text-sm font-medium transition-colors ${
@@ -169,7 +156,31 @@ const Header = () => {
           {loading ? (
             <div className="w-8 h-8 rounded-full animate-pulse bg-gray-700"></div>
           ) : isAuthenticated ? (
-            <div className="relative group">
+            /* Desktop: My Walk pill + user dropdown */
+            <div className="flex items-center space-x-3">
+              {(isPremium() || (isAdmin && isAdmin())) && (
+                <Link
+                  to="/my-walk"
+                  aria-label="My Walk"
+                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                    isActive('/my-walk')
+                      ? 'bg-yellow-300 text-blue-900'
+                      : 'bg-yellow-400 text-blue-900 hover:bg-yellow-300'
+                  }`}
+                >
+                  {/* sparkles icon */}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-1.5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M5 8l.867 1.803L7.5 10.5l-1.633.697L5 13l-.867-1.803L2.5 10.5l1.633-.697L5 8zm5-7l1.286 2.674L14 5l-2.714 1.326L10 9l-1.286-2.674L6 5l2.714-1.326L10 1zm5 9l.75 1.553L17 12l-1.25.447L15 14l-.75-1.553L13 12l1.25-.447L15 10z" />
+                  </svg>
+                  My Walk
+                </Link>
+              )}
+              <div className="relative group">
               <button className="flex items-center space-x-2 focus:outline-none">
                 <div className="w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
@@ -328,19 +339,6 @@ const Header = () => {
             >
               Favorites
             </Link>
-            {/* My Walk (mobile) */}
-            {isAuthenticated && (isPremium() || (isAdmin && isAdmin())) && (
-              <Link 
-                to="/my-walk" 
-                className={`text-sm font-medium transition-colors ${
-                  isActive('/my-walk') 
-                    ? 'text-yellow-400' 
-                    : 'text-gray-300'
-                }`}
-              >
-                My Walk
-              </Link>
-            )}
             <Link 
               to="/pricing" 
               className={`text-sm font-medium transition-colors ${
@@ -375,6 +373,24 @@ const Header = () => {
                   </div>
                   <span className="text-white text-sm">{user?.email || 'User'}</span>
                 </div>
+                {(isPremium() || (isAdmin && isAdmin())) && (
+                  <Link
+                    to="/my-walk"
+                    className="block w-full px-3 py-2 mt-3 text-sm font-semibold text-center bg-yellow-400 text-blue-900 rounded-full hover:bg-yellow-300 transition-colors"
+                  >
+                    <div className="inline-flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 mr-1"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M5 8l.867 1.803L7.5 10.5l-1.633.697L5 13l-.867-1.803L2.5 10.5l1.633-.697L5 8zm5-7l1.286 2.674L14 5l-2.714 1.326L10 9l-1.286-2.674L6 5l2.714-1.326L10 1zm5 9l.75 1.553L17 12l-1.25.447L15 14l-.75-1.553L13 12l1.25-.447L15 10z" />
+                      </svg>
+                      My Walk
+                    </div>
+                  </Link>
+                )}
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <Link 
                     to="/profile" 
