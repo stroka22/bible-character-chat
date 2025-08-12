@@ -246,8 +246,9 @@ const ProfilePage = () => {
           </div>
         )}
       </div>
+      {/* Site footer */}
+      <Footer />
     </div>
-    <Footer />
   );
 };
 
