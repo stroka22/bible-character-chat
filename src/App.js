@@ -24,6 +24,13 @@ import FAQPage from './pages/FAQPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ContactPage from './pages/ContactPage.jsx';
+import HowItWorksPage from './pages/HowItWorksPage.jsx';
+import AboutPage from './pages/AboutPage.jsx';
+import TermsPage from './pages/TermsPage.jsx';
+import PrivacyPage from './pages/PrivacyPage.jsx';
+import CookiePolicyPage from './pages/CookiePolicyPage.jsx';
+import PressKitPage from './pages/PressKitPage.jsx';
+import CareersPage from './pages/CareersPage.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
@@ -167,7 +174,14 @@ function App() {
         _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }),
         _jsx(Route, { path: "/signup", element: _jsx(SignupPage, {}) }),
         _jsx(Route, { path: "/pricing", element: _jsx(PricingPage, {}) }),
+        _jsx(Route, { path: "/how-it-works", element: _jsx(HowItWorksPage, {}) }),
+        _jsx(Route, { path: "/about", element: _jsx(AboutPage, {}) }),
         _jsx(Route, { path: "/contact", element: _jsx(ContactPage, {}) }),
+        _jsx(Route, { path: "/terms", element: _jsx(TermsPage, {}) }),
+        _jsx(Route, { path: "/privacy", element: _jsx(PrivacyPage, {}) }),
+        _jsx(Route, { path: "/cookies", element: _jsx(CookiePolicyPage, {}) }),
+        _jsx(Route, { path: "/press-kit", element: _jsx(PressKitPage, {}) }),
+        _jsx(Route, { path: "/careers", element: _jsx(CareersPage, {}) }),
         _jsx(Route, { path: "/faq", element: _jsx(FAQPage, {}) }),
         _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         

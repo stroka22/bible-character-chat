@@ -1,35 +1,54 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FaithLogo from './FaithLogo';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (email) {
+      window.location.href = `mailto:newsletter@faithtalkai.com?subject=Subscribe&body=Please subscribe me with email: ${email}`;
+      setEmail('');
+    }
+  };
   
   return (
     <footer className="bg-[#0a0a2a] text-white">
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo and Tagline */}
-          <div className="col-span-1 md:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+          {/* Brand Column */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-1">
             <FaithLogo variant="light" size="lg" className="mb-4" />
             <p className="text-gray-300 mt-4">
               Engage in meaningful conversations with Biblical characters through the power of AI.
             </p>
           </div>
           
-          {/* Quick Links */}
+          {/* Product Column */}
           <div className="col-span-1">
-            <h3 className="text-yellow-400 font-bold text-lg mb-4">Quick Links</h3>
+            <h3 className="text-yellow-400 font-bold text-lg mb-4">Product</h3>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-gray-300 hover:text-yellow-400 transition-colors">Home</Link></li>
-              <li><Link to="/about" className="text-gray-300 hover:text-yellow-400 transition-colors">About</Link></li>
-              <li><Link to="/faq" className="text-gray-300 hover:text-yellow-400 transition-colors">FAQ</Link></li>
+              <li><Link to="/how-it-works" className="text-gray-300 hover:text-yellow-400 transition-colors">How it Works</Link></li>
               <li><Link to="/pricing" className="text-gray-300 hover:text-yellow-400 transition-colors">Pricing</Link></li>
+              <li><Link to="/faq" className="text-gray-300 hover:text-yellow-400 transition-colors">FAQ</Link></li>
+              <li><Link to="/contact" className="text-gray-300 hover:text-yellow-400 transition-colors">Contact Us</Link></li>
             </ul>
           </div>
           
-          {/* Legal */}
+          {/* Company Column */}
+          <div className="col-span-1">
+            <h3 className="text-yellow-400 font-bold text-lg mb-4">Company</h3>
+            <ul className="space-y-2">
+              <li><Link to="/about" className="text-gray-300 hover:text-yellow-400 transition-colors">About</Link></li>
+              <li><Link to="/press-kit" className="text-gray-300 hover:text-yellow-400 transition-colors">Press Kit</Link></li>
+              <li><Link to="/careers" className="text-gray-300 hover:text-yellow-400 transition-colors">Careers</Link></li>
+            </ul>
+          </div>
+          
+          {/* Legal Column */}
           <div className="col-span-1">
             <h3 className="text-yellow-400 font-bold text-lg mb-4">Legal</h3>
             <ul className="space-y-2">
@@ -39,7 +58,7 @@ const Footer = () => {
             </ul>
           </div>
           
-          {/* Contact */}
+          {/* Connect Column */}
           <div className="col-span-1">
             <h3 className="text-yellow-400 font-bold text-lg mb-4">Connect With Us</h3>
             <div className="flex space-x-4 mb-4">
@@ -65,26 +84,53 @@ const Footer = () => {
                 </svg>
               </a>
             </div>
-            <p className="text-gray-300">
+            <p className="text-gray-300 mb-4">
               <a href="mailto:contact@faithtalkai.com" className="hover:text-yellow-400 transition-colors">
                 contact@faithtalkai.com
               </a>
             </p>
+            
+            {/* Newsletter Signup */}
+            <form onSubmit={handleSubscribe} className="mt-4">
+              <label htmlFor="newsletter-email" className="text-sm text-gray-300 mb-2 block">Subscribe to our newsletter</label>
+              <div className="flex">
+                <input 
+                  type="email" 
+                  id="newsletter-email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your email" 
+                  className="flex-grow px-3 py-2 bg-blue-900/50 border border-blue-700 rounded-l-lg focus:outline-none focus:ring-1 focus:ring-yellow-400 text-white text-sm"
+                  required
+                />
+                <button 
+                  type="submit" 
+                  className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-3 py-2 rounded-r-lg text-sm font-medium transition-colors"
+                >
+                  Subscribe
+                </button>
+              </div>
+            </form>
           </div>
+        </div>
+      </div>
+      
+      {/* AI Disclaimer */}
+      <div className="border-t border-blue-800 py-4">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-400 text-sm">
+            AI-generated conversations are for educational and devotional purposes and are not a substitute for Scripture or pastoral counsel. 
+            <br />Bringing Biblical wisdom to life through AI
+          </p>
         </div>
       </div>
       
       {/* Copyright Bar */}
       <div className="bg-[#070718] py-4">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-sm">
-          <p className="text-gray-400 mb-2 md:mb-0">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-400 text-sm">
             &copy; {currentYear} FaithTalkAI.com. All rights reserved.
           </p>
-          <div className="flex space-x-4">
-            <span className="text-gray-400">
-              Bringing Biblical wisdom to life through AI
-            </span>
-          </div>
         </div>
       </div>
     </footer>
