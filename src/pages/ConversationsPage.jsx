@@ -538,6 +538,8 @@ const ConversationsPage = () => {
           )}
         </>
       </div>
+      {/* Site footer */}
+      <Footer />
     </div>
   );
 };
