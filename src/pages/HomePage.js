@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext.jsx';
 import ScalableCharacterSelection from '../components/ScalableCharacterSelection.jsx';
 import ChatInterface from '../components/chat/ChatInterface';
+import Footer from '../components/Footer';
 const HomePage = () => {
     const { character, messages, chatId } = useChat();
     const [resumed, setResumed] = React.useState(false);
@@ -52,6 +53,8 @@ const HomePage = () => {
                         /*  The “Resumed conversation” debug badge has been removed
                             to avoid confusing end-users with technical details. */
                     ] }) })
+            /* Site footer */
+            , _jsx(Footer, {})
         ] }));
 };
 export default HomePage;
