@@ -100,16 +100,6 @@ const Header = () => {
             Home
           </Link>
           <Link 
-            to="/characters" 
-            className={`text-sm font-medium transition-colors ${
-              isActive('/characters') 
-                ? 'text-yellow-400' 
-                : 'text-gray-300 hover:text-yellow-300'
-            }`}
-          >
-            Characters
-          </Link>
-          <Link 
             to="/pricing" 
             className={`text-sm font-medium transition-colors ${
               isActive('/pricing') 
@@ -128,6 +118,16 @@ const Header = () => {
             }`}
           >
             FAQ
+          </Link>
+          <Link 
+            to="/contact" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/contact') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Contact&nbsp;Us
           </Link>
         </nav>
 
@@ -292,16 +292,6 @@ const Header = () => {
               Home
             </Link>
             <Link 
-              to="/characters" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/characters') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              Characters
-            </Link>
-            <Link 
               to="/pricing" 
               className={`text-sm font-medium transition-colors ${
                 isActive('/pricing') 
@@ -320,6 +310,16 @@ const Header = () => {
               }`}
             >
               FAQ
+            </Link>
+            <Link 
+              to="/contact" 
+              className={`text-sm font-medium transition-colors ${
+                isActive('/contact') 
+                  ? 'text-yellow-400' 
+                  : 'text-gray-300'
+              }`}
+            >
+              Contact&nbsp;Us
             </Link>
           </nav>
 
