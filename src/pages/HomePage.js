@@ -5,9 +5,13 @@ import { useChat } from '../contexts/ChatContext.jsx';
 import ScalableCharacterSelection from '../components/ScalableCharacterSelection.jsx';
 import ChatInterface from '../components/chat/ChatInterface';
 import Footer from '../components/Footer';
+import { getOwnerSlug } from '../services/tierSettingsService';
+import { characterRepository } from '../repositories/characterRepository';
 const HomePage = () => {
     const { character, messages, chatId } = useChat();
     const [resumed, setResumed] = React.useState(false);
+    /* Featured character shown in banner below chat/selection */
+    const [featured, setFeatured] = React.useState(null);
     React.useEffect(() => {
         if (character && messages.length > 0) {
             setResumed(true);
@@ -16,6 +20,46 @@ const HomePage = () => {
             setResumed(false);
         }
     }, [character, messages]);
+
+    /* ------------------------------------------------------------------
+     * Load org-scoped featured character on mount
+     * ------------------------------------------------------------------ */
+    React.useEffect(() => {
+        (async () => {
+            try {
+                const slug = getOwnerSlug();
+                const key = `featuredCharacter:${slug}`;
+                const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+                if (!raw) return;
+
+                let id = null;
+                let name = null;
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        if (parsed.id) id = parsed.id;
+                        if (parsed.name) name = parsed.name;
+                    }
+                } catch {
+                    // not JSON – treat as plain string
+                    if (/^\\d+$/.test(raw)) id = raw;
+                    else name = raw;
+                }
+
+                let charObj = null;
+                if (id !== null) {
+                    charObj = await characterRepository.getById(id).catch(() => null);
+                }
+                if (!charObj && name) {
+                    const all = await characterRepository.getAll();
+                    charObj = all.find(c => (c.name || '').toLowerCase() === (name || '').toLowerCase()) || null;
+                }
+                if (charObj) setFeatured(charObj);
+            } catch (err) {
+                console.error('[HomePage] Failed to load featured character:', err);
+            }
+        })();
+    }, []);
     
     // Handler for upgrade button click
     const handleUpgradeClick = () => {
@@ -53,6 +97,13 @@ const HomePage = () => {
                         /*  The “Resumed conversation” debug badge has been removed
                             to avoid confusing end-users with technical details. */
                     ] }) })
+            ,
+            /* Featured Character banner (shows when configured) */
+            featured && _jsx("div", { className: "relative z-10 flex justify-center mt-6", children: _jsx("div", { className: "flex items-center gap-4 px-5 py-3 bg-white/5 backdrop-blur-md border border-white/15 rounded-xl shadow-lg", children: _jsxs(_Fragment, { children: [
+                            _jsx("img", { src: featured.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(featured.name)}`, alt: featured.name, className: "h-10 w-10 rounded-full object-cover" }),
+                            _jsx("span", { className: "text-yellow-300 font-semibold", children: featured.name }),
+                            _jsx(Link, { to: `/chat?character=${featured.id}`, className: "ml-auto px-4 py-1.5 bg-yellow-400 text-blue-900 rounded-full text-sm font-semibold hover:bg-yellow-300 transition-colors", children: "Chat Now" })
+                        ] }) }) })
             /* Site footer */
             , _jsx("div", { className: "relative z-10", children: _jsx(Footer, {}) })
         ] }));
