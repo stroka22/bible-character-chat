@@ -343,7 +343,6 @@ const Header = () => {
                   </div>
                   <span className="text-white text-sm">{user?.email || 'User'}</span>
                 </div>
-                {(isPremium() || (isAdmin && isAdmin())) && (
                 {(isPremiumUser || (isAdmin && isAdmin())) && (
                   <Link
                     to="/my-walk"
