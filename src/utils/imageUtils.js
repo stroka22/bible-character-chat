@@ -5,10 +5,15 @@ export const getSafeAvatarUrl = (name, url) => {
     if (!url)
         return generateFallbackAvatar(name);
     try {
-        const { hostname } = new URL(url);
+        const { protocol, hostname } = new URL(url);
+
+        // Reject non-HTTPS images to avoid mixed-content issues on mobile
+        if (protocol !== 'https:') {
+            return generateFallbackAvatar(name);
+        }
         // Explicitly allow Unsplash and Imgur hosted images (and sub-domains).
         const allowedHosts = [
-            // Unsplash
+        const allowedExactHosts = [
             'images.unsplash.com',
             'unsplash.com',
             // Imgur
@@ -16,13 +21,27 @@ export const getSafeAvatarUrl = (name, url) => {
             'i.imgur.com',
             'm.imgur.com',
             's.imgur.com'
+            's.imgur.com',
+            // FaithTalkAI own domain
+            'faithtalkai.com',
+            'www.faithtalkai.com',
+            // Cloudinary (common managed hosting)
+            'res.cloudinary.com',
+            // Amazon S3 generic endpoint
+            's3.amazonaws.com'
+
+        const isAllowed =
+        // Hosts we allow by suffix (any sub-domain)
+        const allowedSuffixes = [
+            '.unsplash.com',
+            '.imgur.com',
+            '.supabase.co',
+            '.s3.amazonaws.com'
         ];
 
         const isAllowed =
-            allowedHosts.includes(hostname) ||
-            hostname.endsWith('.unsplash.com') ||
-            hostname.endsWith('.imgur.com');
-
+            allowedExactHosts.includes(hostname) ||
+            allowedSuffixes.some((suffix) => hostname.endsWith(suffix));
         if (isAllowed) {
             return url;
         }
