@@ -196,8 +196,11 @@ export const characterRepository = {
                 .from('characters')
                 .update(updateData)
                 .eq('id', id)
-                .select('*')
-                .single();
+                // Return only a minimal projected set so we avoid large payloads
+                // and switch to maybeSingle() to prevent a 406 error when 0 rows
+                // are affected (RLS filtered or wrong ID).
+                .select('id,name,updated_at')
+                .maybeSingle();
 
             if (error) {
                 // ------------------------------------------------------------------
@@ -217,6 +220,19 @@ export const characterRepository = {
                     console.error('🚨 [DEBUG] Unable to stringify full error object:', stringifyErr);
                 }
                 throw error;
+            }
+
+            /* ------------------------------------------------------------
+             * No rows updated — likely permission issue or bad ID
+             * ------------------------------------------------------------ */
+            if (!data) {
+                console.warn(
+                    '🚨 [DEBUG] Update returned zero rows. This usually means the row',
+                    'was not found OR RLS prevented the update.'
+                );
+                throw new Error(
+                    'No rows updated. You may not have permission or the character was not found.'
+                );
             }
 
             console.log('🚨 [DEBUG] Update succeeded!', data);
