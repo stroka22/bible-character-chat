@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { characterRepository } from '../../repositories/characterRepository';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * AdminFeaturedCharacter Component
@@ -7,6 +8,12 @@ import { characterRepository } from '../../repositories/characterRepository';
  * Allows administrators to control which character is featured by default on the home page
  */
 const AdminFeaturedCharacter = () => {
+  // ------------------------------------------------------------------
+  // Auth / role helpers
+  // ------------------------------------------------------------------
+  const { isAdmin } = useAuth();
+  const isAdminUser = isAdmin && isAdmin();
+
   // State for characters and selection
   const [characters, setCharacters] = useState([]);
   const [selectedCharacterId, setSelectedCharacterId] = useState(null);
@@ -26,7 +33,8 @@ const AdminFeaturedCharacter = () => {
       setError(null);
       
       try {
-        const data = await characterRepository.getAll();
+        // Pass admin flag so repository returns hidden chars for admins only
+        const data = await characterRepository.getAll(isAdminUser);
         setCharacters(data);
         
         // Check if there's an admin-set featured character
@@ -60,7 +68,7 @@ const AdminFeaturedCharacter = () => {
     };
     
     fetchCharacters();
-  }, []);
+  }, [isAdminUser]);
   
   // Filter characters based on search query
   const filteredCharacters = useMemo(() => {
