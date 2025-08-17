@@ -22,9 +22,15 @@ export const characterRepository = {
         try {
             // Build query conditionally instead of using the (non-existent) .modify helper
             let query = supabase.from('characters').select('*');
-            // NOTE: We now always return every record regardless of `is_visible`.
-            // The `is_visible` flag can still be used elsewhere (e.g., UI badges),
-            // but it no longer hides characters from non-admin users.
+            /* ------------------------------------------------------------------
+             * Respect visibility for non-admin users:
+             *   • show rows where is_visible is TRUE
+             *   • keep legacy rows where the column is NULL
+             * Admin / super-admin users receive the full list.
+             * ------------------------------------------------------------------ */
+            if (!isAdmin) {
+                query = query.or('is_visible.is.null,is_visible.eq.true');
+            }
             const { data, error } = await query.order('name');
             if (error) {
                 throw error;
