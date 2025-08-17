@@ -12,6 +12,8 @@ import { usePremium } from '../hooks/usePremium';
 import { loadAccountTierSettings, isCharacterFree } from '../utils/accountTier';
 import UpgradeModal from './modals/UpgradeModal.jsx';
 import { useAuth } from '../contexts/AuthContext';
+import { getOwnerSlug } from '../services/tierSettingsService';
+
 console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
 const BIBLE_BOOKS = {
     oldTestament: [
@@ -55,7 +57,9 @@ const ScalableCharacterSelection = () => {
      * Premium / tier gating state
      * ----------------------------------------------------------- */
     const { isPremium } = usePremium();
-    const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  // Re-use helper pattern from Header – isAdmin is a function
+  const isAdminUser = isAdmin && isAdmin();
     const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [upgradeCharacter, setUpgradeCharacter] = useState(null);
@@ -160,7 +164,7 @@ const ScalableCharacterSelection = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await characterRepository.getAll();
+      const data = await characterRepository.getAll(isAdminUser);
             setCharacters(data);
             
             // 1. Check URL parameter for featured character
@@ -183,7 +187,39 @@ const ScalableCharacterSelection = () => {
                 }
             }
             
-            // 2. Check localStorage for saved featured character
+            // 2. Check org-scoped localStorage key for featured character
+            const ownerSlug = getOwnerSlug();
+            const orgScopedKey = `featuredCharacter:${ownerSlug}`;
+            const orgScopedFeatured = localStorage.getItem(orgScopedKey);
+            
+            if (orgScopedFeatured) {
+                try {
+                    // Try to parse as JSON first (newer format with ID)
+                    const parsed = JSON.parse(orgScopedFeatured);
+                    if (parsed && parsed.id) {
+                        featured = data.find(c => c.id.toString() === parsed.id.toString());
+                        if (featured) {
+                            console.log(`Found featured character from org-scoped setting: ${featured.name}`);
+                            setFeaturedCharacter(featured);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // Not JSON, treat as string (name)
+                    featured = data.find(c => 
+                        c.name.toLowerCase() === orgScopedFeatured.toLowerCase() ||
+                        c.name.toLowerCase().includes(orgScopedFeatured.toLowerCase())
+                    );
+                    
+                    if (featured) {
+                        console.log(`Found featured character from org-scoped setting: ${featured.name}`);
+                        setFeaturedCharacter(featured);
+                        return;
+                    }
+                }
+            }
+            
+            // 3. Check regular localStorage for saved featured character
             const savedFeatured = localStorage.getItem('featuredCharacter');
             if (savedFeatured) {
                 featured = data.find(c => 
@@ -198,7 +234,7 @@ const ScalableCharacterSelection = () => {
                 }
             }
             
-            // 3. Fallback to Jesus or first character (existing logic)
+            // 4. Fallback to Jesus or first character (existing logic)
             const jesus = data.find(c => c.name.toLowerCase().includes('jesus'));
             setFeaturedCharacter(jesus || (data.length > 0 ? data[0] : null));
         }
@@ -209,7 +245,7 @@ const ScalableCharacterSelection = () => {
         finally {
             setIsLoading(false);
         }
-    }, []);
+  }, [isAdminUser]);
     useEffect(() => {
         console.log('🪄 ScalableCharacterSelection useEffect (mount) fired');
         fetchCharacters();
@@ -695,6 +731,82 @@ const ScalableCharacterSelection = () => {
                 _jsxs("div", {
                     className: "max-w-7xl mx-auto bg-white/8 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl",
                     children: [
+                        /* Featured Character Banner */
+                        featuredCharacter && (
+                            _jsxs("div", {
+                                className: "mb-8 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl overflow-hidden relative",
+                                children: [
+                                    /* Yellow accent elements */
+                                    _jsx("div", { 
+                                        className: "absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full -mr-20 -mt-20 z-0"
+                                    }),
+                                    _jsx("div", { 
+                                        className: "absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/10 rounded-full -ml-16 -mb-16 z-0"
+                                    }),
+                                    
+                                    _jsxs("div", {
+                                        className: "flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10",
+                                        children: [
+                                            /* Character info */
+                                            _jsxs("div", {
+                                                className: "flex-1",
+                                                children: [
+                                                    _jsx("div", {
+                                                        className: "text-yellow-300 text-sm font-medium mb-2",
+                                                        children: "Featured Character"
+                                                    }),
+                                                    _jsx("h2", {
+                                                        className: "text-3xl md:text-4xl font-bold text-yellow-400 mb-3",
+                                                        style: { fontFamily: 'Cinzel, serif' },
+                                                        children: featuredCharacter.name
+                                                    }),
+                                                    _jsx("p", {
+                                                        className: "text-white/80 mb-4 line-clamp-2",
+                                                        children: featuredCharacter.description
+                                                    }),
+                                                    
+                                                    /* CTA Button */
+                                                    _jsx("button", {
+                                                        onClick: () => {
+                                                            const canChatBanner = isPremium || isCharacterFree(featuredCharacter, tierSettings);
+                                                            if (canChatBanner) {
+                                                                handleSelectCharacter(featuredCharacter);
+                                                            } else {
+                                                                setUpgradeCharacter(featuredCharacter);
+                                                                setShowUpgrade(true);
+                                                            }
+                                                        },
+                                                        className: `px-6 py-3 rounded-lg font-medium text-base transition-colors ${
+                                                            isPremium || isCharacterFree(featuredCharacter, tierSettings)
+                                                                ? 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
+                                                                : 'bg-gray-400 text-gray-800 hover:bg-gray-500'
+                                                        }`,
+                                                        children: isPremium || isCharacterFree(featuredCharacter, tierSettings)
+                                                            ? `Chat with ${featuredCharacter.name}`
+                                                            : 'Upgrade to Chat'
+                                                    })
+                                                ]
+                                            }),
+                                            
+                                            /* Character image */
+                                            _jsx("div", {
+                                                className: "w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-yellow-400/50 shadow-lg flex-shrink-0",
+                                                children: _jsx("img", {
+                                                    src: featuredCharacter.avatar_url || 
+                                                        `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`,
+                                                    alt: featuredCharacter.name,
+                                                    className: "w-full h-full object-cover",
+                                                    onError: (e) => {
+                                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`;
+                                                    }
+                                                })
+                                            })
+                                        ]
+                                    })
+                                ]
+                            })
+                        ),
+
                         /* Title ----------------------------------------------------- */
                         _jsx("h1", {
                             className: "text-4xl md:text-5xl font-extrabold text-center text-yellow-400 mb-8 tracking-tight drop-shadow-lg",
