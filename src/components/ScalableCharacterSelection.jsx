@@ -283,7 +283,6 @@ const ScalableCharacterSelection = () => {
                     typeof characterIdOrObject === 'object'
                         ? characterIdOrObject
                         : characters.find((c) => `${c.id}` === `${characterIdOrObject}`);
-
                 if (!characterObj) {
                     console.error(
                         'Character not found for ID:',
@@ -736,7 +735,13 @@ const ScalableCharacterSelection = () => {
                         /* Featured Character Banner */
                         featuredCharacter && (
                             _jsxs("div", {
-                                className: "mb-8 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/15 shadow-xl overflow-hidden relative",
+                                /* ----------------------------------------------------------
+                                 * Desktop-only personality: subtle hover glow & ring
+                                 * -------------------------------------------------------- */
+                                className: `mb-8 bg-white/10 backdrop-blur-sm rounded-2xl p-6 
+                                    border border-white/15 shadow-xl overflow-hidden relative
+                                    md:hover:ring-2 md:hover:ring-yellow-400/30 md:hover:bg-white/15
+                                    md:transition-all`,
                                 children: [
                                     /* Yellow accent elements */
                                     _jsx("div", { 
@@ -746,6 +751,16 @@ const ScalableCharacterSelection = () => {
                                         className: "absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/10 rounded-full -ml-16 -mb-16 z-0"
                                     }),
                                     
+                                    /* Desktop patterned overlay – ultra-low opacity so it’s
+                                     * invisible on mobile (hidden) and decorative on md+. */
+                                    _jsx("div", {
+                                        className: "hidden md:block absolute inset-0 pointer-events-none",
+                                        style: {
+                                            backgroundImage:
+                                                'repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 8px)',
+                                        }
+                                    }),
+
                                     _jsxs("div", {
                                         className: "flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10",
                                         children: [
@@ -765,6 +780,42 @@ const ScalableCharacterSelection = () => {
                                                     _jsx("p", {
                                                         className: "text-white/80 mb-4 line-clamp-2",
                                                         children: featuredCharacter.description
+                                                    }),
+                                                    
+                                                    /* Quote / opening line -------------------------------- */
+                                                    featuredCharacter.opening_line && (
+                                                        _jsxs("blockquote", {
+                                                            className: "italic text-blue-100/90 relative pl-6 mb-4",
+                                                            children: [
+                                                                _jsx("svg", {
+                                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                                    className: "h-4 w-4 absolute left-0 top-1 text-yellow-300",
+                                                                    fill: "currentColor",
+                                                                    viewBox: "0 0 20 20",
+                                                                    children: _jsx("path", { d: "M6.17 7A4.17 4.17 0 012 2.83V2a1 1 0 00-2 0v.83A6.17 6.17 0 006.17 9H7a1 1 0 000-2H6.17zM17 7a4.17 4.17 0 01-4.17-4.17V2a1 1 0 10-2 0v.83A6.17 6.17 0 0017 9h.83a1 1 0 000-2H17z" })
+                                                                }),
+                                                                _jsx("span", { children: featuredCharacter.opening_line })
+                                                            ]
+                                                        })
+                                                    ),
+
+                                                    /* Badges row ------------------------------------------- */
+                                                    _jsxs("div", {
+                                                        className: "flex flex-wrap gap-2 mb-4",
+                                                        children: [
+                                                            featuredCharacter.testament && (
+                                                                _jsx("span", {
+                                                                    className: "bg-yellow-400/20 text-yellow-300 text-xs font-semibold px-3 py-1 rounded-full border border-yellow-400/40",
+                                                                    children: featuredCharacter.testament
+                                                                })
+                                                            ),
+                                                            featuredCharacter.bible_book && (
+                                                                _jsx("span", {
+                                                                    className: "bg-blue-400/20 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full border border-blue-300/30",
+                                                                    children: featuredCharacter.bible_book.split(',')[0]
+                                                                })
+                                                            )
+                                                        ]
                                                     }),
                                                     
                                                     /* CTA Button */
@@ -792,7 +843,12 @@ const ScalableCharacterSelection = () => {
                                             
                                             /* Character image */
                                             _jsx("div", {
-                                                className: "w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-yellow-400/50 shadow-lg flex-shrink-0",
+                                                className: `
+                                                    w-32 h-32 md:w-44 md:h-44 rounded-full overflow-hidden
+                                                    border-4 border-yellow-400/50 shadow-lg flex-shrink-0
+                                                    relative transform transition-transform
+                                                    md:hover:-translate-y-0.5 md:hover:shadow-2xl
+                                                `,
                                                 children: _jsx("img", {
                                                     src: featuredCharacter.avatar_url || 
                                                         `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`,
@@ -802,6 +858,11 @@ const ScalableCharacterSelection = () => {
                                                         e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`;
                                                     }
                                                 })
+                                            }),
+
+                                            /* Halo glow layer (behind avatar) */
+                                            _jsx("div", {
+                                                className: "absolute md:block hidden w-48 h-48 rounded-full bg-yellow-300 blur-3xl opacity-20 -z-10",
                                             })
                                         ]
                                     })
