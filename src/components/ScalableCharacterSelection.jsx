@@ -164,7 +164,8 @@ const ScalableCharacterSelection = () => {
         setIsLoading(true);
         setError(null);
         try {
-      const data = await characterRepository.getAll(isAdminUser);
+      // Always exclude hidden characters for the chooser, even for admins
+      const data = await characterRepository.getAll(false);
             setCharacters(data);
             
             // 1. Check URL parameter for featured character
@@ -245,7 +246,8 @@ const ScalableCharacterSelection = () => {
         finally {
             setIsLoading(false);
         }
-  }, [isAdminUser]);
+  // No deps – admin status no longer alters fetch logic
+  }, []);
     useEffect(() => {
         console.log('🪄 ScalableCharacterSelection useEffect (mount) fired');
         fetchCharacters();
