@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 // receive the same provider instance.
 import { ChatProvider } from './contexts/ChatContext.jsx';
 import { ConversationProvider } from './contexts/ConversationContext.jsx';
+import { RoundtableProvider } from './contexts/RoundtableContext.jsx';
 /* ------------------------------------------------------------------
  * Global styles
  * ------------------------------------------------------------------ */
@@ -33,6 +34,8 @@ import PressKitPage from './pages/PressKitPage.jsx';
 import CareersPage from './pages/CareersPage.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
+import RoundtableSetup from './pages/RoundtableSetup.jsx';
+import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
@@ -158,7 +161,9 @@ function App() {
     const Providers = ({ children }) => (
         _jsx(AuthProvider, {
             children: _jsx(ConversationProvider, {
-                children: _jsx(ChatProvider, { children })
+                children: _jsx(ChatProvider, {
+                    children: _jsx(RoundtableProvider, { children })
+                })
             })
         })
     );
@@ -181,6 +186,9 @@ function App() {
         _jsx(Route, { path: "/privacy", element: _jsx(PrivacyPage, {}) }),
         _jsx(Route, { path: "/cookies", element: _jsx(CookiePolicyPage, {}) }),
         _jsx(Route, { path: "/press-kit", element: _jsx(PressKitPage, {}) }),
+        /* -------- Roundtable (public) ----------------------------- */
+        _jsx(Route, { path: "/roundtable/setup", element: _jsx(RoundtableSetup, {}) }),
+        _jsx(Route, { path: "/roundtable", element: _jsx(RoundtableChat, {}) }),
         _jsx(Route, { path: "/careers", element: _jsx(CareersPage, {}) }),
         _jsx(Route, { path: "/faq", element: _jsx(FAQPage, {}) }),
         _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
