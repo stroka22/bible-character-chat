@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { generateCharacterResponse } from '../services/openai';
 import { useConversation } from './ConversationContext.jsx';
 import { characterRepository } from '../repositories/characterRepository';
+import { roundtableSettingsRepository, DEFAULT_ROUNDTABLE_SETTINGS } from '../repositories/roundtableSettingsRepository';
+import { getOwnerSlug } from '../services/tierSettingsService';
 
 // Create the roundtable context
 const RoundtableContext = createContext();
@@ -80,6 +82,39 @@ export const RoundtableProvider = ({ children }) => {
     setIsTyping(true);
     
     try {
+      /* ------------------------------------------------------------------
+       * Load per-organisation roundtable settings from Supabase
+       * ----------------------------------------------------------------*/
+      const ownerSlug = getOwnerSlug();
+      let settings = DEFAULT_ROUNDTABLE_SETTINGS;
+      try {
+        const fetched = await roundtableSettingsRepository.getByOwnerSlug(ownerSlug);
+        if (fetched) settings = fetched;
+      } catch (e) {
+        console.warn('[RoundtableContext] Using default roundtable settings due to fetch error:', e);
+      }
+      const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+      // Effective replies / words / follow-ups
+      const effReplies = clamp(
+        rpr || settings.defaults.repliesPerRound,
+        settings.limits.repliesPerRound.min,
+        settings.limits.repliesPerRound.max
+      );
+      const effMaxWords = clamp(
+        settings.defaults.maxWordsPerReply,
+        settings.limits.maxWordsPerReply.min,
+        settings.limits.maxWordsPerReply.max
+      );
+      const effFollowUps = clamp(
+        settings.defaults.followUpsPerRound,
+        settings.limits.followUpsPerRound.min,
+        settings.limits.followUpsPerRound.max
+      );
+      setRepliesPerRound(effReplies);
+      setMaxWordsPerReply(effMaxWords);
+      followUpsPerRound.current = effFollowUps;
+      /* ------------------------------------------------------------------ */
+
       // Reset state
       setMessages([]);
       setConversationId(null);
