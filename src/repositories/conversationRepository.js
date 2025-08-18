@@ -79,6 +79,8 @@ export const conversationRepository = {
    * @param {string} conversation.character_id - ID of the character
    * @param {string} conversation.title - Title of the conversation (optional)
    * @param {boolean} conversation.is_favorite - Whether the conversation is favorited (optional)
+   * @param {Array<string|number>} [conversation.participants] - For roundtables: array of character IDs participating (optional)
+   * @param {string} [conversation.type] - Conversation type e.g. 'roundtable' (optional)
    * @returns {Promise<Object>} - The created conversation
    */
   async createConversation(conversation = {}) {
@@ -86,7 +88,13 @@ export const conversationRepository = {
       /* --------------------------------------------------------------
        * Extract params with safe defaults
        * ------------------------------------------------------------*/
-      const { character_id, title, is_favorite = false } = conversation;
+      const {
+        character_id,
+        title,
+        is_favorite = false,
+        participants = null,
+        type = null
+      } = conversation;
 
       console.log('[MOCK] Creating conversation with params:', {
         character_id,
@@ -116,6 +124,10 @@ export const conversationRepository = {
         character_id,
         title: conversationTitle,
         is_favorite,
+        ...(type ? { conversation_type: type } : {}),
+        ...(Array.isArray(participants) && participants.length > 0
+          ? { participants }
+          : {}),
         is_shared: false,
         share_code: null,
         is_deleted: false,
