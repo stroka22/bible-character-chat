@@ -60,6 +60,7 @@ const AccountTierManagement = () => {
   );
   const [rtLimits, setRtLimits] = useState(DEFAULT_ROUNDTABLE_SETTINGS.limits);
   const [rtLocks, setRtLocks] = useState(DEFAULT_ROUNDTABLE_SETTINGS.locks);
+  const [rtLimitsTier, setRtLimitsTier] = useState('free'); // 'free' | 'premium'
   
   /**
    * Fetch and normalise settings for provided slug
@@ -975,6 +976,7 @@ const AccountTierManagement = () => {
                 <h3 className="text-xl font-semibold text-blue-800 mb-4">Roundtable Settings</h3>
                 <p className="text-sm text-gray-600 mb-6">
                   Configure default settings, limits, and locks for roundtable discussions in this organization.
+                  Roundtable discussions allow multiple biblical characters to respond to topics and interact with each other.
                 </p>
 
                 {rtLoading ? (
@@ -988,6 +990,7 @@ const AccountTierManagement = () => {
                       <h4 className="text-lg font-medium text-blue-700 mb-3">Default Settings</h4>
                       <p className="text-sm text-gray-600 mb-4">
                         These settings will be applied as defaults when users create new roundtable discussions.
+                        Users can adjust these within the allowed limits unless the feature is locked.
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -999,17 +1002,18 @@ const AccountTierManagement = () => {
                           <input
                             type="number"
                             id="repliesPerRound"
-                            min={rtLimits.repliesPerRound.min}
-                            max={rtLimits.repliesPerRound.max}
+                            min={rtLimits[rtLimitsTier].repliesPerRound.min}
+                            max={rtLimits[rtLimitsTier].repliesPerRound.max}
                             value={rtDefaults.repliesPerRound}
                             onChange={(e) => setRtDefaults({
                               ...rtDefaults,
-                              repliesPerRound: parseInt(e.target.value) || rtLimits.repliesPerRound.min
+                              repliesPerRound: parseInt(e.target.value) || rtLimits[rtLimitsTier].repliesPerRound.min
                             })}
                             className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                           />
                           <p className="text-xs text-gray-500">
-                            Number of characters that will respond in each round (min: {rtLimits.repliesPerRound.min}, max: {rtLimits.repliesPerRound.max})
+                            Number of characters that will respond in each round. For example, with 3 replies, three different characters will speak in each round.
+                            <br/>Min: {rtLimits[rtLimitsTier].repliesPerRound.min}, Max: {rtLimits[rtLimitsTier].repliesPerRound.max}
                           </p>
                         </div>
 
@@ -1021,17 +1025,18 @@ const AccountTierManagement = () => {
                           <input
                             type="number"
                             id="followUpsPerRound"
-                            min={rtLimits.followUpsPerRound.min}
-                            max={rtLimits.followUpsPerRound.max}
+                            min={rtLimits[rtLimitsTier].followUpsPerRound.min}
+                            max={rtLimits[rtLimitsTier].followUpsPerRound.max}
                             value={rtDefaults.followUpsPerRound}
                             onChange={(e) => setRtDefaults({
                               ...rtDefaults,
-                              followUpsPerRound: parseInt(e.target.value) || rtLimits.followUpsPerRound.min
+                              followUpsPerRound: parseInt(e.target.value) || rtLimits[rtLimitsTier].followUpsPerRound.min
                             })}
                             className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                           />
                           <p className="text-xs text-gray-500">
-                            Additional responses after main replies (min: {rtLimits.followUpsPerRound.min}, max: {rtLimits.followUpsPerRound.max})
+                            Additional responses after main replies. These create natural back-and-forth discussion between characters.
+                            <br/>Min: {rtLimits[rtLimitsTier].followUpsPerRound.min}, Max: {rtLimits[rtLimitsTier].followUpsPerRound.max}
                           </p>
                         </div>
 
@@ -1043,17 +1048,18 @@ const AccountTierManagement = () => {
                           <input
                             type="number"
                             id="maxWordsPerReply"
-                            min={rtLimits.maxWordsPerReply.min}
-                            max={rtLimits.maxWordsPerReply.max}
+                            min={rtLimits[rtLimitsTier].maxWordsPerReply.min}
+                            max={rtLimits[rtLimitsTier].maxWordsPerReply.max}
                             value={rtDefaults.maxWordsPerReply}
                             onChange={(e) => setRtDefaults({
                               ...rtDefaults,
-                              maxWordsPerReply: parseInt(e.target.value) || rtLimits.maxWordsPerReply.min
+                              maxWordsPerReply: parseInt(e.target.value) || rtLimits[rtLimitsTier].maxWordsPerReply.min
                             })}
                             className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                           />
                           <p className="text-xs text-gray-500">
-                            Maximum words per character response (min: {rtLimits.maxWordsPerReply.min}, max: {rtLimits.maxWordsPerReply.max})
+                            Maximum words per character response. Higher values allow more detailed answers but can make discussions lengthy.
+                            <br/>Min: {rtLimits[rtLimitsTier].maxWordsPerReply.min}, Max: {rtLimits[rtLimitsTier].maxWordsPerReply.max}
                           </p>
                         </div>
 
@@ -1065,21 +1071,24 @@ const AccountTierManagement = () => {
                           <input
                             type="range"
                             id="creativity"
-                            min={rtLimits.creativity.min}
-                            max={rtLimits.creativity.max}
+                            min={rtLimits[rtLimitsTier].creativity.min}
+                            max={rtLimits[rtLimitsTier].creativity.max}
                             step="0.1"
                             value={rtDefaults.creativity}
                             onChange={(e) => setRtDefaults({
                               ...rtDefaults,
-                              creativity: parseFloat(e.target.value) || rtLimits.creativity.min
+                              creativity: parseFloat(e.target.value) || rtLimits[rtLimitsTier].creativity.min
                             })}
                             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                           />
                           <div className="flex justify-between">
-                            <span className="text-xs text-gray-500">Conservative ({rtLimits.creativity.min})</span>
+                            <span className="text-xs text-gray-500">Conservative ({rtLimits[rtLimitsTier].creativity.min})</span>
                             <span className="text-xs text-gray-700 font-medium">{rtDefaults.creativity.toFixed(1)}</span>
-                            <span className="text-xs text-gray-500">Creative ({rtLimits.creativity.max})</span>
+                            <span className="text-xs text-gray-500">Creative ({rtLimits[rtLimitsTier].creativity.max})</span>
                           </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Controls how strictly characters adhere to biblical text. Lower values produce more conservative responses based closely on scripture.
+                          </p>
                         </div>
 
                         {/* Max Participants */}
@@ -1091,7 +1100,7 @@ const AccountTierManagement = () => {
                             type="number"
                             id="maxParticipants"
                             min="2"
-                            max={rtLimits.maxParticipants}
+                            max={rtLimits[rtLimitsTier].maxParticipants}
                             value={rtDefaults.maxParticipants}
                             onChange={(e) => setRtDefaults({
                               ...rtDefaults,
@@ -1100,7 +1109,8 @@ const AccountTierManagement = () => {
                             className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                           />
                           <p className="text-xs text-gray-500">
-                            Maximum number of characters in a roundtable (max: {rtLimits.maxParticipants})
+                            Maximum number of characters in a roundtable. More participants create diverse discussions but each character speaks less frequently.
+                            <br/>Max: {rtLimits[rtLimitsTier].maxParticipants}
                           </p>
                         </div>
                       </div>
@@ -1123,6 +1133,9 @@ const AccountTierManagement = () => {
                             Allow All-Speak Mode
                             {rtLocks.allowAllSpeak && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When enabled, all characters respond to each user message. With this disabled, only the configured number of replies per round will occur.">?</span>
+                          </div>
                         </div>
                         
                         <div className="flex items-center">
@@ -1141,6 +1154,9 @@ const AccountTierManagement = () => {
                             Strict Rotation
                             {rtLocks.strictRotation && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When enabled, characters take turns in a fixed order. Otherwise, there's some randomness in who speaks next.">?</span>
+                          </div>
                         </div>
                         
                         <div className="flex items-center">
@@ -1159,6 +1175,9 @@ const AccountTierManagement = () => {
                             Enable Advance Round
                             {rtLocks.enableAdvanceRound && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="Shows a button to advance to the next round without requiring user input. Characters will continue discussing the topic.">?</span>
+                          </div>
                         </div>
                         
                         <div className="flex items-center">
@@ -1177,6 +1196,9 @@ const AccountTierManagement = () => {
                             Save By Default
                             {rtLocks.saveByDefault && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="Automatically save roundtable discussions to the user's conversation history.">?</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1186,7 +1208,44 @@ const AccountTierManagement = () => {
                       <h4 className="text-lg font-medium text-blue-700 mb-3">Limits</h4>
                       <p className="text-sm text-gray-600 mb-4">
                         These settings define the minimum and maximum values users can select.
+                        Different limits can be set for free and premium users.
                       </p>
+
+                      {/* Tier selector */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Editing Limits For:
+                        </label>
+                        <div className="flex space-x-4">
+                          <button
+                            type="button"
+                            onClick={() => setRtLimitsTier('free')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium ${
+                              rtLimitsTier === 'free'
+                                ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                                : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+                            }`}
+                          >
+                            Free Users
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRtLimitsTier('premium')}
+                            className={`px-4 py-2 rounded-md text-sm font-medium ${
+                              rtLimitsTier === 'premium'
+                                ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                                : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+                            }`}
+                          >
+                            Premium Users
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {rtLimitsTier === 'free' 
+                            ? 'Editing limits for free users. These should be more restrictive than premium limits.'
+                            : 'Editing limits for premium users. These can be more generous than free limits.'}
+                        </p>
+                      </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Replies Per Round Limits */}
@@ -1202,12 +1261,15 @@ const AccountTierManagement = () => {
                                 id="repliesMin"
                                 min="1"
                                 max="5"
-                                value={rtLimits.repliesPerRound.min}
+                                value={rtLimits[rtLimitsTier].repliesPerRound.min}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  repliesPerRound: {
-                                    ...rtLimits.repliesPerRound,
-                                    min: parseInt(e.target.value) || 1
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    repliesPerRound: {
+                                      ...rtLimits[rtLimitsTier].repliesPerRound,
+                                      min: parseInt(e.target.value) || 1
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
@@ -1220,18 +1282,24 @@ const AccountTierManagement = () => {
                                 id="repliesMax"
                                 min="1"
                                 max="10"
-                                value={rtLimits.repliesPerRound.max}
+                                value={rtLimits[rtLimitsTier].repliesPerRound.max}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  repliesPerRound: {
-                                    ...rtLimits.repliesPerRound,
-                                    max: parseInt(e.target.value) || 1
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    repliesPerRound: {
+                                      ...rtLimits[rtLimitsTier].repliesPerRound,
+                                      max: parseInt(e.target.value) || 1
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                               />
                             </div>
                           </div>
+                          <p className="text-xs text-gray-500">
+                            Recommended: Free (1-4), Premium (1-6)
+                          </p>
                         </div>
 
                         {/* Follow-Ups Per Round Limits */}
@@ -1247,12 +1315,15 @@ const AccountTierManagement = () => {
                                 id="followUpsMin"
                                 min="0"
                                 max="5"
-                                value={rtLimits.followUpsPerRound.min}
+                                value={rtLimits[rtLimitsTier].followUpsPerRound.min}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  followUpsPerRound: {
-                                    ...rtLimits.followUpsPerRound,
-                                    min: parseInt(e.target.value) || 0
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    followUpsPerRound: {
+                                      ...rtLimits[rtLimitsTier].followUpsPerRound,
+                                      min: parseInt(e.target.value) || 0
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
@@ -1265,18 +1336,24 @@ const AccountTierManagement = () => {
                                 id="followUpsMax"
                                 min="0"
                                 max="10"
-                                value={rtLimits.followUpsPerRound.max}
+                                value={rtLimits[rtLimitsTier].followUpsPerRound.max}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  followUpsPerRound: {
-                                    ...rtLimits.followUpsPerRound,
-                                    max: parseInt(e.target.value) || 0
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    followUpsPerRound: {
+                                      ...rtLimits[rtLimitsTier].followUpsPerRound,
+                                      max: parseInt(e.target.value) || 0
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                               />
                             </div>
                           </div>
+                          <p className="text-xs text-gray-500">
+                            Recommended: Free (0-2), Premium (0-3)
+                          </p>
                         </div>
 
                         {/* Max Words Per Reply Limits */}
@@ -1292,12 +1369,15 @@ const AccountTierManagement = () => {
                                 id="wordsMin"
                                 min="30"
                                 max="100"
-                                value={rtLimits.maxWordsPerReply.min}
+                                value={rtLimits[rtLimitsTier].maxWordsPerReply.min}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  maxWordsPerReply: {
-                                    ...rtLimits.maxWordsPerReply,
-                                    min: parseInt(e.target.value) || 30
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    maxWordsPerReply: {
+                                      ...rtLimits[rtLimitsTier].maxWordsPerReply,
+                                      min: parseInt(e.target.value) || 30
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
@@ -1310,18 +1390,24 @@ const AccountTierManagement = () => {
                                 id="wordsMax"
                                 min="50"
                                 max="300"
-                                value={rtLimits.maxWordsPerReply.max}
+                                value={rtLimits[rtLimitsTier].maxWordsPerReply.max}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  maxWordsPerReply: {
-                                    ...rtLimits.maxWordsPerReply,
-                                    max: parseInt(e.target.value) || 50
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    maxWordsPerReply: {
+                                      ...rtLimits[rtLimitsTier].maxWordsPerReply,
+                                      max: parseInt(e.target.value) || 50
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                               />
                             </div>
                           </div>
+                          <p className="text-xs text-gray-500">
+                            Recommended: Free (60-140), Premium (60-160)
+                          </p>
                         </div>
 
                         {/* Creativity Limits */}
@@ -1338,12 +1424,15 @@ const AccountTierManagement = () => {
                                 min="0"
                                 max="1"
                                 step="0.1"
-                                value={rtLimits.creativity.min}
+                                value={rtLimits[rtLimitsTier].creativity.min}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  creativity: {
-                                    ...rtLimits.creativity,
-                                    min: parseFloat(e.target.value) || 0
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    creativity: {
+                                      ...rtLimits[rtLimitsTier].creativity,
+                                      min: parseFloat(e.target.value) || 0
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
@@ -1357,18 +1446,24 @@ const AccountTierManagement = () => {
                                 min="0.1"
                                 max="1"
                                 step="0.1"
-                                value={rtLimits.creativity.max}
+                                value={rtLimits[rtLimitsTier].creativity.max}
                                 onChange={(e) => setRtLimits({
                                   ...rtLimits,
-                                  creativity: {
-                                    ...rtLimits.creativity,
-                                    max: parseFloat(e.target.value) || 1
+                                  [rtLimitsTier]: {
+                                    ...rtLimits[rtLimitsTier],
+                                    creativity: {
+                                      ...rtLimits[rtLimitsTier].creativity,
+                                      max: parseFloat(e.target.value) || 1
+                                    }
                                   }
                                 })}
                                 className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                               />
                             </div>
                           </div>
+                          <p className="text-xs text-gray-500">
+                            Recommended: Free (0.2-0.9), Premium (0.2-1.0)
+                          </p>
                         </div>
 
                         {/* Max Participants Limit */}
@@ -1381,15 +1476,19 @@ const AccountTierManagement = () => {
                             id="maxParticipantsLimit"
                             min="2"
                             max="20"
-                            value={rtLimits.maxParticipants}
+                            value={rtLimits[rtLimitsTier].maxParticipants}
                             onChange={(e) => setRtLimits({
                               ...rtLimits,
-                              maxParticipants: parseInt(e.target.value) || 2
+                              [rtLimitsTier]: {
+                                ...rtLimits[rtLimitsTier],
+                                maxParticipants: parseInt(e.target.value) || 2
+                              }
                             })}
                             className="focus:ring-blue-500 focus:border-blue-500 block w-full px-3 py-2 sm:text-sm border-gray-300 rounded-md"
                           />
                           <p className="text-xs text-gray-500">
-                            Maximum number of characters allowed in any roundtable
+                            Maximum number of characters allowed in any roundtable.
+                            <br/>Recommended: Free (8), Premium (12)
                           </p>
                         </div>
                       </div>
@@ -1400,6 +1499,7 @@ const AccountTierManagement = () => {
                       <h4 className="text-lg font-medium text-blue-700 mb-3">Feature Locks</h4>
                       <p className="text-sm text-gray-600 mb-4">
                         Lock features to prevent users from changing these settings.
+                        Locked features will use the default values you've set above and cannot be modified by users.
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1417,6 +1517,9 @@ const AccountTierManagement = () => {
                           <label htmlFor="lockAllowAllSpeak" className="ml-2 block text-sm text-gray-700">
                             Lock All-Speak Mode
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the All-Speak setting. The default value set above will be used.">?</span>
+                          </div>
                         </div>
                         
                         <div className="flex items-center">
@@ -1433,6 +1536,9 @@ const AccountTierManagement = () => {
                           <label htmlFor="lockStrictRotation" className="ml-2 block text-sm text-gray-700">
                             Lock Strict Rotation
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the Strict Rotation setting. The default value set above will be used.">?</span>
+                          </div>
                         </div>
                         
                         <div className="flex items-center">
@@ -1449,6 +1555,9 @@ const AccountTierManagement = () => {
                           <label htmlFor="lockEnableAdvanceRound" className="ml-2 block text-sm text-gray-700">
                             Lock Advance Round
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the Advance Round setting. The default value set above will be used.">?</span>
+                          </div>
                         </div>
                         
                         <div className="flex items-center">
@@ -1465,6 +1574,9 @@ const AccountTierManagement = () => {
                           <label htmlFor="lockSaveByDefault" className="ml-2 block text-sm text-gray-700">
                             Lock Save By Default
                           </label>
+                          <div className="ml-2">
+                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the Save By Default setting. The default value set above will be used.">?</span>
+                          </div>
                         </div>
                       </div>
                     </div>

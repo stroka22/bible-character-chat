@@ -4,6 +4,7 @@ import { useConversation } from './ConversationContext.jsx';
 import { characterRepository } from '../repositories/characterRepository';
 import { roundtableSettingsRepository, DEFAULT_ROUNDTABLE_SETTINGS } from '../repositories/roundtableSettingsRepository';
 import { getOwnerSlug } from '../services/tierSettingsService';
+import { useAuth } from './AuthContext.js';
 
 // Create the roundtable context
 const RoundtableContext = createContext();
@@ -11,6 +12,9 @@ const RoundtableContext = createContext();
 // Provider component
 export const RoundtableProvider = ({ children }) => {
   console.log('[RoundtableContext] Initializing provider');
+  
+  // Premium status (used for tier-gated limits)
+  const { isPremium } = useAuth();
   
   // Roundtable state
   const [participants, setParticipants] = useState([]);
@@ -93,22 +97,30 @@ export const RoundtableProvider = ({ children }) => {
       } catch (e) {
         console.warn('[RoundtableContext] Using default roundtable settings due to fetch error:', e);
       }
+      // ------------------------------------------------------------------
+      // Select the correct limits object based on premium status
+      // Back-compat: if limits do not have free/premium keys, use as-is.
+      // ------------------------------------------------------------------
+      const limitsObj = settings.limits || {};
+      const tierKey = isPremium ? 'premium' : 'free';
+      const tierLimits = limitsObj[tierKey] || limitsObj;
+
       const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
       // Effective replies / words / follow-ups
       const effReplies = clamp(
         rpr || settings.defaults.repliesPerRound,
-        settings.limits.repliesPerRound.min,
-        settings.limits.repliesPerRound.max
+        tierLimits.repliesPerRound.min,
+        tierLimits.repliesPerRound.max
       );
       const effMaxWords = clamp(
         settings.defaults.maxWordsPerReply,
-        settings.limits.maxWordsPerReply.min,
-        settings.limits.maxWordsPerReply.max
+        tierLimits.maxWordsPerReply.min,
+        tierLimits.maxWordsPerReply.max
       );
       const effFollowUps = clamp(
         settings.defaults.followUpsPerRound,
-        settings.limits.followUpsPerRound.min,
-        settings.limits.followUpsPerRound.max
+        tierLimits.followUpsPerRound.min,
+        tierLimits.followUpsPerRound.max
       );
       setRepliesPerRound(effReplies);
       setMaxWordsPerReply(effMaxWords);

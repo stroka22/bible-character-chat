@@ -16,12 +16,25 @@ export const DEFAULT_ROUNDTABLE_SETTINGS = {
     saveByDefault: true,
     enableAdvanceRound: true
   },
+  /*
+   * Per-tier limits.  “free” caps are slightly lower while “premium”
+   * inherits the previous global limits (back-compat).
+   */
   limits: {
-    repliesPerRound: { min: 1, max: 5 },
-    followUpsPerRound: { min: 0, max: 3 },
-    maxWordsPerReply: { min: 60, max: 160 },
-    creativity: { min: 0.2, max: 1.0 },
-    maxParticipants: 12
+    free: {
+      repliesPerRound: { min: 1, max: 4 },
+      followUpsPerRound: { min: 0, max: 2 },
+      maxWordsPerReply: { min: 60, max: 140 },
+      creativity: { min: 0.2, max: 0.9 },
+      maxParticipants: 8
+    },
+    premium: {
+      repliesPerRound: { min: 1, max: 6 },
+      followUpsPerRound: { min: 0, max: 3 },
+      maxWordsPerReply: { min: 60, max: 160 },
+      creativity: { min: 0.2, max: 1.0 },
+      maxParticipants: 12
+    }
   },
   locks: {
     allowAllSpeak: false,
@@ -68,7 +81,24 @@ export const roundtableSettingsRepository = {
       // Merge with defaults to ensure all properties exist
       return {
         defaults: { ...DEFAULT_ROUNDTABLE_SETTINGS.defaults, ...data.defaults },
-        limits: { ...DEFAULT_ROUNDTABLE_SETTINGS.limits, ...data.limits },
+        limits: (() => {
+          const defaultLimits = DEFAULT_ROUNDTABLE_SETTINGS.limits;
+          const incoming = data.limits || {};
+
+          // If incoming already has tier keys, merge tier-by-tier
+          if (incoming.free || incoming.premium) {
+            return {
+              free: { ...defaultLimits.free, ...(incoming.free || {}) },
+              premium: { ...defaultLimits.premium, ...(incoming.premium || {}) }
+            };
+          }
+
+          // Otherwise treat incoming as flat limits applied to both tiers
+          return {
+            free: { ...defaultLimits.free, ...incoming },
+            premium: { ...defaultLimits.premium, ...incoming }
+          };
+        })(),
         locks: { ...DEFAULT_ROUNDTABLE_SETTINGS.locks, ...data.locks }
       };
     } catch (err) {
