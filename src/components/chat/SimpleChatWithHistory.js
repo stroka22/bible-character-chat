@@ -9,6 +9,8 @@ import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
 import CharacterInsightsPanel from './CharacterInsightsPanel';
 import { characterRepository } from '../../repositories/characterRepository';
+import UpgradeModal from '../modals/UpgradeModal';
+import { usePremium } from '../../hooks/usePremium';
 
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
@@ -33,6 +35,7 @@ const SimpleChatWithHistory = () => {
     const navigate   = useNavigate();
     const location   = useLocation();
     const { user, isAuthenticated } = useAuth();
+    const { isPremium } = usePremium();
     const { 
         character, 
         messages, 
@@ -61,10 +64,37 @@ const SimpleChatWithHistory = () => {
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [conversationTitle, setConversationTitle] = useState('');
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [upgradeLimitType, setUpgradeLimitType] = useState('character');
+    const [messageLimit, setMessageLimit] = useState(5);
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
     const { conversationId } = useParams();
+
+    useEffect(() => {
+      try {
+        const s = localStorage.getItem('accountTierSettings');
+        if (s) {
+          const j = JSON.parse(s);
+          if (j.freeMessageLimit) setMessageLimit(j.freeMessageLimit);
+        }
+      } catch {}
+    }, []);
+    
+    useEffect(() => {
+      if (!error || typeof error !== 'string') return;
+      const lower = error.toLowerCase();
+      if (lower.includes('premium character')) {
+        setUpgradeLimitType('character');
+        setShowUpgradeModal(true);
+      } else if (lower.includes('message limit')) {
+        setUpgradeLimitType('message');
+        setShowUpgradeModal(true);
+      }
+    }, [error]);
+    
+    const userMessageCount = messages.filter((m) => m.role === 'user').length;
 
     /* ------------------------------------------------------------------
      * Auto-select character from query string (?character=<id>)
@@ -326,6 +356,15 @@ const SimpleChatWithHistory = () => {
                                             _jsxs("div", { 
                                                 className: "flex space-x-2",
                                                 children: [
+                                                    // Upgrade button for non-premium users
+                                                    {!isPremium && (
+                                                      _jsx("a", {
+                                                        href: "https://faithtalkai.com/pricing",
+                                                        className: "flex items-center gap-1 px-3 py-2 rounded-lg bg-yellow-400 text-blue-900 font-semibold border border-yellow-500 shadow hover:bg-yellow-300 transition-all",
+                                                        children: "Upgrade"
+                                                      })
+                                                    )},
+                                                    
                                                     // Save button (only show if not already saved and user is authenticated)
                                                     isAuthenticated && !isChatSaved && messages.length > 0 && (
                                                         _jsxs("button", {
@@ -463,7 +502,7 @@ const SimpleChatWithHistory = () => {
                                                             })
                                                         ),
                                                         
-                                                        error && (
+                                                        error && !showUpgradeModal && (
                                                             _jsx("div", { 
                                                                 className: "mx-auto my-4 max-w-md rounded-lg bg-red-900/50 border border-red-500 p-4", 
                                                                 children: _jsxs("div", { 
@@ -565,7 +604,17 @@ const SimpleChatWithHistory = () => {
                                                 ]
                                             })
                                         })
-                                    )
+                                    ),
+                                    
+                                    // Upgrade Modal
+                                    _jsx(UpgradeModal, {
+                                      isOpen: showUpgradeModal,
+                                      onClose: () => setShowUpgradeModal(false),
+                                      limitType: upgradeLimitType,
+                                      characterName: character?.name,
+                                      messageCount: userMessageCount,
+                                      messageLimit: messageLimit
+                                    })
                                 ] 
                             })
                         )
