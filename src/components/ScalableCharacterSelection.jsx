@@ -743,6 +743,30 @@ const ScalableCharacterSelection = () => {
                                     md:hover:ring-2 md:hover:ring-yellow-400/30 md:hover:bg-white/15
                                     md:transition-all`,
                                 children: [
+                                    /* ------------------------------------------------------------------
+                                     * Desktop background imagery (only if a hero image exists)
+                                     * ------------------------------------------------------------------ */
+                                    featuredCharacter.feature_image_url && (
+                                        _jsxs(_Fragment, {
+                                            children: [
+                                                /* Background hero image (blurred & dimmed) */
+                                                _jsx("div", {
+                                                    className: "hidden md:block absolute inset-0 -z-10 overflow-hidden",
+                                                    children: _jsx("img", {
+                                                        src: featuredCharacter.feature_image_url,
+                                                        alt: "",
+                                                        className: "w-full h-full object-cover scale-105 opacity-30 blur-md",
+                                                        onError: (e) => { e.currentTarget.style.display = 'none'; }
+                                                    })
+                                                }),
+                                                /* Gradient overlay to ensure readability */
+                                                _jsx("div", {
+                                                    className: "hidden md:block absolute inset-0 -z-10 pointer-events-none bg-gradient-to-tr from-blue-950/60 via-blue-900/50 to-transparent"
+                                                })
+                                            ]
+                                        })
+                                    ),
+
                                     /* Yellow accent elements */
                                     _jsx("div", { 
                                         className: "absolute top-0 right-0 w-40 h-40 bg-yellow-400/10 rounded-full -mr-20 -mt-20 z-0"
