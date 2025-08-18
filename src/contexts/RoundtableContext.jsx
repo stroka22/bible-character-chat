@@ -19,10 +19,14 @@ export const RoundtableProvider = ({ children }) => {
   const [repliesPerRound, setRepliesPerRound] = useState(3);
   const [maxWordsPerReply, setMaxWordsPerReply] = useState(110);
   const [error, setError] = useState(null);
+  const [turnCounts, setTurnCounts] = useState({});
   
   // Refs
   const messageIdCounter = useRef(1);
   const speakerCursor = useRef(0);
+  const lastSpeakerRef = useRef(null);
+  const enableFollowUps = useRef(true);
+  const followUpsPerRound = useRef(2);
   
   // Conversation persistence helpers
   let conversationContext;
@@ -99,8 +103,10 @@ export const RoundtableProvider = ({ children }) => {
       
       setParticipants(validCharacters);
       
-      // Reset speaker cursor
+      // Reset speaker cursor and turn counts
       speakerCursor.current = 0;
+      lastSpeakerRef.current = null;
+      setTurnCounts({});
       
       // Create conversation in repository
       if (typeof createConversation === 'function') {
@@ -235,8 +241,13 @@ export const RoundtableProvider = ({ children }) => {
         speakerCursor.current = (startIndex + repliesPerRound) % participants.length;
       }
       
+      // Track speakers in this round to exclude them from follow-ups
+      const speakersInRound = new Set();
+      
       // Generate replies sequentially for each speaker
       for (const speaker of speakers) {
+        speakersInRound.add(speaker.id);
+        
         // Create a simplified message history for the API
         // Include the last 10 messages for context
         const recentMessages = messages.slice(-10).map(msg => {
@@ -321,6 +332,14 @@ Stay in character and draw from biblical knowledge.`
               metadata: { speakerCharacterId: speaker.id }
             });
           }
+          
+          // Update turn counts and last speaker
+          setTurnCounts(prev => ({
+            ...prev,
+            [speaker.id]: (prev[speaker.id] || 0) + 1
+          }));
+          lastSpeakerRef.current = speaker.id;
+          
         } catch (err) {
           console.error(`Error generating response for ${speaker.name}:`, err);
           
@@ -345,6 +364,121 @@ Stay in character and draw from biblical knowledge.`
         
         // Small delay between speakers for a more natural flow
         await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
+      // Follow-up phase (if enabled)
+      if (enableFollowUps.current && participants.length > repliesPerRound) {
+        // Build candidate list - exclude speakers from this round and the last speaker
+        const candidates = participants.filter(p => 
+          !speakersInRound.has(p.id) && 
+          p.id !== lastSpeakerRef.current
+        );
+        
+        // Shuffle candidates
+        for (let i = candidates.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+        
+        // Limit to configured follow-ups per round
+        const followUpCandidates = candidates.slice(0, followUpsPerRound.current);
+        
+        // Get the most recent messages for context
+        const recentMessages = messages.slice(-10).map(msg => {
+          // For character messages, include the speaker's name
+          if (msg.metadata?.speakerCharacterId) {
+            const speakerChar = participants.find(p => p.id === msg.metadata.speakerCharacterId);
+            const speakerName = speakerChar ? speakerChar.name : 'Unknown';
+            return {
+              role: 'assistant',
+              content: `${speakerName}: ${msg.content}`
+            };
+          }
+          return {
+            role: msg.role,
+            content: msg.content
+          };
+        });
+        
+        // Generate follow-up replies
+        for (const candidate of followUpCandidates) {
+          const otherParticipantNames = participants
+            .filter(p => p.id !== candidate.id)
+            .map(p => p.name)
+            .join(', ');
+          
+          // Create system message with follow-up instructions
+          const systemMessage = {
+            role: 'system',
+            content: `You are ${candidate.name}, ${candidate.description || `a biblical figure known for ${candidate.scriptural_context || 'wisdom'}`}. 
+You are participating in a roundtable discussion on the topic: "${topic}".
+The other participants are: ${otherParticipantNames}.
+Only reply if you have a specific response to one of the last messages (agreement, disagreement, clarification). If not, respond exactly with (skip).
+Keep under ${maxWordsPerReply} words.
+Respond in first person as ${candidate.name}. You may reference other participants by name.
+Stay in character and draw from biblical knowledge.`
+          };
+          
+          const apiMessages = [systemMessage, ...recentMessages];
+          
+          try {
+            const persona = candidate.description || `a biblical figure known for ${candidate.scriptural_context || 'wisdom'}`;
+            
+            const reply = await generateCharacterResponse(
+              candidate.name,
+              persona,
+              apiMessages
+            );
+            
+            // Check if the reply is a skip
+            if (reply && reply.trim().toLowerCase() !== '(skip)') {
+              // Limit reply length if needed
+              let limitedReply = reply;
+              if (reply) {
+                const words = reply.split(/\s+/);
+                if (words.length > maxWordsPerReply) {
+                  limitedReply = words.slice(0, maxWordsPerReply).join(' ') + '...';
+                }
+              }
+              
+              // Create message
+              const messageId = generateMessageId();
+              const followUpMessage = {
+                id: messageId,
+                role: 'assistant',
+                content: limitedReply,
+                timestamp: new Date().toISOString(),
+                metadata: { speakerCharacterId: candidate.id }
+              };
+              
+              // Add to messages
+              setMessages(prev => [...prev, followUpMessage]);
+              
+              // Persist message
+              if (conversationId && typeof addMessage === 'function') {
+                await addMessage({
+                  conversation_id: conversationId,
+                  role: 'assistant',
+                  content: limitedReply,
+                  metadata: { speakerCharacterId: candidate.id }
+                });
+              }
+              
+              // Update turn counts and last speaker
+              setTurnCounts(prev => ({
+                ...prev,
+                [candidate.id]: (prev[candidate.id] || 0) + 1
+              }));
+              lastSpeakerRef.current = candidate.id;
+              
+              // Small delay between speakers for a more natural flow
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          } catch (err) {
+            console.error(`Error generating follow-up for ${candidate.name}:`, err);
+            // Skip this candidate on error
+          }
+        }
       }
     } catch (err) {
       console.error('Error generating round replies:', err);
@@ -377,6 +511,9 @@ Stay in character and draw from biblical knowledge.`
         
         if (validCharacters.length > 0) {
           setParticipants(validCharacters);
+          
+          // Reset turn counts
+          setTurnCounts({});
         }
       }
       
@@ -391,6 +528,17 @@ Stay in character and draw from biblical knowledge.`
         }));
         
         setMessages(normalizedMessages);
+        
+        // Rebuild turn counts from messages
+        const counts = {};
+        normalizedMessages.forEach(msg => {
+          const speakerId = msg.metadata?.speakerCharacterId;
+          if (speakerId) {
+            counts[speakerId] = (counts[speakerId] || 0) + 1;
+            lastSpeakerRef.current = speakerId;
+          }
+        });
+        setTurnCounts(counts);
       }
       
       // Clear any errors
