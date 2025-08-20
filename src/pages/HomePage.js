@@ -5,6 +5,7 @@ import { useChat } from '../contexts/ChatContext.jsx';
 import ScalableCharacterSelection from '../components/ScalableCharacterSelection.jsx';
 import ChatInterface from '../components/chat/ChatInterface';
 import Footer from '../components/Footer';
+import FABCluster from '../components/FABCluster.jsx';
 import { getOwnerSlug } from '../services/tierSettingsService';
 import { characterRepository } from '../repositories/characterRepository';
 const HomePage = () => {
@@ -81,13 +82,8 @@ const HomePage = () => {
                     _jsx("div", { className: "absolute bottom-1/4 left-1/3 w-72 h-28 bg-white rounded-full blur-3xl opacity-5 animate-float-slow" })
                 ] }),
 
-            /* Free-tier badge (always visible for now) */
-            /* Upgrade button (now fixed positioning with higher z-index) */
-            _jsx("button", {
-              onClick: handleUpgradeClick,
-              className: "fixed bottom-4 right-4 z-50 inline-flex justify-center items-center px-6 py-2 border-2 border-white text-sm font-medium rounded-full shadow-sm text-white bg-green-500 hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300 whitespace-nowrap transition-colors",
-              children: "Unlock All Characters – Upgrade to Premium"
-            }),
+            /* Floating action buttons cluster (Roundtable + conditional Upgrade) */
+            _jsx(FABCluster, {}),
 
             /* Glass container wrapping either selection or chat */
             _jsx("div", { className: "relative z-10 flex items-start justify-center pt-24 md:pt-32 pb-10", children: _jsxs("div", { className: "chat-container w-full max-w-6xl h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", children: [
