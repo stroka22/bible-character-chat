@@ -34,6 +34,9 @@ import PressKitPage from './pages/PressKitPage.jsx';
 import CareersPage from './pages/CareersPage.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
+import StudiesPage from './pages/StudiesPage.jsx';
+import StudyDetails from './pages/StudyDetails.jsx';
+import StudyLesson from './pages/StudyLesson.jsx';
 import RoundtableSetup from './pages/RoundtableSetup.jsx';
 import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
@@ -191,6 +194,10 @@ function App() {
         _jsx(Route, { path: "/roundtable", element: _jsx(RoundtableChat, {}) }),
         _jsx(Route, { path: "/careers", element: _jsx(CareersPage, {}) }),
         _jsx(Route, { path: "/faq", element: _jsx(FAQPage, {}) }),
+        /* -------- Bible Studies (public) ------------------------- */
+        _jsx(Route, { path: "/studies", element: _jsx(StudiesPage, {}) }),
+        _jsx(Route, { path: "/studies/:id", element: _jsx(StudyDetails, {}) }),
+        _jsx(Route, { path: "/studies/:id/lesson/:lessonIndex", element: _jsx(StudyLesson, {}) }),
         _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         
         // Chat & Shared conversation routes (public access)
