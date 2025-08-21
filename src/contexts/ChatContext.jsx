@@ -26,6 +26,10 @@ export const ChatProvider = ({ children }) => {
   const [chatId, setChatId] = useState(null);
   const [isChatSaved, setIsChatSaved] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  /* ------------------------------------------------------------------
+   * Optional system-level lesson context injected into every prompt
+   * ------------------------------------------------------------------ */
+  const [systemContext, setSystemContext] = useState(null);
   
   // Refs
   const messageIdCounter = useRef(1);
@@ -196,10 +200,15 @@ export const ChatProvider = ({ children }) => {
 
     try {
       // prepare message history for API (include newest user msg)
-      const apiMsgs = [...messages, userMessage].map(m => ({
+      let apiMsgs = [...messages, userMessage].map(m => ({
         role: m.role,
         content: m.content,
       }));
+
+      // Inject lesson/system context when available
+      if (systemContext && typeof systemContext === 'string' && systemContext.trim() !== '') {
+        apiMsgs.unshift({ role: 'system', content: systemContext.trim() });
+      }
 
       const persona = character.description ||
         `a biblical figure known for ${character.scriptural_context || 'wisdom'}`;
@@ -588,6 +597,8 @@ export const ChatProvider = ({ children }) => {
     saveChatTitle,
     toggleFavorite,
     deleteCurrentChat,
+    // Lesson / system context
+    setLessonContext: (text) => setSystemContext(text || null),
     
     // Helper methods
     clearError: () => setError(null),

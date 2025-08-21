@@ -219,6 +219,53 @@ export const bibleStudiesRepository = {
       return null;
     }
   }
+
+  /* ------------------------------------------------------------------
+   * Admin helpers
+   * ------------------------------------------------------------------ */
+  /**
+   * Permanently delete a Bible study (admin / superadmin only via RLS)
+   * @param {string} id - bible_studies.id (uuid)
+   * @returns {Promise<boolean>} true on success, false on failure
+   */
+  async deleteStudy(id) {
+    try {
+      if (!id) throw new Error('Study id required');
+
+      const { error } = await supabase
+        .from('bible_studies')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw new Error(error.message);
+      return true;
+    } catch (err) {
+      console.error('[bibleStudiesRepository] Error deleting study:', err);
+      return false;
+    }
+  },
+
+  /**
+   * Permanently delete a lesson (admin / superadmin only via RLS)
+   * @param {string} id - bible_study_lessons.id (uuid)
+   * @returns {Promise<boolean>} true on success, false on failure
+   */
+  async deleteLesson(id) {
+    try {
+      if (!id) throw new Error('Lesson id required');
+
+      const { error } = await supabase
+        .from('bible_study_lessons')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw new Error(error.message);
+      return true;
+    } catch (err) {
+      console.error('[bibleStudiesRepository] Error deleting lesson:', err);
+      return false;
+    }
+  }
 };
 
 export default bibleStudiesRepository;

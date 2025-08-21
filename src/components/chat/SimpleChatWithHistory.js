@@ -11,6 +11,7 @@ import CharacterInsightsPanel from './CharacterInsightsPanel';
 import { characterRepository } from '../../repositories/characterRepository';
 import UpgradeModal from '../modals/UpgradeModal';
 import { usePremium } from '../../hooks/usePremium';
+import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
@@ -49,7 +50,8 @@ const SimpleChatWithHistory = () => {
         saveChat, 
         sendMessage,
         selectCharacter,
-        hydrateFromConversation
+        hydrateFromConversation,
+        setLessonContext
     } = useChat();
 
     /* ------------------------------------------------------------------
@@ -71,6 +73,55 @@ const SimpleChatWithHistory = () => {
     const isResumed = messages.length > 0;
 
     const { conversationId } = useParams();
+
+    /* ------------------------------------------------------------------
+     * Inject lesson context when URL contains ?study=<id>&lesson=<index>
+     * ----------------------------------------------------------------*/
+    useEffect(() => {
+      const applyLessonContext = async () => {
+        // Need a selected character before we inject context
+        if (!character) return;
+
+        const params = new URLSearchParams(location.search);
+        const studyId  = params.get('study');
+        const lessonIx = params.get('lesson');
+
+        // If params absent, clear any previous context
+        if (!studyId || lessonIx === null) {
+          setLessonContext(null);
+          return;
+        }
+
+        try {
+          const study  = await bibleStudiesRepository.getStudyById(studyId);
+          const lesson = await bibleStudiesRepository.getLessonByIndex(
+            studyId,
+            parseInt(lessonIx, 10)
+          );
+
+          if (!study || !lesson) {
+            setLessonContext(null);
+            return;
+          }
+
+          const ctx = `You are guiding a Bible study conversation. ` +
+            `Study: ${study.title}. ` +
+            `Lesson ${lesson.order_index + 1}: ${lesson.title}. ` +
+            `Scripture: ${Array.isArray(lesson.scripture_refs) && lesson.scripture_refs.length > 0 ? lesson.scripture_refs.join(', ') : 'N/A'}. ` +
+            `Summary: ${lesson.summary ?? ''}`.trim();
+
+          setLessonContext(ctx);
+        } catch (err) {
+          console.warn('[SimpleChatWithHistory] Failed to fetch lesson context:', err);
+          setLessonContext(null);
+        }
+      };
+
+      applyLessonContext();
+      // Clear context when component unmounts
+      return () => setLessonContext(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.search, character]);
 
     useEffect(() => {
       try {
