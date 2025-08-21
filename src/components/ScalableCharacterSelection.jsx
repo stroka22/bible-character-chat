@@ -901,30 +901,53 @@ const ScalableCharacterSelection = () => {
                             children: "Choose Your Biblical Guide"
                         }),
 
-                        /* ---------------- Roundtable CTA --------------------------- */
-                        _jsx("div", {
-                            className: "flex justify-center mb-6",
-                            children: _jsxs("button", {
-                                onClick: () => navigate('/roundtable/setup'),
-                                className: "inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-yellow-400 text-blue-900 font-semibold border border-yellow-500 shadow hover:bg-yellow-300 transition-all",
-                                children: [
-                                    _jsx("svg", {
-                                        xmlns: "http://www.w3.org/2000/svg",
-                                        className: "h-5 w-5",
-                                        viewBox: "0 0 20 20",
-                                        fill: "currentColor",
-                                        children: [
-                                            _jsx("path", { d: "M13 7H7v6h6V7z" }),
-                                            _jsx("path", {
+                        /* ---------------- CTA Row: Roundtable & Studies ---------- */
+                        _jsxs("div", {
+                            className: "flex justify-center gap-3 mb-6",
+                            children: [
+                                /* Start Roundtable ---------------------------------- */
+                                _jsxs("button", {
+                                    onClick: () => navigate('/roundtable/setup'),
+                                    className: "inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-yellow-400 text-blue-900 font-semibold border border-yellow-500 shadow hover:bg-yellow-300 transition-all",
+                                    children: [
+                                        _jsx("svg", {
+                                            xmlns: "http://www.w3.org/2000/svg",
+                                            className: "h-5 w-5",
+                                            viewBox: "0 0 20 20",
+                                            fill: "currentColor",
+                                            children: [
+                                                _jsx("path", { d: "M13 7H7v6h6V7z" }),
+                                                _jsx("path", {
+                                                    fillRule: "evenodd",
+                                                    d: "M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm10 2H5v10h10V5z",
+                                                    clipRule: "evenodd"
+                                                })
+                                            ]
+                                        }),
+                                        "Start a Roundtable"
+                                    ]
+                                }),
+
+                                /* Explore Studies ----------------------------------- */
+                                _jsxs("button", {
+                                    onClick: () => navigate('/studies'),
+                                    className: "inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 text-white font-semibold border border-white/25 shadow hover:bg-white/20 transition-all",
+                                    children: [
+                                        _jsx("svg", {
+                                            xmlns: "http://www.w3.org/2000/svg",
+                                            className: "h-5 w-5",
+                                            viewBox: "0 0 20 20",
+                                            fill: "currentColor",
+                                            children: _jsx("path", {
                                                 fillRule: "evenodd",
-                                                d: "M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm10 2H5v10h10V5z",
+                                                d: "M4 3a1 1 0 000 2h12a1 1 0 100-2H4zm0 6a1 1 0 000 2h12a1 1 0 100-2H4zm0 6a1 1 0 000 2h12a1 1 0 100-2H4z",
                                                 clipRule: "evenodd"
                                             })
-                                        ]
-                                    }),
-                                    "Start a Roundtable"
-                                ]
-                            })
+                                        }),
+                                        "Explore Studies"
+                                    ]
+                                })
+                            ]
                         }),
 
                         /* Advanced Search and Filters ----------------------------- */

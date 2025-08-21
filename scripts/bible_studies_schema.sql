@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS bible_studies (
   title text NOT NULL,
   description text,
   cover_image_url text,
-  character_id bigint REFERENCES characters(id) ON DELETE SET NULL,
+  -- Link to the guiding character (matches characters.id which is UUID)
+  character_id uuid REFERENCES characters(id) ON DELETE SET NULL,
   visibility text NOT NULL DEFAULT 'public' CHECK (visibility IN ('public', 'private')),
   is_premium boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
