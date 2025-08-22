@@ -14,6 +14,8 @@ const RoundtableSetup = () => {
   const [selectedCharacterIds, setSelectedCharacterIds] = useState([]);
   const [topic, setTopic] = useState('');
   const [repliesPerRound, setRepliesPerRound] = useState(3);
+  // Auto-start toggle
+  const [autoStart, setAutoStart] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,7 +76,8 @@ const RoundtableSetup = () => {
       const success = await startRoundtable({
         participantIds: selectedCharacterIds,
         topic,
-        repliesPerRound
+        repliesPerRound,
+        autoStart
       });
       
       if (success) {
@@ -221,6 +224,31 @@ const RoundtableSetup = () => {
                 ]
               }),
               
+              /* Auto-start toggle */
+              _jsxs("div", {
+                className: "mb-6 flex items-center gap-3",
+                children: [
+                  _jsx("input", {
+                    type: "checkbox",
+                    id: "autoStart",
+                    checked: autoStart,
+                    onChange: (e) => setAutoStart(e.target.checked),
+                    className: "h-5 w-5 rounded border-gray-300 text-yellow-400 focus:ring-yellow-400"
+                  }),
+                  _jsxs("label", {
+                    htmlFor: "autoStart",
+                    className: "text-yellow-300 font-medium select-none",
+                    children: [
+                      "Auto-start discussion ",
+                      _jsx("span", {
+                        className: "text-white/70 text-sm",
+                        children: "(begins immediately after creation)"
+                      })
+                    ]
+                  })
+                ]
+              }),
+
               // Character selection
               _jsxs("div", {
                 className: "mb-6",

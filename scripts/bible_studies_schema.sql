@@ -98,3 +98,24 @@ COMMENT ON TABLE bible_studies IS 'Character-directed Bible studies with metadat
 COMMENT ON TABLE bible_study_lessons IS 'Individual lessons within a Bible study';
 COMMENT ON TABLE user_study_progress IS 'Tracks user progress through Bible studies';
 COMMENT ON TABLE ai_outlines IS 'AI-generated outlines for Bible study authoring (admin tool)';
+
+-- =================================================================
+-- Add new columns for subject and character instructions (idempotent)
+-- =================================================================
+DO $$ BEGIN
+  -- Add 'subject' column if it does not exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'bible_studies' AND column_name = 'subject'
+  ) THEN
+    ALTER TABLE bible_studies ADD COLUMN subject text;
+  END IF;
+
+  -- Add 'character_instructions' column if it does not exist
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'bible_studies' AND column_name = 'character_instructions'
+  ) THEN
+    ALTER TABLE bible_studies ADD COLUMN character_instructions text;
+  END IF;
+END $$;

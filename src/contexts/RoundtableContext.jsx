@@ -33,6 +33,8 @@ export const RoundtableProvider = ({ children }) => {
   const lastSpeakerRef = useRef(null);
   const enableFollowUps = useRef(true);
   const followUpsPerRound = useRef(2);
+  // Flag to auto-start discussion (consumed by RoundtableChat)
+  const autoStartNext = useRef(false);
   
   // Conversation persistence helpers
   let conversationContext;
@@ -70,7 +72,7 @@ export const RoundtableProvider = ({ children }) => {
   /**
    * Start a new roundtable discussion
    */
-  const startRoundtable = useCallback(async ({ participantIds, topic: topicText, repliesPerRound: rpr }) => {
+  const startRoundtable = useCallback(async ({ participantIds, topic: topicText, repliesPerRound: rpr, autoStart = false }) => {
     console.log(`[RoundtableContext] Starting roundtable with ${participantIds.length} participants on topic: ${topicText}`);
     
     if (!participantIds || !participantIds.length) {
@@ -198,6 +200,10 @@ export const RoundtableProvider = ({ children }) => {
       setError(`Failed to start roundtable: ${err.message}`);
       return false;
     } finally {
+      // If caller requested auto-start and setup succeeded, mark flag
+      if (autoStart) {
+        autoStartNext.current = true;
+      }
       setIsTyping(false);
     }
   }, [generateMessageId, createConversation, addMessage]);
@@ -619,7 +625,14 @@ Stay in character and draw from biblical knowledge.`
     setMaxWordsPerReply,
     
     // Helper methods
-    clearError: () => setError(null)
+    clearError: () => setError(null),
+
+    // Consume the auto-start flag once (RoundtableChat will call this)
+    consumeAutoStartFlag: () => {
+      const v = autoStartNext.current;
+      autoStartNext.current = false;
+      return v;
+    }
   };
 
   return (
@@ -669,7 +682,8 @@ export const useRoundtable = () => {
       },
       clearError: () => {
         console.warn('[RoundtableContext] Cannot clear error - no provider');
-      }
+      },
+      consumeAutoStartFlag: () => false
     };
   }
   

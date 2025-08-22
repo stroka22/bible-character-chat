@@ -25,6 +25,8 @@ const AdminStudiesPage = () => {
     owner_slug: ownerSlug,
     title: '',
     description: '',
+    subject: '',
+    character_instructions: '',
     character_id: '',
     cover_image_url: '',
     visibility: 'public',
@@ -205,6 +207,8 @@ const AdminStudiesPage = () => {
       owner_slug: ownerSlug,
       title: '',
       description: '',
+      subject: '',
+      character_instructions: '',
       character_id: '',
       cover_image_url: '',
       visibility: 'public',
@@ -229,6 +233,8 @@ const AdminStudiesPage = () => {
   const handleEditStudy = (study) => {
     setStudyForm({
       ...study,
+      subject: study.subject || '',
+      character_instructions: study.character_instructions || '',
       is_premium: study.is_premium ? 'true' : 'false'
     });
     setShowStudyForm(true);
@@ -681,6 +687,39 @@ const AdminStudiesPage = () => {
                         onChange: (e) => setStudyForm({...studyForm, description: e.target.value}),
                         className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
                         required: true
+                      })
+                    ]
+                  }),
+                  
+                  /* Subject */
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Subject"
+                      }),
+                      _jsx("input", {
+                        type: "text",
+                        value: studyForm.subject,
+                        onChange: (e) => setStudyForm({...studyForm, subject: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                        placeholder: "e.g., Sermon on the Mount"
+                      })
+                    ]
+                  }),
+                  
+                  /* Character Instructions */
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Character Instructions"
+                      }),
+                      _jsx("textarea", {
+                        value: studyForm.character_instructions,
+                        onChange: (e) => setStudyForm({...studyForm, character_instructions: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
+                        placeholder: "Special guidance or persona prompt for the guiding character"
                       })
                     ]
                   }),

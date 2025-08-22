@@ -14,7 +14,9 @@ const RoundtableChat = () => {
     sendUserMessage,
     advanceRound,
     error,
-    clearError
+    clearError,
+    // Optional helper (may be undefined in older context versions)
+    consumeAutoStartFlag
   } = useRoundtable();
   
   const [inputValue, setInputValue] = useState('');
@@ -35,6 +37,20 @@ const RoundtableChat = () => {
     }
   }, [participants, navigate]);
   
+  // Auto-start the first round if the flag was set during setup
+  useEffect(() => {
+    if (participants && participants.length > 0) {
+      const shouldStart =
+        typeof consumeAutoStartFlag === 'function'
+          ? consumeAutoStartFlag()
+          : false;
+      if (shouldStart) {
+        advanceRound();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [participants]);
+
   // Handle message submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,7 +84,7 @@ const RoundtableChat = () => {
           children: [
             // Header with topic and participants
             _jsxs("div", {
-              className: "mb-6",
+              className: "sticky top-[env(safe-area-inset-top,0px)] z-10 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
               children: [
                 _jsx("h1", {
                   className: "text-2xl md:text-3xl font-bold text-center text-yellow-400 mb-2",
