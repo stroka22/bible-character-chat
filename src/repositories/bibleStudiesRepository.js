@@ -218,7 +218,7 @@ export const bibleStudiesRepository = {
       console.error('[bibleStudiesRepository] Unexpected error fetching progress:', err);
       return null;
     }
-  }
+  },
 
   /* ------------------------------------------------------------------
    * Admin helpers
