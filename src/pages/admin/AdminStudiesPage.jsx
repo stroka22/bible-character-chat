@@ -615,343 +615,341 @@ const AdminStudiesPage = () => {
         }),
         
         {/* Study Form Modal */}
-        showStudyForm && (
-          _jsx("div", {
-            className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4",
-            children: _jsxs("div", {
-              className: "bg-blue-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto",
-              children: [
-                _jsxs("div", {
-                  className: "flex justify-between items-center mb-6",
-                  children: [
-                    _jsx("h2", {
-                      className: "text-2xl font-bold text-yellow-400",
-                      children: studyForm.id ? "Edit Study" : "Create New Study"
-                    }),
-                    _jsx("button", {
-                      onClick: () => setShowStudyForm(false),
-                      className: "text-white hover:text-yellow-300",
-                      children: _jsx("svg", {
-                        xmlns: "http://www.w3.org/2000/svg",
-                        className: "h-6 w-6",
-                        fill: "none",
-                        viewBox: "0 0 24 24",
-                        stroke: "currentColor",
-                        children: _jsx("path", {
-                          strokeLinecap: "round",
-                          strokeLinejoin: "round",
-                          strokeWidth: 2,
-                          d: "M6 18L18 6M6 6l12 12"
-                        })
+        _jsx("div", {
+          style: { display: showStudyForm ? undefined : 'none' },
+          className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4",
+          children: _jsxs("div", {
+            className: "bg-blue-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto",
+            children: [
+              _jsxs("div", {
+                className: "flex justify-between items-center mb-6",
+                children: [
+                  _jsx("h2", {
+                    className: "text-2xl font-bold text-yellow-400",
+                    children: studyForm.id ? "Edit Study" : "Create New Study"
+                  }),
+                  _jsx("button", {
+                    onClick: () => setShowStudyForm(false),
+                    className: "text-white hover:text-yellow-300",
+                    children: _jsx("svg", {
+                      xmlns: "http://www.w3.org/2000/svg",
+                      className: "h-6 w-6",
+                      fill: "none",
+                      viewBox: "0 0 24 24",
+                      stroke: "currentColor",
+                      children: _jsx("path", {
+                        strokeLinecap: "round",
+                        strokeLinejoin: "round",
+                        strokeWidth: 2,
+                        d: "M6 18L18 6M6 6l12 12"
                       })
                     })
-                  ]
-                }),
-                
-                _jsxs("form", {
-                  onSubmit: (e) => {
-                    e.preventDefault();
-                    handleSaveStudy();
-                  },
-                  className: "space-y-4",
-                  children: [
-                    _jsxs("div", {
-                      children: [
-                        _jsx("label", {
-                          className: "block text-blue-200 mb-1",
-                          children: "Title"
-                        }),
-                        _jsx("input", {
-                          type: "text",
-                          value: studyForm.title,
-                          onChange: (e) => setStudyForm({...studyForm, title: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                          required: true
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      children: [
-                        _jsx("label", {
-                          className: "block text-blue-200 mb-1",
-                          children: "Description"
-                        }),
-                        _jsx("textarea", {
-                          value: studyForm.description,
-                          onChange: (e) => setStudyForm({...studyForm, description: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
-                          required: true
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      children: [
-                        _jsx("label", {
-                          className: "block text-blue-200 mb-1",
-                          children: "Character Guide"
-                        }),
-                        _jsxs("select", {
-                          value: studyForm.character_id || '',
-                          onChange: (e) => setStudyForm({...studyForm, character_id: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                          children: [
-                            _jsx("option", { value: "", children: "-- Select a character --" }),
-                            characters.map(character => (
-                              _jsx("option", {
-                                value: character.id,
-                                children: character.name
-                              }, character.id)
-                            ))
-                          ]
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      children: [
-                        _jsx("label", {
-                          className: "block text-blue-200 mb-1",
-                          children: "Cover Image URL"
-                        }),
-                        _jsx("input", {
-                          type: "text",
-                          value: studyForm.cover_image_url || '',
-                          onChange: (e) => setStudyForm({...studyForm, cover_image_url: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                          placeholder: "https://example.com/image.jpg"
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      className: "flex gap-6",
-                      children: [
-                        _jsxs("div", {
-                          className: "flex-1",
-                          children: [
-                            _jsx("label", {
-                              className: "block text-blue-200 mb-1",
-                              children: "Visibility"
-                            }),
-                            _jsxs("select", {
-                              value: studyForm.visibility,
-                              onChange: (e) => setStudyForm({...studyForm, visibility: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                              children: [
-                                _jsx("option", { value: "public", children: "Public" }),
-                                _jsx("option", { value: "private", children: "Private" })
-                              ]
-                            })
-                          ]
-                        }),
-                        
-                        _jsxs("div", {
-                          className: "flex-1",
-                          children: [
-                            _jsx("label", {
-                              className: "block text-blue-200 mb-1",
-                              children: "Premium"
-                            }),
-                            _jsxs("select", {
-                              value: String(studyForm.is_premium),
-                              onChange: (e) => setStudyForm({...studyForm, is_premium: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                              children: [
-                                _jsx("option", { value: "false", children: "Free" }),
-                                _jsx("option", { value: "true", children: "Premium Only" })
-                              ]
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      className: "flex justify-end gap-3 pt-4",
-                      children: [
-                        _jsx("button", {
-                          type: "button",
-                          onClick: () => setShowStudyForm(false),
-                          className: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg",
-                          children: "Cancel"
-                        }),
-                        _jsx("button", {
-                          type: "submit",
-                          className: "px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg",
-                          children: "Save Study"
-                        })
-                      ]
-                    })
-                  ]
-                })
-              ]
-            })
+                  })
+                ]
+              }),
+              
+              _jsxs("form", {
+                onSubmit: (e) => {
+                  e.preventDefault();
+                  handleSaveStudy();
+                },
+                className: "space-y-4",
+                children: [
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Title"
+                      }),
+                      _jsx("input", {
+                        type: "text",
+                        value: studyForm.title,
+                        onChange: (e) => setStudyForm({...studyForm, title: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                        required: true
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Description"
+                      }),
+                      _jsx("textarea", {
+                        value: studyForm.description,
+                        onChange: (e) => setStudyForm({...studyForm, description: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
+                        required: true
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Character Guide"
+                      }),
+                      _jsxs("select", {
+                        value: studyForm.character_id || '',
+                        onChange: (e) => setStudyForm({...studyForm, character_id: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                        children: [
+                          _jsx("option", { value: "", children: "-- Select a character --" }),
+                          characters.map(character => (
+                            _jsx("option", {
+                              value: character.id,
+                              children: character.name
+                            }, character.id)
+                          ))
+                        ]
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Cover Image URL"
+                      }),
+                      _jsx("input", {
+                        type: "text",
+                        value: studyForm.cover_image_url || '',
+                        onChange: (e) => setStudyForm({...studyForm, cover_image_url: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                        placeholder: "https://example.com/image.jpg"
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    className: "flex gap-6",
+                    children: [
+                      _jsxs("div", {
+                        className: "flex-1",
+                        children: [
+                          _jsx("label", {
+                            className: "block text-blue-200 mb-1",
+                            children: "Visibility"
+                          }),
+                          _jsxs("select", {
+                            value: studyForm.visibility,
+                            onChange: (e) => setStudyForm({...studyForm, visibility: e.target.value}),
+                            className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                            children: [
+                              _jsx("option", { value: "public", children: "Public" }),
+                              _jsx("option", { value: "private", children: "Private" })
+                            ]
+                          })
+                        ]
+                      }),
+                      
+                      _jsxs("div", {
+                        className: "flex-1",
+                        children: [
+                          _jsx("label", {
+                            className: "block text-blue-200 mb-1",
+                            children: "Premium"
+                          }),
+                          _jsxs("select", {
+                            value: String(studyForm.is_premium),
+                            onChange: (e) => setStudyForm({...studyForm, is_premium: e.target.value}),
+                            className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                            children: [
+                              _jsx("option", { value: "false", children: "Free" }),
+                              _jsx("option", { value: "true", children: "Premium Only" })
+                            ]
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    className: "flex justify-end gap-3 pt-4",
+                    children: [
+                      _jsx("button", {
+                        type: "button",
+                        onClick: () => setShowStudyForm(false),
+                        className: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg",
+                        children: "Cancel"
+                      }),
+                      _jsx("button", {
+                        type: "submit",
+                        className: "px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg",
+                        children: "Save Study"
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
           })
-        ),
+        }),
         
         {/* Lesson Form Modal */}
-        showLessonForm && (
-          _jsx("div", {
-            className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4",
-            children: _jsxs("div", {
-              className: "bg-blue-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto",
-              children: [
-                _jsxs("div", {
-                  className: "flex justify-between items-center mb-6",
-                  children: [
-                    _jsx("h2", {
-                      className: "text-2xl font-bold text-yellow-400",
-                      children: lessonForm.id ? "Edit Lesson" : "Create New Lesson"
-                    }),
-                    _jsx("button", {
-                      onClick: () => setShowLessonForm(false),
-                      className: "text-white hover:text-yellow-300",
-                      children: _jsx("svg", {
-                        xmlns: "http://www.w3.org/2000/svg",
-                        className: "h-6 w-6",
-                        fill: "none",
-                        viewBox: "0 0 24 24",
-                        stroke: "currentColor",
-                        children: _jsx("path", {
-                          strokeLinecap: "round",
-                          strokeLinejoin: "round",
-                          strokeWidth: 2,
-                          d: "M6 18L18 6M6 6l12 12"
-                        })
+        _jsx("div", {
+          style: { display: showLessonForm ? undefined : 'none' },
+          className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4",
+          children: _jsxs("div", {
+            className: "bg-blue-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto",
+            children: [
+              _jsxs("div", {
+                className: "flex justify-between items-center mb-6",
+                children: [
+                  _jsx("h2", {
+                    className: "text-2xl font-bold text-yellow-400",
+                    children: lessonForm.id ? "Edit Lesson" : "Create New Lesson"
+                  }),
+                  _jsx("button", {
+                    onClick: () => setShowLessonForm(false),
+                    className: "text-white hover:text-yellow-300",
+                    children: _jsx("svg", {
+                      xmlns: "http://www.w3.org/2000/svg",
+                      className: "h-6 w-6",
+                      fill: "none",
+                      viewBox: "0 0 24 24",
+                      stroke: "currentColor",
+                      children: _jsx("path", {
+                        strokeLinecap: "round",
+                        strokeLinejoin: "round",
+                        strokeWidth: 2,
+                        d: "M6 18L18 6M6 6l12 12"
                       })
                     })
-                  ]
-                }),
-                
-                _jsxs("form", {
-                  onSubmit: (e) => {
-                    e.preventDefault();
-                    handleSaveLesson();
-                  },
-                  className: "space-y-4",
-                  children: [
-                    _jsxs("div", {
-                      className: "flex gap-4",
-                      children: [
-                        _jsxs("div", {
-                          className: "flex-1",
-                          children: [
-                            _jsx("label", {
-                              className: "block text-blue-200 mb-1",
-                              children: "Title"
-                            }),
-                            _jsx("input", {
-                              type: "text",
-                              value: lessonForm.title,
-                              onChange: (e) => setLessonForm({...lessonForm, title: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                              required: true
-                            })
-                          ]
-                        }),
-                        
-                        _jsxs("div", {
-                          className: "w-24",
-                          children: [
-                            _jsx("label", {
-                              className: "block text-blue-200 mb-1",
-                              children: "Order"
-                            }),
-                            _jsx("input", {
-                              type: "number",
-                              min: "0",
-                              value: lessonForm.order_index,
-                              onChange: (e) => setLessonForm({...lessonForm, order_index: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                              required: true
-                            })
-                          ]
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      children: [
-                        _jsx("label", {
-                          className: "block text-blue-200 mb-1",
-                          children: "Scripture References (comma separated)"
-                        }),
-                        _jsx("input", {
-                          type: "text",
-                          value: Array.isArray(lessonForm.scripture_refs) 
-                            ? lessonForm.scripture_refs.join(', ')
-                            : lessonForm.scripture_refs || '',
-                          onChange: (e) => setLessonForm({...lessonForm, scripture_refs: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
-                          placeholder: "Matthew 5:1-12, John 3:16"
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      children: [
-                        _jsx("label", {
-                          className: "block text-blue-200 mb-1",
-                          children: "Summary"
-                        }),
-                        _jsx("textarea", {
-                          value: lessonForm.summary || '',
-                          onChange: (e) => setLessonForm({...lessonForm, summary: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
-                          required: true
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      children: [
-                        _jsxs("label", {
-                          className: "block text-blue-200 mb-1",
-                          children: [
-                            "Prompts (one per line, or JSON array of objects with 'text' property)"
-                          ]
-                        }),
-                        _jsx("textarea", {
-                          value: typeof lessonForm.prompts === 'string'
-                            ? lessonForm.prompts
-                            : Array.isArray(lessonForm.prompts)
-                              ? lessonForm.prompts.map(p => typeof p === 'object' ? p.text : p).join('\n')
-                              : '',
-                          onChange: (e) => setLessonForm({...lessonForm, prompts: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-32 font-mono text-sm",
-                          placeholder: "What does this passage teach us about God?\nHow can we apply this to our lives today?"
-                        }),
-                        _jsx("p", {
-                          className: "text-xs text-blue-300 mt-1",
-                          children: "These will be used as suggested questions for the character to discuss with the user."
-                        })
-                      ]
-                    }),
-                    
-                    _jsxs("div", {
-                      className: "flex justify-end gap-3 pt-4",
-                      children: [
-                        _jsx("button", {
-                          type: "button",
-                          onClick: () => setShowLessonForm(false),
-                          className: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg",
-                          children: "Cancel"
-                        }),
-                        _jsx("button", {
-                          type: "submit",
-                          className: "px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg",
-                          children: "Save Lesson"
-                        })
-                      ]
-                    })
-                  ]
-                })
-              ]
-            })
+                  })
+                ]
+              }),
+              
+              _jsxs("form", {
+                onSubmit: (e) => {
+                  e.preventDefault();
+                  handleSaveLesson();
+                },
+                className: "space-y-4",
+                children: [
+                  _jsxs("div", {
+                    className: "flex gap-4",
+                    children: [
+                      _jsxs("div", {
+                        className: "flex-1",
+                        children: [
+                          _jsx("label", {
+                            className: "block text-blue-200 mb-1",
+                            children: "Title"
+                          }),
+                          _jsx("input", {
+                            type: "text",
+                            value: lessonForm.title,
+                            onChange: (e) => setLessonForm({...lessonForm, title: e.target.value}),
+                            className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                            required: true
+                          })
+                        ]
+                      }),
+                      
+                      _jsxs("div", {
+                        className: "w-24",
+                        children: [
+                          _jsx("label", {
+                            className: "block text-blue-200 mb-1",
+                            children: "Order"
+                          }),
+                          _jsx("input", {
+                            type: "number",
+                            min: "0",
+                            value: lessonForm.order_index,
+                            onChange: (e) => setLessonForm({...lessonForm, order_index: e.target.value}),
+                            className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                            required: true
+                          })
+                        ]
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Scripture References (comma separated)"
+                      }),
+                      _jsx("input", {
+                        type: "text",
+                        value: Array.isArray(lessonForm.scripture_refs) 
+                          ? lessonForm.scripture_refs.join(', ')
+                          : lessonForm.scripture_refs || '',
+                        onChange: (e) => setLessonForm({...lessonForm, scripture_refs: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                        placeholder: "Matthew 5:1-12, John 3:16"
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    children: [
+                      _jsx("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: "Summary"
+                      }),
+                      _jsx("textarea", {
+                        value: lessonForm.summary || '',
+                        onChange: (e) => setLessonForm({...lessonForm, summary: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
+                        required: true
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    children: [
+                      _jsxs("label", {
+                        className: "block text-blue-200 mb-1",
+                        children: [
+                          "Prompts (one per line, or JSON array of objects with 'text' property)"
+                        ]
+                      }),
+                      _jsx("textarea", {
+                        value: typeof lessonForm.prompts === 'string'
+                          ? lessonForm.prompts
+                          : Array.isArray(lessonForm.prompts)
+                            ? lessonForm.prompts.map(p => typeof p === 'object' ? p.text : p).join('\n')
+                            : '',
+                        onChange: (e) => setLessonForm({...lessonForm, prompts: e.target.value}),
+                        className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-32 font-mono text-sm",
+                        placeholder: "What does this passage teach us about God?\nHow can we apply this to our lives today?"
+                      }),
+                      _jsx("p", {
+                        className: "text-xs text-blue-300 mt-1",
+                        children: "These will be used as suggested questions for the character to discuss with the user."
+                      })
+                    ]
+                  }),
+                  
+                  _jsxs("div", {
+                    className: "flex justify-end gap-3 pt-4",
+                    children: [
+                      _jsx("button", {
+                        type: "button",
+                        onClick: () => setShowLessonForm(false),
+                        className: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg",
+                        children: "Cancel"
+                      }),
+                      _jsx("button", {
+                        type: "submit",
+                        className: "px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg",
+                        children: "Save Lesson"
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
           })
-        )
+        })
       ]
     })
   );
