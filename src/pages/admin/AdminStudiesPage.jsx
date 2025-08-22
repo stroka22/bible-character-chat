@@ -521,7 +521,7 @@ const AdminStudiesPage = () => {
                                           className: "flex space-x-1",
                                           children: [
                                             _jsx("button", {
-                                              onClick={() => handleEditLesson(lesson)}
+                                              onClick={() => handleEditLesson(lesson)},
                                               className: "text-blue-300 hover:text-blue-200 p-1",
                                               title: "Edit lesson",
                                               children: _jsx("svg", {
