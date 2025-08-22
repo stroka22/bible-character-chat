@@ -614,9 +614,8 @@ const AdminStudiesPage = () => {
           ]
         }),
         
-        {/* Study Form Modal */}
-        _jsx("div", {
-          style: { display: showStudyForm ? undefined : 'none' },
+        /* Study Form Modal */
+        (showStudyForm ? _jsx("div", {
           className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4",
           children: _jsxs("div", {
             className: "bg-blue-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto",
@@ -788,11 +787,10 @@ const AdminStudiesPage = () => {
               })
             ]
           })
-        }),
+        }) : null),
         
-        {/* Lesson Form Modal */}
-        _jsx("div", {
-          style: { display: showLessonForm ? undefined : 'none' },
+        /* Lesson Form Modal */
+        (showLessonForm ? _jsx("div", {
           className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4",
           children: _jsxs("div", {
             className: "bg-blue-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto",
@@ -949,7 +947,7 @@ const AdminStudiesPage = () => {
               })
             ]
           })
-        })
+        }) : null)
       ]
     })
   );
