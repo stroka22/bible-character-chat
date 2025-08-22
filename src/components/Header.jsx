@@ -11,6 +11,9 @@ import FaithLogo from './FaithLogo';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // Desktop user dropdown open state
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const menuRef = React.useRef(null);
   /* ------------------------------------------------------------------
    * Auth state
    * ------------------------------------------------------------------ */
@@ -36,12 +39,24 @@ const Header = () => {
   // Close mobile menu when changing routes
   useEffect(() => {
     setIsMenuOpen(false);
+    setUserMenuOpen(false);
   }, [location.pathname]);
 
   // Toggle mobile menu
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // Handle logout
   const handleLogout = async () => {
@@ -158,8 +173,13 @@ const Header = () => {
                   My Walk
                 </Link>
               )}
-              <div className="relative group">
-              <button className="flex items-center space-x-2 focus:outline-none">
+              <div className="relative group" ref={menuRef}>
+              <button
+                className="flex items-center space-x-2 focus:outline-none"
+                onClick={() => setUserMenuOpen(v => !v)}
+                aria-haspopup="true"
+                aria-expanded={userMenuOpen}
+              >
                 <div className="w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
@@ -177,7 +197,9 @@ const Header = () => {
                   />
                 </svg>
               </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg overflow-hidden z-20 opacity-0 scale-95 invisible group-hover:opacity-100 group-hover:scale-100 group-hover:visible transition-all duration-200 origin-top-right">
+              <div className={`absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg overflow-hidden z-20 origin-top-right transform transition-all duration-200 ${
+                userMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
+              } group-hover:opacity-100 group-hover:scale-100 group-hover:visible`}>
                 <div className="py-1">
                   <Link 
                     to="/profile" 
