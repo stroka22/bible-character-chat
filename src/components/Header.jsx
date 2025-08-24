@@ -19,6 +19,18 @@ const Header = () => {
    * ------------------------------------------------------------------ */
   const { user, loading, signOut, isAdmin, isPremium: isPremiumUser, role } = useAuth();
   const isAuthenticated = !!user;
+  /* Show Admin link immediately when:
+     • user is authenticated AND (we're still loading/role unknown)
+       OR we already know the user is admin / superadmin                  */
+  const shouldShowAdminLink =
+    isAuthenticated &&
+    (
+      loading ||
+      role === 'unknown' ||
+      (typeof isAdmin === 'function' && isAdmin()) ||
+      role === 'admin' ||
+      role === 'superadmin'
+    );
 
   const location = useLocation();
 
@@ -224,11 +236,7 @@ const Header = () => {
                   >
                     Settings
                   </Link>
-                  {(
-                    (typeof isAdmin === 'function' && isAdmin()) ||
-                    role === 'admin' ||
-                    role === 'superadmin'
-                  ) && (
+                  {shouldShowAdminLink && (
                     <Link 
                       to="/admin" 
                       className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
@@ -412,11 +420,7 @@ const Header = () => {
                     Settings
                   </Link>
                 </div>
-                {(
-                  (typeof isAdmin === 'function' && isAdmin()) ||
-                  role === 'admin' ||
-                  role === 'superadmin'
-                ) && (
+                {shouldShowAdminLink && (
                   <Link 
                     to="/admin" 
                     className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors"
