@@ -224,7 +224,11 @@ const Header = () => {
                   >
                     Settings
                   </Link>
-                  {(role === 'admin' || role === 'superadmin') && (
+                  {(
+                    (typeof isAdmin === 'function' && isAdmin()) ||
+                    role === 'admin' ||
+                    role === 'superadmin'
+                  ) && (
                     <Link 
                       to="/admin" 
                       className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
@@ -408,7 +412,11 @@ const Header = () => {
                     Settings
                   </Link>
                 </div>
-                {(role === 'admin' || role === 'superadmin') && (
+                {(
+                  (typeof isAdmin === 'function' && isAdmin()) ||
+                  role === 'admin' ||
+                  role === 'superadmin'
+                ) && (
                   <Link 
                     to="/admin" 
                     className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors"

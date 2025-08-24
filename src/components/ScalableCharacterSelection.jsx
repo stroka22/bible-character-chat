@@ -1012,7 +1012,7 @@ const ScalableCharacterSelection = () => {
                                                 setBookFilter(e.target.value);
                                                 setCurrentPage(1);
                                             },
-                                            className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
+                                            className: "w-full md:w-auto bg-white text-gray-900 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
                                             children: [
                                                 _jsx("option", { value: "all", children: "All Books" }),
                                                 _jsx("optgroup", {
@@ -1038,7 +1038,7 @@ const ScalableCharacterSelection = () => {
                                                 setGroupFilter(e.target.value);
                                                 setCurrentPage(1);
                                             },
-                                            className: "w-full md:w-auto bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
+                                            className: "w-full md:w-auto bg-white text-gray-900 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
                                             children: [
                                                 _jsx("option", { value: "all", children: "All Groups" }),
                                                 _jsx("option", { value: "Prophets", children: "Prophets" }),

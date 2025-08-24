@@ -304,12 +304,12 @@ const AdminStudiesPage = ({ embedded = false }) => {
           className: "mb-8",
           children: [
             _jsx("h1", {
-              className: "text-3xl md:text-4xl font-extrabold text-yellow-400 mb-2 tracking-tight drop-shadow-lg",
+              className: `text-3xl md:text-4xl font-extrabold ${embedded ? 'text-gray-800' : 'text-yellow-400'} mb-2 tracking-tight drop-shadow-lg`,
               style: { fontFamily: 'Cinzel, serif' },
               children: "Bible Studies Administration"
             }),
             _jsx("p", {
-              className: "text-blue-100",
+              className: `${embedded ? 'text-gray-600' : 'text-blue-100'}`,
               children: "Manage character-directed Bible studies and lessons"
             })
           ]
@@ -329,18 +329,18 @@ const AdminStudiesPage = ({ embedded = false }) => {
           children: [
             /* Studies list panel */
             _jsxs("div", {
-              className: "bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/15 shadow-lg",
+              className: embedded ? "bg-white rounded-lg p-6 border border-gray-200 shadow-md" : "bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/15 shadow-lg",
               children: [
                 _jsxs("div", {
                   className: "flex justify-between items-center mb-4",
                   children: [
                     _jsx("h2", {
-                      className: "text-xl font-bold text-yellow-400",
+                      className: `text-xl font-bold ${embedded ? 'text-gray-800' : 'text-yellow-400'}`,
                       children: "Bible Studies"
                     }),
                     _jsx("button", {
                       onClick: handleNewStudy,
-                      className: "bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm flex items-center",
+                      className: `${embedded ? 'bg-primary-600 hover:bg-primary-700' : 'bg-green-600 hover:bg-green-700'} text-white px-3 py-1 rounded-lg text-sm flex items-center`,
                       children: _jsxs(_Fragment, {
                         children: [
                           _jsx("svg", {
@@ -371,7 +371,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                   })
                 ) : studies.length === 0 ? (
                   _jsx("div", {
-                    className: "text-center py-8 text-blue-100",
+                    className: `text-center py-8 ${embedded ? 'text-gray-600' : 'text-blue-100'}`,
                     children: "No studies found. Create your first study!"
                   })
                 ) : (
@@ -382,8 +382,8 @@ const AdminStudiesPage = ({ embedded = false }) => {
                         className: `
                           p-4 rounded-lg border transition-all cursor-pointer
                           ${selectedStudy?.id === study.id 
-                            ? 'bg-blue-700/50 border-yellow-400/50' 
-                            : 'bg-white/5 border-white/10 hover:bg-white/10'}
+                            ? embedded ? 'bg-blue-50 border-primary-400' : 'bg-blue-700/50 border-yellow-400/50' 
+                            : embedded ? 'bg-white border-gray-200 hover:bg-gray-50' : 'bg-white/5 border-white/10 hover:bg-white/10'}
                         `,
                         onClick: () => setSelectedStudy(study),
                         children: [
@@ -391,7 +391,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                             className: "flex justify-between items-start",
                             children: [
                               _jsx("h3", {
-                                className: "font-semibold text-yellow-300 mb-1",
+                                className: `font-semibold ${embedded ? 'text-gray-800' : 'text-yellow-300'} mb-1`,
                                 children: study.title
                               }),
                               _jsxs("div", {
@@ -402,7 +402,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                                       e.stopPropagation();
                                       handleEditStudy(study);
                                     },
-                                    className: "text-blue-300 hover:text-blue-200 p-1",
+                                    className: `${embedded ? 'text-blue-600 hover:text-blue-800' : 'text-blue-300 hover:text-blue-200'} p-1`,
                                     title: "Edit study",
                                     children: _jsx("svg", {
                                       xmlns: "http://www.w3.org/2000/svg",
@@ -438,7 +438,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                             ]
                           }),
                           _jsx("p", {
-                            className: "text-sm text-blue-100 line-clamp-2 mb-2",
+                            className: `text-sm ${embedded ? 'text-gray-600' : 'text-blue-100'} line-clamp-2 mb-2`,
                             children: study.description
                           }),
                           _jsxs("div", {
@@ -446,15 +446,23 @@ const AdminStudiesPage = ({ embedded = false }) => {
                             children: [
                               _jsx("span", {
                                 className: `text-xs px-2 py-0.5 rounded-full ${
-                                  study.visibility === 'public'
-                                    ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                                  embedded 
+                                    ? (study.visibility === 'public' 
+                                        ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                                        : 'bg-gray-100 text-gray-800 border border-gray-200')
+                                    : (study.visibility === 'public'
+                                        ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                                        : 'bg-blue-500/20 text-blue-300 border border-blue-500/30')
                                 }`,
                                 children: study.visibility
                               }),
                               study.is_premium && (
                                 _jsx("span", {
-                                  className: "bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-xs px-2 py-0.5 rounded-full",
+                                  className: `text-xs px-2 py-0.5 rounded-full ${
+                                    embedded 
+                                      ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                                      : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                                  }`,
                                   children: "Premium"
                                 })
                               )
@@ -474,7 +482,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
               children: [
                 selectedStudy ? (
                   _jsxs("div", {
-                    className: "bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/15 shadow-lg",
+                    className: embedded ? "bg-white rounded-lg p-6 border border-gray-200 shadow-md" : "bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/15 shadow-lg",
                     children: [
                       _jsxs("div", {
                         className: "flex justify-between items-center mb-6",
@@ -482,11 +490,11 @@ const AdminStudiesPage = ({ embedded = false }) => {
                           _jsxs("div", {
                             children: [
                               _jsx("h2", {
-                                className: "text-xl font-bold text-yellow-400",
+                                className: `text-xl font-bold ${embedded ? 'text-gray-800' : 'text-yellow-400'}`,
                                 children: "Lessons"
                               }),
                               _jsxs("p", {
-                                className: "text-blue-200",
+                                className: `${embedded ? 'text-gray-500' : 'text-blue-200'}`,
                                 children: [
                                   "Study: ",
                                   _jsx("span", {
@@ -499,7 +507,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                           }),
                           _jsx("button", {
                             onClick: handleNewLesson,
-                            className: "bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm flex items-center",
+                            className: `${embedded ? 'bg-primary-600 hover:bg-primary-700' : 'bg-green-600 hover:bg-green-700'} text-white px-3 py-1 rounded-lg text-sm flex items-center`,
                             children: _jsxs(_Fragment, {
                               children: [
                                 _jsx("svg", {
@@ -523,7 +531,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                       /* Lessons list */
                       lessons.length === 0 ? (
                         _jsx("div", {
-                          className: "text-center py-8 text-blue-100",
+                          className: `text-center py-8 ${embedded ? 'text-gray-600' : 'text-blue-100'}`,
                           children: "No lessons found. Create your first lesson!"
                         })
                       ) : (
@@ -533,13 +541,13 @@ const AdminStudiesPage = ({ embedded = false }) => {
                             .sort((a, b) => a.order_index - b.order_index)
                             .map(lesson => (
                             _jsxs("div", {
-                              className: "bg-white/5 rounded-lg p-4 border border-white/10",
+                              className: embedded ? "bg-gray-50 rounded-lg p-4 border border-gray-200" : "bg-white/5 rounded-lg p-4 border border-white/10",
                               children: [
                                 _jsxs("div", {
                                   className: "flex justify-between items-start",
                                   children: [
                                     _jsxs("h3", {
-                                      className: "font-semibold text-yellow-300 mb-1",
+                                      className: `font-semibold ${embedded ? 'text-gray-800' : 'text-yellow-300'} mb-1`,
                                       children: [
                                         "Lesson ", lesson.order_index + 1, ": ", lesson.title
                                       ]
@@ -549,7 +557,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                                       children: [
                                         _jsx("button", {
                                           onClick: () => handleEditLesson(lesson),
-                                          className: "text-blue-300 hover:text-blue-200 p-1",
+                                          className: `${embedded ? 'text-blue-600 hover:text-blue-800' : 'text-blue-300 hover:text-blue-200'} p-1`,
                                           title: "Edit lesson",
                                           children: _jsx("svg", {
                                             xmlns: "http://www.w3.org/2000/svg",
@@ -588,14 +596,14 @@ const AdminStudiesPage = ({ embedded = false }) => {
                                     className: "mt-2",
                                     children: [
                                       _jsx("span", {
-                                        className: "text-xs text-blue-300",
+                                        className: `text-xs ${embedded ? 'text-blue-600' : 'text-blue-300'}`,
                                         children: "Scripture:"
                                       }),
                                       _jsx("div", {
                                         className: "flex flex-wrap gap-1 mt-1",
                                         children: lesson.scripture_refs.map((ref, idx) => (
                                           _jsx("span", {
-                                            className: "bg-blue-500/20 text-blue-200 text-xs px-2 py-0.5 rounded-full",
+                                            className: embedded ? "bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full border border-blue-200" : "bg-blue-500/20 text-blue-200 text-xs px-2 py-0.5 rounded-full",
                                             children: ref
                                           }, `ref-${idx}`)
                                         ))
@@ -606,13 +614,13 @@ const AdminStudiesPage = ({ embedded = false }) => {
                                 
                                 /* Summary */
                                 _jsx("p", {
-                                  className: "text-sm text-blue-100 mt-2 line-clamp-2",
+                                  className: `text-sm ${embedded ? 'text-gray-600' : 'text-blue-100'} mt-2 line-clamp-2`,
                                   children: lesson.summary
                                 }),
                                 
                                 /* Prompts count */
                                 _jsxs("div", {
-                                  className: "mt-2 text-xs text-blue-300",
+                                  className: `mt-2 text-xs ${embedded ? 'text-gray-500' : 'text-blue-300'}`,
                                   children: [
                                     "Prompts: ",
                                     Array.isArray(lesson.prompts) ? lesson.prompts.length : 0
@@ -627,9 +635,9 @@ const AdminStudiesPage = ({ embedded = false }) => {
                   })
                 ) : (
                   _jsx("div", {
-                    className: "bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/15 shadow-lg flex items-center justify-center h-full",
+                    className: embedded ? "bg-white rounded-lg p-8 border border-gray-200 shadow-md flex items-center justify-center h-full" : "bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/15 shadow-lg flex items-center justify-center h-full",
                     children: _jsx("p", {
-                      className: "text-blue-200 text-center",
+                      className: `${embedded ? 'text-gray-500' : 'text-blue-200'} text-center`,
                       children: "Select a study to manage its lessons"
                     })
                   })
@@ -703,7 +711,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                           type: "text",
                           value: studyForm.title,
                           onChange: (e) => setStudyForm({...studyForm, title: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                           required: true
                         })
                       ]
@@ -718,7 +726,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                         _jsx("textarea", {
                           value: studyForm.description,
                           onChange: (e) => setStudyForm({...studyForm, description: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500 h-24",
                           required: true
                         })
                       ]
@@ -735,7 +743,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                           type: "text",
                           value: studyForm.subject,
                           onChange: (e) => setStudyForm({...studyForm, subject: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                           placeholder: "e.g., Sermon on the Mount"
                         })
                       ]
@@ -751,7 +759,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                         _jsx("textarea", {
                           value: studyForm.character_instructions,
                           onChange: (e) => setStudyForm({...studyForm, character_instructions: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500 h-24",
                           placeholder: "Special guidance or persona prompt for the guiding character"
                         })
                       ]
@@ -766,7 +774,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                         _jsxs("select", {
                           value: studyForm.character_id || '',
                           onChange: (e) => setStudyForm({...studyForm, character_id: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                           children: [
                             _jsx("option", { value: "", children: "-- Select a character --" }),
                             characters.map(character => (
@@ -790,7 +798,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                           type: "text",
                           value: studyForm.cover_image_url || '',
                           onChange: (e) => setStudyForm({...studyForm, cover_image_url: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                           placeholder: "https://example.com/image.jpg"
                         })
                       ]
@@ -809,7 +817,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                             _jsxs("select", {
                               value: studyForm.visibility,
                               onChange: (e) => setStudyForm({...studyForm, visibility: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                              className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                               children: [
                                 _jsx("option", { value: "public", children: "Public" }),
                                 _jsx("option", { value: "private", children: "Private" })
@@ -828,7 +836,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                             _jsxs("select", {
                               value: String(studyForm.is_premium),
                               onChange: (e) => setStudyForm({...studyForm, is_premium: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                              className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                               children: [
                                 _jsx("option", { value: "false", children: "Free" }),
                                 _jsx("option", { value: "true", children: "Premium Only" })
@@ -916,7 +924,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                               type: "text",
                               value: lessonForm.title,
                               onChange: (e) => setLessonForm({...lessonForm, title: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                              className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                               required: true
                             })
                           ]
@@ -934,7 +942,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                               min: "0",
                               value: lessonForm.order_index,
                               onChange: (e) => setLessonForm({...lessonForm, order_index: e.target.value}),
-                              className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                              className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                               required: true
                             })
                           ]
@@ -954,7 +962,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                             ? lessonForm.scripture_refs.join(', ')
                             : lessonForm.scripture_refs || '',
                           onChange: (e) => setLessonForm({...lessonForm, scripture_refs: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
                           placeholder: "Matthew 5:1-12, John 3:16"
                         })
                       ]
@@ -969,7 +977,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                         _jsx("textarea", {
                           value: lessonForm.summary || '',
                           onChange: (e) => setLessonForm({...lessonForm, summary: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-24",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500 h-24",
                           required: true
                         })
                       ]
@@ -990,7 +998,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                               ? lessonForm.prompts.map(p => typeof p === 'object' ? p.text : p).join('\n')
                               : '',
                           onChange: (e) => setLessonForm({...lessonForm, prompts: e.target.value}),
-                          className: "w-full bg-white/10 border border-white/30 rounded-lg py-2 px-3 text-white h-32 font-mono text-sm",
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500 h-32 font-mono text-sm",
                           placeholder: "What does this passage teach us about God?\nHow can we apply this to our lives today?"
                         }),
                         _jsx("p", {
