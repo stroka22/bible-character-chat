@@ -62,10 +62,18 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await (signOut?.());
-      // Redirect to home page after logout
-      window.location.replace('/');
     } catch (error) {
       console.error('Logout failed:', error);
+    } finally {
+      /* Extra safety for Windows browsers */
+      try {
+        sessionStorage.clear();
+        localStorage.removeItem('isPremium');
+      } catch {
+        /* ignore */
+      }
+      // Hard redirect to login so the app remounts fresh
+      window.location.href = '/login?loggedOut=1';
     }
   };
 
@@ -216,7 +224,7 @@ const Header = () => {
                   >
                     Settings
                   </Link>
-                  {isAdmin && isAdmin() && (
+                  {(role === 'admin' || role === 'superadmin') && (
                     <Link 
                       to="/admin" 
                       className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
@@ -400,7 +408,7 @@ const Header = () => {
                     Settings
                   </Link>
                 </div>
-                {isAdmin && isAdmin() && (
+                {(role === 'admin' || role === 'superadmin') && (
                   <Link 
                     to="/admin" 
                     className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors"
