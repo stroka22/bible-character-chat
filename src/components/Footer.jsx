@@ -93,19 +93,20 @@ const Footer = () => {
             {/* Newsletter Signup */}
             <form onSubmit={handleSubscribe} className="mt-4">
               <label htmlFor="newsletter-email" className="text-sm text-gray-300 mb-2 block">Subscribe to our newsletter</label>
-              <div className="flex">
+              {/* Flex on larger screens, stack on very small to avoid overflow */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                 <input 
                   type="email" 
                   id="newsletter-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your email" 
-                  className="flex-grow px-3 py-2 bg-blue-900/50 border border-blue-700 rounded-l-lg focus:outline-none focus:ring-1 focus:ring-yellow-400 text-white text-sm"
+                  className="min-w-0 w-full sm:flex-1 px-3 py-2 bg-blue-900/50 border border-blue-700 rounded-lg sm:rounded-l-lg sm:rounded-r-none focus:outline-none focus:ring-1 focus:ring-yellow-400 text-white text-sm"
                   required
                 />
                 <button 
                   type="submit" 
-                  className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-3 py-2 rounded-r-lg text-sm font-medium transition-colors"
+                  className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-3 py-2 rounded-lg sm:rounded-r-lg sm:rounded-l-none text-sm font-medium transition-colors"
                 >
                   Subscribe
                 </button>

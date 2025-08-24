@@ -84,7 +84,7 @@ const RoundtableChat = () => {
           children: [
             // Header with topic and participants
             _jsxs("div", {
-              className: "sticky top-[env(safe-area-inset-top,0px)] z-10 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
+              className: "sticky top-16 md:top-20 z-10 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
               children: [
                 _jsx("h1", {
                   className: "text-2xl md:text-3xl font-bold text-center text-yellow-400 mb-2",

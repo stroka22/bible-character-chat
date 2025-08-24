@@ -17,7 +17,7 @@ const Header = () => {
   /* ------------------------------------------------------------------
    * Auth state
    * ------------------------------------------------------------------ */
-  const { user, loading, signOut, isAdmin, isPremium: isPremiumUser } = useAuth();
+  const { user, loading, signOut, isAdmin, isPremium: isPremiumUser, role } = useAuth();
   const isAuthenticated = !!user;
 
   const location = useLocation();
@@ -197,26 +197,29 @@ const Header = () => {
                   />
                 </svg>
               </button>
-              <div className={`absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg overflow-hidden z-20 origin-top-right transform transition-all duration-200 ${
+              <div
+                key={role}
+                className={`absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-md border border-gray-200 shadow-xl overflow-hidden z-20 origin-top-right transform transition-all duration-200 ${
                 userMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
-              } group-hover:opacity-100 group-hover:scale-100 group-hover:visible`}>
+              } group-hover:opacity-100 group-hover:scale-100 group-hover:visible`}
+              >
                 <div className="py-1">
                   <Link 
                     to="/profile" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
                   >
                     Profile
                   </Link>
                   <Link 
                     to="/settings" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
                   >
                     Settings
                   </Link>
                   {isAdmin && isAdmin() && (
                     <Link 
                       to="/admin" 
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
                     >
                       Admin Panel
                     </Link>
