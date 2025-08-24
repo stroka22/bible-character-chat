@@ -63,7 +63,7 @@ const Header = () => {
     try {
       await (signOut?.());
       // Redirect to home page after logout
-      window.location.href = '/';
+      window.location.replace('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -173,7 +173,7 @@ const Header = () => {
                   My Walk
                 </Link>
               )}
-              <div className="relative group" ref={menuRef}>
+              <div className="relative" ref={menuRef}>
               <button
                 className="flex items-center space-x-2 focus:outline-none"
                 onClick={() => setUserMenuOpen(v => !v)}
@@ -201,7 +201,7 @@ const Header = () => {
                 key={role}
                 className={`absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-md border border-gray-200 shadow-xl overflow-hidden z-20 origin-top-right transform transition-all duration-200 ${
                 userMenuOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
-              } group-hover:opacity-100 group-hover:scale-100 group-hover:visible`}
+              }`}
               >
                 <div className="py-1">
                   <Link 

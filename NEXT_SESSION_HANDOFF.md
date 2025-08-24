@@ -1,187 +1,205 @@
-# NEXT_SESSION_HANDOFF.md  
-Bible Character Chat – Seamless Transition Guide  
-_Last updated: July 2025_
+# Kickoff Message for Next Session
 
----
+Welcome! This handoff summarizes the FaithTalkAI “Bible Character Chat” project to date, including architecture, features, database schema, deployment, and active work. Start by reviewing the Handoff Document below. Then:
 
-## 1 ▪ Project Overview & Current Status
-Bible Character Chat is a React + Vite web app that lets users converse with biblical figures, view contextual “Insights”, and (optionally) subscribe via Stripe.  
-All core screens build, the server runs on **http://localhost:5186**, and three demo characters (“Jesus (Final)”, “Paul (Final)”, “Moses (Final)”) are visible with working images.
+- Pull the repo and run locally with the provided .env.
+- Verify production deployment (Vercel) is showing the latest improvements:
+  - Roundtable sticky header, auto-start toggle.
+  - Admin Studies fields: Subject and Character Instructions.
+  - Header dropdown is clickable; Sign Out works on Mac.
+- Review open UX issues (Windows white-on-white, footer subscribe on mobile) and current priorities.
+- See Roadmap for upcoming features: video/audio roundtables, deep Bible research tools, multi-language support, sermon series builder.
 
-Recent milestones  
-• Fixed navigation, pricing, chat UI and image issues  
-• Implemented robust chat engine with GPT-4 or mock fallback  
-• Added localStorage offline mode for chats when Supabase fails  
-• All builds succeed with Vite 6.3.5
+When ready, continue implementation with the Immediate Next Steps at the bottom.
 
----
+—End of kickoff—
 
-## 2 ▪ Repository Structure & Key Files
-```
-/src
-  ├─ components/          UI atoms/molecules (Header, ChatBubble, InsightsPanel…)
-  ├─ contexts/
-  │   └─ ChatContext.js   ← main chat state, retry logic
-  ├─ pages/               Home, Pricing, AdminPanel…
-  ├─ repositories/
-  │   ├─ characterRepository.js
-  │   ├─ chatRepository.js        ← Supabase + fallback
-  │   └─ mockChatRepository.js    ← localStorage implementation
-  ├─ services/
-  │   ├─ openai.js                ← GPT-4 + mock fallback
-  │   └─ mockResponseService.js   ← generates / streams mock replies
-  └─ data/mockResponses.json      ← canned answers for offline mode
-/scripts                        Utility CLI scripts
-/dist                           Production build (served by Vite preview)
-run-app.sh                      One-liner build + launch
-.env                            Environment variables (safe keys only)
-```
-Full docs live in root:
-- HANDOFF_FINAL.md, FINAL_SOLUTIONS.md, CHAT_FIXES.md, DESIGN_SYSTEM.md, CSV_IMPORT_GUIDE.md, UPDATED_CSV_STRUCTURE.md
 
----
+# Comprehensive Handoff Document
 
-## 3 ▪ Database Configuration (Supabase)
-Project URL : `https://sihfbzltlhkerkxozadt.supabase.co`  
-Anon key : stored in `.env` as `VITE_SUPABASE_ANON_KEY`
+## 1) Executive Summary
 
-Main tables  
-| Table | Purpose | Notes |
-|-------|---------|-------|
-| `characters` | Character metadata & images | Column `is_visible` controls listing |
-| `chats` | One row per user↔character conversation | RLS currently permissive for demo |
-| `chat_messages` | Messages within a chat | FK `chat_id` |
-| `character_groups` | Tagging/relationship info | Optional |
+FaithTalkAI is a multi-tenant, tiered web application that lets users chat with Bible characters, participate in multi-character “Roundtable” discussions, and learn through curated Bible Studies. It uses Supabase for auth/data, Stripe for premium detection, Vercel for hosting, and OpenAI for responses.
 
-Known DB issue: `INSERT INTO chats` can return **409** if RLS or uniqueness mis-matched. chatRepository now auto-switches to localStorage on such errors.
+This document gives you:
+- Full tech stack and architecture.
+- How to set up locally and deploy.
+- Database schema and RLS policies.
+- All implemented features (superadmin, admin, user).
+- Current issues, ongoing work, and a future roadmap.
 
----
+Goal: Seamless continuation of high-quality, fast progress.
 
-## 4 ▪ Chat System Architecture & Recent Fixes
-1. **ChatContext** orchestrates message flow, typing indicator, retry.  
-2. **chatRepository** talks to Supabase; on 403/409/23505 activates **mockChatRepository**.  
-3. **openai.js** streams GPT-4; if key missing or request fails uses **mockResponseService**.  
-4. **mockResponseService** pulls from `mockResponses.json`, analyses user text, streams paragraph-by-paragraph.  
-5. All failures degrade gracefully, so UX never shows blank states.
 
----
+## 2) Tech Stack
 
-## 5 ▪ Environment Variables
-`.env` already contains working public keys. Add/replace as needed:
+- Frontend  
+  - React + Vite  
+  - Tailwind CSS  
+  - React Router  
+- Backend/Platform  
+  - Supabase (Auth, Postgres, RLS, optional Edge Functions)  
+  - Stripe (subscription/premium detection)  
+  - OpenAI API (character responses)  
+- Hosting/CI  
+  - Vercel (GitHub integration, production + preview)  
+- State and Contexts  
+  - AuthContext: session, role, premium status  
+  - ConversationContext: conversation persistence  
+  - RoundtableContext: multi-character orchestration  
+  - ChatContext: lesson context injection  
+- Repositories  
+  - characterRepository, conversationRepository, roundtableSettingsRepository, bibleStudiesRepository, etc.
 
-```
-VITE_SUPABASE_URL=…
-VITE_SUPABASE_ANON_KEY=…
-***REMOVED***
-VITE_STRIPE_PUBLIC_KEY=pk_test_…
-VITE_STRIPE_PRICE_MONTHLY=price_…
-VITE_STRIPE_PRICE_YEARLY=price_…
-```
 
----
+## 3) Repos, Code, and Important Paths
 
-## 6 ▪ Working Characters & Demo Data
-Script `scripts/create_working_characters.js` inserts/updates:
-- **Jesus (Final)**
-- **Paul (Final)**
-- **Moses (Final)**  
-Each includes persona, opening line, insights data, Unsplash avatar & feature images (300 × 300 & 1000 × 560).
+- Repo: GitHub (linked in Vercel project “bible-character-chat”)  
+- Local root: /Users/brian/bible-character-chat  
 
-CSV samples:  
-`complete_characters.csv`, `sample_groups.csv`, plus import guide.
+Key directories/files:
+- src/
+  - components/ (Header.jsx, FABCluster.jsx, ScalableCharacterSelection.jsx, UpgradeModal.jsx)
+  - components/chat/ (SimpleChatWithHistory.js)
+  - contexts/ (AuthContext.js, ConversationContext.jsx, RoundtableContext.jsx, ChatContext.jsx)
+  - pages/ (RoundtableSetup.jsx, RoundtableChat.jsx, StudiesPage.jsx, StudyDetails.jsx, StudyLesson.jsx, admin/AdminStudiesPage.jsx, HomePage.js)
+  - repositories/ (bibleStudiesRepository.js, roundtableSettingsRepository.js, characterRepository.js)
+  - services/ (supabase.js, stripe.js, openai.js)
+  - App.js (routing)
+- scripts/ (bible_studies_schema.sql, bible_studies_policies_admin_superadmin.sql, bible_studies_seed_sotm.sql, roundtable_settings_table.sql, run_sql.cjs)
+- supabase/ (migrations/)
+- .env (local dev config)
+- vercel.json, tailwind.config.js
 
----
 
-## 7 ▪ Scripts & Tools
-| Script | Purpose |
-|--------|---------|
-| `run-app.sh` | Build, kill old preview, start new server on 5186 & open browser |
-| `generate_mock_responses.js` | Produce /src/data/mockResponses.json |
-| `create_working_characters.js` | Ensure demo characters visible with images |
-| `debug_chat_system.js` | CLI test for mock response engine |
-| `check_characters.js` | Diagnose character visibility / schema |
-| `query_db_structure.js` | Prints Supabase table & column info |
+## 4) Environment and Configuration
 
-_All scripts runnable via `node <script>` from project root._
+- .env keys:  
+  VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_OPENAI_API_KEY,  
+  VITE_STRIPE_PUBLIC_KEY, VITE_STRIPE_PRICE_MONTHLY, VITE_STRIPE_PRICE_YEARLY,  
+  optional VITE_SUPABASE_PROJECT_REF, VITE_SUPABASE_EDGE_FUNCTION_URL, feature toggles.
 
----
+- Supabase CLI/API: set SUPABASE_PROJECT_REF and SUPABASE_ACCESS_TOKEN, then `node scripts/run_sql.cjs <sql-file>`.
 
-## 8 bis ▪ Planned Feature Enhancements
-The following feature ideas have been captured during discussion but are **not yet implemented**.  Each item includes a short description and any initial notes so the next Droid can evaluate scope and priority.
+- Vercel: project id `prj_PSuP6…`, auto-deploy on push to main.
 
-1. **Video & Audio Conversations**  
-   • Allow users to converse with characters via recorded voice / video snippets.  
-   • Requires WebRTC (or third-party SDK), media storage (Supabase Storage or S3), and optional speech-to-text for transcripts.  
-   • No code started – only feasibility noted.
 
-2. **Bible Study Plans with Character Guidance**  
-   • Users pick a character; the system suggests a multi-day reading/discussion plan.  
-   • Plan objects could live in a new `study_plans` table; chat prompts auto-generated each day.  
-   • Pending schema design.
+## 5) Setup and Local Development
 
-3. **Editable Free / Premium Parameters**  
-   • Admin UI to change message limits, feature toggles, pricing tiers without redeploying.  
-   • Could store in Supabase table `app_config` and cache in React context.  
-   • Stripe checkout flow already stubbed – this would integrate with it.
+1. `npm install`  
+2. `npm run dev` (local)  
+3. `npm run build` / `npm run preview`  
+4. Apply schema via SQL Editor or `run_sql.cjs`.  
+   Scripts are idempotent.
 
-4. **Comprehensive Responsiveness**  
-   • Audit every screen (Home, Chat, Pricing, Admin) for breakpoints down to 320 px.  
-   • Add unit tests with `jest-playwright` for Chrome, Safari, Firefox; include mobile emulation.  
-   • Header & chat UI mostly responsive but needs QA.
 
-5. **Group Chats (Multiple Characters)**  
-   • User can invite >1 character into a single conversation – assistant persona becomes a multi-agent orchestrator.  
-   • Feasibility document exists (see `HANDOFF_FINAL.md`).  No schema changes yet.
+## 6) Database Schema (Core Tables + RLS Overview)
 
-6. **Gamification System**  
-   • Earn points/badges for streaks, completing study plans, or discovering new insights.  
-   • Proposed tables: `user_rewards`, `badges`.  Needs UX design.
+- characters, tier_settings, roundtable_settings, conversations/messages  
+- bible_studies (new columns: subject, character_instructions)  
+- bible_study_lessons, user_study_progress  
+All protected with RLS; admins/superadmins bypass where needed.
 
-7. **Multi-Language Support**  
-   • Allow users to chat and navigate the UI in multiple languages (e.g., Spanish, French, Portuguese).  
-   • Requires i18n library on the front-end (react-i18next or similar) plus locale JSON files.  
-   • Chat engine: detect user language, translate prompts/responses or request specific language from GPT/mock engine.  
-   • Database: store localized character content or translate on-the-fly; consider `language` column in `characters` and `chat_messages`.  
-   • Admin panel needs language switch & content management for translations.  
 
-8. **Additional Ideas**  
-   • Dark-mode toggle tied to OS preference  
-   • Push-notifications for study plan reminders  
-   • Public share link for specific chat excerpts
+## 7) Authentication, Roles, and Premium Detection
 
----
+AuthContext handles Supabase session, role (superadmin, admin, pastor, user) and Stripe subscription check (`isPremium`). UI gates Admin pages and premium features accordingly.
 
-## 8 ▪ Outstanding Issues & Next Steps
-1. **Supabase RLS** – tighten policies, re-enable server-side auth, drop anon writes.  
-2. **Sync Offline → Online** – when connection returns, push localStorage chats to Supabase.  
-3. **Bundle Size** – Vite warns >500 kB; consider code-split & lazy JSON import.  
-4. **Stripe Checkout** – front-end ready; needs Edge Function / webhook for subscription activation.  
-5. **Group Chat** – multi-character conversations scoped out; feasibility doc exists.  
-6. **Accessibility & SEO** – conduct full WCAG 2.2 audit and add meta/OG tags for sharing.  
-7. **Tests & Monitoring** – integrate Jest + React-Testing-Library; add Sentry / Supabase Edge logs.
 
----
+## 8) Stripe Integration
 
-## 9 ▪ Quick-Start for Next Droid
-```bash
-# 1. Install deps (first run)
-npm install
+stripe.js lazy-loads Stripe, UpgradeModal drives checkout. PricingPage lists plans.
 
-# 2. Provide env overrides if needed
-cp .env.example .env   # or edit existing
 
-# 3. Build & launch
-./run-app.sh           # => http://localhost:5186
-```
-Login/signup is optional (auth disabled in `.env` via `VITE_SKIP_AUTH=true`).  
-Open Home → choose a character → chat streams responses (GPT-4 if key, mock if not).
+## 9) OpenAI Integration
 
----
+openai.js handles streaming responses. RoundtableContext generates multi-character replies.
 
-### Need Help?
-• **Docs first** – HANDOFF_FINAL.md & FINAL_SOLUTIONS.md explain design & fixes in depth.  
-• **Dev console** – extensive console warnings guide you if fallback modes trigger.  
-• **Scripts** – run diagnostics in `/scripts` to validate DB, images and chat engine.
 
-Happy building!  
-_— Previous Droid_ 🚀
+## 10) Roundtable Feature (Implemented)
+
+Setup page lets user pick characters, topic, repliesPerRound, auto-start toggle.  
+RoundtableContext manages rotation, follow-ups, limits, and auto-start.  
+RoundtableChat has sticky header and Advance Round button.
+
+
+## 11) Bible Studies Feature (Implemented)
+
+AdminStudiesPage CRUD for studies/lessons (new Subject & Character Instructions fields).  
+StudiesPage → StudyDetails → StudyLesson injects lesson context into chat.  
+Schema + seed script provided.
+
+
+## 12) Core Chat and Upgrade UX
+
+SimpleChatWithHistory gates non-premium users, injects lesson context, persists conversation. FABCluster shows Start Roundtable & Upgrade buttons.
+
+
+## 13) Superadmin / Admin Features
+
+Org-scoped tier settings, roundtable defaults, Bible Studies admin, characters management, RLS policies.
+
+
+## 14) Deployment
+
+Vercel auto-deploy on push. Manual trigger:  
+`POST /v13/deployments` with payload `{ name, project, gitSource }`.  
+Build command: `vite build`, output `dist`.
+
+
+## 15) Current Issues and Ongoing Work
+
+- Roundtable header clipping on some devices.  
+- Windows white-on-white dropdown contrast.  
+- Footer Subscribe button overflow on small mobile.  
+- Admin Panel link requires refresh after login.  
+- Hero CTAs occasionally missing.  
+- Ensure new study fields persist end-to-end.  
+- Validate Sign Out across devices.  
+- Tier limits QA.
+
+
+## 16) Roadmap / Future Improvements
+
+- Video/audio roundtables (WebRTC or third-party).  
+- Deep Bible research tools with citations.  
+- Multi-language UI and chat.  
+- Pastor sermon series builder.  
+- Bundle splitting & performance.  
+- Accessibility (WCAG) and theming.
+
+
+## 17) Interaction Flow (High Level)
+
+Auth → Repos (Supabase) → Chat/OpenAI → UI components.  
+RoundtableContext orchestrates multi-character flow.  
+Bible Studies inject context into chats.  
+Stripe determines premium gating.
+
+
+## 18) Security
+
+RLS on sensitive tables, HTTPS avatar URL enforcement, secret keys in server env only.
+
+
+## 19) Post-Deploy QA Checklist
+
+- Auth sign-in/out, dropdown click (Mac).  
+- Roundtable auto-start & header.  
+- Admin Studies new fields create/edit.  
+- Lesson chat start.  
+- Hero CTAs present, footer responsive, Windows contrast OK.
+
+
+## 20) Immediate Next Steps
+
+1. QA production for recent fixes.  
+2. Fix Windows contrast & footer layout.  
+3. Ensure Admin Panel link renders post-login.  
+4. Review tier limits logic.  
+5. Draft video/audio roundtable prototype plan.  
+6. Outline deep research and i18n scopes.
+
+# End of Handoff Document
+
+If you need more info (e.g., UX walkthrough or code deep-dive), ask and we’ll append.  
