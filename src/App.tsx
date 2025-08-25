@@ -158,8 +158,12 @@ const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Elem
 
 function App(): JSX.Element {
   const params = new URLSearchParams(window.location.search);
-  const DIRECT_RENDER = params.get('direct') === '1' ||
-    import.meta.env.VITE_DIRECT_RENDER === 'true';
+  // Only enable the “direct render” shortcut while _developing_ and
+  // when the URL explicitly asks for it.  Prevents production from
+  // forcing everything to HomePage and breaking custom routes like
+  // “/pastors”.
+  const DIRECT_RENDER =
+    import.meta.env.DEV && params.get('direct') === '1';
   console.log(`[App] init – DIRECT_RENDER=${DIRECT_RENDER}`);
 
   /* ------------------------------------------------------------------
