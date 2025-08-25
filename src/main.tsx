@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import './index.css';
-import App from './App';
+import App from './App.tsx';
 
 // Import safe service versions that gracefully handle missing API keys
 // A single barrel file initializes all safe service shims in one place

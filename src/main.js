@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import React from 'react';          // Needed for React.Fragment reference
 import './index.css';
-import App from './App';
+import App from './App.tsx';
 import './services/import-services';
 (() => {
     const id = 'sw-cleanup';
