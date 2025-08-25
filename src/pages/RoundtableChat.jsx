@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useRoundtable } from '../contexts/RoundtableContext';
 import Footer from '../components/Footer';
 
@@ -86,6 +86,28 @@ const RoundtableChat = () => {
             _jsxs("div", {
               className: "sticky top-16 md:top-20 z-10 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
               children: [
+                /* Home link */
+                _jsx("div", {
+                  className: "mb-2",
+                  children: _jsxs(Link, {
+                    to: "/",
+                    className: "inline-flex items-center text-blue-100 hover:text-yellow-300 text-sm",
+                    children: [
+                      _jsx("svg", {
+                        xmlns: "http://www.w3.org/2000/svg",
+                        className: "h-4 w-4 mr-1",
+                        viewBox: "0 0 20 20",
+                        fill: "currentColor",
+                        children: _jsx("path", {
+                          fillRule: "evenodd",
+                          d: "M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z",
+                          clipRule: "evenodd"
+                        })
+                      }),
+                      "Home"
+                    ]
+                  })
+                }),
                 _jsx("h1", {
                   className: "text-2xl md:text-3xl font-bold text-center text-yellow-400 mb-2",
                   style: { fontFamily: 'Cinzel, serif' },

@@ -30,6 +30,7 @@ import PrivacyPage from './pages/PrivacyPage.jsx';
 import CookiePolicyPage from './pages/CookiePolicyPage.jsx';
 import PressKitPage from './pages/PressKitPage.jsx';
 import CareersPage from './pages/CareersPage.jsx';
+import PastorsPage from './pages/PastorsPage.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
@@ -196,6 +197,7 @@ function App(): JSX.Element {
     <Route path="/how-it-works" element={<HowItWorksPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/contact" element={<ContactPage />} />
+    <Route path="/pastors" element={<PastorsPage />} />
     <Route path="/terms" element={<TermsPage />} />
     <Route path="/privacy" element={<PrivacyPage />} />
     <Route path="/cookies" element={<CookiePolicyPage />} />
