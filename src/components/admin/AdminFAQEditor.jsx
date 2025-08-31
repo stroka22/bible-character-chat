@@ -11,6 +11,12 @@ import React, { useState, useEffect, useCallback } from 'react';
  * - Persistence through localStorage
  */
 const AdminFAQEditor = () => {
+  /* ------------------------------------------------------------------
+   * Storage keys (shared with FAQPage)
+   * ------------------------------------------------------------------ */
+  const FAQ_STORAGE_KEY = 'faithTalkAI_faqs';
+  const LEGACY_KEY = 'faqItems';
+
   // State for the list of FAQs
   const [faqs, setFaqs] = useState([]);
   
@@ -27,9 +33,23 @@ const AdminFAQEditor = () => {
   // Load FAQs from localStorage on component mount
   useEffect(() => {
     try {
-      const savedFaqs = localStorage.getItem('faithTalkAI_faqs');
-      if (savedFaqs) {
-        setFaqs(JSON.parse(savedFaqs));
+      // Prefer new namespaced key, but support migration from legacy key
+      const savedRaw =
+        localStorage.getItem(FAQ_STORAGE_KEY) ||
+        localStorage.getItem(LEGACY_KEY);
+
+      if (savedRaw) {
+        const parsed = JSON.parse(savedRaw);
+        setFaqs(parsed);
+
+        // If we loaded from the legacy key, migrate it to the new key
+        if (!localStorage.getItem(FAQ_STORAGE_KEY)) {
+          try {
+            localStorage.setItem(FAQ_STORAGE_KEY, savedRaw);
+          } catch {
+            /* ignore quota errors */
+          }
+        }
       }
     } catch (err) {
       console.error('Error loading FAQs from localStorage:', err);
@@ -40,7 +60,7 @@ const AdminFAQEditor = () => {
   // Save FAQs to localStorage whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem('faithTalkAI_faqs', JSON.stringify(faqs));
+      localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(faqs));
     } catch (err) {
       console.error('Error saving FAQs to localStorage:', err);
       setError('Failed to save FAQs. Please check your browser storage settings.');

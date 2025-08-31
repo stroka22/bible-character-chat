@@ -4,17 +4,31 @@ import { createClient } from '@supabase/supabase-js';
 // IMPORTANT: Update these values with your Supabase project information
 // =========================================================================
 
-// The URL is constructed using your Supabase project ID
-export const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
+/* -----------------------------------------------------------------------
+ * Environment helpers – prefer Vite env (import.meta.env.*) but also check
+ * Node‐style process.env so the same file works in SSR / tests.
+ * --------------------------------------------------------------------- */
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+const ENV_URL =
+  (import.meta as any).env?.VITE_SUPABASE_URL ??
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  (typeof process !== 'undefined' ? (process as any).env?.VITE_SUPABASE_URL : undefined);
 
-// INSTRUCTIONS: Replace this with your actual anon key from Supabase
-// To find your anon key:
-// 1. Go to https://app.supabase.com and sign in
-// 2. Select your project (with ID: sihfbzltlhkerkxozadt)
-// 3. Go to Project Settings > API
-// 4. Copy the "anon" key (public) - it's safe to use in browser code
-// 5. Paste it below between the quotes
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+const ENV_ANON =
+  (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ??
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  (typeof process !== 'undefined' ? (process as any).env?.VITE_SUPABASE_ANON_KEY : undefined);
+
+// The URL is constructed using your Supabase project ID (fallback)
+export const SUPABASE_URL =
+  ENV_URL || 'https://sihfbzltlhkerkxozadt.supabase.co';
+
+// Public anon key fallback (safe for browser)
 export const SUPABASE_ANON_KEY =
+  ENV_ANON ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
 
 // =========================================================================
@@ -82,6 +96,15 @@ export interface Profile {
 
 // Initialize the Supabase client with the URL and anon key
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Warn developers when fallback credentials are being used
+if (!ENV_URL || !ENV_ANON) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[supabase] Using fallback Supabase credentials. ' +
+      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your env.',
+  );
+}
 
 // =========================================================================
 // Helper Functions

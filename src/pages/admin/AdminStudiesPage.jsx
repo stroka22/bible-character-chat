@@ -315,13 +315,63 @@ const AdminStudiesPage = ({ embedded = false }) => {
           ]
         }),
         
-        /* Error message */
-        error && (
-          _jsx("div", {
-            className: "bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-6",
-            children: error
-          })
-        ),
+        /* Error message – enhanced visibility + RLS guidance */
+        error &&
+          (() => {
+            const lower = String(error).toLowerCase();
+            const isRls =
+              lower.includes('row level security') ||
+              lower.includes('permission') ||
+              lower.includes('rls');
+            const baseClasses = embedded
+              ? 'bg-red-100 border border-red-300 text-red-700'
+              : 'bg-red-500/20 border border-red-500/50 text-red-200';
+
+            return (
+              _jsxs("div", {
+                className: `${baseClasses} px-4 py-3 rounded-lg mb-6`,
+                children: [
+                  _jsx("p", { children: error }),
+                  isRls && (
+                    _jsxs("div", {
+                      className: `${
+                        embedded
+                          ? 'bg-red-50 text-red-700'
+                          : 'bg-red-900/30 text-red-200'
+                      } mt-4 p-3 rounded-lg`,
+                      children: [
+                        _jsx("h4", {
+                          className: "font-semibold mb-2",
+                          children: "Permission help"
+                        }),
+                        _jsxs("ul", {
+                          className: "list-disc list-inside space-y-1 text-sm",
+                          children: [
+                            _jsx("li", {
+                              children:
+                                "Ensure you are logged in as an admin with the correct organization"
+                            }),
+                            _jsx("li", {
+                              children:
+                                "Set owner_slug in the form to your organization (e.g., grace-church)"
+                            }),
+                            _jsx("li", {
+                              children:
+                                "In Supabase, add an INSERT policy on bible_studies allowing admins to insert rows where owner_slug = auth.jwt() ->> 'owner_slug' OR matches the user's profile"
+                            }),
+                            _jsx("li", {
+                              children:
+                                "After updating policies, reload this page"
+                            })
+                          ]
+                        })
+                      ]
+                    })
+                  )
+                ]
+              })
+            );
+          })(),
         
         /* Main content area */
         _jsxs("div", {

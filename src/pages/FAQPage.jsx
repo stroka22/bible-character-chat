@@ -10,6 +10,12 @@ import Footer from '../components/Footer';
  * Pulls data from the same source used by the admin FAQ editor.
  */
 const FAQPage = () => {
+  /* ------------------------------------------------------------------
+   * Constants
+   * ------------------------------------------------------------------ */
+  const FAQ_STORAGE_KEY = 'faithTalkAI_faqs';
+  const LEGACY_KEY = 'faqItems';
+
   const [faqs, setFaqs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -21,11 +27,15 @@ const FAQPage = () => {
   useEffect(() => {
     setIsLoading(true);
     try {
-      // Get FAQs from localStorage
-      const savedFaqs = localStorage.getItem('faqItems');
-      
-      if (savedFaqs) {
-        const parsedFaqs = JSON.parse(savedFaqs);
+      /* --------------------------------------------------------------
+       * 1) Try localStorage (new key first, then legacy)
+       * ------------------------------------------------------------ */
+      const savedFaqsRaw =
+        localStorage.getItem(FAQ_STORAGE_KEY) ||
+        localStorage.getItem(LEGACY_KEY);
+
+      if (savedFaqsRaw) {
+        const parsedFaqs = JSON.parse(savedFaqsRaw);
         setFaqs(parsedFaqs);
         
         // Extract unique categories
@@ -38,8 +48,49 @@ const FAQPage = () => {
           initialExpandedCategories[category] = true;
         });
         setExpandedCategories(initialExpandedCategories);
+
+        // Ensure data is written back with new key for future reads
+        try {
+          localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(parsedFaqs));
+        } catch {/* ignore quota errors */}
+
       } else {
-        // If no FAQs in localStorage, use default FAQs from pricing page
+        /* --------------------------------------------------------------
+         * 2) Try network fetch (/faq.json) for a shared FAQ resource
+         *    (wrapped in an async IIFE to avoid top-level await)
+         * ------------------------------------------------------------ */
+        (async () => {
+          const fetchRemoteFaqs = async () => {
+            try {
+              const res = await fetch('/faq.json', { credentials: 'omit' });
+              if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                  localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(data));
+                  return data;
+                }
+              }
+            } catch {
+              /* network failure ignored – will fallback */
+            }
+            return null;
+          };
+
+          const remoteFaqs = await fetchRemoteFaqs();
+
+          if (remoteFaqs) {
+            setFaqs(remoteFaqs);
+            const uniqueCategories = [...new Set(remoteFaqs.map(faq => faq.category || 'General'))];
+            setCategories(uniqueCategories);
+            const initialExpandedCategories = {};
+            uniqueCategories.forEach(cat => { initialExpandedCategories[cat] = true; });
+            setExpandedCategories(initialExpandedCategories);
+            return; // exit early on success
+          }
+
+          /* ----------------------------------------------------------
+           * 3) Final fallback – hard-coded defaults
+           * -------------------------------------------------------- */
         const defaultFaqs = [
           { 
             id: '1', 
@@ -90,6 +141,7 @@ const FAQPage = () => {
           initialExpandedCategories[category] = true;
         });
         setExpandedCategories(initialExpandedCategories);
+        })(); // end IIFE
       }
     } catch (err) {
       console.error('Error loading FAQs:', err);
@@ -116,7 +168,9 @@ const FAQPage = () => {
   };
 
   // Filter FAQs by visibility
-  const visibleFaqs = faqs.filter(faq => faq.isVisible !== false);
+  const visibleFaqs = faqs.filter(
+    faq => faq.isVisible !== false && faq.isPublished !== false,
+  );
 
   // Group FAQs by category
   const faqsByCategory = categories.reduce((acc, category) => {

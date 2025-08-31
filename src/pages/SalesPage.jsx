@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import FaithLogo from '../components/FaithLogo';
 
 export default function SalesPage() {
   const [copiedState, setCopiedState] = useState({
@@ -81,6 +82,17 @@ In Christ,
                 For Pastors
               </Link>
             </div>
+            {/* AI-for-good note */}
+            <p className="mt-6 max-w-2xl mx-auto text-white/90 text-lg">
+              We believe in using AI&nbsp;for&nbsp;good.{" "}
+              <a
+                href="https://faithtalkai.com"
+                className="underline font-semibold text-yellow-400 hover:text-yellow-300"
+              >
+                FaithTalkAI.com
+              </a>{" "}
+              harnesses advanced technology to deepen discipleship and grow the Kingdom.
+            </p>
           </div>
         </div>
       </section>
@@ -89,6 +101,8 @@ In Christ,
       <section className="py-8 bg-blue-50">
         <div className="container mx-auto px-4">
           <div className="relative max-w-5xl mx-auto">
+            {/* Brand logo overlay */}
+            <FaithLogo variant="light" size="lg" className="absolute top-4 left-4 z-10" />
             <img 
               src="/images/complete-bible.jpg" 
               alt="Biblical figures from the complete Bible, illustrating the depth of characters available for conversation" 
@@ -111,7 +125,10 @@ In Christ,
             <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6 text-center">What is FaithTalkAI?</h2>
             <div className="bg-blue-50 p-8 rounded-xl shadow-md">
               <p className="text-lg mb-4">
-                FaithTalkAI is a Scripture-based conversation platform that enables believers to have meaningful dialogues with biblical figures. Using advanced AI technology grounded in biblical truth, it helps individuals and groups deepen their understanding of Scripture and apply its wisdom to modern life.
+                <a href="https://faithtalkai.com" className="underline text-blue-900 font-semibold">
+                  FaithTalkAI.com
+                </a>{" "}
+                is a Scripture-based conversation platform that enables believers to have meaningful dialogues with biblical figures. Using advanced AI technology grounded in biblical truth, it helps individuals and groups deepen their understanding of Scripture and apply its wisdom to modern life.
               </p>
               <p className="text-lg mb-4">
                 Unlike generic AI tools, FaithTalkAI is specifically designed for biblical engagement, with every response rooted in Scripture and theological understanding. It's a powerful tool for churches, small groups, and individuals seeking to grow in their faith journey.
@@ -331,6 +348,12 @@ In Christ,
                 <h3 className="text-xl font-bold text-yellow-400 mb-3">Church Analytics</h3>
                 <p>Detailed insights into engagement patterns to help inform teaching and discipleship strategies.</p>
               </div>
+              
+              {/* NEW – Video Chat card */}
+              <div className="bg-blue-700/50 p-6 rounded-lg">
+                <h3 className="text-xl font-bold text-yellow-400 mb-3">Video Chat with Characters</h3>
+                <p>Join live video sessions where biblical characters appear on screen and respond in real time (roadmap).</p>
+              </div>
             </div>
           </div>
         </div>
@@ -371,6 +394,7 @@ In Christ,
       <section className="py-16 bg-blue-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
+            <FaithLogo size="lg" className="mx-auto mb-4" />
             <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6">Ready to Transform Bible Engagement?</h2>
             <p className="text-xl mb-8">Join churches nationwide using AI to deepen Scripture understanding and application.</p>
             
@@ -381,6 +405,33 @@ In Christ,
               <Link to="/pastors" className="bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-300">
                 Pastor Resources
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Downloads Section */}
+      <section className="py-16 bg-white border-t border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6">Downloads</h2>
+            <p className="mb-8">Share FaithTalkAI with your team using these ready-made resources.</p>
+
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <a
+                href="/emails/sales-campaign.html"
+                download
+                className="bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-lg transition duration-300"
+              >
+                Download HTML Email
+              </a>
+              <a
+                href="/downloads/bulletin-blurb.txt"
+                download
+                className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
+              >
+                Bulletin Blurb (.txt)
+              </a>
             </div>
           </div>
         </div>
