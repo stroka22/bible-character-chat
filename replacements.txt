@@ -1,0 +1,8 @@
+regex:(sk-[A-Za-z0-9]{20,})
+[REDACTED-OPENAI-KEY]
+
+regex:(VITE_OPENAI_API_KEY\s*=\s*[^\n]+)
+VITE_OPENAI_API_KEY=[REDACTED]
+
+regex:(OPENAI_API_KEY\s*=\s*[^\n]+)
+OPENAI_API_KEY=[REDACTED]
