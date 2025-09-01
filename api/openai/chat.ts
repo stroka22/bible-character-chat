@@ -1,5 +1,3 @@
-import OpenAI from 'openai';
-
 type Message = {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -26,10 +24,6 @@ export default async function handler(
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
     const systemMessage: Message = {
       role: 'system',
       content: `You are ${characterName}, ${characterPersona}. 
@@ -41,41 +35,42 @@ export default async function handler(
 
     const completeMessages = [systemMessage, ...messages];
 
-    try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: completeMessages,
-        temperature: 0.7,
-        max_tokens: 300,
-        top_p: 1,
-        frequency_penalty: 0.2,
-        presence_penalty: 0.6,
-      });
-
-      const generatedText = response.choices[0]?.message?.content || 
-        "I'm afraid I cannot respond at the moment. Let us speak again later.";
-      
-      return res.status(200).json({ text: generatedText });
-    } catch (openaiError) {
-      try {
-        const fallbackResponse = await openai.chat.completions.create({
-          model: 'gpt-4',
+    // Helper to call OpenAI Chat Completions with native fetch
+    async function callOpenAI(model: string): Promise<string | null> {
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
           messages: completeMessages,
           temperature: 0.7,
           max_tokens: 300,
           top_p: 1,
           frequency_penalty: 0.2,
-          presence_penalty: 0.6,
-        });
+          presence_penalty: 0.6
+        })
+      });
 
-        const fallbackText = fallbackResponse.choices[0]?.message?.content || 
-          "I'm afraid I cannot respond at the moment. Let us speak again later.";
-        
-        return res.status(200).json({ text: fallbackText });
-      } catch (fallbackError) {
-        throw new Error(`OpenAI API error: ${(openaiError as Error).message}`);
-      }
+      if (!resp.ok) return null;
+
+      const data: any = await resp.json();
+      return data?.choices?.[0]?.message?.content ?? null;
     }
+
+    // Try preferred model first, then fallback
+    let generatedText = await callOpenAI('gpt-4o-mini');
+    if (!generatedText) {
+      generatedText = await callOpenAI('gpt-4');
+    }
+
+    if (!generatedText) {
+      throw new Error('Failed to generate response from OpenAI');
+    }
+
+    return res.status(200).json({ text: generatedText });
   } catch (error) {
     return res.status(500).json({ error: (error as Error).message });
   }
