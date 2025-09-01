@@ -148,7 +148,7 @@ export async function createCustomer(userId: string, email: string): Promise<str
       .from('users')
       .select('stripe_customer_id')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
 
     if (dbError) {
       console.error(`[Stripe] 🔴 Database error when checking for existing customer: ${dbError.message}`);
@@ -380,7 +380,7 @@ export async function getActiveSubscription(userId: string): Promise<Subscriptio
             .from('users')
             .select('stripe_customer_id')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
 
         if (dbError) {
             console.error(`[Stripe] 🔴 Database error when fetching customer ID: ${dbError.message}`);
