@@ -73,7 +73,7 @@ export async function createCustomer(userId, email) {
             .from('profiles')
             .select('stripe_customer_id')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
         if (dbError) {
             console.warn(`[Stripe] ⚠️ Database error when checking for existing customer: ${dbError.message}`);
             return 'database_error';
@@ -181,7 +181,7 @@ export async function getActiveSubscription(userId) {
             .from('profiles')
             .select('stripe_customer_id')
             .eq('id', userId)
-            .single();
+            .maybeSingle();
         if (dbError || !userData?.stripe_customer_id) {
             return null;
         }
