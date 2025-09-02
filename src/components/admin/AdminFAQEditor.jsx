@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+// Auth & Supabase helpers
+import { useAuth } from '../../contexts/AuthContext';
+import {
+  listAllFaqs,
+  upsertFaq as upsertFaqRow,
+  deleteFaq as deleteFaqRow,
+} from '../../services/faqs';
 
 /**
  * AdminFAQEditor Component

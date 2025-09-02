@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { listPublishedFaqs } from '../services/faqs';
 
 /**
  * FAQPage Component
@@ -23,9 +24,44 @@ const FAQPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load FAQs from localStorage (same source as admin editor)
+  // Load FAQs – prefer Supabase, then fallback to localStorage / network / defaults
   useEffect(() => {
     setIsLoading(true);
+    (async () => {
+      /* --------------------------------------------------------------
+       * 0) Try Supabase (shared, server-backed)
+       * ------------------------------------------------------------ */
+      try {
+        const supaFaqs = await listPublishedFaqs();
+        if (Array.isArray(supaFaqs) && supaFaqs.length > 0) {
+          setFaqs(supaFaqs);
+          const uniqueCategories = [
+            ...new Set(supaFaqs.map(f => f.category || 'General')),
+          ];
+          setCategories(uniqueCategories);
+          const initCat = {};
+          uniqueCategories.forEach(c => (initCat[c] = true));
+          setExpandedCategories(initCat);
+
+          // cache in localStorage for offline / anon users
+          try {
+            localStorage.setItem(
+              FAQ_STORAGE_KEY,
+              JSON.stringify(supaFaqs),
+            );
+          } catch {
+            /* quota ignored */
+          }
+          setIsLoading(false);
+          return; // success, stop further fallbacks
+        }
+      } catch (err) {
+        console.warn('[FAQPage] Supabase fetch failed, falling back:', err);
+      }
+
+      /* ------------------------------------------------------------------
+       * Existing fallback chain: localStorage → /faq.json → defaults
+       * ------------------------------------------------------------------ */
     try {
       /* --------------------------------------------------------------
        * 1) Try localStorage (new key first, then legacy)
@@ -149,6 +185,7 @@ const FAQPage = () => {
     } finally {
       setIsLoading(false);
     }
+    })();
   }, []);
 
   // Toggle a question's expanded state
