@@ -17,6 +17,8 @@ export default function LeadCaptureModal() {
 
   const triggeredRef = useRef(false);
   const isDesktopRef = useRef(false);
+  // `lead_test=1|true` forces modal regardless of dismissal memory
+  const [force, setForce] = useState(false);
 
   // Determine desktop once on mount
   useEffect(() => {
@@ -26,6 +28,17 @@ export default function LeadCaptureModal() {
   // Respect prior dismissal
   useEffect(() => {
     if (!isDesktopRef.current) return; // desktop only
+    // URL override – show immediately and skip timers/listeners
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const flag = params.get('lead_test');
+      if (flag === '1' || flag === 'true') {
+        setForce(true);
+        setOpen(true);
+        return; // skip normal gating logic
+      }
+    } catch { /* ignore */ }
+
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -57,11 +70,14 @@ export default function LeadCaptureModal() {
   }, []);
 
   const closeAndRemember = () => {
-    try {
-      const until = new Date();
-      until.setDate(until.getDate() + HIDE_DAYS);
-      localStorage.setItem(STORAGE_KEY, until.toISOString());
-    } catch {}
+    // Persist dismissal only when not in forced-test mode
+    if (!force) {
+      try {
+        const until = new Date();
+        until.setDate(until.getDate() + HIDE_DAYS);
+        localStorage.setItem(STORAGE_KEY, until.toISOString());
+      } catch { /* ignore */ }
+    }
     setOpen(false);
   };
 

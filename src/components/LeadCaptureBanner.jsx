@@ -15,8 +15,23 @@ export default function LeadCaptureBanner() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  // `lead_test=1` or `lead_test=true` in URL forces banner to appear regardless of localStorage
+  const [force, setForce] = useState(false);
 
   useEffect(() => {
+    // URL override
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const flag = params.get('lead_test');
+      if (flag === '1' || flag === 'true') {
+        setForce(true);
+        setShow(true);
+        return; // skip normal localStorage logic
+      }
+    } catch {
+      /* ignore */
+    }
+
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return setShow(true);
@@ -28,11 +43,16 @@ export default function LeadCaptureBanner() {
   }, []);
 
   const dismiss = () => {
-    try {
-      const until = new Date();
-      until.setDate(until.getDate() + HIDE_DAYS);
-      localStorage.setItem(STORAGE_KEY, until.toISOString());
-    } catch {}
+    // Do not persist dismissal if we're in forced-test mode
+    if (!force) {
+      try {
+        const until = new Date();
+        until.setDate(until.getDate() + HIDE_DAYS);
+        localStorage.setItem(STORAGE_KEY, until.toISOString());
+      } catch {
+        /* ignore */
+      }
+    }
     setShow(false);
   };
 
