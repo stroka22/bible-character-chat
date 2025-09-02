@@ -433,6 +433,45 @@ In Christ,
                 Bulletin Blurb (.txt)
               </a>
             </div>
+
+            {/* Additional Resources */}
+            <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
+              <a
+                href="/downloads/one-pager.txt"
+                download
+                className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
+              >
+                One-Page Overview (.txt)
+              </a>
+              <a
+                href="/downloads/slide-deck-outline.txt"
+                download
+                className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
+              >
+                Slide Deck Outline (.txt)
+              </a>
+              <a
+                href="/downloads/pastor-demo-script.txt"
+                download
+                className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
+              >
+                Pastor Demo Script (.txt)
+              </a>
+              <a
+                href="/downloads/small-group-launch-guide.txt"
+                download
+                className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
+              >
+                Small-Group Launch Guide (.txt)
+              </a>
+              <a
+                href="/downloads/logo-pack-readme.txt"
+                download
+                className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
+              >
+                Logo Pack Readme
+              </a>
+            </div>
           </div>
         </div>
       </section>

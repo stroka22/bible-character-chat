@@ -1,0 +1,81 @@
+FAITHTALKAI – 3-MIN PASTOR LIVE DEMO SCRIPT
+==========================================
+
+Total time: ~3 min (allow 2 min Q&A buffer)
+
+SET-UP
+• Open faithtalkai.com and log in (projector on).
+• Have the Character Library tab ready.
+
+-------------------------------------------------
+1. PICK A CHARACTER (30 sec)
+-------------------------------------------------
+Talk:  
+“Let’s imagine it’s sermon prep time and I want Paul’s perspective on grace.”
+
+Action:  
+• Click “Characters” in the left menu.  
+• Scroll and click the Apostle Paul card.
+
+Highlight:  
+“Over 50 biblical figures are available, each grounded in Scripture with citations.”
+
+-------------------------------------------------
+2. ASK A QUESTION (45 sec)
+-------------------------------------------------
+Talk:  
+“I’ll ask: *‘How would you explain Ephesians 2:8-9 to a new believer?’*”
+
+Action:  
+• Type the question, press Enter.
+
+Show:  
+• Response appears with verse quoted and explanation.
+
+Point out:  
+“Every answer is footnoted with references so members can verify in their Bible.”
+
+-------------------------------------------------
+3. START A ROUNDTABLE (45 sec)
+-------------------------------------------------
+Talk:  
+“Now let’s add James and Peter for a multi-voice discussion.”
+
+Action:  
+• Click “Roundtable” → “Add Characters” → select James & Peter → Start Roundtable.  
+• Type: *‘How do faith and works fit together?’*
+
+Explain:  
+“Notice how each character brings a different scriptural angle—perfect for small groups.”
+
+-------------------------------------------------
+4. LAUNCH A GUIDED STUDY (45 sec)
+-------------------------------------------------
+Talk:  
+“Beyond free-form chat, we provide ready-made studies.”
+
+Action:  
+• Click “Studies” in sidebar → choose “Grace Explained – 4 Weeks” → open Lesson 1.
+
+Show:  
+• Pre-loaded questions & character prompts.
+
+Explain:  
+“Leaders can simply press ‘Start Session’ and let the AI facilitate, or customize prompts.”
+
+-------------------------------------------------
+5. INVITE NEXT STEPS (15 sec)
+-------------------------------------------------
+Talk:  
+“If you’d like to explore this with your church:”
+
+• “Start a free 14-day trial today—no credit card.”  
+• “Or book a 15-minute demo; we’ll set up a custom portal for your team.”
+
+Action:  
+• Point to yellow ‘Start Free Trial’ button and ‘Book Demo’ link.
+
+CLOSE
+“FaithTalkAI helps people move from reading the Bible to *conversing* with it. Let’s grow disciples together.”
+
+(END)

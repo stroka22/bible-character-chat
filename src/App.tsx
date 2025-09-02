@@ -44,6 +44,7 @@ import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
+import LeadCaptureBanner from './components/LeadCaptureBanner';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -190,11 +191,29 @@ function App(): JSX.Element {
   );
 
   if (DIRECT_RENDER) {
-    return (<ErrorBoundary><Providers><Router><div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600"><Header /><main className="flex-1"><HomePage /></main></div><DebugPanel /></Router></Providers></ErrorBoundary>);
+    return (
+      <ErrorBoundary>
+        <Providers>
+          <Router>
+            <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600">
+              <Header />
+              <LeadCaptureBanner />
+              <main className="flex-1">
+                <HomePage />
+              </main>
+            </div>
+            <DebugPanel />
+          </Router>
+        </Providers>
+      </ErrorBoundary>
+    );
   }
 
   return (<ErrorBoundary><Providers><Router>
-    <div className="flex flex-col min-h-screen"><Header /><main className="flex-1 px-4 md:px-6"><Routes>
+    <div className="flex flex-col min-h-screen">
+      <Header />
+      <LeadCaptureBanner />
+      <main className="flex-1 px-4 md:px-6"><Routes>
     {/* Public routes */}
     <Route path="/" element={<HomePage />} />
     <Route path="/login" element={<LoginPage />} />

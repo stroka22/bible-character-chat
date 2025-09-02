@@ -92,13 +92,19 @@ const AdminFavorites = () => {
     return Object.entries(counts)
       .map(([charId, count]) => {
         const character = characters.find(c => c.id.toString() === charId);
+        if (!character) {
+          // Skip IDs that no longer exist in the character list
+          return null;
+        }
         return {
           id: charId,
-          name: character ? character.name : `Unknown (ID: ${charId})`,
-          avatar: character ? character.avatar_url : null,
+          name: character.name,
+          avatar: character.avatar_url,
           count
         };
       })
+      // Remove null placeholders (unknown IDs)
+      .filter(Boolean)
       .sort((a, b) => b.count - a.count); // Sort by count descending
   }, [characters, favoriteData]);
   
@@ -114,10 +120,9 @@ const AdminFavorites = () => {
   
   // Get character objects for the selected user's favorites
   const userFavoriteCharacters = useMemo(() => {
-    return userFavorites.map(charId => {
-      const character = characters.find(c => c.id.toString() === charId);
-      return character || { id: charId, name: `Unknown (ID: ${charId})` };
-    });
+    return userFavorites
+      .map(charId => characters.find(c => c.id.toString() === charId) || null)
+      .filter(Boolean); // Exclude unknown IDs
   }, [characters, userFavorites]);
   
   // Handle resetting favorites for a user

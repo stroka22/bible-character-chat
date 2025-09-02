@@ -332,8 +332,8 @@ const SuperadminUsersPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="mb-6">
+        {/* Breadcrumb + Back to Admin */}
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="flex items-center space-x-2 text-sm">
             <Link to="/" className="text-yellow-300 hover:text-yellow-400 transition-colors">
               Home
@@ -345,7 +345,15 @@ const SuperadminUsersPage = () => {
             <span>&gt;</span>
             <span className="text-white font-medium">Users</span>
           </div>
-          <h1 className="text-2xl font-bold mt-2">Manage Users</h1>
+          <h1 className="text-2xl font-bold mt-2 md:mt-0">Manage Users</h1>
+
+          {/* Right-aligned Back button for smaller screens will stack below breadcrumb */}
+          <Link
+            to="/admin"
+            className="mt-4 md:mt-0 inline-block px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+          >
+            Back to Admin
+          </Link>
         </div>
         
         {/* Create-org action */}
