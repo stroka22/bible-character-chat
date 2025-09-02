@@ -57,7 +57,7 @@ export default function LeadCaptureBanner() {
         utm_medium: new URLSearchParams(window.location.search).get('utm_medium'),
         utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign'),
       });
-      setSuccess('Thanks! We\'ll be in touch soon.');
+      setSuccess("Thanks! We'll be in touch soon.");
       setName(''); setEmail(''); setPhone(''); setRole('user'); setConsentEmail(true); setConsentSms(false);
       dismiss();
     } catch (err) {
@@ -70,30 +70,62 @@ export default function LeadCaptureBanner() {
   if (!show) return null;
 
   return (
-    <div className="sticky top-16 z-40 bg-yellow-50 border-b border-yellow-200 text-blue-900">
-      <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div className="flex-1">
-          <div className="font-semibold">Stay in the loop</div>
-          <div className="text-sm">Get updates, ministry resources, and launches. Opt-out anytime.</div>
-        </div>
-        <form onSubmit={onSubmit} className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-2 items-center">
-          <input value={name} onChange={(e)=>setName(e.target.value)} className="md:col-span-1 px-3 py-2 rounded border border-yellow-300 bg-white" placeholder="Name" />
-          <input value={email} onChange={(e)=>setEmail(e.target.value)} className="md:col-span-2 px-3 py-2 rounded border border-yellow-300 bg-white" placeholder="Email*" />
-          <input value={phone} onChange={(e)=>setPhone(e.target.value)} className="md:col-span-1 px-3 py-2 rounded border border-yellow-300 bg-white" placeholder="Phone" />
-          <select value={role} onChange={(e)=>setRole(e.target.value)} className="md:col-span-1 px-3 py-2 rounded border border-yellow-300 bg-white">
+    <div className="sticky top-16 z-40 bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg">
+      <div className="container mx-auto px-4 py-3">
+        <form onSubmit={onSubmit} className="rounded-xl border border-blue-700/50 backdrop-blur-sm px-4 py-3 grid grid-cols-1 md:grid-cols-8 gap-2 items-center">
+          <div className="md:col-span-2">
+            <div className="font-semibold">Get ministry updates and resources</div>
+            <div className="text-sm text-white/80">Opt-out anytime — we respect your inbox.</div>
+          </div>
+
+          <input
+            value={name}
+            onChange={(e)=>setName(e.target.value)}
+            className="md:col-span-1 px-3 py-2 rounded-full bg-white text-blue-900 placeholder-blue-900/60 border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            placeholder="Name"
+          />
+          <input
+            value={email}
+            onChange={(e)=>setEmail(e.target.value)}
+            className="md:col-span-2 px-3 py-2 rounded-full bg-white text-blue-900 placeholder-blue-900/60 border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            placeholder="Email*"
+          />
+          <input
+            value={phone}
+            onChange={(e)=>setPhone(e.target.value)}
+            className="md:col-span-1 px-3 py-2 rounded-full bg-white text-blue-900 placeholder-blue-900/60 border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            placeholder="Phone"
+          />
+          <select
+            value={role}
+            onChange={(e)=>setRole(e.target.value)}
+            className="md:col-span-1 px-3 py-2 rounded-full bg-white text-blue-900 border-transparent focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          >
             <option value="user">User</option>
             <option value="pastor">Pastor</option>
             <option value="leader">Leader</option>
             <option value="other">Other</option>
           </select>
-          <button disabled={submitting} className="md:col-span-1 px-4 py-2 rounded bg-blue-900 text-white font-semibold hover:bg-blue-800 disabled:bg-gray-400">{submitting ? 'Submitting...' : 'Keep me updated'}</button>
-          <div className="md:col-span-6 flex items-center gap-4 text-xs text-blue-900/80">
+
+          <button
+            disabled={submitting}
+            className="md:col-span-1 flex items-center justify-center gap-1 px-5 py-2 rounded-full bg-yellow-400 text-blue-900 font-semibold shadow hover:bg-yellow-300 disabled:bg-gray-400"
+          >
+            {submitting ? 'Submitting...' : 'Keep me updated'}
+            {!submitting && (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            )}
+          </button>
+
+          <div className="md:col-span-8 flex items-center gap-4 text-xs text-white/80">
             <label className="flex items-center gap-1"><input type="checkbox" checked={consentEmail} onChange={(e)=>setConsentEmail(e.target.checked)} /> Email OK</label>
             <label className="flex items-center gap-1"><input type="checkbox" checked={consentSms} onChange={(e)=>setConsentSms(e.target.checked)} /> SMS OK</label>
-            <button type="button" onClick={dismiss} className="ml-auto underline">Dismiss</button>
+            <button type="button" onClick={dismiss} className="ml-auto underline underline-offset-2 hover:text-white">Dismiss</button>
+            {error && <div className="text-red-300">{error}</div>}
+            {success && <div className="text-green-200">{success}</div>}
           </div>
-          {error && <div className="md:col-span-6 text-red-700 text-sm">{error}</div>}
-          {success && <div className="md:col-span-6 text-green-700 text-sm">{success}</div>}
         </form>
       </div>
     </div>
