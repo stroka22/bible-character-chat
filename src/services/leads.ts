@@ -18,6 +18,31 @@ export type Lead = {
 const table = 'leads';
 
 export async function createLead(payload: Lead): Promise<Lead> {
+  // 1) Try serverless endpoint first (works in production, bypasses RLS)
+  try {
+    const resp = await fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).catch(() => null); // network / CORS error
+
+    if (resp && resp.ok) {
+      const json = await resp.json().catch(() => ({}));
+      if (json?.lead) return json.lead as Lead;
+      // If schema changes, fall back to Supabase
+    } else if (resp && (resp.status === 404 || resp.status === 405)) {
+      // Endpoint not available (e.g., local dev) → fall through
+    } else if (resp) {
+      // Endpoint returned an error – extract message and throw
+      const { error } = await resp.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(error || `Lead API error ${resp.status}`);
+    }
+  } catch (err) {
+    // Network or other unexpected error – proceed to Supabase fallback
+    console.warn('[leads] /api/leads failed, falling back to direct insert:', err);
+  }
+
+  // 2) Fallback: direct Supabase insert (requires correct RLS/keys)
   const { data, error } = await supabase
     .from(table)
     .insert(payload)

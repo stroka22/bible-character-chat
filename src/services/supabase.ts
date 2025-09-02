@@ -22,14 +22,48 @@ const ENV_ANON =
   // @ts-ignore
   (typeof process !== 'undefined' ? (process as any).env?.VITE_SUPABASE_ANON_KEY : undefined);
 
-// The URL is constructed using your Supabase project ID (fallback)
-export const SUPABASE_URL =
-  ENV_URL || 'https://sihfbzltlhkerkxozadt.supabase.co';
+// ---------------------------------------------------------------------------
+// Hardened env handling
+//   • If BOTH env vars present  → use them
+//   • If NEITHER present       → use hard-coded fallbacks (dev/demo)
+//   • If only ONE present       → log error, use placeholder strings so the
+//                                failure is obvious (avoid mixing pairs)
+// ---------------------------------------------------------------------------
 
-// Public anon key fallback (safe for browser)
-export const SUPABASE_ANON_KEY =
-  ENV_ANON ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+const hasEnvUrl = !!ENV_URL;
+const hasEnvAnon = !!ENV_ANON;
+
+let resolvedUrl: string;
+let resolvedAnon: string;
+
+if (hasEnvUrl && hasEnvAnon) {
+  // Fully-specified via env
+  resolvedUrl = ENV_URL as string;
+  resolvedAnon = ENV_ANON as string;
+} else if (!hasEnvUrl && !hasEnvAnon) {
+  // Dev fallback
+  resolvedUrl = 'https://sihfbzltlhkerkxozadt.supabase.co';
+  resolvedAnon =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[supabase] Using bundled fallback credentials (dev/demo only). ' +
+      'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for production.',
+  );
+} else {
+  // Partial config – hard fail loudly
+  resolvedUrl = ENV_URL || 'MISSING_ENV_SUPABASE_URL';
+  resolvedAnon = ENV_ANON || 'MISSING_ENV_SUPABASE_ANON_KEY';
+  // eslint-disable-next-line no-console
+  console.error(
+    '[supabase] Incomplete Supabase environment configuration. ' +
+      'Both VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set. ' +
+      'Falling back to placeholder values – API calls will fail with 401.',
+  );
+}
+
+export const SUPABASE_URL = resolvedUrl;
+export const SUPABASE_ANON_KEY = resolvedAnon;
 
 // =========================================================================
 // Database Types - these should match your Supabase schema
