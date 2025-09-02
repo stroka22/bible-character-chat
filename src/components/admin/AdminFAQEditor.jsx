@@ -37,9 +37,53 @@ const AdminFAQEditor = () => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  /* ------------------------------------------------------------------
+   * Admin detection (uses AuthContext)
+   * ------------------------------------------------------------------ */
+  const { isAdmin } = useAuth();
+  const isAdminUser = typeof isAdmin === 'function' ? isAdmin() : false;
+
   // Load FAQs from localStorage on component mount
   useEffect(() => {
-    try {
+    (async () => {
+      /* --------------------------------------------------------------
+       * 0) If admin – pull canonical list from Supabase first
+       * ------------------------------------------------------------ */
+      if (isAdminUser) {
+        setIsLoading(true);
+        try {
+          const rows = await listAllFaqs();
+          if (Array.isArray(rows)) {
+            const normalized = rows.map((r) => ({
+              id: r.id,
+              question: r.question,
+              answer: r.answer,
+              category: r.category || 'General',
+              isPublished: r.is_published !== false,
+              order_index: r.order_index ?? null,
+              createdAt: r.created_at || new Date().toISOString(),
+              updatedAt: r.updated_at || r.created_at || new Date().toISOString(),
+            }));
+            setFaqs(normalized);
+            // cache published list for FAQPage fallback
+            try {
+              const published = normalized.filter((f) => f.isPublished !== false);
+              localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(published));
+            } catch {}
+            setIsLoading(false);
+            return; // stop fallback chain
+          }
+        } catch (err) {
+          console.warn('[AdminFAQEditor] Supabase fetch failed, falling back:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
+      /* --------------------------------------------------------------
+       * Fallback – load from localStorage (legacy behaviour)
+       * ------------------------------------------------------------ */
+      try {
       // Prefer new namespaced key, but support migration from legacy key
       const savedRaw =
         localStorage.getItem(FAQ_STORAGE_KEY) ||
@@ -62,6 +106,7 @@ const AdminFAQEditor = () => {
       console.error('Error loading FAQs from localStorage:', err);
       setError('Failed to load saved FAQs. Please try refreshing the page.');
     }
+    })();
   }, []);
 
   // Save FAQs to localStorage whenever they change
@@ -71,7 +116,11 @@ const AdminFAQEditor = () => {
     } catch (err) {
       console.error('Error saving FAQs to localStorage:', err);
       setError('Failed to save FAQs. Please check your browser storage settings.');
-    }
+      // For admin persistence we handle Supabase writes inside handleSubmit /
+      // handleDelete so this effect stays synchronous.
+
+  } // ← close try/catch/useEffect body
+
   }, [faqs]);
 
   // Reset form fields
@@ -82,7 +131,7 @@ const AdminFAQEditor = () => {
   }, []);
 
   // Handle form submission for adding/editing FAQs
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -95,7 +144,65 @@ const AdminFAQEditor = () => {
       }
 
       // Create or update FAQ
-      if (editingId !== null) {
+      if (isAdminUser) {
+        /* --------------------------------------------------------
+         * Admin branch – persist to Supabase first
+         * ------------------------------------------------------ */
+        if (editingId !== null) {
+          // update
+          const saved = await upsertFaqRow({
+            id: editingId,
+            question,
+            answer,
+            category: 'General',
+            is_published: true,
+          });
+          setFaqs(prevFaqs =>
+            prevFaqs.map(f =>
+              f.id === editingId
+                ? { ...f, question: saved.question, answer: saved.answer, updatedAt: saved.updated_at || new Date().toISOString() }
+                : f,
+            ),
+          );
+          setSuccessMessage('FAQ updated successfully!');
+        } else {
+          // add new
+          const saved = await upsertFaqRow({
+            question,
+            answer,
+            category: 'General',
+            is_published: true,
+          });
+          const newFaq = {
+            id: saved.id,
+            question: saved.question,
+            answer: saved.answer,
+            category: saved.category || 'General',
+            createdAt: saved.created_at || new Date().toISOString(),
+            updatedAt: saved.updated_at || new Date().toISOString(),
+            isPublished: true,
+          };
+          setFaqs(prev => [...prev, newFaq]);
+          setSuccessMessage('New FAQ added successfully!');
+        }
+
+        // refresh localStorage cache of published items
+        try {
+          localStorage.setItem(
+            FAQ_STORAGE_KEY,
+            JSON.stringify(
+              (editingId
+                ? faqs.map(f =>
+                    f.id === editingId
+                      ? { ...f, question, answer }
+                      : f,
+                  )
+                : [...faqs, { id: editingId, question, answer, isPublished: true }]
+              ).filter(f => f.isPublished !== false),
+            ),
+          );
+        } catch {/* ignore quota */}
+      } else if (editingId !== null) {
         // Update existing FAQ
         setFaqs(prevFaqs => 
           prevFaqs.map(faq => 
@@ -139,7 +246,7 @@ const AdminFAQEditor = () => {
   };
 
   // Handle deleting an FAQ
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this FAQ? This action cannot be undone.')) {
       return;
     }
@@ -149,7 +256,20 @@ const AdminFAQEditor = () => {
     setSuccessMessage(null);
 
     try {
+      if (isAdminUser) {
+        try {
+          await deleteFaqRow(id);
+        } catch (err) {
+          console.error('[AdminFAQEditor] Supabase delete failed:', err);
+          throw err;
+        }
+      }
+
       setFaqs(prevFaqs => prevFaqs.filter(faq => faq.id !== id));
+      try {
+        const published = faqs.filter((f) => f.id !== id && f.isPublished !== false);
+        localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(published));
+      } catch {}
       setSuccessMessage('FAQ deleted successfully!');
     } catch (err) {
       setError('Failed to delete FAQ. Please try again.');
@@ -161,13 +281,33 @@ const AdminFAQEditor = () => {
 
   // Handle toggling FAQ visibility
   const handleToggleVisibility = (id) => {
-    setFaqs(prevFaqs => 
-      prevFaqs.map(faq => 
-        faq.id === id 
-          ? { ...faq, isPublished: !faq.isPublished } 
-          : faq
-      )
+    setFaqs((prevFaqs) =>
+      prevFaqs.map((faq) =>
+        faq.id === id ? { ...faq, isPublished: !faq.isPublished } : faq,
+      ),
     );
+
+    const target = faqs.find((f) => f.id === id);
+    if (!target) return;
+    const nextPublished = !target.isPublished;
+
+    (async () => {
+      if (isAdminUser) {
+        try {
+          await upsertFaqRow({ id, is_published: nextPublished });
+        } catch (err) {
+          console.error('[AdminFAQEditor] Supabase toggle failed:', err);
+        }
+      }
+      try {
+        const published = faqs
+          .map((f) =>
+            f.id === id ? { ...f, isPublished: nextPublished } : f,
+          )
+          .filter((f) => f.isPublished !== false);
+        localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(published));
+      } catch {}
+    })();
   };
 
   // Sort FAQs by creation date (newest first)
@@ -249,7 +389,19 @@ const AdminFAQEditor = () => {
       
       {/* FAQ List */}
       <div>
-        <h3 className="text-xl font-medium text-gray-700 mb-4">Existing FAQs</h3>
+        {/* Toolbar */}
+        <div className="mb-4 flex items-center gap-2">
+          <h3 className="text-xl font-medium text-gray-700 flex-1">Existing FAQs</h3>
+          {isAdminUser && (
+            <button
+              type="button"
+              onClick={handleImportLocalToSupabase}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500"
+            >
+              Import localStorage → Supabase
+            </button>
+          )}
+        </div>
         
         {sortedFaqs.length === 0 ? (
           <p className="text-gray-500 italic">No FAQs found. Add your first FAQ above.</p>
@@ -332,6 +484,62 @@ const AdminFAQEditor = () => {
       </div>
     </div>
   );
+
+  /* --------------------------------------------------------------
+   * Import helper – pushes local FAQs into Supabase
+   * ------------------------------------------------------------ */
+  async function handleImportLocalToSupabase() {
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+    try {
+      const raw =
+        localStorage.getItem(FAQ_STORAGE_KEY) || localStorage.getItem(LEGACY_KEY);
+      if (!raw) throw new Error('No localStorage FAQs found.');
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr) || arr.length === 0)
+        throw new Error('Local FAQs list is empty.');
+
+      let count = 0;
+      for (const item of arr) {
+        await upsertFaqRow({
+          id: typeof item.id === 'string' && item.id.length > 0 ? item.id : undefined,
+          question: item.question ?? '',
+          answer: item.answer ?? '',
+          category: item.category ?? 'General',
+          is_published:
+            item.is_published ?? item.isPublished ?? item.isVisible ?? true,
+          order_index: item.order_index ?? null,
+        });
+        count++;
+      }
+      setSuccessMessage(`Imported ${count} FAQs to Supabase.`);
+
+      // refresh list
+      try {
+        const rows = await listAllFaqs();
+        const normalized = rows.map((r) => ({
+          id: r.id,
+          question: r.question,
+          answer: r.answer,
+          category: r.category || 'General',
+          isPublished: r.is_published !== false,
+          order_index: r.order_index ?? null,
+          createdAt: r.created_at,
+          updatedAt: r.updated_at,
+        }));
+        setFaqs(normalized);
+        localStorage.setItem(
+          FAQ_STORAGE_KEY,
+          JSON.stringify(normalized.filter((f) => f.isPublished !== false)),
+        );
+      } catch {}
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Import failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
 };
 
 export default AdminFAQEditor;
