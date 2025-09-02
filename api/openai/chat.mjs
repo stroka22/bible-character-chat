@@ -1,4 +1,4 @@
-module.exports = async function(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     if (req.method === 'GET' || req.method === 'HEAD') {
       return res.status(200).json({ ok: true });
@@ -80,5 +80,3 @@ module.exports = async function(req, res) {
     return res.status(500).json({ error: (error && error.message) || String(error) });
   }
 }
-
-module.exports.config = { runtime: 'nodejs18.x' };
