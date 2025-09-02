@@ -70,7 +70,7 @@ export default function LeadCaptureBanner() {
   if (!show) return null;
 
   return (
-    <div className="bg-yellow-50 border-b border-yellow-200 text-blue-900">
+    <div className="sticky top-16 z-40 bg-yellow-50 border-b border-yellow-200 text-blue-900">
       <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div className="flex-1">
           <div className="font-semibold">Stay in the loop</div>
