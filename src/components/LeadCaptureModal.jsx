@@ -14,6 +14,10 @@ export default function LeadCaptureModal() {
   const [consentSms, setConsentSms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // timer for auto-close after success
+  const autoCloseRef = useRef(null);
 
   const triggeredRef = useRef(false);
   const isDesktopRef = useRef(false);
@@ -99,13 +103,25 @@ export default function LeadCaptureModal() {
         utm_medium: new URLSearchParams(window.location.search).get('utm_medium'),
         utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign'),
       });
-      closeAndRemember();
+      // show confirmation message & auto-close
+      setSuccess("Thanks! You're on the list. We'll be in touch soon.");
+      if (autoCloseRef.current) clearTimeout(autoCloseRef.current);
+      autoCloseRef.current = setTimeout(() => {
+        closeAndRemember();
+      }, 3000);
     } catch (err) {
       setError(err?.message || 'Something went wrong.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  // Clear any pending timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoCloseRef.current) clearTimeout(autoCloseRef.current);
+    };
+  }, []);
 
   if (!open) return null;
 
@@ -125,6 +141,17 @@ export default function LeadCaptureModal() {
               </button>
             </div>
           </div>
+          {success ? (
+            <div className="bg-white px-6 py-8 text-blue-900 text-center">
+              <p className="text-lg font-semibold mb-4">{success}</p>
+              <button
+                onClick={closeAndRemember}
+                className="mt-2 px-5 py-2 rounded-full bg-yellow-400 text-blue-900 font-semibold shadow hover:bg-yellow-300"
+              >
+                Close
+              </button>
+            </div>
+          ) : (
           <form onSubmit={onSubmit} className="bg-white px-6 py-5 text-blue-900">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <input value={name} onChange={(e)=>setName(e.target.value)} className="px-3 py-2 rounded-full bg-white border border-blue-200 focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Name" />
@@ -147,6 +174,7 @@ export default function LeadCaptureModal() {
               <button disabled={submitting} className="px-5 py-2 rounded-full bg-yellow-400 text-blue-900 font-semibold shadow hover:bg-yellow-300 disabled:bg-gray-400">{submitting ? 'Submitting...' : 'Keep me updated'}</button>
             </div>
           </form>
+          )}
         </div>
       </div>
     </div>
