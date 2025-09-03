@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { notifyLead } from './_utils/notify-lead.mjs';
 
 function json(res, status, body) {
   res.status(status);
@@ -71,6 +72,16 @@ export default async function handler(req, res) {
 
     if (error) {
       return json(res, 500, { error: error.message });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Side-effect notifications (non-blocking)                           */
+    /* ------------------------------------------------------------------ */
+    try {
+      // notifyLead is internally time-bounded; await to ensure completion
+      await notifyLead(data || row);
+    } catch {
+      /* ignore notification errors */
     }
 
     return json(res, 200, { lead: data });
