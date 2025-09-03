@@ -19,8 +19,25 @@ export default function LeadCaptureBanner() {
   const [force, setForce] = useState(false);
   // timer ref for auto-dismiss after success
   const autoCloseRef = useRef(null);
+  // dynamic offset so banner sits just below fixed header on mobile
+  const [offset, setOffset] = useState(64); // sensible default
 
   useEffect(() => {
+    // Calculate header height and update offset
+    const updateOffset = () => {
+      try {
+        const header = document.querySelector('header');
+        const h = header ? header.getBoundingClientRect().height : 64;
+        setOffset(Math.max(0, h));
+      } catch {
+        /* ignore */
+      }
+    };
+
+    updateOffset();
+    window.addEventListener('resize', updateOffset);
+    window.addEventListener('scroll', updateOffset); // header height shrinks on scroll
+
     // URL override
     try {
       const params = new URLSearchParams(window.location.search);
@@ -99,7 +116,10 @@ export default function LeadCaptureBanner() {
   if (!show) return null;
 
   return (
-    <div className="sticky top-16 z-40 bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg">
+    <div
+      className="fixed left-0 right-0 z-40 bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg"
+      style={{ top: offset }}
+    >
       <div className="container mx-auto px-4 py-3">
         {success ? (
           <div className="rounded-xl border border-blue-700/50 backdrop-blur-sm px-4 py-4 flex items-center justify-between">
