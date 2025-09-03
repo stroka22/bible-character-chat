@@ -28,7 +28,8 @@ export default function LeadCaptureBanner() {
       try {
         const header = document.querySelector('header');
         const h = header ? header.getBoundingClientRect().height : 64;
-        setOffset(Math.max(0, h));
+        // add a small buffer so the banner clears the header completely
+        setOffset(Math.max(0, h + 12));
       } catch {
         /* ignore */
       }
