@@ -1,213 +1,219 @@
-# FaithTalkAI — Comprehensive Project Hand-off
+# FaithTalkAI – Bible Character Chat
 
-This document gives a full, end-to-end overview of the FaithTalkAI project so the next engineer can ramp up immediately and continue shipping with confidence.
-
----
-
-## Quick Links
-- Production: https://faithtalkai.com  
-- GitHub: https://github.com/stroka22/bible-character-chat  
-- Local repo (Brian): `/Users/brian/bible-character-chat`
+Comprehensive engineering hand-off for the next Droid. Covers architecture, environments, features, current status, known issues, and next steps. **Read thoroughly before making changes.**
 
 ---
 
-## Vision & Product Summary
-FaithTalkAI is a multi-tenant Bible-character chat platform. Users converse with historically and theologically grounded personas. The product supports free / premium tiers, rich admin tooling for content management, and superadmin tooling for organization-level oversight.
-
-Roadmap ideas:
-• Round-table group chats (multiple characters + user)  
-• Audio / video (Zoom-like) sessions with characters  
-• Character-led Bible-study flows  
-• Deep research tools on biblical texts & history  
-• Multi-language model & UI support  
-• Sermon-series generator for pastors  
-• Ongoing UI/UX polish
+## 1) Project Overview
+- **Name:** FaithTalkAI – “Bible Character Chat”
+- **Purpose:** Let users converse with Bible characters, learn biblical context, and equip pastors/leaders with tools (studies, outreach, lead capture, sales materials).
+- **Stack**
+  - Front-end: React (Vite), TypeScript + some JSX, Tailwind CSS
+  - Back-end/Infra: Vercel serverless functions
+  - Data & Auth: Supabase (Postgres + Auth + RLS)
+  - AI: OpenAI via serverless proxy
+  - Payments: Stripe code present (not in active scope)
 
 ---
 
-## Architecture Overview
-Frontend: React (Vite) + Tailwind utility classes  
-State:  
-  • AuthContext — auth, profile, role helpers  
-  • ConversationContext — persistence layer  
-  • ChatContext — chat orchestration  
-Backend: Supabase (Auth, PostgREST, RLS, SQL functions)  
-Payments: Stripe (via stripe-safe service; UI block removed)  
-Multi-tenancy: `owners` table scoped by `owner_slug`
+## 2) Repositories, Code Locations & Key Files
+| Area | Path |
+| ---- | ---- |
+| GitHub | https://github.com/stroka22/bible-character-chat |
+| Local dir | `/Users/brian/bible-character-chat` |
+| Entry | `src/main.tsx`, `src/App.tsx` |
+| Contexts | `src/contexts/*` |
+| Supabase client | `src/services/supabase.ts` (hardened env) |
+| Leads service | `src/services/leads.ts` (posts to `/api/leads`) |
+| FAQs service | `src/services/faqs.ts` |
+| OpenAI proxy | `api/openai/chat.mjs` |
+| Leads API   | `api/leads.mjs` (service-role insert) |
+| Lead UI – banner | `src/components/LeadCaptureBanner.jsx` |
+| Lead UI – modal | `src/components/LeadCaptureModal.jsx` |
+| FAQ page | `src/pages/FAQPage.jsx` |
+| Admin FAQ editor | `src/components/admin/AdminFAQEditor.jsx` |
+| Admin extras | `src/components/admin/AdminFavorites.jsx`, `src/pages/admin/*` |
+| Sales page & downloads | `src/pages/SalesPage.jsx`, `public/downloads/` |
+| Chat | `src/components/chat/SimpleChatWithHistory`, Roundtable pages |
+
+> ⚠️  Do a full repo scan & route walk-through first. Some `.jsx` lives in the TS project—Vite handles it.
 
 ---
 
-## Key Folders & Files
-- `src/App.js` — router & guards  
-- `src/contexts/*` — Auth, Conversation, Chat providers  
-- `src/pages/`  
-  • `AdminPage.js` — main admin tabs  
-  • `admin/AdminInvitesPage.jsx`  
-  • `admin/SuperadminUsersPage.jsx`  
-- `src/components/admin/`  
-  • AccountTierManagement.jsx  
-  • AdminFAQEditor.jsx, AdminFavorites.jsx, AdminFeaturedCharacter.jsx  
-  • GroupManagement.js/.tsx  
-- `src/repositories/characterRepository.js`  
-- `src/services/` — supabase, stripe-safe, tierSettingsService, invitesService  
-- `scripts/`  
-  • `min_owners.sql`, `owners_policies_superadmin.sql`, `run_sql.cjs`  
-- `docs/HANDOFF.md` — this document
+## 3) Environments & Configuration
+Create `.env.local` for dev, set **Production** vars in Vercel.
 
----
-
-## Routing & Access Control
-ProtectedRoute → requires auth  
-AdminRoute → requires `isAdmin()` (admin|superadmin)  
-
-Key routes (see `src/App.js`):  
-`/` Home • `/login` • `/signup` • `/pricing` • `/faq`  
-`/chat` (+ `:conversationId`, `/shared/:shareCode`)  
-`/admin` (main tabs) • `/admin/invites` • `/admin/users` (superadmin)  
-`/profile` • `/settings` • `/conversations` • `/favorites`
-
----
-
-## Roles
-`user` | `pastor` | `admin` | `superadmin` (stored in `profiles.role`)  
-Helpers (`AuthContext`): `isSuperadmin`, `isAdmin` (admin or superadmin), `isPastor`
-
----
-
-## Multi-tenancy Model
-`owners` table → `owner_slug`, `display_name`  
-Profiles carry `owner_slug`; superadmins can create orgs & move users.  
-Tier settings persisted per `owner_slug` via `tierSettingsService`.
-
----
-
-## Database & RLS Highlights
-Tables: `profiles`, `owners` (+ characters, etc.)  
-Function: `public.current_user_role()` SECURITY DEFINER  
-Policies:  
-  • `owners` select → authenticated  
-  • `owners` insert/update → `current_user_role() = 'superadmin'`
-
-Scripts: `scripts/min_owners.sql`, `scripts/owners_policies_superadmin.sql`  
-Execute via `node scripts/run_sql.cjs …`
-
----
-
-## Payments
-Stripe-safe service stores `stripe_customer_id` on `profiles`.  
-Stripe config block removed from Account Tier admin UI (cleaned).
-
----
-
-## Admin Features (`AdminPage.js`)
-1. **Characters** — CSV bulk upload, create/edit/delete, visibility toggle, search, export, bulk delete.  
-2. **Groups** — character groupings.  
-3. **Featured Character** — site-wide highlight.  
-4. **User Favorites** — view curated favorites.  
-5. **FAQ Editor** — manage FAQ.  
-6. **Account Tiers** — set free message limit, free character count, pick free characters; saves to Supabase + localStorage; cross-tab sync.
-
-Superadmin shortcut button at top links to `/admin/users`.
-
----
-
-## Superadmin Features (`SuperadminUsersPage.jsx`)
-- Filterable users table (search, role, org).  
-- Change user roles (cannot demote superadmin).  
-- Move users between orgs.  
-- Create organization modal (slugify, RLS-protected).  
-
----
-
-## Invite System
-Admin-generated invite codes to elevate roles, scoped to `owner_slug`.
-
----
-
-## Tier Enforcement
-Free vs premium character list + free message limits enforced globally,
-using both character IDs and fallback names to avoid ID-type mismatch.
-
----
-
-## Chat & Conversation
-ChatContext → message flow; ConversationContext → storage & share links; SimpleChatWithHistory used for all chat routes.
-
----
-
-## Fixes Already Landed
-- PostgREST bad column refs removed.  
-- `owners` table + RLS created; helper function avoids recursion.  
-- Stripe switched to `profiles` table.  
-- Premium gating ID vs string mismatch fixed.  
-- Cross-tab/localStorage event sync; bypass-mode conversation saving stabilized.
-
----
-
-## Current Status
-✅ Admin & Superadmin UIs live in production  
-✅ Organization creation + RLS verified  
-✅ Stripe block removed  
-Next: QA multi-tenant tier enforcement, polish UI, implement roadmap features.
-
----
-
-## Local Development
+### Browser (Vite)
 ```
-npm install
-npm run dev
-cp .env.example .env   # add VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, etc.
+VITE_SUPABASE_URL=https://<project>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon public key>
 ```
-SQL scripts:
+
+### Serverless (Functions)
 ```
-export SUPABASE_PROJECT_REF=...
-export SUPABASE_ACCESS_TOKEN=...
-node scripts/run_sql.cjs scripts/min_owners.sql
-node scripts/run_sql.cjs scripts/owners_policies_superadmin.sql
+SUPABASE_SERVICE_ROLE_KEY=<service_role key>
+VITE_SUPABASE_URL=https://<project>.supabase.co   # or SUPABASE_URL
+OPENAI_API_KEY=<openai key>
 ```
-Push to `main` deploys (check repo’s deployment target).
+
+- `src/services/supabase.ts` only uses envs if **both** are present; otherwise warns or falls back to dev credentials.
+- After env changes, **redeploy**.
+- Check `/api/leads` GET ⇒ `{ ok: true }`.
 
 ---
 
-## Code-Review Checklist
-- AuthContext role logic & profile creation  
-- SuperadminUsersPage → RLS alignment  
-- AccountTierManagement → Supabase & localStorage paths  
-- characterRepository CSV validations  
-- owners SQL scripts idempotent  
-- App.js guards for `/admin/users`  
-- Service layers error handling
+## 4) Data Model & Supabase
+| Table | Purpose |
+| ----- | ------- |
+| `public.faqs`  | FAQs (category, question, answer, published, ordering) |
+| `public.leads` | Lead capture submissions |
+
+### Triggers
+- `moddatetime` (no-arg) updates `updated_at`.
+
+### RLS Policies (desired)
+| Table | Policy | Role | Cmd |
+|-------|--------|------|-----|
+| leads | `leads_insert_anon` | anon | INSERT |
+|       | `leads_insert_auth` | authenticated | INSERT |
+|       | `leads_select_admins` | authenticated (admin/superadmin) | SELECT |
+| faqs  | public read published | public | SELECT |
+|       | admin CRUD | authenticated admin | INS/UPD/DEL |
 
 ---
 
-## Data Model Notes
-Characters include rich metadata (timeline, context, study questions).  
-`relationships` column is JSON for graph-like links.  
-Featured character stored via admin UI.
+## 5) Features by Role
+### Public
+- Marketing pages (Home, About, Contact, How It Works, Pricing, Careers, Press Kit)
+- Sales page with download links (currently placeholders)
+- Chat (`SimpleChatWithHistory`) and shareable routes
+- Roundtable setup & chat
+- FAQ from Supabase
+- Lead capture UX  
+  - Banner (mobile) + Modal (desktop)  
+  - Exit-intent + 10 s fallback, 30-day dismissal memory  
+  - `?lead_test=1` override
+
+### Authenticated User
+- Auth flows (Login/Signup/Reset)
+- Conversations, Favorites, My Walk, Profile, Settings
+
+### Admin
+- `/admin` dashboard
+- FAQ CRUD (`AdminFAQEditor`)
+- Favorites fix, Studies & Invites pages
+
+### Superadmin
+- User management (`/admin/users`) with quick nav
 
 ---
 
-## Observability
-ErrorBoundary shows detailed info in dev; admin components log to console.
+## 6) Lead Capture Flow
+1. **UI** shows banner / modal per device & triggers.  
+2. `createLead()` → POST `/api/leads` (service role) → Supabase insert ➜ success.  
+3. If API absent (local dev) → direct Supabase insert (needs RLS).  
+
+Common errors  
+- 401 = mismatched browser envs  
+- 500 = missing `SUPABASE_SERVICE_ROLE_KEY` or server URL in function env
 
 ---
 
-## Security
-RLS hardened; role elevation via invites.  
-`current_user_role()` used in policies.  
-Keep queries tight—select only needed columns.
+## 7) OpenAI Proxy
+- Path: `/api/openai/chat.mjs`
+- Expects `{ characterName, characterPersona, messages }`
+- Uses `OPENAI_API_KEY`, returns `{ text }`
 
 ---
 
-## Suggested Milestones
-1. Round-table multi-character chats  
-2. Audio/video via WebRTC (LiveKit / Daily)  
-3. Character-led Bible studies with citations  
-4. Deep research module (timeline, maps, textual criticism)  
-5. Internationalization (i18n + multilingual models)  
-6. Pastor sermon-series generator  
-7. UI/UX refinement
+## 8) Downloads (Placeholders)
+`public/downloads/`  
+Replace with real PDFs/PPTX/ZIP.
 
 ---
 
-**End of Hand-off** — Welcome aboard and happy building!
+## 9) Current Status & Known Issues
+- Lead capture UI live; serverless `/api/leads` added.
+- Env hardening in place.
+
+**Blocking issue:** Production 500 on `/api/leads` = server envs not set.  
+Fix = add `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL`, redeploy.
+
+---
+
+## 10) Testing Checklist
+- No Supabase fallback warnings in console.
+- `/api/leads` GET `{ ok:true }`; POST via curl succeeds.
+- Desktop & mobile lead capture with `?lead_test=1`.
+- FAQ public load & admin CRUD.
+- Auth flows & admin routes.
+- Chat + OpenAI proxy.
+- Sales downloads render (will be placeholders until replaced).
+
+---
+
+## 11) Build & Run
+```bash
+npm install        # Node 18+
+npm run dev        # local dev
+npm run build      # production build
+```
+Deploy on Vercel → set envs → redeploy → verify `/api/leads`.
+
+---
+
+## 12) Admin Model
+`public.profiles.role` must be `admin` or `superadmin` for admin UI & leads SELECT.
+
+---
+
+## 13) Supabase SQL Reference (Leads)
+```sql
+-- enable
+alter table public.leads enable row level security;
+
+-- insert policies
+create policy leads_insert_anon
+on public.leads for insert to anon with check (true);
+
+create policy leads_insert_auth
+on public.leads for insert to authenticated with check (true);
+
+-- select for admins
+create policy leads_select_admins
+on public.leads for select to authenticated
+using ( exists (
+  select 1 from public.profiles p
+  where p.id = auth.uid()
+    and p.role in ('admin','superadmin')
+));
+
+-- grants
+grant usage on schema public to anon, authenticated;
+grant insert on public.leads to anon, authenticated;
+```
+
+---
+
+## 14) Roadmap
+Near-term  
+- Finalize envs, verify lead pipeline, replace download assets, connect ESP/SMS, add lead reporting.  
+
+Medium-term  
+- Deep research tools, multi-language support, sermon series generator, video/audio roundtables.  
+
+Long-term  
+- Full pastor dashboard, mobile apps.
+
+---
+
+## 15) Handoff To Next Droid
+1. Clone repo, run locally with proper `.env.local`.  
+2. Check Production envs, redeploy; ensure `/api/leads` POST works.  
+3. Test lead capture (`?lead_test=1`) desktop & mobile.  
+4. Verify FAQ CRUD & public load.  
+5. Audit RLS; keep serverless pattern for writes.  
+6. Replace placeholder assets; plan ESP/SMS.  
+7. Begin roadmap features.
+
+**If unclear, search referenced files and read surrounding code.** This project mixes TS & JSX—Vite handles both. Keep momentum and ship!

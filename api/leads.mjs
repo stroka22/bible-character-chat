@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { notifyLead } from './_utils/notify-lead.mjs';
 
 function json(res, status, body) {
   res.status(status);
@@ -21,8 +22,18 @@ export default async function handler(req, res) {
     return json(res, 405, { error: 'Method not allowed' });
   }
 
-  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // Accept several common env names so Production won't break if a variant is set
+  const SUPABASE_URL =
+    process.env.VITE_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  const SERVICE_ROLE_KEY =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.SUPABASE_SERVICE ||
+    process.env.SUPABASE_SECRET;
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
     return json(res, 500, { error: 'Supabase server env not configured' });
   }
@@ -71,6 +82,16 @@ export default async function handler(req, res) {
 
     if (error) {
       return json(res, 500, { error: error.message });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Side-effect notifications (non-blocking)                           */
+    /* ------------------------------------------------------------------ */
+    try {
+      // notifyLead is internally time-bounded; await to ensure completion
+      await notifyLead(data || row);
+    } catch {
+      /* ignore notification errors */
     }
 
     return json(res, 200, { lead: data });
