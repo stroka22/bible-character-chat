@@ -28,16 +28,43 @@ export default function LeadCaptureBanner() {
       try {
         const header = document.querySelector('header');
         const h = header ? header.getBoundingClientRect().height : 64;
-        // add a small buffer so the banner clears the header completely
-        setOffset(Math.max(0, h + 12));
+
+        // Detect mobile dropdown menu that sits immediately after header
+        const mobileMenu = header?.querySelector('.absolute.top-full');
+        let menuH = 0;
+        if (mobileMenu) {
+          const style = window.getComputedStyle(mobileMenu);
+          const visible =
+            style.visibility !== 'hidden' &&
+            parseFloat(style.opacity || '0') > 0.01;
+          if (visible) {
+            const rect = mobileMenu.getBoundingClientRect();
+            menuH = rect.height;
+          }
+        }
+
+        // 16 px buffer to ensure clear spacing
+        setOffset(Math.max(0, h + menuH + 16));
       } catch {
         /* ignore */
       }
     };
 
     updateOffset();
+    // Catch late layout changes (transitioned header/menu)
+    const t1 = setTimeout(updateOffset, 50);
+    const t2 = setTimeout(updateOffset, 300);
+
     window.addEventListener('resize', updateOffset);
     window.addEventListener('scroll', updateOffset); // header height shrinks on scroll
+
+    // Observe header class / subtree mutations (e.g., mobile menu toggling)
+    let observer;
+    const headerEl = document.querySelector('header');
+    if (headerEl && 'MutationObserver' in window) {
+      observer = new MutationObserver(updateOffset);
+      observer.observe(headerEl, { attributes: true, subtree: true });
+    }
 
     // URL override
     try {
@@ -60,6 +87,13 @@ export default function LeadCaptureBanner() {
     } catch {
       setShow(true);
     }
+    return () => {
+      window.removeEventListener('resize', updateOffset);
+      window.removeEventListener('scroll', updateOffset);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      observer?.disconnect();
+    };
   }, []);
 
   const dismiss = () => {
