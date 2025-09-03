@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createLead } from '../services/leads';
 
 const STORAGE_KEY = 'lead_capture_dismissed_until';
@@ -17,6 +17,8 @@ export default function LeadCaptureBanner() {
   const [error, setError] = useState('');
   // `lead_test=1` or `lead_test=true` in URL forces banner to appear regardless of localStorage
   const [force, setForce] = useState(false);
+  // timer ref for auto-dismiss after success
+  const autoCloseRef = useRef(null);
 
   useEffect(() => {
     // URL override
@@ -77,9 +79,11 @@ export default function LeadCaptureBanner() {
         utm_medium: new URLSearchParams(window.location.search).get('utm_medium'),
         utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign'),
       });
-      setSuccess("Thanks! We'll be in touch soon.");
+      setSuccess("Thanks! You're on the list. We'll be in touch soon.");
       setName(''); setEmail(''); setPhone(''); setRole('user'); setConsentEmail(true); setConsentSms(false);
-      dismiss();
+      // auto-dismiss after 3 s
+      if (autoCloseRef.current) clearTimeout(autoCloseRef.current);
+      autoCloseRef.current = setTimeout(dismiss, 3000);
     } catch (err) {
       setError(err?.message || 'Something went wrong.');
     } finally {
@@ -87,11 +91,28 @@ export default function LeadCaptureBanner() {
     }
   };
 
+  // cleanup any pending timer on unmount
+  useEffect(() => () => {
+    if (autoCloseRef.current) clearTimeout(autoCloseRef.current);
+  }, []);
+
   if (!show) return null;
 
   return (
     <div className="sticky top-16 z-40 bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg">
       <div className="container mx-auto px-4 py-3">
+        {success ? (
+          <div className="rounded-xl border border-blue-700/50 backdrop-blur-sm px-4 py-4 flex items-center justify-between">
+            <span className="text-green-200 text-sm md:text-base">{success}</span>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="ml-4 px-4 py-1 rounded-full bg-yellow-400 text-blue-900 font-semibold shadow hover:bg-yellow-300 text-sm"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
         <form onSubmit={onSubmit} className="rounded-xl border border-blue-700/50 backdrop-blur-sm px-4 py-3 grid grid-cols-1 md:grid-cols-8 gap-2 items-center">
           <div className="md:col-span-2">
             <div className="font-semibold">Get ministry updates and resources</div>
@@ -147,6 +168,7 @@ export default function LeadCaptureBanner() {
             {success && <div className="text-green-200">{success}</div>}
           </div>
         </form>
+        )}
       </div>
     </div>
   );
