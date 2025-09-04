@@ -12,7 +12,7 @@ import { usePremium } from '../hooks/usePremium';
 import { loadAccountTierSettings, isCharacterFree } from '../utils/accountTier';
 import UpgradeModal from './modals/UpgradeModal.jsx';
 import { useAuth } from '../contexts/AuthContext';
-import { getOwnerSlug } from '../services/tierSettingsService';
+import { getOwnerSlug, getSettings as getTierSettings } from '../services/tierSettingsService';
 
 console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
 const BIBLE_BOOKS = {
@@ -252,6 +252,28 @@ const ScalableCharacterSelection = () => {
         console.log('🪄 ScalableCharacterSelection useEffect (mount) fired');
         fetchCharacters();
     }, [fetchCharacters]);
+
+    /* -------------------------------------------------------------
+     * Ensure tier settings are loaded from Supabase on first render
+     * so that brand-new devices (or cleared storage) still recognise
+     * FREE characters without requiring an admin visit.
+     * ----------------------------------------------------------- */
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const settings = await getTierSettings(); // auto‐detect owner slug
+                if (!cancelled && settings) {
+                    setTierSettings(settings);
+                }
+            } catch (e) {
+                console.error('Failed to fetch tier settings; using local defaults', e);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
     useEffect(() => {
         console.log('📚 ScalableCharacterSelection fetching groups list');
         (async () => {
