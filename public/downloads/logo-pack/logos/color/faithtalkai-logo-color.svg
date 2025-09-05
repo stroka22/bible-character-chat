@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="300" height="80" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .logo-text { font-family: Arial, sans-serif; font-weight: bold; }
+    .faith { fill: #0b3b8c; }
+    .talk { fill: #0b3b8c; }
+    .ai { fill: #fbbf24; }
+    .shield { fill: #0b3b8c; stroke: #fbbf24; stroke-width: 2; }
+  </style>
+  <rect class="shield" x="10" y="10" width="60" height="60" rx="10" />
+  <text x="80" y="50" class="logo-text" font-size="32">
+    <tspan class="faith">Faith</tspan>
+    <tspan class="talk">Talk</tspan>
+    <tspan class="ai">AI</tspan>
+  </text>
+</svg>

@@ -437,32 +437,40 @@ In Christ,
             {/* Additional Resources */}
             <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
               <a
-                href="/downloads/one-pager.txt"
+                href="/downloads/one-pager.html"
                 download
                 className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
               >
-                One-Page Overview (.txt)
+                One-Page Overview (.html)
               </a>
               <a
-                href="/downloads/slide-deck-outline.txt"
+                href="/downloads/slide-deck-outline.html"
                 download
                 className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
               >
-                Slide Deck Outline (.txt)
+                Slide Deck Outline (.html)
               </a>
               <a
-                href="/downloads/pastor-demo-script.txt"
+                href="/downloads/pastor-demo-script.html"
                 download
                 className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
               >
-                Pastor Demo Script (.txt)
+                Pastor Demo Script (.html)
               </a>
               <a
-                href="/downloads/small-group-launch-guide.txt"
+                href="/downloads/small-group-launch-guide.html"
                 download
                 className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
               >
-                Small-Group Launch Guide (.txt)
+                Small-Group Launch Guide (.html)
+              </a>
+              {/* NEW – Logo Pack ZIP */}
+              <a
+                href="/downloads/logo-pack.zip"
+                download
+                className="bg-blue-100 hover:bg-blue-200 text-blue-900 font-semibold py-3 px-8 rounded-lg transition duration-300"
+              >
+                Logo Pack (.zip)
               </a>
               <a
                 href="/downloads/logo-pack-readme.txt"
