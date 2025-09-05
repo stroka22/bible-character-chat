@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .shield { fill: #FFFFFF; stroke: #FFFFFF; stroke-width: 2; }
+    .text { font-family: Arial, sans-serif; font-weight: bold; fill: #000000; }
+  </style>
+  <rect class="shield" x="5" y="5" width="70" height="70" rx="10" />
+  <text x="20" y="50" class="text" font-size="24">FTA</text>
+</svg>

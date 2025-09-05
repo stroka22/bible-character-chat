@@ -1134,7 +1134,12 @@ const AccountTierManagement = () => {
                             {rtLocks.allowAllSpeak && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When enabled, all characters respond to each user message. With this disabled, only the configured number of replies per round will occur.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="When enabled, all characters respond to each user message. With this disabled, only the configured number of replies per round will occur."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                         
@@ -1155,7 +1160,12 @@ const AccountTierManagement = () => {
                             {rtLocks.strictRotation && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When enabled, characters take turns in a fixed order. Otherwise, there's some randomness in who speaks next.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="When enabled, characters take turns in a fixed order. Otherwise, there's some randomness in who speaks next."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                         
@@ -1176,7 +1186,12 @@ const AccountTierManagement = () => {
                             {rtLocks.enableAdvanceRound && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="Shows a button to advance to the next round without requiring user input. Characters will continue discussing the topic.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="Shows a button to advance to the next round without requiring user input. Characters will continue discussing the topic."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                         
@@ -1197,7 +1212,12 @@ const AccountTierManagement = () => {
                             {rtLocks.saveByDefault && <span className="ml-1 text-xs text-amber-600">(Locked)</span>}
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="Automatically save roundtable discussions to the user's conversation history.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="Automatically save roundtable discussions to the user's conversation history."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1518,7 +1538,12 @@ const AccountTierManagement = () => {
                             Lock All-Speak Mode
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the All-Speak setting. The default value set above will be used.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="When locked, users cannot change the All-Speak setting. The default value set above will be used."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                         
@@ -1537,7 +1562,12 @@ const AccountTierManagement = () => {
                             Lock Strict Rotation
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the Strict Rotation setting. The default value set above will be used.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="When locked, users cannot change the Strict Rotation setting. The default value set above will be used."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                         
@@ -1556,7 +1586,12 @@ const AccountTierManagement = () => {
                             Lock Advance Round
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the Advance Round setting. The default value set above will be used.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="When locked, users cannot change the Advance Round setting. The default value set above will be used."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                         
@@ -1575,7 +1610,12 @@ const AccountTierManagement = () => {
                             Lock Save By Default
                           </label>
                           <div className="ml-2">
-                            <span className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center" title="When locked, users cannot change the Save By Default setting. The default value set above will be used.">?</span>
+                            <span
+                              className="inline-block w-4 h-4 text-gray-400 cursor-help rounded-full bg-gray-100 text-center"
+                              data-tooltip="When locked, users cannot change the Save By Default setting. The default value set above will be used."
+                            >
+                              ?
+                            </span>
                           </div>
                         </div>
                       </div>

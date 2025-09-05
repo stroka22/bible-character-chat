@@ -145,15 +145,22 @@ const ProtectedRoute = ({ redirectPath = '/login' }: { redirectPath?: string }):
 
 // Admin Route component that checks both authentication and admin role
 const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Element => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, role } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-blue-900 text-white"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div><p>Loading...</p></div></div>;
   }
 
-  // If user not authenticated or not admin, redirect
-  if (!user || !isAdmin()) {
+  if (!user) {
+    return <Navigate to={redirectPath} state={{ from: location }} replace={true} />;
+  }
+  
+  if (role === 'unknown') {
+    return <div className="flex items-center justify-center min-h-screen bg-blue-900 text-white"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div><p>Loading...</p></div></div>;
+  }
+
+  if (!isAdmin()) {
     return <Navigate to={redirectPath} state={{ from: location }} replace={true} />;
   }
 
@@ -162,10 +169,12 @@ const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Elem
 
 function App(): JSX.Element {
   const params = new URLSearchParams(window.location.search);
-  // Only enable the “direct render” shortcut while _developing_ and
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
+  // Only enable the "direct render" shortcut while _developing_ and
   // when the URL explicitly asks for it.  Prevents production from
   // forcing everything to HomePage and breaking custom routes like
-  // “/pastors”.
+  // "/pastors".
   const DIRECT_RENDER =
     import.meta.env.DEV && params.get('direct') === '1';
   console.log(`[App] init – DIRECT_RENDER=${DIRECT_RENDER}`);
@@ -199,9 +208,11 @@ function App(): JSX.Element {
             <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600">
               <Header />
               {/* Mobile-only banner */}
-              <div className="md:hidden">
-                <LeadCaptureBanner />
-              </div>
+              {!isAdminPath && (
+                <div className="md:hidden">
+                  <LeadCaptureBanner />
+                </div>
+              )}
               {/* Desktop modal (self-managed triggers) */}
               <LeadCaptureModal />
               <main className="flex-1">
@@ -219,9 +230,11 @@ function App(): JSX.Element {
     <div className="flex flex-col min-h-screen">
       <Header />
       {/* Mobile-only banner */}
-      <div className="md:hidden">
-        <LeadCaptureBanner />
-      </div>
+      {!isAdminPath && (
+        <div className="md:hidden">
+          <LeadCaptureBanner />
+        </div>
+      )}
       {/* Desktop modal (self-managed triggers) */}
       <LeadCaptureModal />
       <main className="flex-1 px-4 md:px-6"><Routes>

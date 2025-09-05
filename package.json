@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:downloads": "node scripts/generateDownloads.mjs",
+    "generate:logo-pack": "node scripts/generateLogoPack.mjs"
   },
   "dependencies": {
     "@stripe/stripe-js": "^7.4.0",
@@ -36,7 +38,11 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "jszip": "^3.10.1",
+    "pdfkit": "^0.17.2",
     "postcss": "^8.5.6",
+    "pptxgenjs": "^4.0.1",
+    "puppeteer": "^24.19.0",
     "tailwindcss": "^3.3.3",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
