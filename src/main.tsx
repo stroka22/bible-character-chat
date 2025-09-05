@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import './index.css';
 import App from './App.tsx';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 // Import safe service versions that gracefully handle missing API keys
 // A single barrel file initializes all safe service shims in one place
@@ -75,7 +76,9 @@ console.log('[App] Starting Bible Character Chat with safe service initializatio
 try {
   createRoot(rootElement).render(
     <StrictMode>
-      <App />
+      <Router>
+        <App />
+      </Router>
     </StrictMode>,
   );
 } catch (err) {

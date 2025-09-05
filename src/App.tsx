@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Use the unified ChatContext implementation so *all* components
 // (including any legacy ones still importing from `../contexts/ChatContext`)
@@ -46,6 +46,21 @@ import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
 import LeadCaptureModal from './components/LeadCaptureModal';
+
+// ---------------------------------------------------------------------------
+// Helper Component
+// ---------------------------------------------------------------------------
+// Renders the mobile LeadCaptureBanner only when NOT on an /admin route.
+function MobileLeadBannerGate(): JSX.Element | null {
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
+  if (isAdminPath) return null;
+  return (
+    <div className="md:hidden">
+      <LeadCaptureBanner />
+    </div>
+  );
+}
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -169,8 +184,6 @@ const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Elem
 
 function App(): JSX.Element {
   const params = new URLSearchParams(window.location.search);
-  const location = useLocation();
-  const isAdminPath = location.pathname.startsWith('/admin');
   // Only enable the "direct render" shortcut while _developing_ and
   // when the URL explicitly asks for it.  Prevents production from
   // forcing everything to HomePage and breaking custom routes like
@@ -204,15 +217,11 @@ function App(): JSX.Element {
     return (
       <ErrorBoundary>
         <Providers>
-          <Router>
+          <>
             <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600">
               <Header />
               {/* Mobile-only banner */}
-              {!isAdminPath && (
-                <div className="md:hidden">
-                  <LeadCaptureBanner />
-                </div>
-              )}
+              <MobileLeadBannerGate />
               {/* Desktop modal (self-managed triggers) */}
               <LeadCaptureModal />
               <main className="flex-1">
@@ -220,21 +229,17 @@ function App(): JSX.Element {
               </main>
             </div>
             <DebugPanel />
-          </Router>
+          </>
         </Providers>
       </ErrorBoundary>
     );
   }
 
-  return (<ErrorBoundary><Providers><Router>
+  return (<ErrorBoundary><Providers><>
     <div className="flex flex-col min-h-screen">
       <Header />
       {/* Mobile-only banner */}
-      {!isAdminPath && (
-        <div className="md:hidden">
-          <LeadCaptureBanner />
-        </div>
-      )}
+      <MobileLeadBannerGate />
       {/* Desktop modal (self-managed triggers) */}
       <LeadCaptureModal />
       <main className="flex-1 px-4 md:px-6"><Routes>
@@ -287,7 +292,7 @@ function App(): JSX.Element {
     {/* Fallback route */}
     <Route path="*" element={<Navigate to="/" replace={true} />} />
     </Routes></main></div>
-  </Router></Providers></ErrorBoundary>);
+  </></Providers></ErrorBoundary>);
 }
 
 export default App;

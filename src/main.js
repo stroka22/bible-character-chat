@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import React from 'react';          // Needed for React.Fragment reference
 import './index.css';
 import App from './App.tsx';
+import { BrowserRouter as Router } from 'react-router-dom';
 import './services/import-services';
 (() => {
     const id = 'sw-cleanup';
@@ -50,7 +51,9 @@ try {
     // We build the children array manually and use the `_jsxs` helper from `react/jsx-runtime`.
     createRoot(rootElement).render(
         _jsx(StrictMode, {
-            children: _jsx(App, {})
+            children: _jsx(Router, {
+                children: _jsx(App, {})
+            })
         })
     );
 }

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 
 import './index.css';
 import App from './App';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 // Import safe service versions that gracefully handle missing API keys
 // These are imported here to ensure they're initialized before any components
@@ -48,6 +49,8 @@ console.log('[App] Starting Bible Character Chat with safe service initializatio
 // Mount the React application
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <Router>
+      <App />
+    </Router>
   </StrictMode>
 );

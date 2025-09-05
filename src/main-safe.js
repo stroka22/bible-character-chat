@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { BrowserRouter as Router } from 'react-router-dom';
 import './services/openai-safe';
 import './services/stripe-safe';
 (() => {
@@ -30,4 +31,4 @@ if (!rootElement) {
     throw new Error("Root element with id 'root' not found");
 }
 console.log('[App] Starting Bible Character Chat with safe service initialization');
-createRoot(rootElement).render(_jsx(StrictMode, { children: _jsx(App, {}) }));
+createRoot(rootElement).render(_jsx(StrictMode, { children: _jsx(Router, { children: _jsx(App, {}) }) }));
