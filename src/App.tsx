@@ -47,6 +47,21 @@ import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
 import LeadCaptureModal from './components/LeadCaptureModal';
 
+// ---------------------------------------------------------------------------
+// Helper Component
+// ---------------------------------------------------------------------------
+// Renders the mobile LeadCaptureBanner only when NOT on an /admin route.
+function MobileLeadBannerGate(): JSX.Element | null {
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
+  if (isAdminPath) return null;
+  return (
+    <div className="md:hidden">
+      <LeadCaptureBanner />
+    </div>
+  );
+}
+
 interface ErrorBoundaryProps {
   children: React.ReactNode;
 }
@@ -169,8 +184,6 @@ const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Elem
 
 function App(): JSX.Element {
   const params = new URLSearchParams(window.location.search);
-  const location = useLocation();
-  const isAdminPath = location.pathname.startsWith('/admin');
   // Only enable the "direct render" shortcut while _developing_ and
   // when the URL explicitly asks for it.  Prevents production from
   // forcing everything to HomePage and breaking custom routes like
@@ -208,11 +221,7 @@ function App(): JSX.Element {
             <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600">
               <Header />
               {/* Mobile-only banner */}
-              {!isAdminPath && (
-                <div className="md:hidden">
-                  <LeadCaptureBanner />
-                </div>
-              )}
+              <MobileLeadBannerGate />
               {/* Desktop modal (self-managed triggers) */}
               <LeadCaptureModal />
               <main className="flex-1">
@@ -230,11 +239,7 @@ function App(): JSX.Element {
     <div className="flex flex-col min-h-screen">
       <Header />
       {/* Mobile-only banner */}
-      {!isAdminPath && (
-        <div className="md:hidden">
-          <LeadCaptureBanner />
-        </div>
-      )}
+      <MobileLeadBannerGate />
       {/* Desktop modal (self-managed triggers) */}
       <LeadCaptureModal />
       <main className="flex-1 px-4 md:px-6"><Routes>
