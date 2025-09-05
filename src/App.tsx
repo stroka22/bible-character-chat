@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Use the unified ChatContext implementation so *all* components
 // (including any legacy ones still importing from `../contexts/ChatContext`)
@@ -217,7 +217,7 @@ function App(): JSX.Element {
     return (
       <ErrorBoundary>
         <Providers>
-          <Router>
+          <>
             <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600">
               <Header />
               {/* Mobile-only banner */}
@@ -229,13 +229,13 @@ function App(): JSX.Element {
               </main>
             </div>
             <DebugPanel />
-          </Router>
+          </>
         </Providers>
       </ErrorBoundary>
     );
   }
 
-  return (<ErrorBoundary><Providers><Router>
+  return (<ErrorBoundary><Providers><>
     <div className="flex flex-col min-h-screen">
       <Header />
       {/* Mobile-only banner */}
@@ -292,7 +292,7 @@ function App(): JSX.Element {
     {/* Fallback route */}
     <Route path="*" element={<Navigate to="/" replace={true} />} />
     </Routes></main></div>
-  </Router></Providers></ErrorBoundary>);
+  </></Providers></ErrorBoundary>);
 }
 
 export default App;
