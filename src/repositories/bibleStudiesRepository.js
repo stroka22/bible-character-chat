@@ -102,22 +102,11 @@ export const bibleStudiesRepository = {
       if (!study || typeof study !== 'object') {
         throw new Error('Study payload must be a valid object');
       }
-      /* -------------------------------------------------------------- *
-       * Ensure RLS-required fields (owner_slug & created_by) are set   *
-       * -------------------------------------------------------------- */
-      const { data: userResp } = await supabase.auth.getUser();
-      const uid = userResp?.user?.id;
-
       const payload = {
         ...study,
         owner_slug: study.owner_slug || getOwnerSlug(),
         updated_at: new Date().toISOString(),
       };
-
-      // Only set created_by when INSERTING (row has no id yet)
-      if (!study.id && uid) {
-        payload.created_by = uid;
-      }
 
       const { data, error } = await supabase
         .from('bible_studies')
@@ -147,17 +136,10 @@ export const bibleStudiesRepository = {
         throw new Error('Lesson must have a study_id');
       }
 
-      const { data: userResp } = await supabase.auth.getUser();
-      const uid = userResp?.user?.id;
-
       const payload = {
         ...lesson,
         updated_at: new Date().toISOString(),
       };
-
-      if (!lesson.id && uid) {
-        payload.created_by = uid;
-      }
 
       const { data, error } = await supabase
         .from('bible_study_lessons')
