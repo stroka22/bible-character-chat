@@ -330,7 +330,7 @@ const SuperadminUsersPage = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white px-4 md:px-8 pt-32 pb-8">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb + Back to Admin */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
