@@ -263,6 +263,24 @@ export const ChatProvider = ({ children }) => {
   }, [messages, sendMessage]);
 
   /**
+   * Programmatically append an assistant message
+   * (used for auto-intros, system notices, etc.)
+   */
+  const postAssistantMessage = useCallback(
+    (content) => {
+      if (!character || !content) return;
+      const msg = {
+        id: generateMessageId(),
+        role: 'assistant',
+        content,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, msg]);
+    },
+    [character, generateMessageId],
+  );
+
+  /**
    * Reset the chat
    */
   const resetChat = useCallback(() => {
@@ -599,6 +617,8 @@ export const ChatProvider = ({ children }) => {
     deleteCurrentChat,
     // Lesson / system context
     setLessonContext: (text) => setSystemContext(text || null),
+    // Helper to push assistant messages
+    postAssistantMessage,
     
     // Helper methods
     clearError: () => setError(null),
@@ -656,6 +676,9 @@ export const useChat = () => {
       deleteCurrentChat: () => {
         console.warn('[ChatContext] Cannot delete chat - no provider');
         return Promise.resolve(false);
+      },
+      postAssistantMessage: () => {
+        console.warn('[ChatContext] Cannot post assistant message - no provider');
       },
       clearError: () => {
         console.warn('[ChatContext] Cannot clear error - no provider');
