@@ -280,7 +280,7 @@ const StudyLesson = () => {
                             _jsx("button", {
                               onClick: handleStartChat,
                               className: "px-6 py-3 bg-yellow-400 text-blue-900 font-medium rounded-lg hover:bg-yellow-300 transition-colors",
-                              children: `Chat with ${character.name}`
+                              children: "Start"
                             })
                           ]
                         })

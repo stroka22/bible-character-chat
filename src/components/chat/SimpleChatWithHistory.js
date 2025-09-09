@@ -155,7 +155,7 @@ const SimpleChatWithHistory = () => {
       if (lower.includes('premium character')) {
         setUpgradeLimitType('character');
         setShowUpgradeModal(true);
-      } else if (lower.includes('message limit')) {
+      } else if (lower.includes('message limit') || lower.includes('free conversation limit')) {
         setUpgradeLimitType('message');
         setShowUpgradeModal(true);
       }
@@ -684,7 +684,7 @@ const SimpleChatWithHistory = () => {
                                                                             children: [
                                                                                 _jsx("p", { 
                                                                                     className: "text-sm text-red-200", 
-                                                                                    children: "Sorry, something went wrong. Please try again." 
+                                                                                    children: error 
                                                                                 }),
                                                                                 _jsx("button", { 
                                                                                     onClick: retryLastMessage, 

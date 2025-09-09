@@ -28,7 +28,7 @@ export function getOwnerSlug() {
   return (
     import.meta.env.VITE_OWNER_SLUG ||
     localStorage.getItem('ownerSlug') ||
-    'default'
+    'faithtalkai'
   );
 }
 
