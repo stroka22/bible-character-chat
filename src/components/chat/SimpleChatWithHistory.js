@@ -684,7 +684,7 @@ const SimpleChatWithHistory = () => {
                                                                             children: [
                                                                                 _jsx("p", { 
                                                                                     className: "text-sm text-red-200", 
-                                                                                    children: "Sorry, something went wrong. Please try again." 
+                                                                                    children: "" 
                                                                                 }),
                                                                                 _jsx("button", { 
                                                                                     onClick: retryLastMessage, 

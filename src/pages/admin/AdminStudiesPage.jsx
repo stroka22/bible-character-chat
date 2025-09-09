@@ -114,6 +114,12 @@ const AdminStudiesPage = ({ embedded = false }) => {
       if (typeof payload.is_premium === 'string') {
         payload.is_premium = payload.is_premium === 'true';
       }
+      // ------------------------------------------------------------------
+      // Ensure RLS-required field is present.  If the form omitted it (or
+      // a legacy study row has it null), default to the current ownerSlug.
+      // This prevents “row-level security” insert/update failures.
+      // ------------------------------------------------------------------
+      payload.owner_slug = payload.owner_slug || ownerSlug;
       
       await bibleStudiesRepository.upsertStudy(payload);
       await fetchStudies();

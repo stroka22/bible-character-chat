@@ -174,7 +174,7 @@ export const ChatProvider = ({ children }) => {
     const userMessageCount = messages.filter((m) => m.role === 'user').length;
     if (!isPremium && hasReachedMessageLimit(userMessageCount, tierSettings)) {
       setError(
-        'Message limit reached for free tier. Please upgrade to continue.'
+        'You’ve reached the free conversation limit. Upgrade to a Premium account for unlimited conversations and all premium features.'
       );
       return;
     }

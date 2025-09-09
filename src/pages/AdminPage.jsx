@@ -403,7 +403,7 @@ const AdminPage = () => {
     const filteredCharacters = characters.filter(char => char.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         char.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (char.bible_book && char.bible_book.toLowerCase().includes(searchQuery.toLowerCase())));
-    return (_jsxs("div", { className: "container mx-auto px-4 py-8", children: [_jsx("h1", { className: "text-3xl font-bold text-gray-900 mb-6", children: "Admin Panel - Character Management" }), _jsx("p", { className: "text-gray-700 mb-4", children: "Welcome, Admin! Here you can manage Bible characters." }), 
+    return (_jsxs("div", { className: "container mx-auto px-4 pt-24 pb-8", children: [_jsx("h1", { className: "text-3xl font-bold text-gray-900 mb-6", children: "Admin Panel - Character Management" }), _jsx("p", { className: "text-gray-700 mb-4", children: "Welcome, Admin! Here you can manage Bible characters." }), 
         isSuperadmin && (_jsx("div", { className: "mb-6", children: _jsx(Link, { to: "/admin/users", className: "inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600", children: "Superadmin: Manage Users & Organizations" }) })), 
         
         <div className="mb-8 border-b border-gray-200">
