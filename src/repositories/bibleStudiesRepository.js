@@ -108,6 +108,11 @@ export const bibleStudiesRepository = {
         updated_at: new Date().toISOString(),
       };
 
+      // Allow DB default (generated uuid) when creating a new row
+      if (!payload.id) {
+        delete payload.id;
+      }
+
       const { data, error } = await supabase
         .from('bible_studies')
         .upsert(payload)
@@ -140,6 +145,11 @@ export const bibleStudiesRepository = {
         ...lesson,
         updated_at: new Date().toISOString(),
       };
+
+      // Allow DB default (generated uuid) when creating a new row
+      if (!payload.id) {
+        delete payload.id;
+      }
 
       const { data, error } = await supabase
         .from('bible_study_lessons')
