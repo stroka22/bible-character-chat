@@ -16,6 +16,7 @@ import {
  * - Delete FAQ entries
  * - View all FAQ entries
  * - Persistence through localStorage
+ * - Categorize FAQs and control display order
  */
 const AdminFAQEditor = () => {
   /* ------------------------------------------------------------------
@@ -30,6 +31,8 @@ const AdminFAQEditor = () => {
   // Form state
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
+  const [category, setCategory] = useState('General');
+  const [orderIndex, setOrderIndex] = useState('');
   const [editingId, setEditingId] = useState(null);
   
   // UI state
@@ -127,6 +130,8 @@ const AdminFAQEditor = () => {
   const resetForm = useCallback(() => {
     setQuestion('');
     setAnswer('');
+    setCategory('General');
+    setOrderIndex('');
     setEditingId(null);
   }, []);
 
@@ -143,6 +148,9 @@ const AdminFAQEditor = () => {
         throw new Error('Question and answer are required.');
       }
 
+      // Convert orderIndex to number or null
+      const order_index = Number.isFinite(Number(orderIndex)) ? Number(orderIndex) : null;
+
       // Create or update FAQ
       if (isAdminUser) {
         /* --------------------------------------------------------
@@ -154,13 +162,21 @@ const AdminFAQEditor = () => {
             id: editingId,
             question,
             answer,
-            category: 'General',
+            category,
             is_published: true,
+            order_index,
           });
           setFaqs(prevFaqs =>
             prevFaqs.map(f =>
               f.id === editingId
-                ? { ...f, question: saved.question, answer: saved.answer, updatedAt: saved.updated_at || new Date().toISOString() }
+                ? { 
+                    ...f, 
+                    question: saved.question, 
+                    answer: saved.answer, 
+                    category: saved.category || 'General',
+                    order_index: saved.order_index,
+                    updatedAt: saved.updated_at || new Date().toISOString() 
+                  }
                 : f,
             ),
           );
@@ -170,14 +186,16 @@ const AdminFAQEditor = () => {
           const saved = await upsertFaqRow({
             question,
             answer,
-            category: 'General',
+            category,
             is_published: true,
+            order_index,
           });
           const newFaq = {
             id: saved.id,
             question: saved.question,
             answer: saved.answer,
             category: saved.category || 'General',
+            order_index: saved.order_index,
             createdAt: saved.created_at || new Date().toISOString(),
             updatedAt: saved.updated_at || new Date().toISOString(),
             isPublished: true,
@@ -194,10 +212,17 @@ const AdminFAQEditor = () => {
               (editingId
                 ? faqs.map(f =>
                     f.id === editingId
-                      ? { ...f, question, answer }
+                      ? { ...f, question, answer, category, order_index }
                       : f,
                   )
-                : [...faqs, { id: editingId, question, answer, isPublished: true }]
+                : [...faqs, { 
+                    id: editingId, 
+                    question, 
+                    answer, 
+                    category, 
+                    order_index, 
+                    isPublished: true 
+                  }]
               ).filter(f => f.isPublished !== false),
             ),
           );
@@ -207,7 +232,14 @@ const AdminFAQEditor = () => {
         setFaqs(prevFaqs => 
           prevFaqs.map(faq => 
             faq.id === editingId 
-              ? { ...faq, question, answer, updatedAt: new Date().toISOString() } 
+              ? { 
+                  ...faq, 
+                  question, 
+                  answer, 
+                  category, 
+                  order_index, 
+                  updatedAt: new Date().toISOString() 
+                } 
               : faq
           )
         );
@@ -218,6 +250,8 @@ const AdminFAQEditor = () => {
           id: Date.now().toString(),
           question,
           answer,
+          category,
+          order_index,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isPublished: true
@@ -239,6 +273,8 @@ const AdminFAQEditor = () => {
   const handleEdit = (faq) => {
     setQuestion(faq.question);
     setAnswer(faq.answer);
+    setCategory(faq.category || 'General');
+    setOrderIndex(faq.order_index !== null ? String(faq.order_index) : '');
     setEditingId(faq.id);
     
     // Scroll to form
@@ -366,6 +402,36 @@ const AdminFAQEditor = () => {
           />
         </div>
         
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <input
+              type="text"
+              id="category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              placeholder="General"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="orderIndex" className="block text-sm font-medium text-gray-700 mb-1">
+              Order Index (lower numbers appear first)
+            </label>
+            <input
+              type="number"
+              id="orderIndex"
+              value={orderIndex}
+              onChange={(e) => setOrderIndex(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              placeholder="Leave empty for default ordering"
+            />
+          </div>
+        </div>
+        
         <div className="flex space-x-4">
           <button
             type="submit"
@@ -415,14 +481,22 @@ const AdminFAQEditor = () => {
                 }`}
               >
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-lg font-medium text-gray-800">
-                    {faq.question}
-                    {!faq.isPublished && (
-                      <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
-                        Hidden
-                      </span>
-                    )}
-                  </h4>
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-800">
+                      {faq.question}
+                      {!faq.isPublished && (
+                        <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                          Hidden
+                        </span>
+                      )}
+                    </h4>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Category: {faq.category || 'General'}
+                      {faq.order_index !== null && (
+                        <span className="ml-2">• Order: {faq.order_index}</span>
+                      )}
+                    </div>
+                  </div>
                   
                   <div className="flex space-x-2">
                     <button
