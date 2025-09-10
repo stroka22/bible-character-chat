@@ -90,6 +90,108 @@ const HowItWorksPage = () => {
           </div>
           
           {/* AI Note */}
+          {/* ------------------------------------------------------------------
+           * User Features
+           * ------------------------------------------------------------------ */}
+          <div className="bg-white/5 backdrop-blur-md border border-white/15 rounded-xl p-6 mb-8">
+            <h2 className="text-xl font-semibold text-yellow-300 mb-6">
+              User Features
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Character Conversations */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-extrabold">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-300">
+                    Character Conversations
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    One-on-one dialogue with biblical figures grounded in Scripture.
+                  </p>
+                </div>
+              </div>
+
+              {/* Roundtable Discussions */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-extrabold">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-300">
+                    Roundtable Discussions
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Multi-character conversations that explore a topic from several perspectives.
+                  </p>
+                </div>
+              </div>
+
+              {/* Guided Bible Studies */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-extrabold">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-300">
+                    Guided Bible Studies
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Structured studies enhanced with character insights and lesson outlines.
+                  </p>
+                </div>
+              </div>
+
+              {/* Conversation Sharing */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-extrabold">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-300">
+                    Conversation Sharing
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Share conversations with others via unique links for group reflection.
+                  </p>
+                </div>
+              </div>
+
+              {/* Favorites & History */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-extrabold">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-300">
+                    Favorites &amp; History
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Save favorites and revisit previous conversations anytime.
+                  </p>
+                </div>
+              </div>
+
+              {/* Scripture References */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center font-extrabold">
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-300">
+                    Scripture References
+                  </h3>
+                  <p className="text-blue-100 text-sm">
+                    Each response includes biblical references for deeper study.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Note */}
           <div className="bg-white/5 backdrop-blur-md border border-white/15 rounded-xl p-6 mb-8">
             <h2 className="text-xl font-semibold text-yellow-300 mb-4">About Our AI</h2>
             <p className="text-blue-100 mb-4">
