@@ -514,7 +514,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-blue-900 mb-6">
-        Account Tier Management
+        {mode === "roundtable-only" ? "Roundtable Settings" : "Account Tier Management"}
       </h2>
 
       {/* Tab bar (hidden when used in roundtable-only mode) */}
@@ -972,7 +972,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
             </>
           )}
 
-          {(activeTab === 'roundtable' || mode === 'roundtable-only') && (
+          {mode === 'roundtable-only' && (
             <>
               <div className="mb-8">
                 <h3 className="text-xl font-semibold text-blue-800 mb-4">Roundtable Settings</h3>
