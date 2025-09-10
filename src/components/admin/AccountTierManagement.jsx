@@ -22,7 +22,7 @@ import {
  * - Which characters are free vs premium-only
  * - Featured character for the organization
  */
-const AccountTierManagement = () => {
+const AccountTierManagement = ({ mode = 'full' }) => {
   // Configuration state
   const [freeMessageLimit, setFreeMessageLimit] = useState(5);
   const [freeCharacterLimit, setFreeCharacterLimit] = useState(10);
@@ -51,7 +51,7 @@ const AccountTierManagement = () => {
   /* ──────────────────────────────────────────────────────────────
    *  Roundtable tab state
    * ──────────────────────────────────────────────────────────── */
-  const [activeTab, setActiveTab] = useState('tier'); // 'tier' | 'roundtable'
+  const [activeTab, setActiveTab] = useState(mode === 'roundtable-only' ? 'roundtable' : 'tier'); // 'tier' | 'roundtable'
   const [rtLoading, setRtLoading] = useState(false);
   const [rtSaving, setRtSaving] = useState(false);
   const [rtMessage, setRtMessage] = useState({ type: '', text: '' });
@@ -517,8 +517,9 @@ const AccountTierManagement = () => {
         Account Tier Management
       </h2>
 
-      {/* Tab bar */}
-      <div className="flex gap-4 border-b mb-6">
+      {/* Tab bar (hidden when used in roundtable-only mode) */}
+      {mode === 'full' && (
+        <div className="flex gap-4 border-b mb-6">
         <button
           onClick={() => setActiveTab('tier')}
           className={`pb-2 px-1 border-b-2 text-sm font-medium ${
@@ -539,7 +540,8 @@ const AccountTierManagement = () => {
         >
           Roundtable
         </button>
-      </div>
+        </div>
+      )}
 
       {/* ────────────────────────────────────────────────
        *  Organisation selector (superadmin only)
@@ -586,7 +588,7 @@ const AccountTierManagement = () => {
         </div>
       ) : (
         <>
-          {activeTab === 'tier' && (
+          {mode === 'full' && activeTab === 'tier' && (
             <>
               {/* Featured Character Section */}
               <div className="mb-8">
@@ -970,7 +972,7 @@ const AccountTierManagement = () => {
             </>
           )}
 
-          {activeTab === 'roundtable' && (
+          {(activeTab === 'roundtable' || mode === 'roundtable-only') && (
             <>
               <div className="mb-8">
                 <h3 className="text-xl font-semibold text-blue-800 mb-4">Roundtable Settings</h3>
