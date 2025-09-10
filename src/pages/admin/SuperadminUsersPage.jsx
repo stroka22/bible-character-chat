@@ -350,7 +350,7 @@ const SuperadminUsersPage = () => {
           {/* Right-aligned Back button for smaller screens will stack below breadcrumb */}
           <Link
             to="/admin"
-            className="mt-4 md:mt-0 inline-block px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+            className="hidden mt-4 md:mt-0 inline-block px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
           >
             Back to Admin
           </Link>
@@ -719,9 +719,12 @@ const SuperadminUsersPage = () => {
             </>
           )}
         </div>
+      <div className="mt-8">
+        <a href="/admin" className="inline-block px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors">Back to Admin</a>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default SuperadminUsersPage;
