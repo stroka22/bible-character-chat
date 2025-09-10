@@ -16,6 +16,13 @@ It blends a rich character-selection UI with an AI-powered chat and an “insigh
 
 ---
 
+## Documentation
+
+- **Getting Started (user-focused):** [`docs/GettingStarted.md`](docs/GettingStarted.md)
+- **Bot360AI Sales Sheet:** [`docs/SalesSheet-Bot360AI.md`](docs/SalesSheet-Bot360AI.md)
+
+---
+
 ## 🚀 Launch the Stand-Alone Chat (Zero Dependencies)
 
 ### Quick open
