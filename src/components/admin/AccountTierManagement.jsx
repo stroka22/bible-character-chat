@@ -514,32 +514,22 @@ const AccountTierManagement = ({ mode = 'full' }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-blue-900 mb-6">
-        Account Tier Management
+        {mode === "roundtable-only" ? "Roundtable Settings" : "Account Tier Management"}
       </h2>
 
       {/* Tab bar (hidden when used in roundtable-only mode) */}
       {mode === 'full' && (
         <div className="flex gap-4 border-b mb-6">
-        <button
-          onClick={() => setActiveTab('tier')}
-          className={`pb-2 px-1 border-b-2 text-sm font-medium ${
-            activeTab === 'tier'
-              ? 'border-blue-600 text-blue-700'
-              : 'border-transparent text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          Tier & Featured
-        </button>
-        <button
-          onClick={() => setActiveTab('roundtable')}
-          className={`pb-2 px-1 border-b-2 text-sm font-medium ${
-            activeTab === 'roundtable'
-              ? 'border-blue-600 text-blue-700'
-              : 'border-transparent text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          Roundtable
-        </button>
+          <button
+            onClick={() => setActiveTab('tier')}
+            className={`pb-2 px-1 border-b-2 text-sm font-medium ${
+              activeTab === 'tier'
+                ? 'border-blue-600 text-blue-700'
+                : 'border-transparent text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Tier & Featured
+          </button>
         </div>
       )}
 
@@ -972,7 +962,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
             </>
           )}
 
-          {(activeTab === 'roundtable' || mode === 'roundtable-only') && (
+          {mode === 'roundtable-only' && (
             <>
               <div className="mb-8">
                 <h3 className="text-xl font-semibold text-blue-800 mb-4">Roundtable Settings</h3>
