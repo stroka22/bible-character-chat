@@ -41,7 +41,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-type UserRole = 'admin' | 'pastor' | 'user' | 'unknown';
+type UserRole = 'admin' | 'superadmin' | 'pastor' | 'user' | 'unknown';
 interface Profile {
   id: string;
   role: UserRole;
@@ -407,7 +407,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   /* ------------------------------------------------------------------
    * Role helpers
    * ---------------------------------------------------------------- */
-  const isAdmin = () => role === 'admin';
+  const isAdmin = () => role === 'admin' || role === 'superadmin';
+  const isSuperadmin = () => role === 'superadmin';
   const isPastor = () => role === 'pastor' || role === 'admin';
 
   // Create the value object that will be provided to consumers
@@ -420,6 +421,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     error,
     isAuthenticated: !!user,
     isAdmin,
+    isSuperadmin,
     isPastor,
     signIn,
     signUp,
