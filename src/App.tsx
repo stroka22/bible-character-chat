@@ -160,8 +160,27 @@ const ProtectedRoute = ({ redirectPath = '/login' }: { redirectPath?: string }):
 
 // Admin Route component that checks both authentication and admin role
 const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Element => {
-  const { user, loading, isAdmin, role } = useAuth();
+  const { user, loading, isAdmin, role, refreshProfile, refreshSession } = useAuth();
   const location = useLocation();
+  const [attemptedRefresh, setAttemptedRefresh] = React.useState(false);
+  const [retrying, setRetrying] = React.useState(false);
+
+  React.useEffect(() => {
+    if (user && role === 'unknown' && !attemptedRefresh) {
+      setAttemptedRefresh(true);
+      // Kick a quick profile refresh; if that fails, try a session refresh
+      (async () => {
+        try {
+          await refreshProfile();
+          if (role === 'unknown') {
+            await refreshSession();
+          }
+        } catch (e) {
+          // swallow – UI offers manual retry
+        }
+      })();
+    }
+  }, [user, role, attemptedRefresh, refreshProfile, refreshSession]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen bg-blue-900 text-white"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div><p>Loading...</p></div></div>;
@@ -170,9 +189,35 @@ const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Elem
   if (!user) {
     return <Navigate to={redirectPath} state={{ from: location }} replace={true} />;
   }
-  
+
   if (role === 'unknown') {
-    return <div className="flex items-center justify-center min-h-screen bg-blue-900 text-white"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div><p>Loading...</p></div></div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-blue-900 text-white">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-400 mx-auto"></div>
+          <p>Checking your admin access…</p>
+          <div className="flex items-center justify-center space-x-2">
+            <button
+              className="bg-yellow-400 text-blue-900 font-semibold px-4 py-2 rounded-lg disabled:opacity-60"
+              disabled={retrying}
+              onClick={async () => {
+                setRetrying(true);
+                try {
+                  await refreshProfile();
+                  if (role === 'unknown') {
+                    await refreshSession();
+                  }
+                } finally {
+                  setRetrying(false);
+                }
+              }}
+            >
+              {retrying ? 'Retrying…' : 'Try again'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!isAdmin()) {
