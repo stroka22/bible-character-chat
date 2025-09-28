@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    // Restrict dependency scanning to the main SPA entry to avoid
+    // esbuild errors from legacy HTML test pages under public/ and dist-bypass/
+    entries: ["index.html"],
+  },
   /**
    * Dev-server tweaks
    *  • strictPort forces Vite to fail if the desired port is taken rather than
