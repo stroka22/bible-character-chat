@@ -289,7 +289,7 @@ const ScalableCharacterSelection: React.FC = () => {
                       `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`
                     }
                     alt={character.name}
-                    className="w-16 h-16 object-cover block"
+                    className="w-16 h-16 object-cover object-[center_20%] block"
                   />
                 </td>
               </tr>
@@ -537,7 +537,7 @@ const ScalableCharacterSelection: React.FC = () => {
                           )}&background=random`
                         }
                         alt={featuredCharacter.name}
-                        className="w-32 h-32 object-cover block"
+                        className="w-32 h-32 object-cover object-[center_20%] block"
                       />
                     </td>
                   </tr>

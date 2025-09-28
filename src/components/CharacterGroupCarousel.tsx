@@ -359,7 +359,7 @@ const CharacterGroupCarousel: React.FC<CharacterGroupCarouselProps> = ({ onSelec
                       <img
                         src={group.image_url || `https://via.placeholder.com/400x240?text=${encodeURIComponent(group.name)}`}
                         alt={group.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-[center_20%]"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = `https://via.placeholder.com/400x240?text=${encodeURIComponent(group.name)}`;
                         }}

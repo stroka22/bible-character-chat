@@ -675,7 +675,7 @@ const CharacterSelection: React.FC = () => {
                     src={character.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`}
                     alt={character.name}
                     className={`
-                      h-16 w-16 rounded-full object-cover border-2
+                      h-16 w-16 rounded-full object-cover object-[center_20%] border-2
                       ${selectedCharacter?.id === character.id ? 'border-yellow-400' : 'border-white/30'}
                     `}
                   />

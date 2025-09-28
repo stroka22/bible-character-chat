@@ -105,7 +105,7 @@ const CharacterInsightsPanel: React.FC<CharacterInsightsPanelProps> = ({
               <img
                 src={getSafeAvatarUrl(character.name, character.avatar_url)}
                 alt={character.name}
-                className="h-24 w-24 rounded-full object-cover mx-auto mb-4 border-4 border-yellow-300 shadow-lg"
+                className="h-24 w-24 rounded-full object-cover object-[center_20%] mx-auto mb-4 border-4 border-yellow-300 shadow-lg"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = generateFallbackAvatar(
                     character.name,
