@@ -543,7 +543,7 @@ const ScalableCharacterSelection = () => {
                             src: character.avatar_url ||
                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`,
                             alt: character.name,
-                            className: "w-full h-full object-cover",
+                            className: "w-full h-full object-cover object-[center_20%]",
                         }),
                     }),
                     
@@ -899,7 +899,7 @@ const ScalableCharacterSelection = () => {
                                                     src: featuredCharacter.avatar_url || 
                                                         `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`,
                                                     alt: featuredCharacter.name,
-                                                    className: "w-full h-full object-cover",
+                                                    className: "w-full h-full object-cover object-[center_20%]",
                                                     onError: (e) => {
                                                         e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(featuredCharacter.name)}&background=random`;
                                                     }

@@ -141,7 +141,7 @@ const CharacterInsightsPanel = ({ character, isOpen, onClose }) => {
                                 _jsx("img", { 
                                     src: getSafeAvatarUrl(character.name, character.avatar_url), 
                                     alt: character.name, 
-                                    className: "portrait w-[120px] h-[120px] rounded-full object-cover border-3 border-yellow-400 mx-auto mb-4 block",
+                                    className: "portrait w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-3 border-yellow-400 mx-auto mb-4 block",
                                     onError: (e) => {
                                         e.target.src = generateFallbackAvatar(character.name);
                                     } 

@@ -200,9 +200,25 @@ const CharacterGroupCarousel = ({ onSelectGroup }) => {
                                     "aria-label": group.name, 
                                     "aria-current": isCenter ? "true" : "false", 
                                     tabIndex: isCenter ? 0 : -1, 
-                                    children: [_jsxs("div", { className: "relative h-full flex flex-col bg-white", children: [_jsxs("div", { className: "relative h-48 overflow-hidden", children: [_jsx("div", { className: "absolute inset-0 bg-gray-100 bg-opacity-30 mix-blend-overlay pointer-events-none" }), _jsx("img", { src: group.image_url || `https://via.placeholder.com/400x240?text=${encodeURIComponent(group.name)}`, alt: group.name, className: "w-full h-full object-cover", onError: (e) => {
-                                                                e.target.src = `https://via.placeholder.com/400x240?text=${encodeURIComponent(group.name)}`;
-                                                            } }), _jsx("div", { className: "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" }), _jsx("div", { className: "absolute top-0 right-0 w-12 h-12 opacity-70", children: _jsx("svg", { viewBox: "0 0 100 100", fill: "none", xmlns: "http://www.w3.org/2000/svg", className: "w-full h-full", children: _jsx("path", { d: "M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z", fill: "white" }) }) }), _jsxs("div", { className: "absolute bottom-4 left-4 right-4", children: [_jsx("h3", { className: "text-2xl font-extrabold text-white drop-shadow-lg", children: group.name }), _jsx("div", { className: "h-1 w-16 mt-1 bg-secondary-500 rounded-full" })] }), group.icon && (_jsx("span", { className: "absolute top-4 right-4 text-white text-3xl drop-shadow-md", children: group.icon })), isSelected && (_jsx("div", { className: "absolute inset-0 bg-secondary-500 mix-blend-soft-light opacity-20" }))] }), _jsxs("div", { className: "p-4 flex flex-col flex-grow", children: [_jsxs("div", { className: "relative mb-4 flex-grow", children: [_jsx("div", { className: "absolute inset-0 bg-amber-50 bg-opacity-30 rounded pointer-events-none" }), _jsx("p", { className: "relative text-gray-700 text-base line-clamp-3 z-10", children: group.description || `Characters from the ${group.name} group.` })] }), _jsx("button", { onClick: (e) => {
+                                    children: [_jsxs("div", { className: "relative h-full flex flex-col bg-white", children: [_jsxs("div", { className: "relative h-48 overflow-hidden", children: [
+                                                    _jsx("div", { className: "absolute inset-0 bg-gray-100 bg-opacity-30 mix-blend-overlay pointer-events-none" }),
+                                                    _jsx("img", { 
+                                                        src: group.image_url || `https://via.placeholder.com/400x240?text=${encodeURIComponent(group.name)}`,
+                                                        alt: group.name,
+                                                        className: "w-full h-full object-cover object-[center_20%]",
+                                                        onError: (e) => { 
+                                                            e.target.src = `https://via.placeholder.com/400x240?text=${encodeURIComponent(group.name)}`;
+                                                        }
+                                                    }),
+                                                    _jsx("div", { className: "absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" }),
+                                                    _jsx("div", { className: "absolute top-0 right-0 w-12 h-12 opacity-70", children: _jsx("svg", { viewBox: "0 0 100 100", fill: "none", xmlns: "http://www.w3.org/2000/svg", className: "w-full h-full", children: _jsx("path", { d: "M0 0C55.2285 0 100 44.7715 100 100H75C75 58.5786 41.4214 25 0 25V0Z", fill: "white" }) }) }),
+                                                    _jsxs("div", { className: "absolute bottom-4 left-4 right-4", children: [
+                                                        _jsx("h3", { className: "text-2xl font-extrabold text-white drop-shadow-lg", children: group.name }),
+                                                        _jsx("div", { className: "h-1 w-16 mt-1 bg-secondary-500 rounded-full" })
+                                                    ] }),
+                                                    group.icon && (_jsx("span", { className: "absolute top-4 right-4 text-white text-3xl drop-shadow-md", children: group.icon })),
+                                                    isSelected && (_jsx("div", { className: "absolute inset-0 bg-secondary-500 mix-blend-soft-light opacity-20" }))
+                                                ] }), _jsxs("div", { className: "p-4 flex flex-col flex-grow", children: [_jsxs("div", { className: "relative mb-4 flex-grow", children: [_jsx("div", { className: "absolute inset-0 bg-amber-50 bg-opacity-30 rounded pointer-events-none" }), _jsx("p", { className: "relative text-gray-700 text-base line-clamp-3 z-10", children: group.description || `Characters from the ${group.name} group.` })] }), _jsx("button", { onClick: (e) => {
                                                                 e.stopPropagation();
                                                                 handleGroupClick(group.id);
                                                             }, className: `
