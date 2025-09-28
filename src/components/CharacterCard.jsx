@@ -415,7 +415,7 @@ const CharacterCard = ({
                             children: _jsx("img", {
                                 src: avatarUrl,
                                 alt: character.name,
-                                className: "w-full h-full object-cover"
+                                className: "w-full h-full object-cover object-[center_20%]"
                             })
                         }),
                         _jsxs("div", {
@@ -524,7 +524,7 @@ const CharacterCard = ({
                 _jsx("img", {
                     src: avatarUrl,
                     alt: character.name,
-                    className: "w-20 h-20 rounded-full mx-auto mb-3",
+                    className: "w-20 h-20 rounded-full object-cover object-[center_20%] mx-auto mb-3",
                     onError: (e) => {
                         e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`;
                     }
