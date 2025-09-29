@@ -544,6 +544,10 @@ const ScalableCharacterSelection = () => {
                                 `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`,
                             alt: character.name,
                             className: "w-full h-full object-cover object-[center_20%]",
+                            loading: "lazy",
+                            decoding: "async",
+                            width: "64",
+                            height: "64",
                         }),
                     }),
                     
