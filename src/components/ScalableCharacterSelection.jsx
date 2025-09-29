@@ -101,7 +101,7 @@ const ScalableCharacterSelection = () => {
      * ----------------------------------------------------------- */
     const [isMobile, setIsMobile] = useState(false);
 
-    const itemsPerPage = 20;
+    const itemsPerPage = 15;
     const { selectCharacter, character: selectedCharacter } = useChat();
 
     /* -------------------------------------------------------------
