@@ -56,10 +56,11 @@ alter table public.user_series_progress enable row level security;
 -- NOTE: Initial permissive policies suitable for development. These can be
 -- hardened later to enforce org/role-based access similar to profiles.
 
--- Series: allow read for all; writes for authenticated users (admins via app UI)
+drop policy if exists bible_study_series_select_all on public.bible_study_series;
 create policy bible_study_series_select_all on public.bible_study_series
   for select using (true);
 
+drop policy if exists bible_study_series_write_authenticated on public.bible_study_series;
 create policy bible_study_series_write_authenticated on public.bible_study_series
   for all
   to authenticated
@@ -67,9 +68,11 @@ create policy bible_study_series_write_authenticated on public.bible_study_serie
   with check (true);
 
 -- Series items: readable by all; write by authenticated
+drop policy if exists bible_study_series_items_select_all on public.bible_study_series_items;
 create policy bible_study_series_items_select_all on public.bible_study_series_items
   for select using (true);
 
+drop policy if exists bible_study_series_items_write_authenticated on public.bible_study_series_items;
 create policy bible_study_series_items_write_authenticated on public.bible_study_series_items
   for all
   to authenticated
@@ -77,6 +80,7 @@ create policy bible_study_series_items_write_authenticated on public.bible_study
   with check (true);
 
 -- User series progress: user can read/write own rows
+drop policy if exists user_series_progress_self_rw on public.user_series_progress;
 create policy user_series_progress_self_rw on public.user_series_progress
   for all
   to authenticated
