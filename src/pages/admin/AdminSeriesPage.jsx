@@ -12,6 +12,8 @@ const AdminSeriesPage = ({ embedded = false }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  // For create flow: allow selecting studies to add as items immediately
+  const [createSelectedStudyIds, setCreateSelectedStudyIds] = useState([]);
   const [showItemForm, setShowItemForm] = useState(false);
 
   const [form, setForm] = useState({
@@ -86,6 +88,9 @@ const AdminSeriesPage = ({ embedded = false }) => {
     is_premium: false,
     auto_premium_if_any: true,
   });
+  
+  // Also reset the create-time study selection
+  const resetCreateSelection = () => setCreateSelectedStudyIds([]);
 
   const resetItemForm = () => setItemForm({
     id: null,
@@ -95,7 +100,7 @@ const AdminSeriesPage = ({ embedded = false }) => {
     override_title: ''
   });
 
-  const handleNew = () => { resetForm(); setShowForm(true); };
+  const handleNew = () => { resetForm(); resetCreateSelection(); setShowForm(true); };
   const handleEdit = (s) => { setForm({ ...s }); setShowForm(true); };
 
   const handleSave = async () => {
@@ -105,9 +110,28 @@ const AdminSeriesPage = ({ embedded = false }) => {
       if (typeof payload.show_in_nav === 'string') payload.show_in_nav = payload.show_in_nav === 'true';
       if (typeof payload.auto_premium_if_any === 'string') payload.auto_premium_if_any = payload.auto_premium_if_any === 'true';
       payload.owner_slug = payload.owner_slug || ownerSlug;
+      const isCreate = !payload.id;
       const saved = await bibleSeriesRepository.upsertSeries(payload);
+      // If creating and studies were selected, add them now as items in order
+      if (isCreate && saved?.id && createSelectedStudyIds.length > 0) {
+        const ids = createSelectedStudyIds.slice();
+        for (let i = 0; i < ids.length; i++) {
+          const studyId = ids[i];
+          try {
+            await bibleSeriesRepository.upsertItem({
+              series_id: saved.id,
+              study_id: studyId,
+              order_index: i,
+              override_title: ''
+            });
+          } catch (e) {
+            console.error('Failed to add study to new series:', e);
+          }
+        }
+      }
       await fetchData();
       setShowForm(false);
+      resetCreateSelection();
       if (saved) setSelected(saved);
     } catch (err) {
       console.error('Save series error:', err);
@@ -284,6 +308,42 @@ const AdminSeriesPage = ({ embedded = false }) => {
                   <input type="checkbox" checked={!!form.auto_premium_if_any} onChange={(e) => setForm({ ...form, auto_premium_if_any: e.target.checked })} /> Auto-premium if any item is premium
                 </label>
               </div>
+
+              {/* Create-time Study Selection */}
+              {!form.id && (
+                <div className="mt-2">
+                  <div className="text-blue-200 font-semibold mb-2">Add studies now (optional)</div>
+                  <div className="text-blue-200 text-sm mb-2">Selected studies will be added to this series in the order you check them.</div>
+                  <div className="max-h-56 overflow-y-auto bg-white/10 rounded-lg border border-white/15 p-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {studies.map(st => (
+                        <label key={st.id} className="flex items-start gap-2 text-blue-100 bg-white/5 rounded-md p-2">
+                          <input
+                            type="checkbox"
+                            checked={createSelectedStudyIds.includes(st.id)}
+                            onChange={(e) => {
+                              setCreateSelectedStudyIds(prev => {
+                                const exists = prev.includes(st.id);
+                                if (e.target.checked) {
+                                  return exists ? prev : [...prev, st.id];
+                                } else {
+                                  return prev.filter(id => id !== st.id);
+                                }
+                              });
+                            }}
+                          />
+                          <span>
+                            <span className="font-medium">{st.title}</span>
+                            {st.is_premium && (
+                              <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">Premium</span>
+                            )}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">Cancel</button>
                 <button type="submit" className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">Save Series</button>
