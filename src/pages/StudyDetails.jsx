@@ -1,15 +1,17 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { characterRepository } from '../repositories/characterRepository';
 import { usePremium } from '../hooks/usePremium';
+import { useAuth } from '../contexts/AuthContext';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
 
 const StudyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [study, setStudy] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [character, setCharacter] = useState(null);
@@ -17,6 +19,7 @@ const StudyDetails = () => {
   const [error, setError] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const { isPremium } = usePremium();
+  const [progress, setProgress] = useState(null);
 
   useEffect(() => {
     const fetchStudyDetails = async () => {
@@ -41,6 +44,14 @@ const StudyDetails = () => {
         // Fetch lessons
         const lessonsData = await bibleStudiesRepository.listLessons(id);
         setLessons(lessonsData);
+
+        // Fetch user progress
+        if (user?.id) {
+          const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
+          setProgress(p);
+        } else {
+          setProgress(null);
+        }
         
         // Fetch character if available
         if (studyData.character_id) {
@@ -60,7 +71,18 @@ const StudyDetails = () => {
     if (id) {
       fetchStudyDetails();
     }
-  }, [id, isPremium]);
+  }, [id, isPremium, user?.id]);
+
+  const nextLessonIndex = useMemo(() => {
+    if (!lessons || lessons.length === 0) return 0;
+    if (!progress) return 0;
+    const completed = Array.isArray(progress.completed_lessons) ? progress.completed_lessons : [];
+    // find first not in completed
+    for (let i = 0; i < lessons.length; i++) {
+      if (!completed.includes(i)) return i;
+    }
+    return Math.min(progress.current_lesson_index ?? 0, lessons.length - 1);
+  }, [lessons, progress]);
 
   const handleLessonClick = (lessonIndex) => {
     if (study?.is_premium && !isPremium) {
@@ -198,12 +220,22 @@ const StudyDetails = () => {
                           })
                         ),
 
-                        /* Title */
-                        _jsx("h1", {
-                          className: "text-3xl md:text-4xl font-extrabold text-yellow-400 mb-4 tracking-tight",
-                          style: { fontFamily: 'Cinzel, serif' },
-                          children: study.title
-                        }),
+                        /* Title + progress + resume */
+                        _jsxs("div", { children: [
+                          _jsx("h1", {
+                            className: "text-3xl md:text-4xl font-extrabold text-yellow-400 tracking-tight",
+                            style: { fontFamily: 'Cinzel, serif' },
+                            children: study.title
+                          }),
+                          _jsxs("div", { className: "mt-3 flex flex-wrap items-center gap-2", children: [
+                            (user && lessons.length > 0) && (
+                              _jsx("span", { className: "text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/30", children: `${Array.isArray(progress?.completed_lessons) ? progress.completed_lessons.length : 0} of ${lessons.length} complete` })
+                            ),
+                            (user && lessons.length > 0) && (
+                              _jsx(Link, { to: `/studies/${id}/lesson/${nextLessonIndex}`, className: "text-xs px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white", children: "Resume study" })
+                            )
+                          ]})
+                        ]}),
 
                         /* Description */
                         _jsx("p", {
@@ -287,20 +319,26 @@ const StudyDetails = () => {
                                           ]
                                         }),
                                         
-                                        /* Lock icon for premium */
-                                        (study.is_premium && !isPremium) && (
-                                          _jsx("svg", {
-                                            xmlns: "http://www.w3.org/2000/svg",
-                                            className: "h-5 w-5 text-gray-400",
-                                            viewBox: "0 0 20 20",
-                                            fill: "currentColor",
-                                            children: _jsx("path", {
-                                              fillRule: "evenodd",
-                                              d: "M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z",
-                                              clipRule: "evenodd"
+                                        _jsxs("div", { className: "flex items-center gap-2", children: [
+                                          /* Completed chip */
+                                          (user && Array.isArray(progress?.completed_lessons) && progress.completed_lessons.includes(lesson.order_index)) && (
+                                            _jsx("span", { className: "text-[11px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-200 border border-green-500/30", children: "Completed" })
+                                          ),
+                                          /* Lock icon for premium */
+                                          (study.is_premium && !isPremium) && (
+                                            _jsx("svg", {
+                                              xmlns: "http://www.w3.org/2000/svg",
+                                              className: "h-5 w-5 text-gray-400",
+                                              viewBox: "0 0 20 20",
+                                              fill: "currentColor",
+                                              children: _jsx("path", {
+                                                fillRule: "evenodd",
+                                                d: "M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z",
+                                                clipRule: "evenodd"
+                                              })
                                             })
-                                          })
-                                        )
+                                          )
+                                        ]})
                                       ]
                                     }),
                                     
