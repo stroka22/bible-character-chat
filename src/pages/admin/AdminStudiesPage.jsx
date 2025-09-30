@@ -329,8 +329,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
           children: [
             _jsx("h3", { className: embedded ? "text-lg font-semibold text-gray-800 mb-2" : "text-lg font-semibold text-yellow-300 mb-2", children: "Study Series" }),
             _jsxs("div", { className: "flex flex-wrap gap-3", children: [
-              _jsx("button", { onClick: () => setShowSeriesManager(v => !v), className: embedded ? "px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg", children: showSeriesManager ? "Hide Manager" : "Manage Series" }),
-              _jsx("a", { href: "/series", className: embedded ? "px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-900 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-gray-900 hover:bg-black text-white rounded-lg", children: "View Public Series" })
+              _jsx("button", { onClick: () => setShowSeriesManager(v => !v), className: embedded ? "px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg", children: showSeriesManager ? "Hide Manager" : "Manage Series" })
             ] })
           ]
         }),
