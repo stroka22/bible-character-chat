@@ -1,12 +1,12 @@
 -- Bible Study Series schema
 -- Created: 2025-09-30
 
--- Enable extensions used for UUIDs and triggers if not present
-create extension if not exists "uuid-ossp";
+-- Prefer pgcrypto's gen_random_uuid() for UUID defaults (widely available in Supabase)
+create extension if not exists pgcrypto;
 
 -- bible_study_series: container for ordered studies
 create table if not exists public.bible_study_series (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   owner_slug text not null,
   slug text not null,
   title text not null,
@@ -23,7 +23,7 @@ create table if not exists public.bible_study_series (
 
 -- bible_study_series_items: ordered items within a series
 create table if not exists public.bible_study_series_items (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   series_id uuid not null references public.bible_study_series(id) on delete cascade,
   study_id uuid not null references public.bible_studies(id) on delete restrict,
   order_index integer not null default 0,
