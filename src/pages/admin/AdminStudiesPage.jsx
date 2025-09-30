@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import React, { useState, useEffect } from 'react';
+import AdminSeriesPage from './AdminSeriesPage.jsx';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 import { characterRepository } from '../../repositories/characterRepository';
 import { getOwnerSlug } from '../../services/tierSettingsService';
@@ -27,6 +28,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [showStudyForm, setShowStudyForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
   const [ownerSlug, setOwnerSlug] = useState(getOwnerSlug());
+  const [showSeriesManager, setShowSeriesManager] = useState(false);
   
   // Form states
   const [studyForm, setStudyForm] = useState({
@@ -327,11 +329,14 @@ const AdminStudiesPage = ({ embedded = false }) => {
           children: [
             _jsx("h3", { className: embedded ? "text-lg font-semibold text-gray-800 mb-2" : "text-lg font-semibold text-yellow-300 mb-2", children: "Study Series" }),
             _jsxs("div", { className: "flex flex-wrap gap-3", children: [
-              _jsx("a", { href: "/admin/series", className: embedded ? "px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg", children: "Manage Series" }),
+              _jsx("button", { onClick: () => setShowSeriesManager(v => !v), className: embedded ? "px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg", children: showSeriesManager ? "Hide Manager" : "Manage Series" }),
               _jsx("a", { href: "/series", className: embedded ? "px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-900 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-gray-900 hover:bg-black text-white rounded-lg", children: "View Public Series" })
             ] })
           ]
         }),
+        showSeriesManager && (
+          _jsx("div", { className: embedded ? "mb-8 bg-white rounded-lg border border-gray-200 shadow-md" : "mb-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/15 shadow-lg", children: _jsx("div", { className: "p-4 md:p-6", children: _jsx(AdminSeriesPage, { embedded: true }) }) })
+        ),
         
         /* Error message – enhanced visibility + RLS guidance */
         error &&
