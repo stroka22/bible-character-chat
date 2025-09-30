@@ -35,6 +35,7 @@ import CareersPage from './pages/CareersPage.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
+import AdminSeriesPage from './pages/admin/AdminSeriesPage.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
 import StudyLesson from './pages/StudyLesson.jsx';
@@ -217,7 +218,8 @@ function App() {
                 _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
                 _jsx(Route, { path: "/admin/invites", element: _jsx(AdminInvitesPage, {}) }),
                 _jsx(Route, { path: "/admin/users", element: _jsx(SuperadminUsersPage, {}) }),
-                _jsx(Route, { path: "/admin/studies", element: _jsx(AdminStudiesPage, {}) })
+                _jsx(Route, { path: "/admin/studies", element: _jsx(AdminStudiesPage, {}) }),
+                _jsx(Route, { path: "/admin/series", element: _jsx(AdminSeriesPage, {}) })
             ] }) }),
             _jsx(Route, { path: "/profile", element: _jsx(ProfilePage, {}) }),
             _jsx(Route, { path: "/settings", element: _jsx(SettingsPage, {}) }),
