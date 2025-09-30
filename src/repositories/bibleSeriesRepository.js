@@ -55,7 +55,7 @@ export const bibleSeriesRepository = {
       if (!seriesId) return [];
       const { data, error } = await supabase
         .from('bible_study_series_items')
-        .select('id, series_id, study_id, order_index, override_title, study:bible_studies(id, title, description, is_premium, cover_image_url)')
+        .select('id, series_id, study_id, order_index, override_title, study:bible_studies(id, title, description, is_premium, cover_image_url, character_id)')
         .eq('series_id', seriesId)
         .order('order_index', { ascending: true });
       if (error) {

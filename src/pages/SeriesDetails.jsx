@@ -10,7 +10,6 @@ const SeriesDetails = () => {
 
   const [series, setSeries] = useState(null);
   const [items, setItems] = useState([]);
-  const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,31 +20,20 @@ const SeriesDetails = () => {
       if (s) {
         const it = await bibleSeriesRepository.listItemsWithStudies(s.id);
         setItems(it || []);
-        if (user) {
-          const p = await bibleSeriesRepository.getProgress({ userId: user.id, seriesId: s.id });
-          setProgress(p);
-        }
       }
       setLoading(false);
     })();
   }, [slug, user]);
 
-  const nextIndex = useMemo(() => {
-    if (!items || items.length === 0) return 0;
-    if (!progress) return 0;
-    const idx = Math.min(progress.current_index ?? 0, items.length - 1);
-    return idx;
-  }, [items, progress]);
+  const firstCharacterId = useMemo(() => {
+    const first = items && items.length > 0 ? items[0] : null;
+    return first?.study?.character_id || null;
+  }, [items]);
 
-  const handleStartOrResume = async () => {
-    if (!user || !series || !items.length) return;
-    const idx = nextIndex;
-    const target = items[idx];
-    try {
-      await bibleSeriesRepository.saveProgress({ userId: user.id, seriesId: series.id, currentIndex: idx });
-    } catch {}
-    // Navigate to the study details; let user pick a lesson there
-    navigate(`/studies/${target.study?.id || target.study_id}`);
+  const handleIntroChat = () => {
+    if (!firstCharacterId || !series) return;
+    // Pass series slug to let chat set hidden context and auto-post intro
+    navigate(`/chat?character=${firstCharacterId}&series=${encodeURIComponent(series.slug)}`);
   };
 
   if (loading) {
@@ -87,9 +75,9 @@ const SeriesDetails = () => {
             {series.is_premium && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200">Premium</span>
             )}
-            {user && items.length > 0 && (
-              <button onClick={handleStartOrResume} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                {progress ? 'Resume series' : 'Start series'}
+            {user && items.length > 0 && firstCharacterId && (
+              <button onClick={handleIntroChat} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                Start intro chat
               </button>
             )}
           </div>
@@ -105,7 +93,7 @@ const SeriesDetails = () => {
             {items.map((it, idx) => (
               <li key={it.id} className="p-4 bg-white rounded-lg border border-gray-200 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${idx === nextIndex ? 'bg-yellow-200 text-yellow-900' : 'bg-gray-100 text-gray-700'}`}>{idx + 1}</div>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gray-100 text-gray-700">{idx + 1}</div>
                   <div>
                     <div className="font-medium text-gray-900">{it.override_title || it.study?.title || 'Study'}</div>
                     {it.study?.description && (<div className="text-sm text-gray-600 line-clamp-2 max-w-2xl">{it.study.description}</div>)}
@@ -116,22 +104,8 @@ const SeriesDetails = () => {
                     onClick={() => navigate(`/studies/${it.study?.id || it.study_id}`)}
                     className="px-3 py-1.5 text-sm bg-gray-800 text-white rounded-md hover:bg-gray-700"
                   >
-                    View
+                    Open
                   </button>
-                  {user && (
-                    <button
-                      onClick={async () => {
-                        try {
-                          await bibleSeriesRepository.saveProgress({ userId: user.id, seriesId: series.id, currentIndex: idx });
-                          const p = await bibleSeriesRepository.getProgress({ userId: user.id, seriesId: series.id });
-                          setProgress(p);
-                        } catch {}
-                      }}
-                      className={`px-3 py-1.5 text-sm rounded-md ${idx === nextIndex ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100'}`}
-                    >
-                      {idx === nextIndex ? 'Current' : 'Set current'}
-                    </button>
-                  )}
                 </div>
               </li>
             ))}
