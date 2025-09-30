@@ -35,9 +35,12 @@ import CareersPage from './pages/CareersPage.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
+import AdminSeriesPage from './pages/admin/AdminSeriesPage.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
 import StudyLesson from './pages/StudyLesson.jsx';
+import SeriesList from './pages/SeriesList.jsx';
+import SeriesDetails from './pages/SeriesDetails.jsx';
 import RoundtableSetup from './pages/RoundtableSetup.jsx';
 import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
@@ -199,6 +202,9 @@ function App() {
         _jsx(Route, { path: "/studies", element: _jsx(StudiesPage, {}) }),
         _jsx(Route, { path: "/studies/:id", element: _jsx(StudyDetails, {}) }),
         _jsx(Route, { path: "/studies/:id/lesson/:lessonIndex", element: _jsx(StudyLesson, {}) }),
+        /* -------- Study Series (public) -------------------------- */
+        _jsx(Route, { path: "/series", element: _jsx(SeriesList, {}) }),
+        _jsx(Route, { path: "/series/:slug", element: _jsx(SeriesDetails, {}) }),
         _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         
         // Chat & Shared conversation routes (public access)
@@ -212,7 +218,8 @@ function App() {
                 _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
                 _jsx(Route, { path: "/admin/invites", element: _jsx(AdminInvitesPage, {}) }),
                 _jsx(Route, { path: "/admin/users", element: _jsx(SuperadminUsersPage, {}) }),
-                _jsx(Route, { path: "/admin/studies", element: _jsx(AdminStudiesPage, {}) })
+                _jsx(Route, { path: "/admin/studies", element: _jsx(AdminStudiesPage, {}) }),
+                _jsx(Route, { path: "/admin/series", element: _jsx(AdminSeriesPage, {}) })
             ] }) }),
             _jsx(Route, { path: "/profile", element: _jsx(ProfilePage, {}) }),
             _jsx(Route, { path: "/settings", element: _jsx(SettingsPage, {}) }),
