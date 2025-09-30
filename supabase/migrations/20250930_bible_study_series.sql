@@ -46,15 +46,7 @@ create table if not exists public.user_series_progress (
   primary key (user_id, series_id)
 );
 
--- Updated_at trigger (reuse common trigger if exists)
-do $$
-begin
-  if exists (select 1 from pg_proc where proname = 'set_updated_at') then
-    perform set_updated_at('public.bible_study_series'::regclass);
-    perform set_updated_at('public.bible_study_series_items'::regclass);
-    perform set_updated_at('public.user_series_progress'::regclass);
-  end if;
-end $$;
+-- Skipping auto-updated_at trigger wiring to avoid dependency on a repo-specific helper
 
 -- RLS
 alter table public.bible_study_series enable row level security;
