@@ -66,6 +66,36 @@ const simulateApiCall = (data, delay = 300) => {
 // Generate a random ID
 const generateId = (prefix) => `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+// Normalise a "character_id" that may be a primitive, an object, or a
+// stringified "[object Object]". Optionally use the conversation stub
+// (which may contain an embedded characters object) to recover the id.
+function normaliseCharacterId(raw, conversation) {
+  if (!raw) return null;
+  // If already a primitive (string/number) that isn't the dreaded
+  // "[object Object]" then return as-is.
+  if (typeof raw !== 'object') {
+    if (typeof raw === 'string' && raw.trim() === '[object Object]') {
+      // fall through to conversation.characters
+    } else {
+      return raw;
+    }
+  }
+
+  // Try to extract from object-like values
+  if (typeof raw === 'object') {
+    const candidate = raw.id ?? raw.uuid ?? raw.value ?? null;
+    if (candidate) return candidate;
+  }
+
+  // Fallback to embedded character
+  const embedded = conversation?.characters;
+  if (embedded && (embedded.id || embedded.uuid || embedded.value)) {
+    return embedded.id ?? embedded.uuid ?? embedded.value;
+  }
+
+  return null;
+}
+
 /**
  * Repository for handling conversations and messages
  */
@@ -215,7 +245,10 @@ export const conversationRepository = {
         filteredConversations.map(async (conv) => {
           let character = null;
           try {
-            character = await characterRepository.getById(conv.character_id);
+            const cid = normaliseCharacterId(conv.character_id, conv);
+            if (cid) {
+              character = await characterRepository.getById(cid);
+            }
           } catch {
             /* ignore – character may not resolve in mock mode */
           }
@@ -273,7 +306,10 @@ export const conversationRepository = {
       // Get the character via repository (supports string/UUID or number IDs)
       let character = null;
       try {
-        character = await characterRepository.getById(conversation.character_id);
+        const cid = normaliseCharacterId(conversation.character_id, conversation);
+        if (cid) {
+          character = await characterRepository.getById(cid);
+        }
       } catch {
         character = null;
       }
