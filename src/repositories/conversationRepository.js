@@ -1,10 +1,13 @@
-import supabase from '../supabase/client';
+// Real Supabase client for authenticated persistence
+import { supabase } from '../services/supabase';
 // Use the central character repository so we always respect whatever
 // ID type (string / UUID / number) the rest of the app supplies.
 import { characterRepository } from './characterRepository';
+// Supabase-backed chat repository (CRUD for chats/messages)
+import { chatRepository } from './chatRepository';
 
 /* eslint-disable no-console */
-console.log('[MOCK] Conversation repository initialised (character IDs now resolved on-demand)');
+console.log('[ConversationRepository] Initialised – will use Supabase when authenticated, otherwise mock localStorage');
 /* eslint-enable no-console */
 
 // In-memory storage for mock data
@@ -96,6 +99,30 @@ function normaliseCharacterId(raw, conversation) {
   return null;
 }
 
+// Detect whether to bypass Supabase (demo/local mode)
+function isSkipAuth() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const bypass = window.localStorage?.getItem('bypass_auth') === 'true';
+    return (
+      params.get('skipAuth') === '1' ||
+      import.meta.env?.VITE_SKIP_AUTH === 'true' ||
+      bypass
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Repository for handling conversations and messages
  */
@@ -115,6 +142,21 @@ export const conversationRepository = {
    */
   async createConversation(conversation = {}) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+
+      // Supabase-backed path for authenticated users (unless skip auth)
+      if (!skip && uid) {
+        const cid = normaliseCharacterId(conversation.character_id, conversation);
+        const title = (typeof conversation.title === 'string' && conversation.title.trim())
+          ? conversation.title.trim()
+          : undefined;
+        const created = await chatRepository.createChat(uid, cid, title);
+        // Keep legacy activeConversationId in sync for addMessage(content, role)
+        this.activeConversationId = created?.id || null;
+        return created;
+      }
+
       /* --------------------------------------------------------------
        * Extract params with safe defaults
        * ------------------------------------------------------------*/
@@ -206,6 +248,23 @@ export const conversationRepository = {
     characterId = null
   } = {}) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+      if (!skip && uid) {
+        // Supabase-backed list
+        const rows = await chatRepository.getUserChats(uid);
+        const conversationsWithCharacters = await Promise.all(
+          (rows || []).map(async (conv) => {
+            let character = null;
+            try {
+              const cid = normaliseCharacterId(conv.character_id, conv);
+              if (cid) character = await characterRepository.getById(cid);
+            } catch {}
+            return { ...conv, characters: character };
+          })
+        );
+        return conversationsWithCharacters;
+      }
       // Ensure stale preset data is cleared once per session
       resetMockData();
       // ------------------------------------------------------------------
@@ -294,6 +353,19 @@ export const conversationRepository = {
    */
   async getConversationWithMessages(conversationId, { includeDeleted = false } = {}) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+      if (!skip && uid) {
+        const conv = await chatRepository.getChatById(conversationId);
+        if (!conv) throw new Error('Conversation not found');
+        let character = null;
+        try {
+          const cid = normaliseCharacterId(conv.character_id, conv);
+          if (cid) character = await characterRepository.getById(cid);
+        } catch {}
+        const messages = await chatRepository.getChatMessages(conversationId);
+        return { ...conv, characters: character, messages: messages || [] };
+      }
       console.log('[MOCK] Fetching conversation with messages:', conversationId);
       
       // Find the conversation
@@ -341,6 +413,23 @@ export const conversationRepository = {
    */
   async addMessage(messageData, role) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+
+      if (!skip && uid) {
+        let content, messageRole, conversationId;
+        if (typeof messageData === 'string') {
+          content = messageData;
+          messageRole = role;
+          conversationId = this.activeConversationId;
+          if (!conversationId) throw new Error('No active conversation ID');
+        } else if (typeof messageData === 'object') {
+          content = messageData.content;
+          messageRole = messageData.role;
+          conversationId = messageData.conversation_id;
+        }
+        return await chatRepository.addMessage(conversationId, content, messageRole);
+      }
       // Handle different parameter formats
       let content, messageRole, conversationId, metadata = {};
       
@@ -412,6 +501,11 @@ export const conversationRepository = {
    */
   async updateConversation(conversationId, updates = {}) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+      if (!skip && uid) {
+        return await chatRepository.updateChat(conversationId, updates);
+      }
       console.log('[MOCK] Updating conversation:', conversationId, updates);
       
       // Find the conversation with exact ID match
@@ -448,6 +542,12 @@ export const conversationRepository = {
    */
   async deleteConversation(conversationId) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+      if (!skip && uid) {
+        await chatRepository.deleteChat(conversationId);
+        return true;
+      }
       console.log('[MOCK] Soft deleting conversation:', conversationId);
       
       // Find the conversation
@@ -503,6 +603,11 @@ export const conversationRepository = {
    */
   async shareConversation(conversationId) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+      if (!skip && uid) {
+        console.warn('[ConversationRepository] Share not implemented in Supabase path – using mock fallback');
+      }
       console.log('[MOCK] Sharing conversation:', conversationId);
       
       // Find the conversation
@@ -535,6 +640,11 @@ export const conversationRepository = {
    */
   async getSharedConversation(shareCode) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+      if (!skip && uid) {
+        console.warn('[ConversationRepository] getSharedConversation not implemented in Supabase path – using mock fallback');
+      }
       console.log('[MOCK] Fetching shared conversation with code:', shareCode);
       
       // Find the conversation by share code
@@ -580,6 +690,11 @@ export const conversationRepository = {
    */
   async stopSharing(conversationId) {
     try {
+      const skip = isSkipAuth();
+      const uid = await getCurrentUserId();
+      if (!skip && uid) {
+        console.warn('[ConversationRepository] stopSharing not implemented in Supabase path – using mock fallback');
+      }
       console.log('[MOCK] Stopping sharing for conversation:', conversationId);
       
       // Find the conversation
