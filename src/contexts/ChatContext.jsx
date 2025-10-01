@@ -451,8 +451,21 @@ export const ChatProvider = ({ children }) => {
         (!convCharacter || !convCharacter.name || convCharacter.name === 'Unknown') &&
         conversation.character_id
       ) {
+        // Normalise character_id: some historical records stored the
+        // entire character object in character_id, producing "[object Object]"
+        // in Supabase queries. Extract the primitive id when needed.
+        const rawId = conversation.character_id;
+        const normalisedId =
+          rawId && typeof rawId === 'object'
+            ? (rawId.id ?? rawId.uuid ?? rawId.value ?? null)
+            : rawId;
+
+        if (!normalisedId) {
+          console.warn('[ChatContext] character_id malformed on conversation; cannot resolve id');
+        }
+
         characterRepository
-          .getById(conversation.character_id)
+          .getById(normalisedId)
           .then((fetched) => {
             if (fetched) {
               setCharacter(fetched);

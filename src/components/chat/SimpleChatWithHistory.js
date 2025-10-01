@@ -756,8 +756,13 @@ const SimpleChatWithHistory = () => {
                                         })
                                     }),
                                     
-                                    // Chat actions
-                                    _jsx(ChatActions, {}),
+                                    // Chat actions – compact icons on mobile, full on desktop
+                                    _jsxs(_Fragment, {
+                                        children: [
+                                            _jsx("div", { className: "md:hidden px-3 py-2 border-t border-white/10 bg-white/5", children: _jsx(ChatActions, { compact: true, className: "justify-center w-full" }) }),
+                                            _jsx("div", { className: "hidden md:block", children: _jsx(ChatActions, {}) })
+                                        ]
+                                    }),
                                     
                                     // Save Dialog Modal
                                     showSaveDialog && (
