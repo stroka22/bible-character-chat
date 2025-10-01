@@ -439,7 +439,7 @@ const SimpleChatWithHistory = () => {
                 _jsx("div", { 
                     className: "relative z-10 flex items-start justify-center pt-24 md:pt-32 pb-10", 
                     children: _jsx("div", { 
-                        className: "chat-container w-full max-w-6xl h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", 
+                        className: "chat-container w-full max-w-6xl h-[calc(100svh-7rem)] md:h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", 
                         children: loadingConversation ? (
                             /* Simple loading state */
                             _jsx("div", {
@@ -505,12 +505,12 @@ const SimpleChatWithHistory = () => {
                                                 ]
                                             }),
                                             _jsxs("div", { 
-                                                className: "flex space-x-2",
+                                                className: "flex flex-wrap gap-2",
                                                 children: [
                                                     _jsx("button", { 
                                                         onClick: resetChat, 
                                                         id: "backBtn", 
-                                                        className: "text-sm px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
+                                                        className: "text-xs md:text-sm px-2 md:px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
                                                         children: "Back to Characters" 
                                                     })
                                                 ] 
@@ -551,12 +551,12 @@ const SimpleChatWithHistory = () => {
                                                 ]
                                             }),
                                             _jsxs("div", { 
-                                                className: "flex space-x-2",
+                                                className: "flex flex-wrap gap-2",
                                                 children: [
                                                     // Upgrade button for non-premium users
                                                     !isPremium ? _jsx("a", {
                                                       href: "https://faithtalkai.com/pricing",
-                                                      className: "flex items-center gap-1 px-3 py-2 rounded-lg bg-yellow-400 text-blue-900 font-semibold border border-yellow-500 shadow hover:bg-yellow-300 transition-all",
+                                                      className: "flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-yellow-400 text-blue-900 font-semibold border border-yellow-500 shadow hover:bg-yellow-300 transition-all text-xs md:text-sm",
                                                       children: "Upgrade"
                                                     }) : null,
                                                     
@@ -564,7 +564,7 @@ const SimpleChatWithHistory = () => {
                                                     isAuthenticated && !isChatSaved && messages.length > 0 && (
                                                         _jsxs("button", {
                                                             onClick: handleSaveConversation,
-                                                            className: "flex items-center gap-1 px-3 py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900",
+                                                            className: "flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
                                                             children: [
                                                                 _jsx("svg", {
                                                                     xmlns: "http://www.w3.org/2000/svg",
@@ -584,7 +584,7 @@ const SimpleChatWithHistory = () => {
                                                     _jsxs("button", { 
                                                         id: "insightsToggle", 
                                                         onClick: () => setShowInsightsPanel(!showInsightsPanel),
-                                                        className: `insights-toggle-button flex items-center gap-1 px-3 py-2 rounded-lg ${showInsightsPanel ? 'bg-yellow-400 text-blue-900' : 'bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400'} font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900`,
+                                                        className: `insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg ${showInsightsPanel ? 'bg-yellow-400 text-blue-900' : 'bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400'} font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm`,
                                                         children: [
                                                             _jsx("svg", { 
                                                                 xmlns: "http://www.w3.org/2000/svg", 
@@ -604,7 +604,7 @@ const SimpleChatWithHistory = () => {
                                                     // Simple share button (no persistence)
                                                     _jsxs("button", { 
                                                         id: "shareBtn", 
-                                                        className: "insights-toggle-button flex items-center gap-1 px-3 py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900",
+                                                        className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
                                                         onClick: () => {
                                                             if (navigator.share) {
                                                                 navigator.share({
