@@ -437,7 +437,7 @@ const SimpleChatWithHistory = () => {
 
                 /* Glass container wrapping either selection or chat */
                 _jsx("div", { 
-                    className: "relative z-10 flex items-start justify-center pt-24 md:pt-32 pb-10", 
+                    className: "relative z-10 flex items-start justify-center pt-20 md:pt-32 pb-8", 
                     children: _jsx("div", { 
                         className: "chat-container w-full max-w-6xl h-[calc(100svh-7rem)] md:h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", 
                         children: loadingConversation ? (
@@ -481,7 +481,7 @@ const SimpleChatWithHistory = () => {
                                 children: [
                                     // Breadcrumb + Back button + My Conversations
                                     _jsxs("div", { 
-                                        className: "flex items-center justify-between px-4 py-2 text-sm bg-[rgba(255,255,255,.03)] border-b border-[rgba(255,255,255,.08)]",
+                                        className: "flex items-center justify-between px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm bg-[rgba(255,255,255,.03)] border-b border-[rgba(255,255,255,.08)]",
                                         children: [
                                             _jsxs("div", { 
                                                 className: "breadcrumb space-x-1",
@@ -520,7 +520,7 @@ const SimpleChatWithHistory = () => {
                                     
                                     // Chat header with character info and action buttons
                                     _jsxs("div", { 
-                                        className: "chat-header flex items-center justify-between p-4 border-b border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)]",
+                                        className: "chat-header flex items-center justify-between p-2 md:p-4 border-b border-[rgba(255,255,255,.1)] bg-[rgba(255,255,255,.05)]",
                                         children: [
                                             _jsxs("div", { 
                                                 className: "flex items-center",
@@ -528,7 +528,7 @@ const SimpleChatWithHistory = () => {
                                                     _jsx("img", { 
                                                         src: getSafeAvatarUrl(character.name, character.avatar_url), 
                                                         alt: character.name, 
-                                                        className: "h-12 w-12 rounded-full object-cover border-2 border-yellow-400 mr-3",
+                                                        className: "h-10 w-10 md:h-12 md:w-12 rounded-full object-cover border-2 border-yellow-400 mr-2 md:mr-3",
                                                         onError: (e) => {
                                                             e.target.src = generateFallbackAvatar(character.name);
                                                         }
@@ -536,7 +536,7 @@ const SimpleChatWithHistory = () => {
                                                     _jsxs("div", {
                                                         children: [
                                                             _jsx("h2", { 
-                                                                className: "text-xl font-bold text-yellow-400", 
+                                                                className: "text-base md:text-xl font-bold text-yellow-400", 
                                                                 style: { fontFamily: 'Cinzel, serif' },
                                                                 children: `Chat with ${character.name}` 
                                                             }),
