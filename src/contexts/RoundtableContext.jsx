@@ -325,6 +325,9 @@ export const RoundtableProvider = ({ children }) => {
           .map(p => p.name)
           .join(', ');
         
+        // Detect latest user input (if any) to allow topical pivots
+        const latestUserInput = [...messages].reverse().find(m => m.role === 'user')?.content || '';
+
         const systemMessage = {
           role: 'system',
           content: `You are ${speaker.name}, ${speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`}. 
@@ -332,7 +335,10 @@ You are participating in a roundtable discussion on the topic: "${topic}".
 The other participants are: ${otherParticipantNames}.
 Respond in first person as ${speaker.name}. You may reference other participants by name.
 Keep your response concise (${maxWordsPerReply} words or less).
-Stay in character and draw from biblical knowledge.`
+Critically: do not repeat or lightly rephrase points already made in this discussion. Bring a new perspective, deepen a prior point with a specific scripture, or challenge/affirm another speaker by name.
+If the user's latest input shifts the focus, explicitly address that shift.
+${latestUserInput ? `Latest user input to consider: "${latestUserInput}"` : ''}
+Stay in character and draw from biblical knowledge.`.trim()
         };
         
         const apiMessages = [systemMessage, ...recentMessages];
@@ -461,15 +467,18 @@ Stay in character and draw from biblical knowledge.`
             .join(', ');
           
           // Create system message with follow-up instructions
+          const latestUserInputFU = [...messages].reverse().find(m => m.role === 'user')?.content || '';
           const systemMessage = {
             role: 'system',
             content: `You are ${candidate.name}, ${candidate.description || `a biblical figure known for ${candidate.scriptural_context || 'wisdom'}`}. 
 You are participating in a roundtable discussion on the topic: "${topic}".
 The other participants are: ${otherParticipantNames}.
 Only reply if you have a specific response to one of the last messages (agreement, disagreement, clarification). If not, respond exactly with (skip).
+Do not repeat what has already been said; add a distinct insight, cite a specific scripture, or pose a concise, relevant question.
+${latestUserInputFU ? `Latest user input to consider: "${latestUserInputFU}"` : ''}
 Keep under ${maxWordsPerReply} words.
 Respond in first person as ${candidate.name}. You may reference other participants by name.
-Stay in character and draw from biblical knowledge.`
+Stay in character and draw from biblical knowledge.`.trim()
           };
           
           const apiMessages = [systemMessage, ...recentMessages];

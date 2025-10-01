@@ -143,7 +143,7 @@ export const ConversationProvider = ({ children }) => {
    * @param {string} characterId - ID of the character
    * @param {string} title - Optional title for the conversation
    */
-  const createConversation = useCallback(async (characterId, title) => {
+  const createConversation = useCallback(async (characterIdOrOptions, maybeTitle) => {
     // Allow unauthenticated users to create mock-mode conversations so that
     // ChatContext.saveChat works in bypass/local mode. We still log a warning
     // for visibility but do NOT block the flow.
@@ -153,7 +153,23 @@ export const ConversationProvider = ({ children }) => {
       );
     }
 
-    if (!characterId) {
+    // Support both legacy signature (characterId, title) and
+    // new object signature ({ character_id, title, type, participants })
+    let payload;
+    if (
+      characterIdOrOptions &&
+      typeof characterIdOrOptions === 'object' &&
+      !Array.isArray(characterIdOrOptions)
+    ) {
+      payload = { ...characterIdOrOptions };
+    } else {
+      payload = {
+        character_id: characterIdOrOptions,
+        title: maybeTitle || undefined,
+      };
+    }
+
+    if (!payload.character_id) {
       console.warn('Cannot create conversation: No character ID provided');
       return null;
     }
@@ -162,10 +178,7 @@ export const ConversationProvider = ({ children }) => {
     setError(null);
     
     try {
-      const data = await conversationRepository.createConversation({
-        character_id: characterId,
-        title: title || undefined
-      });
+      const data = await conversationRepository.createConversation(payload);
       
       // Update the conversations list if we have it
       if (conversations.length > 0) {

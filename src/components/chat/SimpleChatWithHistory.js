@@ -507,13 +507,6 @@ const SimpleChatWithHistory = () => {
                                             _jsxs("div", { 
                                                 className: "flex space-x-2",
                                                 children: [
-                                                    isAuthenticated && (
-                                                        _jsx("button", { 
-                                                            onClick: goToConversations, 
-                                                            className: "text-sm px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
-                                                            children: "My Conversations" 
-                                                        })
-                                                    ),
                                                     _jsx("button", { 
                                                         onClick: resetChat, 
                                                         id: "backBtn", 
