@@ -2,15 +2,19 @@ import { supabase } from '../services/supabase';
 import { getOwnerSlug } from '../services/tierSettingsService';
 
 export const bibleStudiesRepository = {
-  async listStudies({ ownerSlug, includePrivate = false } = {}) {
+  async listStudies({ ownerSlug, includePrivate = false, allOwners = false } = {}) {
     try {
-      const org = ownerSlug || getOwnerSlug();
+      const org = (ownerSlug || getOwnerSlug() || '').trim();
+      const wantAll = allOwners || org === '__ALL__' || org === '*';
       
       let query = supabase
         .from('bible_studies')
         .select('*')
-        .eq('owner_slug', org)
         .order('created_at', { ascending: false });
+      
+      if (!wantAll) {
+        query = query.eq('owner_slug', org.toLowerCase());
+      }
       
       if (!includePrivate) {
         query = query.eq('visibility', 'public');

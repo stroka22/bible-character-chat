@@ -5,6 +5,7 @@ import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepositor
 import { characterRepository } from '../../repositories/characterRepository';
 import { getOwnerSlug } from '../../services/tierSettingsService';
 import { supabase } from '../../services/supabase';
+import { useAuth } from '../../contexts/AuthContext.tsx';
 
 /**
  * AdminStudiesPage
@@ -16,6 +17,7 @@ import { supabase } from '../../services/supabase';
  * a breadcrumb back-link.
  */
 const AdminStudiesPage = ({ embedded = false }) => {
+  const { role } = useAuth();
   // Main data states
   const [studies, setStudies] = useState([]);
   const [characters, setCharacters] = useState([]);
@@ -29,7 +31,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [showStudyForm, setShowStudyForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
   const [ownerSlug, setOwnerSlug] = useState(getOwnerSlug());
-  const [ownerOptions, setOwnerOptions] = useState([getOwnerSlug(), 'faithtalkai', 'default']);
+  const [ownerOptions, setOwnerOptions] = useState(['__ALL__', getOwnerSlug(), 'faithtalkai', 'default']);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
   
   // Form states
@@ -76,9 +78,11 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const fetchStudies = async (slugOverride) => {
     setIsLoading(true);
     try {
+      const wantAll = (slugOverride || ownerSlug) === '__ALL__';
       const data = await bibleStudiesRepository.listStudies({ 
         ownerSlug: slugOverride || ownerSlug, 
-        includePrivate: true 
+        includePrivate: true,
+        allOwners: wantAll,
       });
       setStudies(data);
       setError(null);
@@ -98,6 +102,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
         .select('owner_slug');
       if (!error && Array.isArray(data)) {
         const uniques = Array.from(new Set([
+          '__ALL__',
           ownerSlug,
           'faithtalkai',
           'default',
@@ -357,13 +362,13 @@ const AdminStudiesPage = ({ embedded = false }) => {
           ]
         }),
 
-        /* Owner selector + Series quick actions */
+        /* Owner selector (visible only to superadmin) + Series quick actions */
         _jsxs("div", {
           className: embedded ? "mb-6 bg-white rounded-lg p-4 border border-gray-200 shadow-md" : "mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15 shadow-lg",
           children: [
             _jsxs("div", { className: "flex flex-wrap items-center gap-3 mb-2", children: [
               _jsx("h3", { className: embedded ? "text-lg font-semibold text-gray-800" : "text-lg font-semibold text-yellow-300", children: "Study Series" }),
-              _jsxs("div", { className: "ml-auto flex items-center gap-2", children: [
+              (role === 'superadmin') && _jsxs("div", { className: "ml-auto flex items-center gap-2", children: [
                 _jsx("label", { className: embedded ? "text-sm text-gray-700" : "text-sm text-blue-200", children: "Owner" }),
                 _jsxs("select", {
                   value: ownerSlug,
@@ -372,7 +377,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                     ? "text-sm bg-white border border-gray-300 text-gray-900 rounded-md py-1 px-2"
                     : "text-sm bg-white/80 text-blue-900 rounded-md py-1 px-2",
                   children: ownerOptions.map(opt => (
-                    _jsx("option", { value: opt, children: opt }, `owner-${opt}`)
+                    _jsx("option", { value: opt, children: opt === '__ALL__' ? 'All owners' : opt }, `owner-${opt}`)
                   ))
                 })
               ] })
