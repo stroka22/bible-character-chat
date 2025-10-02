@@ -4,6 +4,7 @@ import AdminSeriesPage from './AdminSeriesPage.jsx';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 import { characterRepository } from '../../repositories/characterRepository';
 import { getOwnerSlug } from '../../services/tierSettingsService';
+import { supabase } from '../../services/supabase';
 
 /**
  * AdminStudiesPage
@@ -28,6 +29,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [showStudyForm, setShowStudyForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
   const [ownerSlug, setOwnerSlug] = useState(getOwnerSlug());
+  const [ownerOptions, setOwnerOptions] = useState([getOwnerSlug(), 'faithtalkai', 'default']);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
   
   // Form states
@@ -58,6 +60,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
   useEffect(() => {
     fetchStudies();
     fetchCharacters();
+    fetchOwnerOptions();
   }, []);
   
   // Load lessons when a study is selected
@@ -70,11 +73,11 @@ const AdminStudiesPage = ({ embedded = false }) => {
   }, [selectedStudy]);
   
   // Fetch all studies for current owner
-  const fetchStudies = async () => {
+  const fetchStudies = async (slugOverride) => {
     setIsLoading(true);
     try {
       const data = await bibleStudiesRepository.listStudies({ 
-        ownerSlug, 
+        ownerSlug: slugOverride || ownerSlug, 
         includePrivate: true 
       });
       setStudies(data);
@@ -84,6 +87,28 @@ const AdminStudiesPage = ({ embedded = false }) => {
       setError('Failed to load studies. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch distinct owner slugs from existing rows to populate selector
+  const fetchOwnerOptions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bible_studies')
+        .select('owner_slug');
+      if (!error && Array.isArray(data)) {
+        const uniques = Array.from(new Set([
+          ownerSlug,
+          'faithtalkai',
+          'default',
+          ...data
+            .map(r => (r?.owner_slug || '').trim())
+            .filter(Boolean),
+        ]));
+        setOwnerOptions(uniques);
+      }
+    } catch (e) {
+      // Non-fatal; keep defaults
     }
   };
   
@@ -131,6 +156,15 @@ const AdminStudiesPage = ({ embedded = false }) => {
       console.error('Error saving study:', err);
       setError('Failed to save study: ' + err.message);
     }
+  };
+
+  // When the owner changes, refresh studies and reset selection/forms
+  const handleOwnerChange = async (e) => {
+    const value = e?.target ? e.target.value : String(e || '').trim();
+    setOwnerSlug(value);
+    setSelectedStudy(null);
+    setSelectedLesson(null);
+    await fetchStudies(value);
   };
   
   // Create or update a lesson
@@ -323,11 +357,26 @@ const AdminStudiesPage = ({ embedded = false }) => {
           ]
         }),
 
-        /* Series quick actions */
+        /* Owner selector + Series quick actions */
         _jsxs("div", {
           className: embedded ? "mb-6 bg-white rounded-lg p-4 border border-gray-200 shadow-md" : "mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15 shadow-lg",
           children: [
-            _jsx("h3", { className: embedded ? "text-lg font-semibold text-gray-800 mb-2" : "text-lg font-semibold text-yellow-300 mb-2", children: "Study Series" }),
+            _jsxs("div", { className: "flex flex-wrap items-center gap-3 mb-2", children: [
+              _jsx("h3", { className: embedded ? "text-lg font-semibold text-gray-800" : "text-lg font-semibold text-yellow-300", children: "Study Series" }),
+              _jsxs("div", { className: "ml-auto flex items-center gap-2", children: [
+                _jsx("label", { className: embedded ? "text-sm text-gray-700" : "text-sm text-blue-200", children: "Owner" }),
+                _jsxs("select", {
+                  value: ownerSlug,
+                  onChange: handleOwnerChange,
+                  className: embedded
+                    ? "text-sm bg-white border border-gray-300 text-gray-900 rounded-md py-1 px-2"
+                    : "text-sm bg-white/80 text-blue-900 rounded-md py-1 px-2",
+                  children: ownerOptions.map(opt => (
+                    _jsx("option", { value: opt, children: opt }, `owner-${opt}`)
+                  ))
+                })
+              ] })
+            ] }),
             _jsxs("div", { className: "flex flex-wrap gap-3", children: [
               _jsx("button", { onClick: () => setShowSeriesManager(v => !v), className: embedded ? "px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg", children: showSeriesManager ? "Hide Manager" : "Manage Series" })
             ] })
