@@ -5,6 +5,9 @@ import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { usePremium } from '../hooks/usePremium';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
+import { supabase } from '../services/supabase';
+import { getOwnerSlug } from '../services/tierSettingsService';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 const StudiesPage = () => {
   const [studies, setStudies] = useState([]);
@@ -12,12 +15,18 @@ const StudiesPage = () => {
   const [error, setError] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const { isPremium } = usePremium();
+  const { role } = useAuth();
+
+  // Owner filter (superadmin only)
+  const [ownerSlug, setOwnerSlug] = useState((getOwnerSlug() || '').toLowerCase());
+  const [ownerOptions, setOwnerOptions] = useState(['__ALL__', (getOwnerSlug() || '').toLowerCase(), 'faithtalkai']);
 
   useEffect(() => {
     const fetchStudies = async () => {
       try {
         setIsLoading(true);
-        const data = await bibleStudiesRepository.listStudies();
+        const wantAll = ownerSlug === '__ALL__';
+        const data = await bibleStudiesRepository.listStudies({ ownerSlug, includePrivate: false, allOwners: wantAll });
         setStudies(data);
         setError(null);
       } catch (err) {
@@ -29,7 +38,28 @@ const StudiesPage = () => {
     };
 
     fetchStudies();
-  }, []);
+  }, [ownerSlug]);
+
+  // Populate owner options for superadmin view
+  useEffect(() => {
+    const fetchOwnerOptions = async () => {
+      try {
+        const { data, error } = await supabase.from('bible_studies').select('owner_slug');
+        if (!error && Array.isArray(data)) {
+          const uniques = Array.from(new Set([
+            '__ALL__',
+            (getOwnerSlug() || '').toLowerCase(),
+            'faithtalkai',
+            ...data.map(r => (r?.owner_slug || '').trim().toLowerCase()).filter(Boolean),
+          ]));
+          setOwnerOptions(uniques);
+        }
+      } catch (e) {
+        /* non-fatal */
+      }
+    };
+    if (role === 'superadmin') fetchOwnerOptions();
+  }, [role]);
 
   const handleStudyClick = (study) => {
     if (study.is_premium && !isPremium) {
@@ -91,7 +121,11 @@ const StudiesPage = () => {
                   _jsx("p", {
                     className: "text-blue-100 text-lg max-w-3xl mx-auto",
                     children: "Explore the Bible through guided studies led by biblical characters. Deepen your understanding with scripture-based lessons and reflections."
-                  })
+                  }),
+                  (role === 'superadmin') && _jsxs("div", { className: "mt-4 flex items-center justify-center gap-2", children: [
+                    _jsx("label", { className: "text-sm text-blue-200", children: "Owner" }),
+                    _jsxs("select", { value: ownerSlug, onChange: (e) => setOwnerSlug(e.target.value), className: "text-sm bg-white/80 text-blue-900 rounded-md py-1 px-2", children: ownerOptions.map(opt => _jsx("option", { value: opt, children: opt === '__ALL__' ? 'All owners' : opt }, `owner-${opt}`)) })
+                  ]})
                 ]
               }),
 
