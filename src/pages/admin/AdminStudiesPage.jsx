@@ -31,7 +31,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [showStudyForm, setShowStudyForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
   const [ownerSlug, setOwnerSlug] = useState(getOwnerSlug());
-  const [ownerOptions, setOwnerOptions] = useState(['__ALL__', getOwnerSlug(), 'faithtalkai', 'default']);
+  const [ownerOptions, setOwnerOptions] = useState(['__ALL__', (getOwnerSlug() || '').toLowerCase(), 'faithtalkai', 'default']);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
   
   // Form states
@@ -103,11 +103,11 @@ const AdminStudiesPage = ({ embedded = false }) => {
       if (!error && Array.isArray(data)) {
         const uniques = Array.from(new Set([
           '__ALL__',
-          ownerSlug,
+          (ownerSlug || '').toLowerCase(),
           'faithtalkai',
           'default',
           ...data
-            .map(r => (r?.owner_slug || '').trim())
+            .map(r => (r?.owner_slug || '').trim().toLowerCase())
             .filter(Boolean),
         ]));
         setOwnerOptions(uniques);
