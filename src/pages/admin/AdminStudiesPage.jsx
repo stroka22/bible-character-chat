@@ -382,7 +382,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                 })
               ] })
             ] }),
-            _jsxs("div", { className: "flex flex-wrap gap-3", children: [
+            (role === 'superadmin') && _jsxs("div", { className: "flex flex-wrap gap-3", children: [
               _jsx("button", { onClick: () => setShowSeriesManager(v => !v), className: embedded ? "px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg", children: showSeriesManager ? "Hide Manager" : "Manage Series" })
             ] })
           ]
