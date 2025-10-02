@@ -171,7 +171,7 @@ const Header = () => {
           ) : isAuthenticated ? (
             /* Desktop: My Walk pill + user dropdown */
             <div className="flex items-center space-x-3">
-              {(isPremiumUser || (isAdmin && isAdmin())) && (
+              {isAuthenticated && (
                 <Link
                   to="/my-walk"
                   aria-label="My Walk"
@@ -388,7 +388,7 @@ const Header = () => {
                   </div>
                   <span className="text-white text-sm">{user?.email || 'User'}</span>
                 </div>
-                {(isPremiumUser || (isAdmin && isAdmin())) && (
+                {isAuthenticated && (
                   <Link
                     to="/my-walk"
                     className="block w-full px-3 py-2 mt-3 text-sm font-semibold text-center bg-yellow-400 text-blue-900 rounded-full hover:bg-yellow-300 transition-colors"
