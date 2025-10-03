@@ -206,7 +206,7 @@ const StudiesPage = () => {
                         }
                       },
                       className: `
-                        block bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden
+                        relative block bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden
                         border border-white/15 transition-all duration-300
                         hover:bg-white/15 hover:shadow-lg hover:-translate-y-1
                         ${study.is_premium && !isPremium ? 'relative' : ''}
@@ -256,7 +256,7 @@ const StudiesPage = () => {
                           /* Premium overlay */
                           (study.is_premium && !isPremium) && (
                             _jsx("div", {
-                              className: "absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center",
+                              className: "pointer-events-none absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center",
                               children: _jsx("div", {
                                 className: "px-4 py-2 bg-yellow-400 text-blue-900 font-medium rounded-lg",
                                 children: "Upgrade to Access"
