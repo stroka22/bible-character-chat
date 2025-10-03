@@ -161,9 +161,15 @@ export const ChatProvider = ({ children }) => {
      *  Premium gating
      * ------------------------------------------------------------ */
     // 1) Character access
+    // Allow chats launched from a Bible study/series context to bypass
+    // character premium gating. The study/series page already enforces
+    // access (free vs premium). Presence of systemContext indicates
+    // we're in such a guided context.
+    const isGuidedContext = !!systemContext;
     if (
       character &&
       !isPremium &&
+      !isGuidedContext &&
       !isCharacterFree(character, tierSettings)
     ) {
       setError('This is a premium character. Please upgrade to chat.');
