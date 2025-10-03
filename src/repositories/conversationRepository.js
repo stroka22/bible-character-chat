@@ -4,7 +4,7 @@ import { supabase } from '../services/supabase';
 // ID type (string / UUID / number) the rest of the app supplies.
 import { characterRepository } from './characterRepository';
 // Supabase-backed chat repository (CRUD for chats/messages)
-import { chatRepository } from './chatRepository';
+import { chatRepository, chatRepositoryMode } from './chatRepository';
 
 /* eslint-disable no-console */
 console.log('[ConversationRepository] Initialised – will use Supabase when authenticated, otherwise mock localStorage');
@@ -142,11 +142,11 @@ export const conversationRepository = {
    */
   async createConversation(conversation = {}) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-
-      // Supabase-backed path for authenticated users (unless skip auth)
-      if (!skip && uid) {
+      // Prefer Supabase whenever a real user session exists, regardless of bypass flags
+      if (uid) {
+        // Ensure the lower-level chatRepository is in REAL mode
+        try { chatRepositoryMode.forceReal(); } catch {}
         const cid = normaliseCharacterId(conversation.character_id, conversation);
         const title = (typeof conversation.title === 'string' && conversation.title.trim())
           ? conversation.title.trim()
@@ -248,9 +248,9 @@ export const conversationRepository = {
     characterId = null
   } = {}) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-      if (!skip && uid) {
+      if (uid) {
+        try { chatRepositoryMode.forceReal(); } catch {}
         // Supabase-backed list
         const rows = await chatRepository.getUserChats(uid);
         const conversationsWithCharacters = await Promise.all(
@@ -353,9 +353,9 @@ export const conversationRepository = {
    */
   async getConversationWithMessages(conversationId, { includeDeleted = false } = {}) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-      if (!skip && uid) {
+      if (uid) {
+        try { chatRepositoryMode.forceReal(); } catch {}
         const conv = await chatRepository.getChatById(conversationId);
         if (!conv) throw new Error('Conversation not found');
         let character = null;
@@ -413,10 +413,10 @@ export const conversationRepository = {
    */
   async addMessage(messageData, role) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
 
-      if (!skip && uid) {
+      if (uid) {
+        try { chatRepositoryMode.forceReal(); } catch {}
         let content, messageRole, conversationId;
         if (typeof messageData === 'string') {
           content = messageData;
@@ -501,9 +501,9 @@ export const conversationRepository = {
    */
   async updateConversation(conversationId, updates = {}) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-      if (!skip && uid) {
+      if (uid) {
+        try { chatRepositoryMode.forceReal(); } catch {}
         return await chatRepository.updateChat(conversationId, updates);
       }
       console.log('[MOCK] Updating conversation:', conversationId, updates);
@@ -542,9 +542,9 @@ export const conversationRepository = {
    */
   async deleteConversation(conversationId) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-      if (!skip && uid) {
+      if (uid) {
+        try { chatRepositoryMode.forceReal(); } catch {}
         await chatRepository.deleteChat(conversationId);
         return true;
       }
@@ -603,9 +603,8 @@ export const conversationRepository = {
    */
   async shareConversation(conversationId) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-      if (!skip && uid) {
+      if (uid) {
         console.warn('[ConversationRepository] Share not implemented in Supabase path – using mock fallback');
       }
       console.log('[MOCK] Sharing conversation:', conversationId);
@@ -640,9 +639,8 @@ export const conversationRepository = {
    */
   async getSharedConversation(shareCode) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-      if (!skip && uid) {
+      if (uid) {
         console.warn('[ConversationRepository] getSharedConversation not implemented in Supabase path – using mock fallback');
       }
       console.log('[MOCK] Fetching shared conversation with code:', shareCode);
@@ -690,9 +688,8 @@ export const conversationRepository = {
    */
   async stopSharing(conversationId) {
     try {
-      const skip = isSkipAuth();
       const uid = await getCurrentUserId();
-      if (!skip && uid) {
+      if (uid) {
         console.warn('[ConversationRepository] stopSharing not implemented in Supabase path – using mock fallback');
       }
       console.log('[MOCK] Stopping sharing for conversation:', conversationId);

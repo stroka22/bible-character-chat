@@ -14,6 +14,9 @@ import { usePremium } from '../../hooks/usePremium';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 import { bibleSeriesRepository } from '../../repositories/bibleSeriesRepository';
 
+// Feature flag: enable/disable local chat cache usage for resume fallback
+const ENABLE_LOCAL_CHAT_CACHE = false;
+
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
 const getSafeAvatarUrl = (name, url) => {
@@ -204,41 +207,8 @@ const SimpleChatWithHistory = () => {
     
     const userMessageCount = messages.filter((m) => m.role === 'user').length;
 
-    /* ------------------------------------------------------------------
-     * Auto-save conversation when launched from a Bible-study link
-     * ----------------------------------------------------------------*/
-    const autoSavedRef = useRef(false);
+    const autoSavedRef = useRef(false); // retained but unused with autosave disabled
     const introPostedRef = useRef(false);
-
-    useEffect(() => {
-      // Already handled or impossible to save
-      if (autoSavedRef.current || isChatSaved !== false) return;
-      if (!character || !isAuthenticated) return;
-      if (messages.length === 0) return; // avoid saving empty chat
-
-      const params = new URLSearchParams(location.search);
-      if (!params.get('study')) return; // only auto-save when coming from a study
-
-      // Ensure we have study/lesson metadata to format the title
-      if (!studyMeta || !lessonMeta) return;
-
-      const formattedTitle = `[Study] ${studyMeta.title} – Lesson ${
-        (lessonMeta.order_index ?? parseInt(params.get('lesson') || '0', 10)) + 1
-      }`;
-
-      // All conditions met – save once with formatted title
-      saveChat(formattedTitle);
-      autoSavedRef.current = true;
-    }, [
-      character,
-      isChatSaved,
-      isAuthenticated,
-      messages.length,
-      location.search,
-      saveChat,
-      studyMeta,
-      lessonMeta
-    ]);
 
     /* ------------------------------------------------------------------
      * Auto-post introduction when launched from a Bible-study link
@@ -348,7 +318,28 @@ const SimpleChatWithHistory = () => {
             try {
                 const conv = await fetchConversationWithMessages(conversationId);
                 if (conv) {
-                    hydrateFromConversation(conv);
+                    // Fallback: if no messages returned (e.g., due to RLS),
+                    // try to hydrate from local cache written during save/send.
+                    if (ENABLE_LOCAL_CHAT_CACHE) {
+                      let finalConv = conv;
+                      try {
+                        if (!conv.messages || conv.messages.length === 0) {
+                          const cacheKey = `chat-cache-${conversationId}`;
+                          const cached = localStorage.getItem(cacheKey);
+                          if (cached) {
+                            const parsed = JSON.parse(cached);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                              finalConv = { ...conv, messages: parsed };
+                            }
+                          }
+                        }
+                      } catch (e) {
+                        console.warn('[SimpleChatWithHistory] Cache hydration failed:', e);
+                      }
+                      hydrateFromConversation(finalConv);
+                    } else {
+                      hydrateFromConversation(conv);
+                    }
                 }
             } catch (err) {
                 console.error('[SimpleChatWithHistory] Failed to load conversation:', err);

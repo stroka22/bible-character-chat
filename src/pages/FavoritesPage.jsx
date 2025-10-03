@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
+import userFavoritesRepository from '../repositories/userFavoritesRepository';
+import userSettingsRepository from '../repositories/userSettingsRepository';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CharacterCard from '../components/CharacterCard.jsx';
@@ -17,68 +19,42 @@ const FavoritesPage = () => {
   const [characters, setCharacters] = useState([]);
   const [favoriteCharacters, setFavoriteCharacters] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [featuredId, setFeaturedId] = useState(null);
   const [error, setError] = useState(null);
 
-  // Load all characters and filter favorites
+  // Load all characters and server favorites
   useEffect(() => {
     const fetchCharactersAndFavorites = async () => {
       setIsLoading(true);
       setError(null);
       
       try {
-        // Load all characters
         const allCharacters = await characterRepository.getAll();
         setCharacters(allCharacters);
-        
-        // Load favorites from localStorage
-        try {
-          const savedFavorites = localStorage.getItem('favoriteCharacters');
-          if (savedFavorites) {
-            const favoriteIds = JSON.parse(savedFavorites);
-            // Filter characters to get only favorites
-            const favorites = allCharacters.filter(char => 
-              favoriteIds.includes(char.id)
-            );
-            setFavoriteCharacters(favorites);
-          }
-        } catch (err) {
-          console.error('Error loading favorite characters:', err);
-          setError('Failed to load your favorite characters.');
-        }
+        const favoriteIds = await userFavoritesRepository.getFavoriteIds(user?.id);
+        const favorites = allCharacters.filter(char => favoriteIds.includes(char.id));
+        setFavoriteCharacters(favorites);
+        const feat = await userSettingsRepository.getFeaturedCharacterId(user?.id);
+        setFeaturedId(feat);
       } catch (err) {
-        console.error('Failed to fetch characters:', err);
-        setError('Failed to load characters. Please try again later.');
+        console.error('Failed to fetch favorites or featured:', err);
+        setError('Failed to load your favorites.');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchCharactersAndFavorites();
-  }, []);
+  }, [user?.id]);
 
   // Handle toggling a character as favorite
-  const handleToggleFavorite = (characterId) => {
+  const handleToggleFavorite = async (characterId) => {
     try {
-      // Get current favorites from localStorage
-      const savedFavorites = localStorage.getItem('favoriteCharacters') || '[]';
-      const favoriteIds = JSON.parse(savedFavorites);
-      
-      // Toggle favorite status
-      let updatedFavoriteIds;
-      if (favoriteIds.includes(characterId)) {
-        updatedFavoriteIds = favoriteIds.filter(id => id !== characterId);
-      } else {
-        updatedFavoriteIds = [...favoriteIds, characterId];
-      }
-      
-      // Save updated favorites to localStorage
-      localStorage.setItem('favoriteCharacters', JSON.stringify(updatedFavoriteIds));
-      
-      // Update state with filtered characters
-      const updatedFavorites = characters.filter(char => 
-        updatedFavoriteIds.includes(char.id)
-      );
-      setFavoriteCharacters(updatedFavorites);
+      const isFav = favoriteCharacters.some((c) => c.id === characterId);
+      await userFavoritesRepository.setFavorite(user?.id, characterId, !isFav);
+      const favoriteIds = await userFavoritesRepository.getFavoriteIds(user?.id);
+      const favorites = characters.filter(char => favoriteIds.includes(char.id));
+      setFavoriteCharacters(favorites);
     } catch (err) {
       console.error('Error updating favorite characters:', err);
       setError('Failed to update favorites. Please try again.');
@@ -86,15 +62,12 @@ const FavoritesPage = () => {
   };
 
   // Handle setting a character as featured
-  const handleSetAsFeatured = (character) => {
+  const handleSetAsFeatured = async (character) => {
     if (!character) return;
-    
     try {
-      // Save to localStorage
-      localStorage.setItem('featuredCharacter', character.name);
-      
-      // Show confirmation
-      alert(`${character.name} is now your featured character!`);
+      await userSettingsRepository.setFeaturedCharacterId(user?.id, character.id);
+      setFeaturedId(character.id);
+      alert(`${character.name} is now your featured character across devices!`);
     } catch (error) {
       console.error('Error setting featured character:', error);
     }
@@ -194,7 +167,7 @@ const FavoritesPage = () => {
                 onSelect={(char) => window.location.href = `/chat?character=${char.id}`}
                 isFavorite={true}
                 onToggleFavorite={() => handleToggleFavorite(character.id)}
-                isFeatured={localStorage.getItem('featuredCharacter') === character.name}
+                isFeatured={featuredId === character.id}
                 onSetAsFeatured={() => handleSetAsFeatured(character)}
               />
             ))}

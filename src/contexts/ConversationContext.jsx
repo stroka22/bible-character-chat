@@ -196,9 +196,13 @@ export const ConversationProvider = ({ children }) => {
         }
       }
 
-      // Update the conversations list if we have it
-      if (conversations.length > 0 && data) {
-        setConversations(prevConversations => [data, ...prevConversations]);
+      // Update the conversations list immediately so other pages (like My Walk)
+      // will see the new conversation without requiring a manual refresh.
+      if (data) {
+        setConversations(prevConversations => [data, ...(prevConversations || [])]);
+        try {
+          window.dispatchEvent(new CustomEvent('conversations:changed'));
+        } catch {}
       }
       
       setActiveConversation(data || null);

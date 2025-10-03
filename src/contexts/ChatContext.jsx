@@ -17,6 +17,8 @@ const ChatContext = createContext();
 // Provider component
 export const ChatProvider = ({ children }) => {
   console.log('[ChatContext] Initializing provider');
+  // Feature flag: enable/disable local chat cache usage for resume fallback
+  const ENABLE_LOCAL_CHAT_CACHE = false;
   
   // Chat state
   const [messages, setMessages] = useState([]);
@@ -98,6 +100,27 @@ export const ChatProvider = ({ children }) => {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  /* ------------------------------------------------------------------
+   * Local cache: persist messages for the current chatId
+   * This enables resume fallback when Supabase policies return 0 rows
+   * for messages (we hydrate from this cache on the chat screen).
+   * ------------------------------------------------------------------ */
+  useEffect(() => {
+    if (!ENABLE_LOCAL_CHAT_CACHE) return;
+    if (!chatId) return;
+    try {
+      const cached = (messages || []).map((m) => ({
+        id: m.id,
+        role: m.role,
+        content: m.content,
+        created_at: m.timestamp || new Date().toISOString(),
+      }));
+      localStorage.setItem(`chat-cache-${chatId}`, JSON.stringify(cached));
+    } catch (e) {
+      console.warn('[ChatContext] Failed to write chat cache:', e);
+    }
+  }, [chatId, messages]);
 
   /**
    * Generate a unique message ID

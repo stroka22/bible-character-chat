@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useConversation } from '../contexts/ConversationContext.jsx';
 import { characterRepository } from '../repositories/characterRepository';
+import userFavoritesRepository from '../repositories/userFavoritesRepository';
+import userSettingsRepository from '../repositories/userSettingsRepository';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CharacterCard from '../components/CharacterCard.jsx';
+import conversationRepository from '../repositories/conversationRepository';
 
 const MyWalkPage = () => {
   const { user, loading, isAuthenticated } = useAuth();
@@ -21,6 +24,9 @@ const MyWalkPage = () => {
   // State for favorite characters
   const [favoriteCharacters, setFavoriteCharacters] = useState([]);
   const [favLoading, setFavLoading] = useState(true);
+  const [featuredId, setFeaturedId] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importSummary, setImportSummary] = useState(null);
   
   // State to track if we've attempted to load conversations
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
@@ -29,13 +35,12 @@ const MyWalkPage = () => {
   const [renamingConversationId, setRenamingConversationId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
 
-  // Load favorite characters on mount
+  // Load favorite characters from server (fallback to localStorage)
   useEffect(() => {
     const loadFavorites = async () => {
       try {
         const allCharacters = await characterRepository.getAll();
-        const saved = localStorage.getItem('favoriteCharacters');
-        const favIds = saved ? JSON.parse(saved) : [];
+        const favIds = await userFavoritesRepository.getFavoriteIds(user?.id);
         const favChars = allCharacters.filter((c) => favIds.includes(c.id));
         setFavoriteCharacters(favChars);
       } catch (e) {
@@ -45,7 +50,20 @@ const MyWalkPage = () => {
       }
     };
     loadFavorites();
-  }, []);
+  }, [user?.id]);
+
+  // Load featured character id from server
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const id = await userSettingsRepository.getFeaturedCharacterId(user?.id);
+        setFeaturedId(id);
+      } catch (e) {
+        setFeaturedId(null);
+      }
+    };
+    run();
+  }, [user?.id]);
 
   // Fetch conversations when authenticated
   useEffect(() => {
@@ -61,6 +79,18 @@ const MyWalkPage = () => {
     }
   }, [user, fetchConversations]);
 
+  // Listen for cross-page conversation changes to refresh the list
+  useEffect(() => {
+    const handler = () => {
+      if (typeof fetchConversations === 'function') {
+        fetchConversations();
+        setHasAttemptedLoad(true);
+      }
+    };
+    window.addEventListener('conversations:changed', handler);
+    return () => window.removeEventListener('conversations:changed', handler);
+  }, [fetchConversations]);
+
   // Add a failsafe timeout to ensure hasAttemptedLoad gets set to true
   useEffect(() => {
     if (!hasAttemptedLoad) {
@@ -74,58 +104,98 @@ const MyWalkPage = () => {
   }, [hasAttemptedLoad]);
 
   // Toggle a character in favorites
-  const handleToggleFavoriteCharacter = (charId) => {
-    setFavoriteCharacters((prev) => {
-      let updated;
-      if (prev.some((c) => c.id === charId)) {
-        // remove
-        updated = prev.filter((c) => c.id !== charId);
-      } else {
-        // add – find character details from repository-loaded list first
-        const charObj =
-          favoriteCharacters.find((c) => c.id === charId) ||
-          null; /* fallback if not in current list */;
-        if (charObj) {
-          updated = [...prev, charObj];
-        } else {
-          // character not present locally – leave list unchanged
-          updated = prev;
-        }
-      }
-
-      // Persist ID list (not full objects) to localStorage
-      try {
-        localStorage.setItem(
-          'favoriteCharacters',
-          JSON.stringify(updated.map((c) => c.id)),
-        );
-        /* Manual StorageEvent for cross-tab sync */
-        window.dispatchEvent(
-          new StorageEvent('storage', {
-            key: 'favoriteCharacters',
-            newValue: JSON.stringify(updated.map((c) => c.id)),
-          }),
-        );
-      } catch (e) {
-        console.error('Failed to update favoriteCharacters in localStorage', e);
-      }
-
-      return updated;
-    });
+  const handleToggleFavoriteCharacter = async (charId) => {
+    try {
+      const isFav = favoriteCharacters.some((c) => c.id === charId);
+      await userFavoritesRepository.setFavorite(user?.id, charId, !isFav);
+      // re-load list from server for truth
+      const allCharacters = await characterRepository.getAll();
+      const favIds = await userFavoritesRepository.getFavoriteIds(user?.id);
+      const favChars = allCharacters.filter((c) => favIds.includes(c.id));
+      setFavoriteCharacters(favChars);
+    } catch (e) {
+      console.error('Failed to toggle favorite:', e);
+    }
   };
 
   // Handle setting a character as featured
-  const handleSetAsFeatured = (character) => {
+  const handleSetAsFeatured = async (character) => {
     if (!character) return;
     
     try {
-      // Save to localStorage
-      localStorage.setItem('featuredCharacter', character.name);
-      
-      // Show confirmation
-      alert(`${character.name} is now your featured character!`);
+      await userSettingsRepository.setFeaturedCharacterId(user?.id, character.id);
+      alert(`${character.name} is now your featured character across devices!`);
     } catch (error) {
       console.error('Error setting featured character:', error);
+    }
+  };
+
+  // Detect local mock conversations for optional import
+  const getLocalMockConversations = () => {
+    try {
+      const raw = localStorage.getItem('mockConversationStorage');
+      if (!raw) return { conversations: [], messages: [] };
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.conversations)) return { conversations: [], messages: [] };
+      return {
+        conversations: parsed.conversations || [],
+        messages: parsed.messages || []
+      };
+    } catch {
+      return { conversations: [], messages: [] };
+    }
+  };
+
+  const handleImportLocalConversations = async () => {
+    if (!user?.id) {
+      alert('Please sign in to import local conversations.');
+      return;
+    }
+    const { conversations: localConvs, messages: localMsgs } = getLocalMockConversations();
+    if (!localConvs.length) {
+      alert('No local conversations found to import.');
+      return;
+    }
+    if (!window.confirm(`Import ${localConvs.length} local conversation(s) to your account?`)) return;
+
+    setImporting(true);
+    const results = { created: 0, failed: 0 };
+    try {
+      for (const conv of localConvs) {
+        try {
+          const created = await conversationRepository.createConversation({
+            character_id: conv.character_id,
+            title: conv.title || 'Conversation',
+          });
+          if (!created?.id) throw new Error('Create returned no id');
+          const convMsgs = localMsgs
+            .filter((m) => m.conversation_id === conv.id)
+            .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+          for (const m of convMsgs) {
+            await conversationRepository.addMessage({
+              conversation_id: created.id,
+              role: m.role,
+              content: m.content,
+              metadata: m.metadata || {}
+            });
+          }
+          results.created += 1;
+        } catch (e) {
+          console.warn('Failed to import one conversation:', e);
+          results.failed += 1;
+        }
+      }
+      setImportSummary(results);
+      // After import, refresh server list
+      await fetchConversations?.();
+      // Offer to clear local storage copy
+      try {
+        localStorage.removeItem('mockConversationStorage');
+        localStorage.removeItem('bypass_auth');
+      } catch {}
+      alert(`Import complete. Created: ${results.created}. Failed: ${results.failed}.`);
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -220,6 +290,28 @@ const MyWalkPage = () => {
           </Link>
         </div>
 
+        {/* Local import banner if local mock data exists */}
+        {(() => {
+          const { conversations: localConvs } = getLocalMockConversations();
+          if (!user || !localConvs.length) return null;
+          return (
+            <div className="bg-amber-900/40 border border-amber-400/50 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="text-amber-100">
+                  Detected {localConvs.length} local conversation{localConvs.length>1?'s':''}. Import them to your account so they’re available across devices.
+                </div>
+                <button
+                  onClick={handleImportLocalConversations}
+                  disabled={importing}
+                  className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors disabled:opacity-60"
+                >
+                  {importing ? 'Importing…' : `Import ${localConvs.length} conversation${localConvs.length>1?'s':''}`}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Error block */}
         {conversationsError && (
           <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-6">
@@ -241,7 +333,7 @@ const MyWalkPage = () => {
                   onSelect={(c) => (window.location.href = `/chat?character=${c.id}`)}
                   isFavorite={true}
                   onToggleFavorite={() => handleToggleFavoriteCharacter(char.id)}
-                  isFeatured={localStorage.getItem('featuredCharacter') === char.name}
+                  isFeatured={featuredId === char.id}
                   onSetAsFeatured={() => handleSetAsFeatured(char)}
                 />
               ))}

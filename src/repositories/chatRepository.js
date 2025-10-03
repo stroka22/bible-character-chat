@@ -8,6 +8,20 @@ import { mockChatRepository } from './mockChatRepository';
  */
 let useMock = false;
 
+// Expose minimal control hooks so higher layers can correct mode when
+// the auth state changes (e.g., force real Supabase mode when a user is
+// authenticated after a previous mock fallback).
+export const chatRepositoryMode = {
+    isMock: () => useMock,
+    forceReal: () => {
+        if (useMock) {
+            // eslint-disable-next-line no-console
+            console.warn('[chatRepository] Forcing real (Supabase) mode');
+        }
+        useMock = false;
+    }
+};
+
 const FALLBACK_STATUS = [403, 409]; // forbidden / conflict
 const FALLBACK_PG_CODES = ['23505']; // duplicate key, etc.
 
