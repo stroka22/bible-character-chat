@@ -199,7 +199,7 @@ export const bibleStudiesRepository = {
       
       const { data, error } = await supabase
         .from('user_study_progress')
-        .upsert(payload)
+        .upsert(payload, { onConflict: 'user_id,study_id' })
         .select('*')
         .maybeSingle();
       
