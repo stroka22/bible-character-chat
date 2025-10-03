@@ -296,7 +296,7 @@ export const ChatProvider = ({ children }) => {
    * Save the current chat
    * Repository will auto-generate a title if none is supplied
    */
-  const saveChat = useCallback(async () => {
+  const saveChat = useCallback(async (overrideTitle) => {
     // ------------------------------------------------------------------
     // Diagnostics + defensive checks
     // ------------------------------------------------------------------
@@ -333,9 +333,13 @@ export const ChatProvider = ({ children }) => {
       console.log('[ChatContext] Creating conversation via ConversationContext');
 
       // 1️⃣  Create conversation
-      const title = `Conversation with ${
-        character?.name ?? 'Unknown'
-      } - ${new Date().toLocaleDateString()}`;
+      const title = (
+        typeof overrideTitle === 'string' && overrideTitle.trim() !== ''
+      )
+        ? overrideTitle.trim()
+        : `Conversation with ${
+            character?.name ?? 'Unknown'
+          } - ${new Date().toLocaleDateString()}`;
       const newConversation = await createConversation(characterId, title);
 
       console.log('[ChatContext] Conversation created:', newConversation);

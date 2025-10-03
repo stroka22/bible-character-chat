@@ -1,22 +1,27 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { characterRepository } from '../repositories/characterRepository';
 import { usePremium } from '../hooks/usePremium';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
+import { useAuth } from '../contexts/AuthContext';
 
 const StudyLesson = () => {
   const { id, lessonIndex } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [study, setStudy] = useState(null);
   const [lesson, setLesson] = useState(null);
+  const [lessons, setLessons] = useState([]);
   const [character, setCharacter] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const { isPremium } = usePremium();
+  const [progress, setProgress] = useState(null);
+  const [isSavingProgress, setIsSavingProgress] = useState(false);
 
   useEffect(() => {
     const fetchLessonData = async () => {
@@ -50,6 +55,29 @@ const StudyLesson = () => {
         
         setLesson(lessonData);
         
+        // Fetch all lessons to know total and compute next/prev
+        const allLessons = await bibleStudiesRepository.listLessons(id);
+        setLessons(allLessons || []);
+        
+        // Fetch user progress
+        if (user?.id) {
+          const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
+          setProgress(p);
+          // Ensure current index is up-to-date on view
+          try {
+            setIsSavingProgress(true);
+            await bibleStudiesRepository.saveProgress({
+              userId: user.id,
+              studyId: id,
+              currentLessonIndex: parseInt(lessonIndex, 10)
+            });
+          } finally {
+            setIsSavingProgress(false);
+          }
+        } else {
+          setProgress(null);
+        }
+        
         // Fetch character if available
         if (studyData.character_id) {
           const characterData = await characterRepository.getById(studyData.character_id);
@@ -68,7 +96,69 @@ const StudyLesson = () => {
     if (id && lessonIndex !== undefined) {
       fetchLessonData();
     }
-  }, [id, lessonIndex, isPremium]);
+  }, [id, lessonIndex, isPremium, user?.id]);
+
+  const totalLessons = lessons?.length || 0;
+  const currentIndex = useMemo(() => parseInt(lessonIndex ?? '0', 10) || 0, [lessonIndex]);
+  const isCompleted = useMemo(() => {
+    const completed = Array.isArray(progress?.completed_lessons) ? progress.completed_lessons : [];
+    return completed.includes(currentIndex);
+  }, [progress, currentIndex]);
+
+  const handleToggleComplete = async () => {
+    if (!user?.id || !study) return;
+    try {
+      setIsSavingProgress(true);
+      const completed = Array.isArray(progress?.completed_lessons) ? [...progress.completed_lessons] : [];
+      const idx = completed.indexOf(currentIndex);
+      if (idx >= 0) {
+        completed.splice(idx, 1);
+      } else {
+        completed.push(currentIndex);
+        completed.sort((a, b) => a - b);
+      }
+      const updated = await bibleStudiesRepository.saveProgress({
+        userId: user.id,
+        studyId: id,
+        currentLessonIndex: currentIndex,
+        completedLessons: completed
+      });
+      setProgress(updated);
+    } catch (err) {
+      console.error('Error saving completion:', err);
+      setError('Failed to update progress. Please try again.');
+    } finally {
+      setIsSavingProgress(false);
+    }
+  };
+
+  const goToPrev = async () => {
+    const prev = Math.max(currentIndex - 1, 0);
+    if (prev === currentIndex) return;
+    if (user?.id) {
+      try {
+        setIsSavingProgress(true);
+        await bibleStudiesRepository.saveProgress({ userId: user.id, studyId: id, currentLessonIndex: prev });
+      } finally {
+        setIsSavingProgress(false);
+      }
+    }
+    navigate(`/studies/${id}/lesson/${prev}`);
+  };
+
+  const goToNext = async () => {
+    const next = Math.min(currentIndex + 1, Math.max(totalLessons - 1, 0));
+    if (next === currentIndex) return;
+    if (user?.id) {
+      try {
+        setIsSavingProgress(true);
+        await bibleStudiesRepository.saveProgress({ userId: user.id, studyId: id, currentLessonIndex: next });
+      } finally {
+        setIsSavingProgress(false);
+      }
+    }
+    navigate(`/studies/${id}/lesson/${next}`);
+  };
 
   const handleStartChat = () => {
     if (study?.is_premium && !isPremium) {
@@ -286,6 +376,24 @@ const StudyLesson = () => {
                         })
                       })
                     )
+                  ]
+                })
+              ),
+
+              /* Navigation & Progress Actions */
+              !isLoading && !error && study && lesson && (
+                _jsxs("div", {
+                  className: "mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15 flex flex-col md:flex-row md:items-center md:justify-between gap-3",
+                  children: [
+                    _jsxs("div", { className: "flex items-center gap-2", children: [
+                      _jsx("button", { onClick: () => navigate(`/studies/${id}`), className: "px-3 py-1.5 rounded-md bg-blue-700/40 text-blue-100 hover:bg-blue-700/60 transition-colors", children: "All lessons" }),
+                      _jsx("button", { onClick: goToPrev, disabled: currentIndex <= 0, className: `px-3 py-1.5 rounded-md transition-colors ${currentIndex <= 0 ? 'bg-gray-600/40 text-gray-300 cursor-not-allowed' : 'bg-blue-700/40 text-blue-100 hover:bg-blue-700/60'}`, children: "Previous" }),
+                      _jsx("button", { onClick: goToNext, disabled: totalLessons === 0 || currentIndex >= totalLessons - 1, className: `px-3 py-1.5 rounded-md transition-colors ${totalLessons === 0 || currentIndex >= totalLessons - 1 ? 'bg-gray-600/40 text-gray-300 cursor-not-allowed' : 'bg-blue-700/40 text-blue-100 hover:bg-blue-700/60'}`, children: "Next" })
+                    ]}),
+                    _jsxs("div", { className: "flex items-center gap-3", children: [
+                      user?.id && _jsx("span", { className: "text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/30", children: `${(Array.isArray(progress?.completed_lessons) ? progress.completed_lessons.length : 0)} of ${totalLessons || 0} complete` }),
+                      user?.id && _jsx("button", { onClick: handleToggleComplete, disabled: isSavingProgress, className: `px-3 py-1.5 rounded-md font-medium transition-colors ${isCompleted ? 'bg-green-500/20 text-green-200 border border-green-500/30 hover:bg-green-500/30' : 'bg-yellow-400/20 text-yellow-200 border border-yellow-400/30 hover:bg-yellow-400/30'}`, children: isCompleted ? 'Mark incomplete' : 'Mark complete' })
+                    ]})
                   ]
                 })
               ),
