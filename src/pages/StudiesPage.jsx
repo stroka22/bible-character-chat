@@ -7,7 +7,7 @@ import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
 import { supabase } from '../services/supabase';
 import { getOwnerSlug } from '../services/tierSettingsService';
-import { useAuth } from '../contexts/AuthContext.tsx';
+import { useAuth } from '../contexts/AuthContext';
 
 const StudiesPage = () => {
   const [studies, setStudies] = useState([]);

@@ -5,7 +5,7 @@ import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepositor
 import { characterRepository } from '../../repositories/characterRepository';
 import { getOwnerSlug } from '../../services/tierSettingsService';
 import { supabase } from '../../services/supabase';
-import { useAuth } from '../../contexts/AuthContext.tsx';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * AdminStudiesPage
