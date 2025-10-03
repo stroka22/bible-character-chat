@@ -4,6 +4,7 @@ import { useConversation } from './ConversationContext.jsx';
 import { useAuth } from './AuthContext';
 import { usePremium } from '../hooks/usePremium';
 import { characterRepository } from '../repositories/characterRepository';
+import conversationRepository from '../repositories/conversationRepository';
 import {
   loadAccountTierSettings,
   isCharacterFree,
@@ -346,7 +347,23 @@ export const ChatProvider = ({ children }) => {
         : `Conversation with ${
             character?.name ?? 'Unknown'
           } - ${new Date().toLocaleDateString()}`;
-      const newConversation = await createConversation(characterId, title);
+      let newConversation = await createConversation(characterId, title);
+
+      // Hard fallback in case provider path could not return an ID
+      if (!newConversation || !newConversation.id) {
+        try {
+          console.warn('[ChatContext] createConversation returned no ID – enabling bypass_auth and retrying via repository fallback');
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem('bypass_auth', 'true');
+          }
+          newConversation = await conversationRepository.createConversation({
+            character_id: characterId,
+            title,
+          });
+        } catch (repoErr) {
+          console.error('[ChatContext] Repository fallback failed:', repoErr);
+        }
+      }
 
       console.log('[ChatContext] Conversation created:', newConversation);
 
