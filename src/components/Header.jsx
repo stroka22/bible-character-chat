@@ -48,6 +48,34 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Support URL-driven logout: ?logout=1 (optionally with &resetFeatured=1)
+  useEffect(() => {
+    (async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const shouldLogout = params.get('logout') === '1';
+        if (shouldLogout) {
+          await (signOut?.());
+          // Optional: clear featured overrides if requested
+          if (params.get('resetFeatured') === '1') {
+            try {
+              localStorage.removeItem('featuredCharacter');
+              // Try to remove org-scoped key as well (best‑effort)
+              const slugKey = Object.keys(localStorage).find(k => k.startsWith('featuredCharacter:'));
+              if (slugKey) localStorage.removeItem(slugKey);
+            } catch {}
+          }
+          // Clean URL without logout param
+          params.delete('logout');
+          const newUrl = `${window.location.pathname}?${params.toString()}`.replace(/\?$/, '');
+          window.history.replaceState({}, document.title, newUrl);
+        }
+      } catch (e) {
+        console.warn('[Header] URL logout failed:', e);
+      }
+    })();
+  }, [signOut]);
+
   // Close mobile menu when changing routes
   useEffect(() => {
     setIsMenuOpen(false);
