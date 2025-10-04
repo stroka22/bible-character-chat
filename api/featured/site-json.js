@@ -11,7 +11,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
   try {
-    const ownerSlug = String((req.query && req.query.ownerSlug) || process.env.VITE_OWNER_SLUG || 'faithtalkai');
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    const ownerSlug = String(url.searchParams.get('ownerSlug') || process.env.VITE_OWNER_SLUG || 'faithtalkai');
     const { data, error } = await supabase
       .from('site_settings')
       .select('default_featured_character_id')
