@@ -19,6 +19,7 @@ export const characterRepository = {
         return characters.map(char => this.sanitizeCharacter(char));
     },
     async getAll(isAdmin = false) {
+        const TIMEOUT_MS = 6000; // Ensure UI doesn't hang if network/CORS blocks requests
         try {
             // Build query conditionally instead of using the (non-existent) .modify helper
             let query = supabase.from('characters').select('*');
@@ -31,10 +32,18 @@ export const characterRepository = {
             if (!isAdmin) {
                 query = query.or('is_visible.is.null,is_visible.eq.true');
             }
-            const { data, error } = await query.order('name');
-            if (error) {
-                throw error;
-            }
+
+            // Wrap the Supabase request in a timeout so we can gracefully fall back on slow/failing devices
+            const fetchPromise = (async () => {
+                const { data, error } = await query.order('name');
+                if (error) throw error;
+                return data;
+            })();
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('TIMEOUT: characters fetch exceeded 6s')), TIMEOUT_MS)
+            );
+
+            const data = await Promise.race([fetchPromise, timeoutPromise]);
             return this.sanitizeCharacters(data);
         }
         catch (error) {

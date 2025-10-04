@@ -12,8 +12,10 @@ import { usePremium } from '../hooks/usePremium';
 import { loadAccountTierSettings, isCharacterFree } from '../utils/accountTier';
 import UpgradeModal from './modals/UpgradeModal.jsx';
 import { useAuth } from '../contexts/AuthContext';
+import userSettingsRepository from '../repositories/userSettingsRepository';
 import { getOwnerSlug, getSettings as getTierSettings } from '../services/tierSettingsService';
 
+import siteSettingsRepository from '../repositories/siteSettingsRepository';
 console.log('🚀🚀🚀 ScalableCharacterSelection MODULE LOADED! 🚀🚀🚀');
 const BIBLE_BOOKS = {
     oldTestament: [
@@ -144,21 +146,27 @@ const ScalableCharacterSelection = () => {
         }
     }, [favoriteCharacters]);
     
-    // Handle setting a character as featured
-    const handleSetAsFeatured = useCallback((character) => {
+    // Handle setting a character as featured (server-backed when signed in)
+    const handleSetAsFeatured = useCallback(async (character) => {
         if (!character) return;
-        
         try {
-            // Save to localStorage
-            localStorage.setItem('featuredCharacter', character.name);
+            // Always persist a local fallback so devices with blocked Supabase can still resolve it
+            const owner = getOwnerSlug?.() || 'default';
+            const key = `featuredCharacter:${owner}`;
+            try {
+                localStorage.setItem(key, JSON.stringify({ id: character.id, name: character.name }));
+                localStorage.setItem('featuredCharacter', character.name);
+            } catch (_) { /* ignore localStorage failures */ }
+
+            if (user?.id) {
+                await userSettingsRepository.setFeaturedCharacterId(user.id, character.id);
+            }
             setFeaturedCharacter(character);
-            
-            // Show confirmation
-            alert(`${character.name} is now your featured character!`);
+            alert(`${character.name} is now your featured character${user?.id ? ' across devices' : ''}!`);
         } catch (error) {
             console.error('Error setting featured character:', error);
         }
-    }, []);
+    }, [user?.id]);
     
     const fetchCharacters = useCallback(async () => {
         setIsLoading(true);
@@ -187,40 +195,72 @@ const ScalableCharacterSelection = () => {
                     return;
                 }
             }
-            
-            // 2. Check org-scoped localStorage key for featured character
-            const ownerSlug = getOwnerSlug();
-            const orgScopedKey = `featuredCharacter:${ownerSlug}`;
-            const orgScopedFeatured = localStorage.getItem(orgScopedKey);
-            
-            if (orgScopedFeatured) {
+            // 2. Check user setting from server
+            if (user?.id) {
                 try {
-                    // Try to parse as JSON first (newer format with ID)
-                    const parsed = JSON.parse(orgScopedFeatured);
-                    if (parsed && parsed.id) {
-                        featured = data.find(c => c.id.toString() === parsed.id.toString());
+                    const featId = await userSettingsRepository.getFeaturedCharacterId(user.id);
+                    if (featId) {
+                        const byId = data.find(c => `${c.id}` === `${featId}`);
+                        if (byId) {
+                            console.log(`Found featured character from user settings: ${byId.name}`);
+                            setFeaturedCharacter(byId);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Failed to load user featured setting:', e);
+                }
+            }
+
+            // 3. Admin default (site/org-level)
+            try {
+                const ownerSlug = getOwnerSlug();
+                const defId = await siteSettingsRepository.getDefaultFeaturedCharacterId(ownerSlug);
+                if (defId) {
+                    const byId = data.find(c => `${c.id}` === `${defId}`);
+                    if (byId) {
+                        console.log(`Found featured character from admin site default: ${byId.name}`);
+                        setFeaturedCharacter(byId);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to load admin default featured character:', e);
+            }
+
+            // 4. Check org-scoped localStorage key for featured character
+            {
+                const ownerSlug = getOwnerSlug();
+                const orgScopedKey = `featuredCharacter:${ownerSlug}`;
+                const orgScopedFeatured = localStorage.getItem(orgScopedKey);
+                if (orgScopedFeatured) {
+                    try {
+                        // Try to parse as JSON first (newer format with ID)
+                        const parsed = JSON.parse(orgScopedFeatured);
+                        if (parsed && parsed.id) {
+                            featured = data.find(c => `${c.id}` === `${parsed.id}`);
+                            if (featured) {
+                                console.log(`Found featured character from org-scoped setting: ${featured.name}`);
+                                setFeaturedCharacter(featured);
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        // Not JSON, treat as string (name)
+                        featured = data.find(c => 
+                            c.name.toLowerCase() === orgScopedFeatured.toLowerCase() ||
+                            c.name.toLowerCase().includes(orgScopedFeatured.toLowerCase())
+                        );
                         if (featured) {
                             console.log(`Found featured character from org-scoped setting: ${featured.name}`);
                             setFeaturedCharacter(featured);
                             return;
                         }
                     }
-                } catch (e) {
-                    // Not JSON, treat as string (name)
-                    featured = data.find(c => 
-                        c.name.toLowerCase() === orgScopedFeatured.toLowerCase() ||
-                        c.name.toLowerCase().includes(orgScopedFeatured.toLowerCase())
-                    );
-                    
-                    if (featured) {
-                        console.log(`Found featured character from org-scoped setting: ${featured.name}`);
-                        setFeaturedCharacter(featured);
-                        return;
-                    }
                 }
             }
             
-            // 3. Check regular localStorage for saved featured character
+            // 5. Check regular localStorage for saved featured character
             const savedFeatured = localStorage.getItem('featuredCharacter');
             if (savedFeatured) {
                 featured = data.find(c => 
@@ -235,7 +275,7 @@ const ScalableCharacterSelection = () => {
                 }
             }
             
-            // 4. Fallback to Jesus or first character (existing logic)
+            // 6. Fallback to Jesus or first character (existing logic)
             const jesus = data.find(c => c.name.toLowerCase().includes('jesus'));
             setFeaturedCharacter(jesus || (data.length > 0 ? data[0] : null));
         }
@@ -247,7 +287,7 @@ const ScalableCharacterSelection = () => {
             setIsLoading(false);
         }
   // No deps – admin status no longer alters fetch logic
-  }, []);
+  }, [user?.id]);
     useEffect(() => {
         console.log('🪄 ScalableCharacterSelection useEffect (mount) fired');
         fetchCharacters();

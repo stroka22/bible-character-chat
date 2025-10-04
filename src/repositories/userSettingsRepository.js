@@ -6,6 +6,15 @@ export const userSettingsRepository = {
   async getFeaturedCharacterId(userId) {
     if (!userId) return null;
     try {
+      // Try same-origin proxy first to avoid device CORS/privacy blockers
+      try {
+        const resp = await fetch('/api/user/featured', { credentials: 'include', cache: 'no-store' });
+        if (resp.ok) {
+          const json = await resp.json();
+          if ('featured_character_id' in json) return json.featured_character_id || null;
+        }
+      } catch (_) { /* fall through */ }
+
       const { data, error } = await supabase
         .from('user_settings')
         .select('featured_character_id')
@@ -28,7 +37,17 @@ export const userSettingsRepository = {
   async setFeaturedCharacterId(userId, characterId) {
     if (!userId) return false;
     try {
-      // Upsert user_settings row
+      // Try same-origin proxy first (passes auth header and avoids CORS)
+      try {
+        const resp = await fetch('/api/user/featured', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ featured_character_id: characterId })
+        });
+        if (resp.ok) return true;
+      } catch (_) { /* fall through to direct */ }
+
       const { error } = await supabase
         .from('user_settings')
         .upsert({ user_id: userId, featured_character_id: characterId }, { onConflict: 'user_id' });
