@@ -13,17 +13,23 @@ export default async function handler(req, res) {
   try {
     const url = new URL(req.url, `https://${req.headers.host}`);
     const ownerSlug = String(url.searchParams.get('ownerSlug') || process.env.VITE_OWNER_SLUG || 'faithtalkai');
+    if (url.searchParams.get('ping')) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({ ok: true, runtime: 'node-esm', ownerSlug });
+    }
     const { data, error } = await supabase
       .from('site_settings')
       .select('default_featured_character_id')
       .eq('owner_slug', ownerSlug)
       .maybeSingle();
     if (error) {
-      return res.status(500).json({ error: error.message });
+      console.error('[site-json] supabase error:', error);
+      return res.status(500).json({ error: error.message || 'Supabase error', code: error.code || null });
     }
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json({ owner_slug: ownerSlug, default_featured_character_id: data?.default_featured_character_id || null });
   } catch (e) {
+    console.error('[site-json] handler error:', e);
     return res.status(500).json({ error: e.message || 'Unknown error' });
   }
 }
