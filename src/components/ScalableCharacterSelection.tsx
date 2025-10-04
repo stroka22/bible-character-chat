@@ -7,6 +7,10 @@ import type { CharacterGroup } from '../repositories/groupRepository';
 import { type Character } from '../services/supabase';
 import { useChat } from '../contexts/ChatContext';
 import CharacterCard from './CharacterCard';
+import siteSettingsRepository from '../repositories/siteSettingsRepository';
+import { userSettingsRepository } from '../repositories/userSettingsRepository';
+import { getOwnerSlug } from '../services/tierSettingsService';
+import { useAuth } from '../contexts/AuthContext';
 
 // Define Bible books for filtering
 
@@ -68,6 +72,7 @@ const ScalableCharacterSelection: React.FC = () => {
   
   // Get the chat context
   const { selectCharacter, character: selectedCharacter } = useChat();
+  const { user } = useAuth();
 
   // Fetch characters on component mount
   const fetchCharacters = useCallback(async () => {
@@ -76,8 +81,63 @@ const ScalableCharacterSelection: React.FC = () => {
     try {
       const data = await characterRepository.getAll();
       setCharacters(data);
-      
-      // Set a featured character (Jesus if available)
+      // Resolve featured character following priority:
+      // URL param → Admin default (if enforce) → User preference → Local fallbacks
+      const params = new URLSearchParams(window.location.search);
+      const resetFeatured = params.get('resetFeatured') === '1';
+      const featuredParam = params.get('featured');
+
+      // Helper to find character by name or id
+      const findByName = (name: string) => data.find(c => c.name.toLowerCase() === name.toLowerCase());
+      const findById = (id: string) => data.find(c => String(c.id) === String(id));
+
+      // 1) URL param override by name (e.g., ?featured=Moses)
+      if (featuredParam) {
+        const byName = findByName(featuredParam);
+        if (byName) {
+          setFeaturedCharacter(byName);
+          return;
+        }
+        const byId = findById(featuredParam);
+        if (byId) {
+          setFeaturedCharacter(byId);
+          return;
+        }
+      }
+
+      const owner = getOwnerSlug();
+      // 2) Site settings (admin default + enforcement)
+      let adminDefault: string | null = null;
+      let enforceAdmin = false;
+      try {
+        const settings = await siteSettingsRepository.getSettings(owner);
+        adminDefault = settings?.defaultId || null;
+        enforceAdmin = !!settings?.enforceAdminDefault;
+      } catch (_) { /* swallow */ }
+
+      if (enforceAdmin && adminDefault) {
+        const c = findById(adminDefault);
+        if (c) {
+          setFeaturedCharacter(c);
+          return;
+        }
+      }
+
+      // 3) User preference (only if not enforcing admin)
+      if (!enforceAdmin && user?.id && !resetFeatured) {
+        try {
+          const userFeaturedId = await userSettingsRepository.getFeaturedCharacterId(user.id);
+          if (userFeaturedId) {
+            const c = findById(userFeaturedId);
+            if (c) {
+              setFeaturedCharacter(c);
+              return;
+            }
+          }
+        } catch (_) { /* ignore and fall through */ }
+      }
+
+      // 4) Fallbacks: Jesus → first visible
       const jesus = data.find(c => c.name.toLowerCase().includes('jesus'));
       setFeaturedCharacter(jesus || (data.length > 0 ? data[0] : null));
     } catch (err) {
