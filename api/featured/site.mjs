@@ -16,21 +16,38 @@ export default async function handler(req, res) {
   try {
     const ownerSlug = (req.query.ownerSlug || process.env.VITE_OWNER_SLUG || 'faithtalkai').toString();
 
-    const { data, error } = await supabase
-      .from('site_settings')
-      .select('default_featured_character_id,enforce_admin_default')
-      .eq('owner_slug', ownerSlug)
-      .maybeSingle();
-
-    if (error) {
-      return res.status(500).json({ error: error.message });
+    let data, error;
+    try {
+      ({ data, error } = await supabase
+        .from('site_settings')
+        .select('default_featured_character_id,enforce_admin_default')
+        .eq('owner_slug', ownerSlug)
+        .maybeSingle());
+      if (error) throw error;
+      return res.status(200).json({
+        owner_slug: ownerSlug,
+        default_featured_character_id: data?.default_featured_character_id || null,
+        enforce_admin_default: !!(data?.enforce_admin_default)
+      });
+    } catch (e) {
+      // Graceful fallback when new column is not yet migrated
+      if (e && (e.code === '42703' || /column .*enforce_admin_default.* does not exist/i.test(e.message || ''))) {
+        const alt = await supabase
+          .from('site_settings')
+          .select('default_featured_character_id')
+          .eq('owner_slug', ownerSlug)
+          .maybeSingle();
+        if (alt.error) {
+          return res.status(500).json({ error: alt.error.message });
+        }
+        return res.status(200).json({
+          owner_slug: ownerSlug,
+          default_featured_character_id: alt.data?.default_featured_character_id || null,
+          enforce_admin_default: false
+        });
+      }
+      return res.status(500).json({ error: e.message || 'Unknown error' });
     }
-
-    return res.status(200).json({
-      owner_slug: ownerSlug,
-      default_featured_character_id: data?.default_featured_character_id || null,
-      enforce_admin_default: !!(data?.enforce_admin_default)
-    });
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Unknown error' });
   }
