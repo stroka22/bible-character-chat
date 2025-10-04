@@ -10,6 +10,7 @@ on:
 jobs:
   supabase-migrate:
     runs-on: ubuntu-latest
+    environment: Production
     permissions:
       contents: read
     steps:
