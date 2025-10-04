@@ -18,7 +18,9 @@ const Header = () => {
    * Auth state
    * ------------------------------------------------------------------ */
   const { user, loading, signOut, isAdmin, isPremium: isPremiumUser, role } = useAuth();
-  const isAuthenticated = !!user;
+  const urlParams = new URLSearchParams(window.location.search);
+  const isUrlLogout = urlParams.get('logout') === '1';
+  const isAuthenticated = !!user && !isUrlLogout;
   /* Show Admin link immediately when:
      • user is authenticated AND (we're still loading/role unknown)
        OR we already know the user is admin / superadmin                  */
