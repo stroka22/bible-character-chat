@@ -81,7 +81,7 @@ const HomePage = () => {
                 let enforce = false;
                 try {
                     const slug = getOwnerSlug();
-                    const { defaultId, enforceAdminDefault } = await siteSettingsRepository.getDefaultFeaturedCharacterId(slug) || {};
+                    const { defaultId, enforceAdminDefault } = await siteSettingsRepository.getSettings(slug) || {};
                     enforce = !!enforceAdminDefault;
                     if (defaultId) {
                         const c = await characterRepository.getById(defaultId);
