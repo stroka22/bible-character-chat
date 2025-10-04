@@ -1,7 +1,7 @@
 import { supabase } from '../services/supabase';
 
 export const siteSettingsRepository = {
-  async getDefaultFeaturedCharacterId(ownerSlug) {
+  async getSettings(ownerSlug) {
     if (!ownerSlug) return null;
     try {
       // 1) Try direct Supabase first (fast path on desktop and most devices)
@@ -37,6 +37,11 @@ export const siteSettingsRepository = {
       console.warn('[siteSettingsRepository] getDefaultFeaturedCharacterId failed:', e?.message);
       return { defaultId: null, enforceAdminDefault: false };
     }
+  },
+
+  async getDefaultFeaturedCharacterId(ownerSlug) {
+    const settings = await this.getSettings(ownerSlug);
+    return settings?.defaultId || null;
   },
 
   async setDefaultFeaturedCharacterId(ownerSlug, characterId) {
