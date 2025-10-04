@@ -8,6 +8,9 @@ import Footer from '../components/Footer';
 import FABCluster from '../components/FABCluster.jsx';
 import { getOwnerSlug } from '../services/tierSettingsService';
 import { characterRepository } from '../repositories/characterRepository';
+import { useAuth } from '../contexts/AuthContext';
+import userSettingsRepository from '../repositories/userSettingsRepository';
+import siteSettingsRepository from '../repositories/siteSettingsRepository';
 const HomePage = () => {
     const { character, messages, chatId } = useChat();
     const [resumed, setResumed] = React.useState(false);
@@ -23,44 +26,123 @@ const HomePage = () => {
     }, [character, messages]);
 
     /* ------------------------------------------------------------------
-     * Load org-scoped featured character on mount
+     * Load featured character on mount (server-first for signed-in users)
+     * Priority:
+     *   1) URL param (?featured=Name)
+     *   2) User setting from server (featured_character_id)
+     *   3) Org-scoped localStorage key (featuredCharacter:<ownerSlug>)
+     *   4) Legacy localStorage key (featuredCharacter)
+     *   5) Fallback (Jesus or first character)
      * ------------------------------------------------------------------ */
+    const { user } = useAuth();
+    const [resetNonce, setResetNonce] = React.useState(0);
+    // Optional quick-reset: visiting with ?resetFeatured=1 clears personal featured and local fallbacks
     React.useEffect(() => {
         (async () => {
             try {
-                const slug = getOwnerSlug();
-                const key = `featuredCharacter:${slug}`;
-                const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-                if (!raw) return;
+                const params = new URLSearchParams(window.location.search);
+                const hadReset = params.get('resetFeatured') === '1';
+                if (user?.id && hadReset) {
+                    await userSettingsRepository.setFeaturedCharacterId(user.id, null);
+                }
+                if (hadReset) {
+                    try {
+                        const slug = getOwnerSlug();
+                        localStorage.removeItem(`featuredCharacter:${slug}`);
+                        localStorage.removeItem('featuredCharacter');
+                    } catch (_) {}
+                    // Remove the param from URL without reloading
+                    params.delete('resetFeatured');
+                    const newUrl = `${window.location.pathname}?${params.toString()}`.replace(/\?$/, '');
+                    window.history.replaceState({}, document.title, newUrl);
+                    // Trigger re-resolution
+                    setResetNonce(Date.now());
+                }
+            } catch (e) {
+                console.warn('[HomePage] resetFeatured failed:', e);
+            }
+        })();
+    }, [user?.id]);
+    React.useEffect(() => {
+        (async () => {
+            try {
+                let all = null;
 
-                let id = null;
-                let name = null;
+                // 1) URL param by name
+                const params = new URLSearchParams(window.location.search);
+                const byName = params.get('featured');
+                if (byName) {
+                    all = await characterRepository.getAll();
+                    const match = all.find(c => (c.name || '').toLowerCase() === byName.toLowerCase());
+                    if (match) { setFeatured(match); return; }
+                }
+
+                // 2) Admin default (site/org-level) with enforce flag
+                let enforce = false;
                 try {
-                    const parsed = JSON.parse(raw);
-                    if (typeof parsed === 'object' && parsed !== null) {
-                        if (parsed.id) id = parsed.id;
-                        if (parsed.name) name = parsed.name;
+                    const slug = getOwnerSlug();
+                    const { defaultId, enforceAdminDefault } = await siteSettingsRepository.getDefaultFeaturedCharacterId(slug) || {};
+                    enforce = !!enforceAdminDefault;
+                    if (defaultId) {
+                        const c = await characterRepository.getById(defaultId);
+                        if (c && c.is_visible !== false) { setFeatured(c); if (enforce) return; }
                     }
-                } catch {
-                    // not JSON – treat as plain string
-                    if (/^\\d+$/.test(raw)) id = raw;
-                    else name = raw;
+                } catch {}
+
+                // 3) User setting from server (only if not enforcing admin default)
+                if (!enforce && user?.id) {
+                    try {
+                        const featId = await userSettingsRepository.getFeaturedCharacterId(user.id);
+                        if (featId) {
+                            const chr = await characterRepository.getById(featId);
+                            if (chr) { setFeatured(chr); return; }
+                        }
+                    } catch (e) {
+                        /* ignore and continue to fallbacks */
+                    }
                 }
 
-                let charObj = null;
-                if (id !== null) {
-                    charObj = await characterRepository.getById(id).catch(() => null);
-                }
-                if (!charObj && name) {
-                    const all = await characterRepository.getAll();
-                    charObj = all.find(c => (c.name || '').toLowerCase() === (name || '').toLowerCase()) || null;
-                }
-                if (charObj) setFeatured(charObj);
+                // Ensure we have the character list for name-based lookups
+                all = all || await characterRepository.getAll();
+
+                // 4) Org-scoped localStorage (only if not enforcing admin default)
+                try {
+                    if (enforce) throw new Error('enforced');
+                    const slug = getOwnerSlug();
+                    const key = `featuredCharacter:${slug}`;
+                    const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+                    if (raw) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            if (parsed && parsed.id) {
+                                const byId = await characterRepository.getById(parsed.id).catch(() => null);
+                                if (byId && byId.is_visible !== false) { setFeatured(byId); return; }
+                            }
+                        } catch {
+                            const byLocalName = all.find(c => (c.name || '').toLowerCase() === raw.toLowerCase());
+                            if (byLocalName && byLocalName.is_visible !== false) { setFeatured(byLocalName); return; }
+                        }
+                    }
+                } catch {}
+
+                // 5) Legacy localStorage (only if not enforcing admin default)
+                try {
+                    if (enforce) throw new Error('enforced');
+                    const legacy = localStorage.getItem('featuredCharacter');
+                    if (legacy) {
+                        const byLegacy = all.find(c => (c.name || '').toLowerCase() === legacy.toLowerCase());
+                        if (byLegacy && byLegacy.is_visible !== false) { setFeatured(byLegacy); return; }
+                    }
+                } catch {}
+
+                // 6) Fallback – Jesus or first
+                const jesus = all.find(c => (c.name || '').toLowerCase().includes('jesus'));
+                setFeatured(jesus || all[0] || null);
             } catch (err) {
                 console.error('[HomePage] Failed to load featured character:', err);
             }
         })();
-    }, []);
+    }, [user?.id, resetNonce]);
     
     // Handler for upgrade button click
     const handleUpgradeClick = () => {

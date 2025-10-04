@@ -7,10 +7,15 @@ export const siteSettingsRepository = {
       // 1) Try direct Supabase first (fast path on desktop and most devices)
       const { data, error } = await supabase
         .from('site_settings')
-        .select('default_featured_character_id')
+        .select('default_featured_character_id,enforce_admin_default')
         .eq('owner_slug', ownerSlug)
         .single();
-      if (!error && data) return data?.default_featured_character_id || null;
+      if (!error && data) {
+        return {
+          defaultId: data?.default_featured_character_id || null,
+          enforceAdminDefault: !!data?.enforce_admin_default
+        };
+      }
 
       // 2) Fallback to same-origin proxy to bypass device CORS/privacy blockers
       try {
@@ -19,15 +24,18 @@ export const siteSettingsRepository = {
         if (resp.ok) {
           const json = await resp.json();
           if ('default_featured_character_id' in json) {
-            return json.default_featured_character_id || null;
+            return {
+              defaultId: json.default_featured_character_id || null,
+              enforceAdminDefault: !!json.enforce_admin_default
+            };
           }
         }
       } catch (_) { /* swallow and return null below */ }
 
-      return null;
+      return { defaultId: null, enforceAdminDefault: false };
     } catch (e) {
       console.warn('[siteSettingsRepository] getDefaultFeaturedCharacterId failed:', e?.message);
-      return null;
+      return { defaultId: null, enforceAdminDefault: false };
     }
   },
 

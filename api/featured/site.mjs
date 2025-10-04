@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     const { data, error } = await supabase
       .from('site_settings')
-      .select('default_featured_character_id')
+      .select('default_featured_character_id,enforce_admin_default')
       .eq('owner_slug', ownerSlug)
       .maybeSingle();
 
@@ -29,6 +29,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       owner_slug: ownerSlug,
       default_featured_character_id: data?.default_featured_character_id || null,
+      enforce_admin_default: !!(data?.enforce_admin_default)
     });
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Unknown error' });
