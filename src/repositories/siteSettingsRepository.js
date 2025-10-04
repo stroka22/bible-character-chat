@@ -4,31 +4,27 @@ export const siteSettingsRepository = {
   async getDefaultFeaturedCharacterId(ownerSlug) {
     if (!ownerSlug) return null;
     try {
-      // Try same-origin proxy first to avoid mobile CORS/privacy blockers
+      // 1) Try direct Supabase first (fast path on desktop and most devices)
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('default_featured_character_id')
+        .eq('owner_slug', ownerSlug)
+        .single();
+      if (!error && data) return data?.default_featured_character_id || null;
+
+      // 2) Fallback to same-origin proxy to bypass device CORS/privacy blockers
       try {
-        // Prefer CommonJS variant which is known to work in our environment
-        const urlJson = `/api/featured/site-json?ownerSlug=${encodeURIComponent(ownerSlug)}`;
-        let resp = await fetch(urlJson, { credentials: 'include', cache: 'no-store' });
-        if (!resp.ok) {
-          // Fallback to ESM route if JSON route not available
-          const url = `/api/featured/site?ownerSlug=${encodeURIComponent(ownerSlug)}`;
-          resp = await fetch(url, { credentials: 'include', cache: 'no-store' });
-        }
+        const url = `/api/featured/site?ownerSlug=${encodeURIComponent(ownerSlug)}`;
+        const resp = await fetch(url, { credentials: 'include', cache: 'no-store' });
         if (resp.ok) {
           const json = await resp.json();
           if ('default_featured_character_id' in json) {
             return json.default_featured_character_id || null;
           }
         }
-      } catch (_) { /* fall through to Supabase direct */ }
+      } catch (_) { /* swallow and return null below */ }
 
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('default_featured_character_id')
-        .eq('owner_slug', ownerSlug)
-        .single();
-      if (error && error.code !== 'PGRST116') throw error;
-      return data?.default_featured_character_id || null;
+      return null;
     } catch (e) {
       console.warn('[siteSettingsRepository] getDefaultFeaturedCharacterId failed:', e?.message);
       return null;
