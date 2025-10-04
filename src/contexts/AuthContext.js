@@ -232,6 +232,9 @@ export function AuthProvider({ children }) {
             if (error) {
                 throw error;
             }
+            // Immediately clear local auth state so UI updates without waiting for listener
+            setSession(null);
+            setUser(null);
             setProfile(null);
             setRole('unknown');
             setSubscription(null);
