@@ -8,7 +8,11 @@ export const userSettingsRepository = {
     try {
       // Try same-origin proxy first to avoid device CORS/privacy blockers
       try {
-        const resp = await fetch('/api/user/featured', { credentials: 'include', cache: 'no-store' });
+        const { data: session } = await supabase.auth.getSession();
+        const accessToken = session?.session?.access_token;
+        const headers = { 'Content-Type': 'application/json' };
+        if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+        const resp = await fetch('/api/user/featured', { credentials: 'include', cache: 'no-store', headers });
         if (resp.ok) {
           const json = await resp.json();
           if ('featured_character_id' in json) return json.featured_character_id || null;
@@ -39,9 +43,13 @@ export const userSettingsRepository = {
     try {
       // Try same-origin proxy first (passes auth header and avoids CORS)
       try {
+        const { data: session } = await supabase.auth.getSession();
+        const accessToken = session?.session?.access_token;
+        const headers = { 'Content-Type': 'application/json' };
+        if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
         const resp = await fetch('/api/user/featured', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           credentials: 'include',
           body: JSON.stringify({ featured_character_id: characterId })
         });

@@ -6,8 +6,14 @@ export const siteSettingsRepository = {
     try {
       // Try same-origin proxy first to avoid mobile CORS/privacy blockers
       try {
-        const url = `/api/featured/site?ownerSlug=${encodeURIComponent(ownerSlug)}`;
-        const resp = await fetch(url, { credentials: 'include', cache: 'no-store' });
+        // Prefer CommonJS variant which is known to work in our environment
+        const urlJson = `/api/featured/site-json?ownerSlug=${encodeURIComponent(ownerSlug)}`;
+        let resp = await fetch(urlJson, { credentials: 'include', cache: 'no-store' });
+        if (!resp.ok) {
+          // Fallback to ESM route if JSON route not available
+          const url = `/api/featured/site?ownerSlug=${encodeURIComponent(ownerSlug)}`;
+          resp = await fetch(url, { credentials: 'include', cache: 'no-store' });
+        }
         if (resp.ok) {
           const json = await resp.json();
           if ('default_featured_character_id' in json) {
