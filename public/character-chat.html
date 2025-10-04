@@ -952,6 +952,23 @@
     </style>
 </head>
 <body>
+  <script>
+    // Redirect legacy static page to SPA home so featured character uses server-first logic
+    (function () {
+      var target = '/';
+      try {
+        if (location.pathname !== target) {
+          location.replace(target + location.search + location.hash);
+        }
+      } catch (_) {}
+    })();
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=/" />
+    <div style="padding:16px; color:#fff; font-family: sans-serif;">
+      This page moved. Please go to <a href="/" style="color:#facc15;">Home</a>.
+    </div>
+  </noscript>
     <!-- App Header -->
     <header class="app-header">
         <h1 class="app-title">Bible Character Chat</h1>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { characterRepository } from '../../repositories/characterRepository';
 import { useAuth } from '../../contexts/AuthContext';
+import { getOwnerSlug } from '../../services/tierSettingsService';
+import siteSettingsRepository from '../../repositories/siteSettingsRepository';
 
 /**
  * AdminFeaturedCharacter Component
@@ -23,7 +25,6 @@ const AdminFeaturedCharacter = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   
   // Constants
-  const ADMIN_FEATURED_KEY = 'adminFeaturedCharacter';
   const DEFAULT_CHARACTER_NAME = 'Jesus';
   
   // Fetch characters on component mount
@@ -37,16 +38,19 @@ const AdminFeaturedCharacter = () => {
         const data = await characterRepository.getAll(isAdminUser);
         setCharacters(data);
         
-        // Check if there's an admin-set featured character
-        const adminFeatured = localStorage.getItem(ADMIN_FEATURED_KEY);
-        
-        if (adminFeatured) {
-          // Find the character by ID
-          const character = data.find(c => c.id.toString() === adminFeatured);
-          if (character) {
-            setSelectedCharacterId(character.id);
+        // Load server-backed admin default
+        const owner = getOwnerSlug();
+        try {
+          const defId = await siteSettingsRepository.getDefaultFeaturedCharacterId(owner);
+          if (defId) {
+            const character = data.find(c => `${c.id}` === `${defId}`);
+            if (character) setSelectedCharacterId(character.id);
           }
-        } else {
+        } catch (e) {
+          /* ignore */
+        }
+
+        if (!selectedCharacterId) {
           // Find Jesus as the default
           const defaultCharacter = data.find(c => 
             c.name.toLowerCase() === DEFAULT_CHARACTER_NAME.toLowerCase()
@@ -87,7 +91,7 @@ const AdminFeaturedCharacter = () => {
   }, [characters, selectedCharacterId]);
   
   // Handle setting featured character
-  const handleSetFeatured = () => {
+  const handleSetFeatured = async () => {
     setError(null);
     setSuccessMessage(null);
     
@@ -95,31 +99,24 @@ const AdminFeaturedCharacter = () => {
       if (!selectedCharacterId) {
         throw new Error('Please select a character first.');
       }
-      
-      // Save to localStorage
-      localStorage.setItem(ADMIN_FEATURED_KEY, selectedCharacterId.toString());
-      
-      // Also set the regular featured character key so it takes effect immediately
+      const owner = getOwnerSlug();
+      await siteSettingsRepository.setDefaultFeaturedCharacterId(owner, selectedCharacterId);
       const character = characters.find(c => c.id === selectedCharacterId);
-      if (character) {
-        localStorage.setItem('featuredCharacter', character.name);
-      }
-      
-      setSuccessMessage(`${character?.name || 'Character'} is now set as the default featured character.`);
+      setSuccessMessage(`${character?.name || 'Character'} is now set as the default featured character (server-backed).`);
     } catch (err) {
       setError(err.message || 'Failed to set featured character.');
     }
   };
   
   // Handle resetting to default (Jesus)
-  const handleResetToDefault = () => {
+  const handleResetToDefault = async () => {
     setError(null);
     setSuccessMessage(null);
     
     try {
-      // Remove admin setting
-      localStorage.removeItem(ADMIN_FEATURED_KEY);
-      
+      const owner = getOwnerSlug();
+      await siteSettingsRepository.setDefaultFeaturedCharacterId(owner, null);
+
       // Reset to Jesus
       const defaultCharacter = characters.find(c => 
         c.name.toLowerCase() === DEFAULT_CHARACTER_NAME.toLowerCase()
@@ -127,8 +124,7 @@ const AdminFeaturedCharacter = () => {
       
       if (defaultCharacter) {
         setSelectedCharacterId(defaultCharacter.id);
-        localStorage.setItem('featuredCharacter', defaultCharacter.name);
-        setSuccessMessage(`Reset to default: ${defaultCharacter.name} is now the featured character.`);
+        setSuccessMessage(`Reset to default: ${defaultCharacter.name} is now the featured character (server default cleared).`);
       } else {
         throw new Error(`Default character (${DEFAULT_CHARACTER_NAME}) not found.`);
       }

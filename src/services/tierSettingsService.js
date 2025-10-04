@@ -24,12 +24,21 @@ function getCacheKey(slug) {
  * @returns {string} The owner slug to use for tier settings
  */
 export function getOwnerSlug() {
-  // Priority: 1. Environment variable, 2. localStorage, 3. Default
-  return (
-    import.meta.env.VITE_OWNER_SLUG ||
-    localStorage.getItem('ownerSlug') ||
-    'faithtalkai'
-  );
+  // To avoid cross-device mismatches, in production we do NOT read localStorage
+  // for ownerSlug. Use the build-time env var or fall back to default.
+  const envSlug = import.meta.env.VITE_OWNER_SLUG;
+  if (envSlug && String(envSlug).trim()) return String(envSlug).trim();
+
+  // In development only, allow local override to help testing multi-tenant setups
+  try {
+    if (!import.meta.env.PROD) {
+      const ls = localStorage.getItem('ownerSlug');
+      if (ls && String(ls).trim()) return String(ls).trim();
+    }
+  } catch (_) {
+    // ignore
+  }
+  return 'faithtalkai';
 }
 
 /**
