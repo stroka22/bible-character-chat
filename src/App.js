@@ -44,6 +44,7 @@ import RoundtableSetup from './pages/RoundtableSetup.jsx';
 import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
+const DEV = import.meta && import.meta.env && import.meta.env.DEV === true;
 import Header from './components/Header';
 
 class ErrorBoundary extends React.Component {
@@ -204,7 +205,7 @@ function App() {
         /* -------- Study Series (public) -------------------------- */
         _jsx(Route, { path: "/series", element: _jsx(SeriesList, {}) }),
         _jsx(Route, { path: "/series/:slug", element: _jsx(SeriesDetails, {}) }),
-        _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
+        DEV && _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         
         // Chat & Shared conversation routes (public access)
         _jsx(Route, { path: "/chat", element: _jsx(SimpleChatWithHistory, {}) }),

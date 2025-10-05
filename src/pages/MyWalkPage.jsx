@@ -311,7 +311,7 @@ const MyWalkPage = () => {
         </div>
 
         {/* Local import banner if local mock data exists */}
-        {(() => {
+        {import.meta?.env?.DEV && (() => {
           const { conversations: localConvs } = getLocalMockConversations();
           if (!user || !localConvs.length) return null;
           return (

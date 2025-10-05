@@ -8,6 +8,9 @@ import { mockChatRepository } from './mockChatRepository';
  */
 let useMock = false;
 
+// In production, never allow switching to mock mode
+const IS_PROD = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.PROD === true;
+
 // Expose minimal control hooks so higher layers can correct mode when
 // the auth state changes (e.g., force real Supabase mode when a user is
 // authenticated after a previous mock fallback).
@@ -26,6 +29,8 @@ const FALLBACK_STATUS = [403, 409]; // forbidden / conflict
 const FALLBACK_PG_CODES = ['23505']; // duplicate key, etc.
 
 const shouldFallback = (error) => {
+    // In production builds we DO NOT fallback to mock; surface the error instead
+    if (IS_PROD) return false;
     if (!error) return false;
     const httpStatus = error.status || error.code;
     if (FALLBACK_STATUS.includes(httpStatus) ||
