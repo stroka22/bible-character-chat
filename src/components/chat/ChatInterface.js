@@ -94,20 +94,13 @@ const ChatInterface = () => {
             console.warn('[ChatInterface] share_code generation failed; falling back:', e);
         }
 
-        // Fallback to a meaningful route if share_code not available
+        // Require a saved conversation to avoid links that start a brand-new chat
         if (!url) {
             if (chatId) {
                 url = `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`;
-            } else if (window.location.pathname.startsWith('/chat/')) {
-                // Already on a chat route (even without id) – keep current URL
-                url = window.location.href;
-            } else if (character && character.id) {
-                // Direct people into chat with the current character as a fallback
-                const qp = new URLSearchParams(params);
-                qp.set('character', character.id);
-                url = `${origin}/chat${qp.toString() ? `?${qp.toString()}` : ''}`;
             } else {
-                url = `${origin}/chat`;
+                alert('Please sign in and save this conversation before sharing.');
+                return;
             }
         }
 

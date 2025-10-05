@@ -615,7 +615,35 @@ export const conversationRepository = {
       const uid = await getCurrentUserId();
       const SKIP = isSkipAuth();
       if (uid && !SKIP) {
-        console.warn('[ConversationRepository] Share not implemented in Supabase path – using mock fallback');
+        try { chatRepositoryMode.forceReal(); } catch {}
+        // 1) Fetch existing chat to see if already shared
+        const existing = await chatRepository.getChatById(conversationId);
+        if (!existing) throw new Error('Conversation not found');
+        if (existing.is_shared && existing.share_code) {
+          return existing.share_code;
+        }
+        // 2) Generate a unique share code (retry if collision)
+        let shareCode;
+        for (let i = 0; i < 5; i++) {
+          const candidate = `share-${Math.random().toString(36).slice(2, 10)}`;
+          const { data: conflict } = await supabase
+            .from('chats')
+            .select('id')
+            .eq('share_code', candidate)
+            .limit(1)
+            .maybeSingle();
+          if (!conflict) { shareCode = candidate; break; }
+        }
+        if (!shareCode) {
+          // last resort – timestamp-based
+          shareCode = `share-${Date.now().toString(36)}`;
+        }
+        // 3) Update chat as shared
+        const updated = await chatRepository.updateChat(conversationId, {
+          is_shared: true,
+          share_code: shareCode,
+        });
+        return updated?.share_code || shareCode;
       }
       console.log('[MOCK] Sharing conversation:', conversationId);
       
@@ -652,7 +680,30 @@ export const conversationRepository = {
       const uid = await getCurrentUserId();
       const SKIP = isSkipAuth();
       if (uid && !SKIP) {
-        console.warn('[ConversationRepository] getSharedConversation not implemented in Supabase path – using mock fallback');
+        try { chatRepositoryMode.forceReal(); } catch {}
+        // Public path: fetch by share_code regardless of owner; RLS should allow when is_shared=true
+        const { data: chat, error: chatErr } = await supabase
+          .from('chats')
+          .select('*')
+          .eq('share_code', shareCode)
+          .eq('is_shared', true)
+          .maybeSingle();
+        if (chatErr) throw chatErr;
+        if (!chat) throw new Error('Shared conversation not found');
+        // Character
+        let character = null;
+        try {
+          const cid = normaliseCharacterId(chat.character_id, chat);
+          if (cid) character = await characterRepository.getById(cid);
+        } catch {}
+        // Messages (anon readable via policy)
+        const { data: msgs, error: msgErr } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('chat_id', chat.id)
+          .order('created_at', { ascending: true });
+        if (msgErr) throw msgErr;
+        return { ...chat, characters: character, messages: msgs || [] };
       }
       console.log('[MOCK] Fetching shared conversation with code:', shareCode);
       
@@ -702,7 +753,12 @@ export const conversationRepository = {
       const uid = await getCurrentUserId();
       const SKIP = isSkipAuth();
       if (uid && !SKIP) {
-        console.warn('[ConversationRepository] stopSharing not implemented in Supabase path – using mock fallback');
+        try { chatRepositoryMode.forceReal(); } catch {}
+        const updated = await chatRepository.updateChat(conversationId, {
+          is_shared: false,
+          share_code: null,
+        });
+        return updated;
       }
       console.log('[MOCK] Stopping sharing for conversation:', conversationId);
       
