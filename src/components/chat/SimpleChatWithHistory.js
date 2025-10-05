@@ -388,6 +388,15 @@ const SimpleChatWithHistory = () => {
         }
     }, [character, conversationTitle, location.search, studyMeta, lessonMeta]);
 
+    // Keep URL synced with saved chat id so shared links hydrate the correct conversation
+    useEffect(() => {
+        try {
+            if (chatId && conversationId !== chatId) {
+                navigate(`/chat/${chatId}${location.search}`, { replace: true });
+            }
+        } catch {}
+    }, [chatId, conversationId, location.search, navigate]);
+
     // Handle saving the conversation
     const handleSaveConversation = () => {
         if (!isAuthenticated) {
@@ -619,22 +628,38 @@ const SimpleChatWithHistory = () => {
                                                         ]
                                                     }),
                                                     
-                                                    // Simple share button (no persistence)
+                                                    // Share button – prefer canonical /chat/:id URL when available
                                                     _jsxs("button", { 
                                                         id: "shareBtn", 
                                                         className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
                                                         onClick: () => {
+                                                            const origin = window.location.origin;
+                                                            const params = new URLSearchParams(location.search);
+                                                            const shareUrl = chatId
+                                                              ? `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`
+                                                              : window.location.href;
+
                                                             if (navigator.share) {
                                                                 navigator.share({
                                                                     title: `Chat with ${character.name}`,
                                                                     text: 'Check out my conversation!',
-                                                                    url: window.location.href
+                                                                    url: shareUrl
                                                                 }).catch(err => {
                                                                     console.log('Share failed:', err);
-                                                                    alert('Link copied to clipboard');
+                                                                    try {
+                                                                        navigator.clipboard.writeText(shareUrl);
+                                                                        alert('Link copied to clipboard');
+                                                                    } catch {
+                                                                        alert('Link ready: ' + shareUrl);
+                                                                    }
                                                                 });
                                                             } else {
-                                                                alert('Link copied to clipboard');
+                                                                try {
+                                                                    navigator.clipboard.writeText(shareUrl);
+                                                                    alert('Link copied to clipboard');
+                                                                } catch {
+                                                                    alert('Link ready: ' + shareUrl);
+                                                                }
                                                             }
                                                         },
                                                         children: [
