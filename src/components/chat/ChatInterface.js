@@ -81,7 +81,7 @@ const ChatInterface = () => {
         }
 
         let url;
-        // Prefer public share link with share_code when possible
+        // Prefer public share link with share_code; do not fall back to /chat/:id
         try {
             if (typeof shareConversation === 'function' && (chatId || window.__lastChatId)) {
                 const id = chatId || window.__lastChatId;
@@ -91,18 +91,11 @@ const ChatInterface = () => {
                 }
             }
         } catch (e) {
-            console.warn('[ChatInterface] share_code generation failed; falling back:', e);
+            console.warn('[ChatInterface] share_code generation failed:', e);
         }
 
-        // Require a saved conversation to avoid links that start a brand-new chat
-        if (!url) {
-            if (chatId) {
-                url = `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`;
-            } else {
-                alert('Please sign in and save this conversation before sharing.');
-                return;
-            }
-        }
+        // If we do not have a public URL, exit silently (no non-public fallback)
+        if (!url) return;
 
         // If we now have a chatId but URL bar isn't at /chat/:id yet, sync it for consistency
         try {
@@ -121,15 +114,15 @@ const ChatInterface = () => {
                 });
             } else {
                 await navigator.clipboard.writeText(url);
-                alert('Link copied to clipboard');
+                // silent copy
             }
         } catch (err) {
             console.log('Share failed:', err);
             try {
                 await navigator.clipboard.writeText(url);
-                alert('Link copied to clipboard');
+                // silent copy
             } catch {
-                alert('Link ready: ' + url);
+                // ignore
             }
         }
     }, [character?.name, chatId, isAuthenticated, messages.length, location.search, navigate, saveChat, shareConversation]);

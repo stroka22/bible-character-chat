@@ -66,7 +66,8 @@ const SimpleChatWithHistory = () => {
         fetchConversationWithMessages,
         isLoading: convLoading,
         error: convError,
-        shareConversation
+        shareConversation,
+        getSharedConversation,
     } = useConversation();
 
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
@@ -81,7 +82,7 @@ const SimpleChatWithHistory = () => {
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
-    const { conversationId } = useParams();
+    const { conversationId, shareCode } = useParams();
 
     /* ------------------------------------------------------------------
      * Inject lesson context when URL contains ?study=<id>&lesson=<index>
@@ -90,6 +91,8 @@ const SimpleChatWithHistory = () => {
       const applyLessonContext = async () => {
         // Need a selected character before we inject context
         if (!character) return;
+        // Do not modify context for shared view
+        if (shareCode) return;
 
         const params = new URLSearchParams(location.search);
         const studyId  = params.get('study');
@@ -144,7 +147,7 @@ const SimpleChatWithHistory = () => {
         setSeriesMeta(null);
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search, character]);
+    }, [location.search, character, shareCode]);
 
     /* ------------------------------------------------------------------
      * Inject series introduction context when URL contains ?series=<slug>
@@ -153,6 +156,8 @@ const SimpleChatWithHistory = () => {
     useEffect(() => {
       const run = async () => {
         if (!character) return;
+        // Shared view: do not inject series intro
+        if (shareCode) return;
         const params = new URLSearchParams(location.search);
         if (params.get('study')) return; // handled by lesson context
         const seriesSlug = params.get('series');
@@ -182,7 +187,7 @@ const SimpleChatWithHistory = () => {
       };
       run();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search, character, messages.length]);
+    }, [location.search, character, messages.length, shareCode]);
 
     useEffect(() => {
       try {
@@ -217,6 +222,8 @@ const SimpleChatWithHistory = () => {
     useEffect(() => {
       // Skip if intro already posted or impossible to post
       if (introPostedRef.current || !character) return;
+      // Shared view should not auto-post intro
+      if (shareCode) return;
       
       // Check if we have study context from URL
       const params = new URLSearchParams(location.search);
@@ -278,7 +285,7 @@ const SimpleChatWithHistory = () => {
       postAssistantMessage(introText);
       introPostedRef.current = true;
       
-    }, [character, studyMeta, lessonMeta, location.search, messages, postAssistantMessage]);
+    }, [character, studyMeta, lessonMeta, location.search, messages, postAssistantMessage, shareCode]);
 
     /* ------------------------------------------------------------------
      * Auto-select character from query string (?character=<id>)
@@ -290,6 +297,8 @@ const SimpleChatWithHistory = () => {
 
             // If we are restoring by conversationId, skip auto-selection
             if (conversationId) return;
+            // Shared view: never auto-select from query
+            if (shareCode) return;
 
             const params = new URLSearchParams(location.search);
             const charId = params.get('character');
@@ -307,7 +316,7 @@ const SimpleChatWithHistory = () => {
             }
         })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search, character, conversationId]);
+    }, [location.search, character, conversationId, shareCode]);
 
     /* ------------------------------------------------------------------
      * Load existing conversation when /chat/:conversationId route used
@@ -350,6 +359,25 @@ const SimpleChatWithHistory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [conversationId]);
 
+    /* ------------------------------------------------------------------
+     * Load shared conversation when /shared/:shareCode route is used
+     * ----------------------------------------------------------------*/
+    useEffect(() => {
+        const loadShared = async () => {
+            if (!shareCode) return;
+            try {
+                const conv = await getSharedConversation(shareCode);
+                if (conv) {
+                    hydrateFromConversation(conv);
+                }
+            } catch (err) {
+                console.error('[SimpleChatWithHistory] Failed to load shared conversation:', err);
+            }
+        };
+        loadShared();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [shareCode]);
+
     // Scroll to bottom when messages change
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -367,6 +395,7 @@ const SimpleChatWithHistory = () => {
     // Set default conversation title based on character name or study context
     useEffect(() => {
         if (!character) return;
+        if (shareCode) return; // do not auto-title for shared view
 
         const params = new URLSearchParams(location.search);
         const fromStudy = params.get('study') && params.get('lesson');
@@ -387,7 +416,7 @@ const SimpleChatWithHistory = () => {
         if (!conversationTitle) {
             setConversationTitle(`Conversation with ${character.name}`);
         }
-    }, [character, conversationTitle, location.search, studyMeta, lessonMeta]);
+    }, [character, conversationTitle, location.search, studyMeta, lessonMeta, shareCode]);
 
     // Keep URL synced with saved chat id so shared links hydrate the correct conversation
     useEffect(() => {
@@ -401,29 +430,26 @@ const SimpleChatWithHistory = () => {
     // Handle saving the conversation
     const handleSaveConversation = () => {
         if (!isAuthenticated) {
-            alert('Please sign in to save conversations');
+            // Silent fail in shared view / unauthenticated: no intrusive alerts
             return;
         }
 
         if (!character) {
-            alert('Please select a character first');
             return;
         }
 
         if (isChatSaved) {
-            alert('This conversation is already saved');
             return;
         }
 
         if (messages.length === 0) {
-            alert('Cannot save an empty conversation');
             return;
         }
 
         // If we have a title, save directly, otherwise show dialog
         if (conversationTitle) {
             saveChat(conversationTitle);
-            alert('Conversation saved!');
+            // no popup
         } else {
             setShowSaveDialog(true);
         }
@@ -432,13 +458,12 @@ const SimpleChatWithHistory = () => {
     // Handle submitting the save dialog
     const handleSaveSubmit = () => {
         if (!conversationTitle.trim()) {
-            alert('Please enter a title for your conversation');
             return;
         }
 
         saveChat(conversationTitle);
         setShowSaveDialog(false);
-        alert('Conversation saved!');
+        // no popup
     };
 
     // Navigate to conversations page
@@ -629,7 +654,7 @@ const SimpleChatWithHistory = () => {
                                                         ]
                                                     }),
                                                     
-                                                    // Share button – public view via share_code when available, otherwise fall back to /chat/:id
+                                                    // Share button – public view via share_code only (no non-public fallbacks)
                                                     _jsxs("button", { 
                                                         id: "shareBtn", 
                                                         className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
@@ -651,7 +676,7 @@ const SimpleChatWithHistory = () => {
                                                                 }
                                                             }
 
-                                                            // Try to generate a public share_code via ConversationContext
+                                                            // Generate a public share_code via ConversationContext
                                                             let shareUrl;
                                                             try {
                                                               if (chatId && typeof shareConversation === 'function') {
@@ -664,15 +689,8 @@ const SimpleChatWithHistory = () => {
                                                               console.warn('[Share] share_code generation failed; falling back:', e);
                                                             }
 
-                                                            // Require a saved conversation for sharing to avoid confusing links
-                                                            if (!shareUrl) {
-                                                              if (chatId) {
-                                                                shareUrl = `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`;
-                                                              } else {
-                                                                alert('Please sign in and save this conversation before sharing.');
-                                                                return;
-                                                              }
-                                                            }
+                                                            // If no public share URL, do nothing (avoid non-public fallbacks)
+                                                            if (!shareUrl) return;
 
                                                             if (navigator.share) {
                                                                 navigator.share({
@@ -683,17 +701,17 @@ const SimpleChatWithHistory = () => {
                                                                     console.log('Share failed:', err);
                                                                     try {
                                                                         navigator.clipboard.writeText(shareUrl);
-                                                                        alert('Link copied to clipboard');
+                                                                        // silent copy
                                                                     } catch {
-                                                                        alert('Link ready: ' + shareUrl);
+                                                                        // ignore
                                                                     }
                                                                 });
                                                             } else {
                                                                 try {
                                                                     navigator.clipboard.writeText(shareUrl);
-                                                                    alert('Link copied to clipboard');
+                                                                    // silent copy
                                                                 } catch {
-                                                                    alert('Link ready: ' + shareUrl);
+                                                                    // ignore
                                                                 }
                                                             }
                                                         },
