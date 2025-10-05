@@ -628,7 +628,7 @@ const SimpleChatWithHistory = () => {
                                                         ]
                                                     }),
                                                     
-                                                    // Share button – prefer canonical /chat/:id URL when available
+                                                    // Share button – public view via share_code when available, otherwise fall back to /chat/:id
                                                     _jsxs("button", { 
                                                         id: "shareBtn", 
                                                         className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
@@ -650,12 +650,25 @@ const SimpleChatWithHistory = () => {
                                                                 }
                                                             }
 
-                                                            // Recompute with potential new chatId (or updated URL from navigation effect)
-                                                            let shareUrl = chatId
-                                                              ? `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`
-                                                              : (window.location.pathname.startsWith('/chat/')
-                                                                  ? window.location.href
-                                                                  : window.location.href);
+                                                            // Prefer public share_code when repository supports it
+                                                            let shareUrl;
+                                                            try {
+                                                              if (chatId && typeof window.__shareConversation === 'function') {
+                                                                const code = await window.__shareConversation(chatId);
+                                                                if (code) {
+                                                                  shareUrl = `${origin}/shared/${code}`;
+                                                                }
+                                                              }
+                                                            } catch (e) {
+                                                              console.warn('[Share] share_code generation failed; falling back:', e);
+                                                            }
+
+                                                            // Fallback to private /chat/:id URL if share_code not available
+                                                            if (!shareUrl) {
+                                                              shareUrl = chatId
+                                                                ? `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`
+                                                                : window.location.href;
+                                                            }
 
                                                             if (navigator.share) {
                                                                 navigator.share({

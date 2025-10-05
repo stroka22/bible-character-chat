@@ -1,11 +1,13 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
+import { useConversation } from '../../contexts/ConversationContext.jsx';
 import { useAuth } from '../../contexts/AuthContext';
 // Added `basicOnly` prop: when true in compact mode, only show
 // copy, favorite & save – omit rename/delete even for saved chats.
 const ChatActions = ({ className = '', compact = false, basicOnly = false }) => {
     const { character, chatId, messages, saveChatTitle, toggleFavorite, saveChat, deleteCurrentChat, isChatSaved, isFavorite } = useChat();
+    const { shareConversation } = useConversation();
     const { user } = useAuth();
     const [bypassMode, setBypassMode] = useState(false);
     useEffect(() => {
@@ -61,6 +63,28 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
         }
         finally {
             setIsLoading(false);
+        }
+    };
+    const handleSharePublic = async () => {
+        try {
+            // Ensure chat is saved
+            if (!chatId) {
+                const ok = await saveChat();
+                if (!ok) return;
+            }
+            // Generate share code via repository path
+            const code = await shareConversation(chatId || (window.__lastChatId || ''));
+            if (!code) {
+                setError('Failed to generate share link.');
+                return;
+            }
+            const url = `${window.location.origin}/shared/${code}`;
+            await navigator.clipboard.writeText(url);
+            setShowCopySuccess(true);
+            setTimeout(() => setShowCopySuccess(false), 3000);
+        } catch (e) {
+            console.error('Error generating public share link:', e);
+            setError('Failed to generate share link. Please try again.');
         }
     };
     const handleSaveChat = async () => {
@@ -191,6 +215,8 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
 
                 /* Copy conversation */
                 _jsx("button", { onClick: handleExportConversation, disabled: isLoading, className: "rounded-full p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors", "aria-label": "Copy conversation to clipboard", title: "Copy conversation to clipboard", children: _jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-4 w-4", viewBox: "0 0 20 20", fill: "currentColor", children: [_jsx("path", { d: "M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" }), _jsx("path", { d: "M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" })] }) }),
+                /* Share public link */
+                _jsx("button", { onClick: handleSharePublic, disabled: isLoading, className: "rounded-full p-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition-colors", "aria-label": "Copy public share link", title: "Copy public share link", children: _jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-4 w-4", viewBox: "0 0 20 20", fill: "currentColor", children: _jsx("path", { d: "M13 7H7v6h6V7zM5 5a2 2 0 00-2 2v6a2 2 0 002 2h6l4 3V7a2 2 0 00-2-2H5z" }) }) }),
                 /* Toggle favorite */
                 _jsx("button", { onClick: handleToggleFavorite, disabled: isLoading, className: `rounded-full p-2 ${localFavorite ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-600'} hover:bg-gray-200 transition-colors`, "aria-label": localFavorite ? 'Remove from favorites' : 'Add to favorites', title: localFavorite ? 'Remove from favorites' : 'Add to favorites', children: _jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-4 w-4", viewBox: "0 0 20 20", fill: "currentColor", children: _jsx("path", { fillRule: "evenodd", d: "M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z", clipRule: "evenodd" }) }) }),
                 /* Save (only if not saved) */
