@@ -664,11 +664,21 @@ const SimpleChatWithHistory = () => {
                                                               console.warn('[Share] share_code generation failed; falling back:', e);
                                                             }
 
-                                                            // Fallback to private /chat/:id URL if share_code not available
+                                                            // Fallback to a meaningful route if share_code not available
                                                             if (!shareUrl) {
-                                                              shareUrl = chatId
-                                                                ? `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`
-                                                                : window.location.href;
+                                                              if (chatId) {
+                                                                shareUrl = `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`;
+                                                              } else if (window.location.pathname.startsWith('/chat/')) {
+                                                                // Already on a chat route (even without id) – keep current URL
+                                                                shareUrl = window.location.href;
+                                                              } else if (character && character.id) {
+                                                                // Direct people into chat with the current character as a fallback
+                                                                const qp = new URLSearchParams(params);
+                                                                qp.set('character', character.id);
+                                                                shareUrl = `${origin}/chat${qp.toString() ? `?${qp.toString()}` : ''}`;
+                                                              } else {
+                                                                shareUrl = `${origin}/chat`;
+                                                              }
                                                             }
 
                                                             if (navigator.share) {
