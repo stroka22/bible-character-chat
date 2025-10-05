@@ -176,12 +176,8 @@ const HomePage = () => {
                             to avoid confusing end-users with technical details. */
                     ] }) })
             ,
-            /* Featured Character banner (shows when configured) */
-            featured && _jsx("div", { className: "relative z-10 flex justify-center mt-6", children: _jsx("div", { className: "flex items-center gap-4 px-5 py-3 bg-white/5 backdrop-blur-md border border-white/15 rounded-xl shadow-lg", children: _jsxs(_Fragment, { children: [
-                            _jsx("img", { src: featured.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(featured.name)}`, alt: featured.name, className: "h-10 w-10 rounded-full object-cover" }),
-                            _jsx("span", { className: "text-yellow-300 font-semibold", children: featured.name }),
-                            _jsx(Link, { to: `/chat?character=${featured.id}`, className: "ml-auto px-4 py-1.5 bg-yellow-400 text-blue-900 rounded-full text-sm font-semibold hover:bg-yellow-300 transition-colors", children: "Chat Now" })
-                        ] }) }) })
+            /* Featured Character banner hidden by request */
+            null
             /* Site footer */
             , _jsx("div", { className: "relative z-10", children: _jsx(Footer, {}) })
         ] }));
