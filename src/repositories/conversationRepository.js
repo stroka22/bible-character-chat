@@ -104,11 +104,14 @@ function isSkipAuth() {
   try {
     const params = new URLSearchParams(window.location.search);
     const bypass = window.localStorage?.getItem('bypass_auth') === 'true';
-    return (
+    const devHint = (
       params.get('skipAuth') === '1' ||
       import.meta.env?.VITE_SKIP_AUTH === 'true' ||
       bypass
     );
+    // In production, never allow skip/bypass
+    if (import.meta?.env?.PROD) return false;
+    return devHint;
   } catch {
     return false;
   }
