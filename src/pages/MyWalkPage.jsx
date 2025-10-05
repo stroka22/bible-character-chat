@@ -161,6 +161,13 @@ const MyWalkPage = () => {
     setImporting(true);
     const results = { created: 0, failed: 0 };
     try {
+      // Ensure we import into the real (Supabase) account by temporarily
+      // disabling bypass mode for the duration of the import operation.
+      const prevBypass = (() => {
+        try { return localStorage.getItem('bypass_auth'); } catch { return null; }
+      })();
+      try { localStorage.setItem('bypass_auth', 'false'); } catch {}
+
       for (const conv of localConvs) {
         try {
           const created = await conversationRepository.createConversation({
@@ -188,12 +195,25 @@ const MyWalkPage = () => {
       setImportSummary(results);
       // After import, refresh server list
       await fetchConversations?.();
-      // Offer to clear local storage copy
+      // Restore previous bypass mode exactly as it was
       try {
-        localStorage.removeItem('mockConversationStorage');
-        localStorage.removeItem('bypass_auth');
+        if (prevBypass === 'true') {
+          localStorage.setItem('bypass_auth', 'true');
+        } else if (prevBypass === 'false') {
+          localStorage.setItem('bypass_auth', 'false');
+        } else {
+          localStorage.removeItem('bypass_auth');
+        }
       } catch {}
-      alert(`Import complete. Created: ${results.created}. Failed: ${results.failed}.`);
+
+      // Offer to clear local storage copy only after a successful import
+      const msg = `Import complete. Created: ${results.created}. Failed: ${results.failed}.`;
+      if (results.created > 0 && window.confirm(`${msg}\n\nDelete the local copy now? (This cannot be undone)`)) {
+        try { localStorage.removeItem('mockConversationStorage'); } catch {}
+        alert('Local copy deleted.');
+      } else {
+        alert(msg);
+      }
     } finally {
       setImporting(false);
     }
