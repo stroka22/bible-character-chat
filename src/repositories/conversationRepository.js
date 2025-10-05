@@ -143,8 +143,9 @@ export const conversationRepository = {
   async createConversation(conversation = {}) {
     try {
       const uid = await getCurrentUserId();
-      // Prefer Supabase whenever a real user session exists, regardless of bypass flags
-      if (uid) {
+      const SKIP = isSkipAuth();
+      // Prefer Supabase whenever a real user session exists and we're NOT explicitly bypassing
+      if (uid && !SKIP) {
         // Ensure the lower-level chatRepository is in REAL mode
         try { chatRepositoryMode.forceReal(); } catch {}
         const cid = normaliseCharacterId(conversation.character_id, conversation);
@@ -249,7 +250,8 @@ export const conversationRepository = {
   } = {}) {
     try {
       const uid = await getCurrentUserId();
-      if (uid) {
+      const SKIP = isSkipAuth();
+      if (uid && !SKIP) {
         try { chatRepositoryMode.forceReal(); } catch {}
         // Supabase-backed list
         const rows = await chatRepository.getUserChats(uid);
@@ -354,7 +356,8 @@ export const conversationRepository = {
   async getConversationWithMessages(conversationId, { includeDeleted = false } = {}) {
     try {
       const uid = await getCurrentUserId();
-      if (uid) {
+      const SKIP = isSkipAuth();
+      if (uid && !SKIP) {
         try { chatRepositoryMode.forceReal(); } catch {}
         const conv = await chatRepository.getChatById(conversationId);
         if (!conv) throw new Error('Conversation not found');
@@ -414,8 +417,9 @@ export const conversationRepository = {
   async addMessage(messageData, role) {
     try {
       const uid = await getCurrentUserId();
+      const SKIP = isSkipAuth();
 
-      if (uid) {
+      if (uid && !SKIP) {
         try { chatRepositoryMode.forceReal(); } catch {}
         let content, messageRole, conversationId;
         if (typeof messageData === 'string') {
@@ -502,7 +506,8 @@ export const conversationRepository = {
   async updateConversation(conversationId, updates = {}) {
     try {
       const uid = await getCurrentUserId();
-      if (uid) {
+      const SKIP = isSkipAuth();
+      if (uid && !SKIP) {
         try { chatRepositoryMode.forceReal(); } catch {}
         return await chatRepository.updateChat(conversationId, updates);
       }
@@ -543,7 +548,8 @@ export const conversationRepository = {
   async deleteConversation(conversationId) {
     try {
       const uid = await getCurrentUserId();
-      if (uid) {
+      const SKIP = isSkipAuth();
+      if (uid && !SKIP) {
         try { chatRepositoryMode.forceReal(); } catch {}
         await chatRepository.deleteChat(conversationId);
         return true;
@@ -604,7 +610,8 @@ export const conversationRepository = {
   async shareConversation(conversationId) {
     try {
       const uid = await getCurrentUserId();
-      if (uid) {
+      const SKIP = isSkipAuth();
+      if (uid && !SKIP) {
         console.warn('[ConversationRepository] Share not implemented in Supabase path – using mock fallback');
       }
       console.log('[MOCK] Sharing conversation:', conversationId);
@@ -640,7 +647,8 @@ export const conversationRepository = {
   async getSharedConversation(shareCode) {
     try {
       const uid = await getCurrentUserId();
-      if (uid) {
+      const SKIP = isSkipAuth();
+      if (uid && !SKIP) {
         console.warn('[ConversationRepository] getSharedConversation not implemented in Supabase path – using mock fallback');
       }
       console.log('[MOCK] Fetching shared conversation with code:', shareCode);
@@ -689,7 +697,8 @@ export const conversationRepository = {
   async stopSharing(conversationId) {
     try {
       const uid = await getCurrentUserId();
-      if (uid) {
+      const SKIP = isSkipAuth();
+      if (uid && !SKIP) {
         console.warn('[ConversationRepository] stopSharing not implemented in Supabase path – using mock fallback');
       }
       console.log('[MOCK] Stopping sharing for conversation:', conversationId);
