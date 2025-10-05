@@ -65,7 +65,8 @@ const SimpleChatWithHistory = () => {
     const {
         fetchConversationWithMessages,
         isLoading: convLoading,
-        error: convError
+        error: convError,
+        shareConversation
     } = useConversation();
 
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
@@ -650,11 +651,11 @@ const SimpleChatWithHistory = () => {
                                                                 }
                                                             }
 
-                                                            // Prefer public share_code when repository supports it
+                                                            // Try to generate a public share_code via ConversationContext
                                                             let shareUrl;
                                                             try {
-                                                              if (chatId && typeof window.__shareConversation === 'function') {
-                                                                const code = await window.__shareConversation(chatId);
+                                                              if (chatId && typeof shareConversation === 'function') {
+                                                                const code = await shareConversation(chatId);
                                                                 if (code) {
                                                                   shareUrl = `${origin}/shared/${code}`;
                                                                 }
