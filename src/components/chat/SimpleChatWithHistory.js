@@ -694,27 +694,12 @@ const SimpleChatWithHistory = () => {
                                                             // If no public share URL, do nothing (avoid non-public fallbacks)
                                                             if (!shareUrl) return;
 
-                                                            if (navigator.share) {
-                                                                navigator.share({
-                                                                    title: `Chat with ${character.name}`,
-                                                                    text: 'Check out my conversation!',
-                                                                    url: shareUrl
-                                                                }).catch(err => {
-                                                                    console.log('Share failed:', err);
-                                                                    try {
-                                                                        navigator.clipboard.writeText(shareUrl);
-                                                                        // silent copy
-                                                                    } catch {
-                                                                        // ignore
-                                                                    }
-                                                                });
-                                                            } else {
-                                                                try {
-                                                                    navigator.clipboard.writeText(shareUrl);
-                                                                    // silent copy
-                                                                } catch {
-                                                                    // ignore
-                                                                }
+                                                            // Always copy silently (no native share popups)
+                                                            try {
+                                                              navigator.clipboard.writeText(shareUrl);
+                                                              // silent copy
+                                                            } catch {
+                                                              // ignore
                                                             }
                                                         },
                                                         children: [

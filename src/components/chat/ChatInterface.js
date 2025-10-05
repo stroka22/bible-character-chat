@@ -104,26 +104,13 @@ const ChatInterface = () => {
             }
         } catch {}
 
-        // Share or copy
+        // Always copy silently (no native share popups)
         try {
-            if (navigator.share) {
-                await navigator.share({
-                    title: `Chat with ${character?.name}`,
-                    text: 'Check out my conversation!',
-                    url
-                });
-            } else {
-                await navigator.clipboard.writeText(url);
-                // silent copy
-            }
+            await navigator.clipboard.writeText(url);
+            // silent copy
         } catch (err) {
-            console.log('Share failed:', err);
-            try {
-                await navigator.clipboard.writeText(url);
-                // silent copy
-            } catch {
-                // ignore
-            }
+            console.log('Clipboard copy failed:', err);
+            // ignore
         }
     }, [character?.name, chatId, isAuthenticated, messages.length, location.search, navigate, saveChat, shareConversation]);
 
