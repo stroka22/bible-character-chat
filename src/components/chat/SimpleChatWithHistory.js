@@ -632,12 +632,30 @@ const SimpleChatWithHistory = () => {
                                                     _jsxs("button", { 
                                                         id: "shareBtn", 
                                                         className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
-                                                        onClick: () => {
+                                                        onClick: async () => {
                                                             const origin = window.location.origin;
                                                             const params = new URLSearchParams(location.search);
-                                                            const shareUrl = chatId
+
+                                                            // If no saved chat yet but we can save, do so to generate a stable /chat/:id URL
+                                                            if (!chatId && isAuthenticated && messages.length > 0) {
+                                                                try {
+                                                                    const title = conversationTitle && conversationTitle.trim()
+                                                                      ? conversationTitle.trim()
+                                                                      : `Conversation with ${character.name}`;
+                                                                    await saveChat(title);
+                                                                    // Allow state + route sync effect to run
+                                                                    await new Promise(r => setTimeout(r, 800));
+                                                                } catch (e) {
+                                                                    console.warn('[Share] Auto-save before share failed:', e);
+                                                                }
+                                                            }
+
+                                                            // Recompute with potential new chatId (or updated URL from navigation effect)
+                                                            let shareUrl = chatId
                                                               ? `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`
-                                                              : window.location.href;
+                                                              : (window.location.pathname.startsWith('/chat/')
+                                                                  ? window.location.href
+                                                                  : window.location.href);
 
                                                             if (navigator.share) {
                                                                 navigator.share({
