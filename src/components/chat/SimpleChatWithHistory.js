@@ -691,6 +691,8 @@ const SimpleChatWithHistory = () => {
 
                                                             // If no public share URL, do nothing (avoid non-public fallbacks)
                                                             if (!shareUrl) return;
+                                                            // If no public share URL, do nothing (avoid non-public fallbacks)
+                                                            if (!shareUrl) return;
 
                                                             if (navigator.share) {
                                                                 navigator.share({
