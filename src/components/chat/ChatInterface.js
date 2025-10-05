@@ -1,7 +1,9 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
-import { Link } from 'react-router-dom';
+import { useConversation } from '../../contexts/ConversationContext.jsx';
+import { useAuth } from '../../contexts/AuthContext';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
@@ -35,8 +37,15 @@ const ChatInterface = () => {
         isTyping,
         retryLastMessage,
         resetChat,
-        sendMessage           // <-- needed for ChatInput
+        sendMessage,          // <-- needed for ChatInput
+        chatId,
+        isChatSaved,
+        saveChat
     } = useChat();
+    const { shareConversation } = useConversation();
+    const { isAuthenticated } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     /* Compact actions pop-up on mobile */
     const [showMobileActions, setShowMobileActions] = useState(false);
@@ -55,23 +64,74 @@ const ChatInterface = () => {
         setTimeout(() => setShowInsightsPanel(prev => !prev), 0);
     }, []);
 
-    const handleShare = useCallback(() => {
-        // Use setTimeout to defer execution and prevent UI blocking
-        setTimeout(() => {
+    const handleShare = useCallback(async () => {
+        const origin = window.location.origin;
+        const params = new URLSearchParams(location.search);
+
+        // If not yet saved, attempt to save (auth required in production)
+        if (!chatId && isAuthenticated && messages.length > 0 && character) {
+            try {
+                const title = `Conversation with ${character.name}`;
+                await saveChat(title);
+                // Give state/route a brief moment to update
+                await new Promise(r => setTimeout(r, 600));
+            } catch (e) {
+                console.warn('[ChatInterface] Auto-save before share failed:', e);
+            }
+        }
+
+        let url;
+        // Prefer public share link with share_code when possible
+        try {
+            if (typeof shareConversation === 'function' && (chatId || window.__lastChatId)) {
+                const id = chatId || window.__lastChatId;
+                const code = await shareConversation(id);
+                if (code) {
+                    url = `${origin}/shared/${code}`;
+                }
+            }
+        } catch (e) {
+            console.warn('[ChatInterface] share_code generation failed; falling back:', e);
+        }
+
+        // Fallback to canonical /chat/:id link
+        if (!url) {
+            if (chatId) {
+                url = `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`;
+            } else {
+                url = window.location.href;
+            }
+        }
+
+        // If we now have a chatId but URL bar isn't at /chat/:id yet, sync it for consistency
+        try {
+            if (chatId && !window.location.pathname.startsWith(`/chat/${chatId}`)) {
+                navigate(`/chat/${chatId}${location.search}`, { replace: true });
+            }
+        } catch {}
+
+        // Share or copy
+        try {
             if (navigator.share) {
-                navigator.share({
+                await navigator.share({
                     title: `Chat with ${character?.name}`,
                     text: 'Check out my conversation!',
-                    url: window.location.href
-                }).catch(err => {
-                    console.log('Share failed:', err);
-                    alert('Link copied to clipboard');
+                    url
                 });
             } else {
+                await navigator.clipboard.writeText(url);
                 alert('Link copied to clipboard');
             }
-        }, 0);
-    }, [character?.name]);
+        } catch (err) {
+            console.log('Share failed:', err);
+            try {
+                await navigator.clipboard.writeText(url);
+                alert('Link copied to clipboard');
+            } catch {
+                alert('Link ready: ' + url);
+            }
+        }
+    }, [character?.name, chatId, isAuthenticated, messages.length, location.search, navigate, saveChat, shareConversation]);
 
     const handleRetryLastMessage = useCallback((e) => {
         if (e) e.preventDefault();
