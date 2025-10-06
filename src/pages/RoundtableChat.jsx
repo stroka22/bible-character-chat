@@ -2,6 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useRoundtable } from '../contexts/RoundtableContext';
+import { useConversation } from '../contexts/ConversationContext.jsx';
 import Footer from '../components/Footer';
 
 const RoundtableChat = () => {
@@ -11,6 +12,7 @@ const RoundtableChat = () => {
     topic,
     messages,
     isTyping,
+    conversationId,
     sendUserMessage,
     advanceRound,
     error,
@@ -18,6 +20,7 @@ const RoundtableChat = () => {
     // Optional helper (may be undefined in older context versions)
     consumeAutoStartFlag
   } = useRoundtable();
+  const { shareConversation } = useConversation();
   
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
@@ -84,7 +87,7 @@ const RoundtableChat = () => {
           children: [
             // Header with topic and participants
             _jsxs("div", {
-              className: "sticky top-16 md:top-20 z-10 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
+              className: "sticky top-20 md:top-24 z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
               children: [
                 /* Home link */
                 _jsx("div", {
@@ -144,7 +147,7 @@ const RoundtableChat = () => {
                 
                 // Controls
                 _jsxs("div", {
-                  className: "flex justify-center gap-4 mb-4",
+                  className: "flex justify-center gap-4 mb-4 flex-wrap",
                   children: [
                     _jsx("button", {
                       onClick: () => navigate('/roundtable/setup'),
@@ -160,6 +163,30 @@ const RoundtableChat = () => {
                           : 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
                       }`,
                       children: isTyping ? "Characters Responding..." : "Advance Round"
+                    }),
+                    _jsx("button", {
+                      onClick: async () => {
+                        try {
+                          if (!conversationId) return;
+                          const shareCode = await shareConversation?.(conversationId);
+                          if (!shareCode) return;
+                          const url = `${window.location.origin}/shared/${shareCode}`;
+                          const title = `Roundtable: ${topic || 'Discussion'}`;
+                          const text = `Join this roundtable on \"${topic}\"`;
+                          if (navigator.share) {
+                            try {
+                              await navigator.share({ title, text, url });
+                              return;
+                            } catch {/* fallthrough */}
+                          }
+                          await navigator.clipboard.writeText(url);
+                          alert('Public link copied to clipboard');
+                        } catch (e) {
+                          console.error('Failed to share roundtable:', e);
+                        }
+                      },
+                      className: "px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors",
+                      children: "Share public link"
                     })
                   ]
                 })
@@ -178,7 +205,7 @@ const RoundtableChat = () => {
             // Transcript
             _jsxs("div", {
               ref: transcriptRef,
-              className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
+              className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 pt-6 md:pt-8 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
               children: [
                 messages.length === 0 ? (
                   _jsx("div", {
