@@ -12,7 +12,16 @@ export const userFavoritesRepository = {
         .select('character_id')
         .eq('user_id', userId);
       if (error) throw error;
-      return (data || []).map((r) => r.character_id);
+      const serverIds = (data || []).map((r) => r.character_id);
+      // Also merge any local favorites to ensure continuity when offline or when
+      // Supabase policies/tables are not yet provisioned. This helps My Walk
+      // show favorites saved locally until server sync is available.
+      let localIds = [];
+      try {
+        const saved = localStorage.getItem(LS_FAVORITES_KEY);
+        localIds = saved ? JSON.parse(saved) : [];
+      } catch {}
+      return Array.from(new Set([...(serverIds || []), ...(localIds || [])]));
     } catch (err) {
       console.warn('[userFavoritesRepository] Falling back to localStorage for favorites:', err?.message);
       try {

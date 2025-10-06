@@ -249,10 +249,12 @@ export const conversationRepository = {
   async getUserConversations({ 
     includeDeleted = false, 
     favoritesOnly = false,
-    characterId = null
+    characterId = null,
+    userId = null,
   } = {}) {
     try {
-      const uid = await getCurrentUserId();
+      // Allow caller to pass an explicit user id (prevents timing issues with auth session)
+      const uid = userId ?? (await getCurrentUserId());
       const SKIP = isSkipAuth();
       if (uid && !SKIP) {
         try { chatRepositoryMode.forceReal(); } catch {}

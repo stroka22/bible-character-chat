@@ -95,7 +95,11 @@ export const ConversationProvider = ({ children }) => {
       console.log(
         '[ConversationContext] Calling repository.getUserConversations()',
       );
-      const data = await conversationRepository.getUserConversations(options);
+      const data = await conversationRepository.getUserConversations({
+        ...options,
+        // Pass explicit user id to avoid timing issues with auth session
+        userId: user?.id || null,
+      });
       console.log(
         '[ConversationContext] Conversations received from repository:',
         data,
@@ -110,7 +114,7 @@ export const ConversationProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, SKIP_AUTH]);
+  }, [isAuthenticated, SKIP_AUTH, user?.id]);
 
   /**
    * Fetch a single conversation with its messages
