@@ -11,6 +11,7 @@ import siteSettingsRepository from '../repositories/siteSettingsRepository';
 import { userSettingsRepository } from '../repositories/userSettingsRepository';
 import { getOwnerSlug } from '../services/tierSettingsService';
 import { useAuth } from '../contexts/AuthContext';
+import userFavoritesRepository from '../repositories/userFavoritesRepository';
 
 // Define Bible books for filtering
 
@@ -62,6 +63,7 @@ const ScalableCharacterSelection: React.FC = () => {
   const [groups, setGroups] = useState<CharacterGroup[]>([]);
   const [activeFilters, setActiveFilters] = useState<{type: string, value: string}[]>([]);
   const [featuredCharacter, setFeaturedCharacter] = useState<Character | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<(string | number)[]>([]);
   /** When user clicks a card we show a quick “loading” overlay until ChatContext
    * finishes selecting the character.  This prevents a confusing pause where
    * nothing appears to happen, especially on slower connections. */
@@ -73,6 +75,22 @@ const ScalableCharacterSelection: React.FC = () => {
   // Get the chat context
   const { selectCharacter, character: selectedCharacter } = useChat();
   const { user } = useAuth();
+
+  // Load user's favorite character IDs
+  useEffect(() => {
+    (async () => {
+      if (!user?.id) {
+        setFavoriteIds([]);
+        return;
+      }
+      try {
+        const ids = await userFavoritesRepository.getFavoriteIds(user.id);
+        setFavoriteIds(ids || []);
+      } catch {
+        setFavoriteIds([]);
+      }
+    })();
+  }, [user?.id]);
 
   // Fetch characters on component mount
   const fetchCharacters = useCallback(async () => {
@@ -318,6 +336,16 @@ const ScalableCharacterSelection: React.FC = () => {
             character={character}
             onSelect={handleSelectCharacter}
             isSelected={selectedCharacter?.id === character.id}
+            isFavorite={favoriteIds.includes(character.id)}
+            onToggleFavorite={async () => {
+              if (!user?.id) return;
+              const isFav = favoriteIds.includes(character.id);
+              await userFavoritesRepository.setFavorite(user.id, character.id as any, !isFav);
+              try {
+                const ids = await userFavoritesRepository.getFavoriteIds(user.id);
+                setFavoriteIds(ids || []);
+              } catch {}
+            }}
           />
         </div>
       );
@@ -376,7 +404,7 @@ const ScalableCharacterSelection: React.FC = () => {
         </div>
       );
     }
-  }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter]);
+  }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteIds, user?.id]);
 
   // Generate pagination controls
   const renderPagination = () => {

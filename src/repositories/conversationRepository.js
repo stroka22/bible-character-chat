@@ -677,9 +677,11 @@ export const conversationRepository = {
    */
   async getSharedConversation(shareCode) {
     try {
-      const uid = await getCurrentUserId();
       const SKIP = isSkipAuth();
-      if (uid && !SKIP) {
+      // For public shared views we MUST use Supabase even for anonymous users
+      // (RLS should allow reads when is_shared=true). Only fall back to the
+      // mock path when explicitly skipping auth in local/dev bypass mode.
+      if (!SKIP) {
         try { chatRepositoryMode.forceReal(); } catch {}
         // Public path: fetch by share_code regardless of owner; RLS should allow when is_shared=true
         const { data: chat, error: chatErr } = await supabase
