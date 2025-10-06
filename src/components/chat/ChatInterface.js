@@ -104,13 +104,19 @@ const ChatInterface = () => {
             }
         } catch {}
 
-        // Always copy silently (no native share popups)
+        // Prefer native share sheet; fallback to clipboard
         try {
-            await navigator.clipboard.writeText(url);
-            // silent copy
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'FaithTalk AI Conversation',
+                    text: `Chat with ${character?.name || 'FaithTalk AI'}`,
+                    url,
+                });
+            } else {
+                await navigator.clipboard.writeText(url);
+            }
         } catch (err) {
-            console.log('Clipboard copy failed:', err);
-            // ignore
+            try { await navigator.clipboard.writeText(url); } catch {}
         }
     }, [character?.name, chatId, isAuthenticated, messages.length, location.search, navigate, saveChat, shareConversation]);
 

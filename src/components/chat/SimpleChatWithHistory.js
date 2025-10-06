@@ -694,13 +694,21 @@ const SimpleChatWithHistory = () => {
                                                             // If no public share URL, do nothing (avoid non-public fallbacks)
                                                             if (!shareUrl) return;
 
-                                                            // Always copy silently (no native share popups)
-                                                            try {
-                                                              navigator.clipboard.writeText(shareUrl);
-                                                              // silent copy
-                                                            } catch {
-                                                              // ignore
-                                                            }
+                                                    // Prefer native share sheet when available
+                                                    try {
+                                                      if (navigator.share) {
+                                                        await navigator.share({
+                                                          title: 'FaithTalk AI Conversation',
+                                                          text: `Chat with ${character.name}`,
+                                                          url: shareUrl,
+                                                        });
+                                                      } else {
+                                                        await navigator.clipboard.writeText(shareUrl);
+                                                      }
+                                                    } catch (e) {
+                                                      // Fallback to clipboard if user cancels or share not supported
+                                                      try { await navigator.clipboard.writeText(shareUrl); } catch {}
+                                                    }
                                                         },
                                                         children: [
                                                             _jsx("svg", { 
