@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useConversation } from '../contexts/ConversationContext.jsx';
@@ -34,6 +34,7 @@ const MyWalkPage = () => {
   // State for renaming conversations
   const [renamingConversationId, setRenamingConversationId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
+  const [sortMode, setSortMode] = useState('recent'); // 'recent' | 'favorites'
 
   // Load favorite characters from server (fallback to localStorage)
   useEffect(() => {
@@ -254,6 +255,27 @@ const MyWalkPage = () => {
     }
   };
 
+  // Sorted conversations based on selected sort mode
+  const sortedConversations = useMemo(() => {
+    const list = [...(conversations || [])];
+    if (sortMode === 'favorites') {
+      list.sort((a, b) => {
+        const favDelta = Number(!!b.is_favorite) - Number(!!a.is_favorite);
+        if (favDelta !== 0) return favDelta;
+        const da = new Date(a.updated_at || a.created_at || 0).getTime();
+        const db = new Date(b.updated_at || b.created_at || 0).getTime();
+        return db - da;
+      });
+    } else {
+      list.sort((a, b) => {
+        const da = new Date(a.updated_at || a.created_at || 0).getTime();
+        const db = new Date(b.updated_at || b.created_at || 0).getTime();
+        return db - da;
+      });
+    }
+    return list;
+  }, [conversations, sortMode]);
+
   // Placeholder when not logged in
   if (!user && !loading && hasAttemptedLoad) {
     return (
@@ -383,9 +405,23 @@ const MyWalkPage = () => {
 
         {/* Saved Conversations section */}
         <section>
-          <h2 className="text-2xl font-semibold text-yellow-300 mb-4">
-            Saved Conversations
-          </h2>
+          <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+            <h2 className="text-2xl font-semibold text-yellow-300">
+              Saved Conversations
+            </h2>
+            <div className="flex items-center gap-2">
+              <label htmlFor="sortMode" className="text-blue-200 text-sm">Sort by</label>
+              <select
+                id="sortMode"
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value)}
+                className="bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.2)] text-white text-sm rounded-md px-2 py-1"
+              >
+                <option value="recent">Most Recent</option>
+                <option value="favorites">Favorites First</option>
+              </select>
+            </div>
+          </div>
 
           {/* Empty state for conversations */}
           {!conversationsLoading && (!conversations || conversations.length === 0) && (
@@ -403,9 +439,9 @@ const MyWalkPage = () => {
           )}
 
           {/* Conversations list */}
-          {conversations && conversations.length > 0 && (
+          {sortedConversations && sortedConversations.length > 0 && (
             <div className="space-y-4">
-              {conversations.map(conv => (
+              {sortedConversations.map(conv => (
                 <div
                   key={conv.id}
                   className={`p-4 rounded-lg transition-colors ${
