@@ -79,9 +79,8 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
                 return;
             }
             const url = `${window.location.origin}/shared/${code}`;
+            // Copy silently – no popup for Share
             await navigator.clipboard.writeText(url);
-            setShowCopySuccess(true);
-            setTimeout(() => setShowCopySuccess(false), 3000);
         } catch (e) {
             console.error('Error generating public share link:', e);
             setError('Failed to generate share link. Please try again.');

@@ -81,7 +81,7 @@ const ChatInterface = () => {
         }
 
         let url;
-        // Prefer public share link with share_code when possible
+        // Prefer public share link with share_code; do not fall back to /chat/:id
         try {
             if (typeof shareConversation === 'function' && (chatId || window.__lastChatId)) {
                 const id = chatId || window.__lastChatId;
@@ -91,25 +91,11 @@ const ChatInterface = () => {
                 }
             }
         } catch (e) {
-            console.warn('[ChatInterface] share_code generation failed; falling back:', e);
+            console.warn('[ChatInterface] share_code generation failed:', e);
         }
 
-        // Fallback to a meaningful route if share_code not available
-        if (!url) {
-            if (chatId) {
-                url = `${origin}/chat/${chatId}${params.toString() ? `?${params.toString()}` : ''}`;
-            } else if (window.location.pathname.startsWith('/chat/')) {
-                // Already on a chat route (even without id) – keep current URL
-                url = window.location.href;
-            } else if (character && character.id) {
-                // Direct people into chat with the current character as a fallback
-                const qp = new URLSearchParams(params);
-                qp.set('character', character.id);
-                url = `${origin}/chat${qp.toString() ? `?${qp.toString()}` : ''}`;
-            } else {
-                url = `${origin}/chat`;
-            }
-        }
+        // If we do not have a public URL, exit silently (no non-public fallback)
+        if (!url) return;
 
         // If we now have a chatId but URL bar isn't at /chat/:id yet, sync it for consistency
         try {
@@ -118,26 +104,13 @@ const ChatInterface = () => {
             }
         } catch {}
 
-        // Share or copy
+        // Always copy silently (no native share popups)
         try {
-            if (navigator.share) {
-                await navigator.share({
-                    title: `Chat with ${character?.name}`,
-                    text: 'Check out my conversation!',
-                    url
-                });
-            } else {
-                await navigator.clipboard.writeText(url);
-                alert('Link copied to clipboard');
-            }
+            await navigator.clipboard.writeText(url);
+            // silent copy
         } catch (err) {
-            console.log('Share failed:', err);
-            try {
-                await navigator.clipboard.writeText(url);
-                alert('Link copied to clipboard');
-            } catch {
-                alert('Link ready: ' + url);
-            }
+            console.log('Clipboard copy failed:', err);
+            // ignore
         }
     }, [character?.name, chatId, isAuthenticated, messages.length, location.search, navigate, saveChat, shareConversation]);
 
