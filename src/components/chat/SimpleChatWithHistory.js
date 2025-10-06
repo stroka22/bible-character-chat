@@ -419,13 +419,16 @@ const SimpleChatWithHistory = () => {
     }, [character, conversationTitle, location.search, studyMeta, lessonMeta, shareCode]);
 
     // Keep URL synced with saved chat id so shared links hydrate the correct conversation
+    // IMPORTANT: Do NOT rewrite /shared/:code to /chat/:id. Shared view must remain stable
     useEffect(() => {
+        // If we're on a public share page, never replace the URL
+        if (shareCode) return;
         try {
             if (chatId && conversationId !== chatId) {
                 navigate(`/chat/${chatId}${location.search}`, { replace: true });
             }
         } catch {}
-    }, [chatId, conversationId, location.search, navigate]);
+    }, [chatId, conversationId, location.search, navigate, shareCode]);
 
     // Handle saving the conversation
     const handleSaveConversation = () => {
