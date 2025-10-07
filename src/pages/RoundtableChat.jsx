@@ -27,7 +27,11 @@ const RoundtableChat = () => {
   const transcriptRef = useRef(null);
   const headerRef = useRef(null);
   const [headerPad, setHeaderPad] = useState(128);
-  const [isSharedView, setIsSharedView] = useState(false);
+  const [isSharedView, setIsSharedView] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('shared') === '1';
+    } catch { return false; }
+  });
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -38,11 +42,13 @@ const RoundtableChat = () => {
   
   // Redirect to setup if no participants
   useEffect(() => {
+    // For shared views, never redirect to setup
+    if (isSharedView) return;
     // Only redirect to setup if there are no participants AND no messages
     if ((!participants || participants.length === 0) && (!messages || messages.length === 0)) {
       navigate('/roundtable/setup');
     }
-  }, [participants, messages, navigate]);
+  }, [participants, messages, navigate, isSharedView]);
   
   // Measure header height to prevent overlap
   useEffect(() => {
@@ -59,12 +65,13 @@ const RoundtableChat = () => {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  // Detect shared (read-only) view from query string
+  // Keep isSharedView in sync if URL changes
   useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      setIsSharedView(params.get('shared') === '1');
-    } catch {}
+    const onPop = () => {
+      try { setIsSharedView(new URLSearchParams(window.location.search).get('shared') === '1'); } catch {}
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
   
   // Auto-start the first round if the flag was set during setup
@@ -229,11 +236,13 @@ const RoundtableChat = () => {
               })
             ),
             
+            // Spacer to keep content below sticky header
+            _jsx("div", { "aria-hidden": true, style: { height: headerPad } }),
+
             // Transcript
             _jsxs("div", {
               ref: transcriptRef,
               className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
-              style: { paddingTop: headerPad },
               children: [
                 messages.length === 0 ? (
                   _jsx("div", {

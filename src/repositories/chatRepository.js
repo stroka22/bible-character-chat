@@ -76,23 +76,41 @@ export const chatRepository = {
             throw new Error('Failed to create chat. Please try again later.');
         }
     },
-    async addMessage(chatId, content, role) {
+    async addMessage(chatId, content, role, metadata) {
         if (useMock) {
             return mockChatRepository.addMessage(chatId, content, role);
         }
         try {
-            const newMessage = {
+            const baseMessage = {
                 chat_id: chatId,
                 content,
                 role
             };
-            const { data, error } = await supabase
+            // Attempt to include metadata when provided; if the column doesn't
+            // exist in the DB, we'll retry without it.
+            const newMessage = (metadata && typeof metadata === 'object')
+              ? { ...baseMessage, metadata }
+              : baseMessage;
+
+            let { data, error } = await supabase
                 .from('chat_messages')
                 .insert(newMessage)
                 .select()
                 .single();
             if (error) {
-                throw error;
+                // If metadata column is missing (undefined column), retry without it
+                const code = error.code || error.details || '';
+                const msg  = (error.message || '').toLowerCase();
+                if (msg.includes('column') && msg.includes('metadata')) {
+                    ({ data, error } = await supabase
+                        .from('chat_messages')
+                        .insert(baseMessage)
+                        .select()
+                        .single());
+                    if (error) throw error;
+                } else {
+                    throw error;
+                }
             }
             await supabase
                 .from('chats')
