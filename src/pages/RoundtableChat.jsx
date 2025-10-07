@@ -26,7 +26,8 @@ const RoundtableChat = () => {
   const messagesEndRef = useRef(null);
   const transcriptRef = useRef(null);
   const headerRef = useRef(null);
-  const [headerPad, setHeaderPad] = useState(96);
+  const [headerPad, setHeaderPad] = useState(128);
+  const [isSharedView, setIsSharedView] = useState(false);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -37,23 +38,33 @@ const RoundtableChat = () => {
   
   // Redirect to setup if no participants
   useEffect(() => {
-    if (!participants || participants.length === 0) {
+    // Only redirect to setup if there are no participants AND no messages
+    if ((!participants || participants.length === 0) && (!messages || messages.length === 0)) {
       navigate('/roundtable/setup');
     }
-  }, [participants, navigate]);
+  }, [participants, messages, navigate]);
   
   // Measure header height to prevent overlap
   useEffect(() => {
     const measure = () => {
       try {
         const h = headerRef.current?.offsetHeight || 96;
-        // Add a small cushion beneath the sticky header
-        setHeaderPad(h + 16);
+        // Add a generous cushion beneath the sticky header to cover sticky offset variations
+        const cushion = window.innerWidth < 768 ? 40 : 56;
+        setHeaderPad(h + cushion);
       } catch {}
     };
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  // Detect shared (read-only) view from query string
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setIsSharedView(params.get('shared') === '1');
+    } catch {}
   }, []);
   
   // Auto-start the first round if the flag was set during setup
@@ -173,9 +184,9 @@ const RoundtableChat = () => {
                     }),
                     _jsx("button", {
                       onClick: handleAdvanceRound,
-                      disabled: isTyping,
+                      disabled: isTyping || isSharedView,
                       className: `px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        isTyping
+                        (isTyping || isSharedView)
                           ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
                           : 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
                       }`,
@@ -343,17 +354,17 @@ const RoundtableChat = () => {
                   value: inputValue,
                   onChange: (e) => setInputValue(e.target.value),
                   placeholder: "Type your message...",
-                  disabled: isTyping,
+                  disabled: isTyping || isSharedView,
                   className: `flex-1 bg-white/10 border border-white/30 rounded-full py-3 px-4 text-white placeholder-blue-100/70 
                     focus:outline-none focus:ring-2 focus:ring-yellow-400/50
-                    ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}
+                    ${(isTyping || isSharedView) ? 'opacity-50 cursor-not-allowed' : ''}
                   `
                 }),
                 _jsx("button", {
                   type: "submit",
-                  disabled: isTyping || !inputValue.trim(),
+                  disabled: isTyping || !inputValue.trim() || isSharedView,
                   className: `px-4 py-2 rounded-full transition-colors flex items-center justify-center
-                    ${isTyping || !inputValue.trim()
+                    ${(isTyping || !inputValue.trim() || isSharedView)
                       ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
                       : 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'}
                   `,

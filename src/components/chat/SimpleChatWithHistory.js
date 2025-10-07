@@ -331,8 +331,9 @@ const SimpleChatWithHistory = () => {
                 const conv = await fetchConversationWithMessages(conversationId);
                 if (conv) {
                     // If this is a roundtable conversation, hydrate roundtable and redirect
-                    const convType = conv.type || conv.conversation_type;
-                    if (convType === 'roundtable' && typeof hydrateRoundtable === 'function') {
+                    const convType = (conv.type || conv.conversation_type || '').toLowerCase();
+                    const isRoundtableByTitle = typeof conv.title === 'string' && conv.title.startsWith('Roundtable: ');
+                    if ((convType === 'roundtable' || isRoundtableByTitle) && typeof hydrateRoundtable === 'function') {
                         try { await hydrateRoundtable(conv); } catch {}
                         navigate('/roundtable', { replace: true });
                         return;
@@ -377,10 +378,11 @@ const SimpleChatWithHistory = () => {
             try {
                 const conv = await getSharedConversation(shareCode);
                 if (conv) {
-                    const convType = conv.type || conv.conversation_type;
-                    if (convType === 'roundtable' && typeof hydrateRoundtable === 'function') {
+                    const convType = (conv.type || conv.conversation_type || '').toLowerCase();
+                    const isRoundtableByTitle = typeof conv.title === 'string' && conv.title.startsWith('Roundtable: ');
+                    if ((convType === 'roundtable' || isRoundtableByTitle) && typeof hydrateRoundtable === 'function') {
                         try { await hydrateRoundtable(conv); } catch {}
-                        return navigate('/roundtable', { replace: true });
+                        return navigate('/roundtable?shared=1', { replace: true });
                     }
                     hydrateFromConversation(conv);
                 }
