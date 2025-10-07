@@ -8,24 +8,18 @@
  * 
  * Usage: node create_working_characters.js
  * 
- * Requirements: npm install @supabase/supabase-js node-fetch
+ * Requirements: Node 18+ (uses global fetch), @supabase/supabase-js
  */
 
 import { createClient } from '@supabase/supabase-js';
+import 'dotenv/config';
 
-// Dynamically import node-fetch
-let _fetch;
 async function fetchWithTimeout(url, options = {}, timeout = 10000) {
-  if (!_fetch) {
-    const mod = await import('node-fetch');
-    _fetch = mod.default || mod;
-  }
-  
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
   try {
-    const response = await _fetch(url, {
+    const response = await fetch(url, {
       ...options,
       signal: controller.signal
     });
@@ -36,8 +30,12 @@ async function fetchWithTimeout(url, options = {}, timeout = 10000) {
 }
 
 // Supabase connection details
-const SUPABASE_URL = 'https://sihfbzltlhkerkxozadt.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpaGZiemx0bGhrZXJreG96YWR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwNzc2NTgsImV4cCI6MjA2NTY1MzY1OH0.5H3eQxQxSfHZnpScO9bGHrSXA3GVuorLgpcTCEIomX4';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('\u001b[31mMissing SUPABASE_URL or SUPABASE_ANON_KEY env vars. Create a .env file and retry.\u001b[0m');
+  process.exit(1);
+}
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ANSI color codes for prettier output

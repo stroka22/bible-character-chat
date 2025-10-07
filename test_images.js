@@ -8,19 +8,11 @@
  * 
  * Usage: node test_images.js
  * 
- * Requirements: npm install node-fetch
+ * Requirements: Node 18+ (uses global fetch)
  */
 
-// Dynamically import `node-fetch` the first time we need it so the file
-// can run in common Node environments (ESM or CJS) without a top-level
-// import error.
-let _fetch;
 async function fetchHead(url, options = {}) {
-  if (!_fetch) {
-    const mod = await import('node-fetch');
-    _fetch = mod.default || mod; // ESM/CJS compatibility
-  }
-  return _fetch(url, options);
+  return fetch(url, options);
 }
 
 // ANSI color codes for prettier console output
