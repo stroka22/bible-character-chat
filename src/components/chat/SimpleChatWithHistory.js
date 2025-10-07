@@ -331,7 +331,8 @@ const SimpleChatWithHistory = () => {
                 const conv = await fetchConversationWithMessages(conversationId);
                 if (conv) {
                     // If this is a roundtable conversation, hydrate roundtable and redirect
-                    if (conv.type === 'roundtable' && typeof hydrateRoundtable === 'function') {
+                    const convType = conv.type || conv.conversation_type;
+                    if (convType === 'roundtable' && typeof hydrateRoundtable === 'function') {
                         try { await hydrateRoundtable(conv); } catch {}
                         navigate('/roundtable', { replace: true });
                         return;
@@ -376,7 +377,8 @@ const SimpleChatWithHistory = () => {
             try {
                 const conv = await getSharedConversation(shareCode);
                 if (conv) {
-                    if (conv.type === 'roundtable' && typeof hydrateRoundtable === 'function') {
+                    const convType = conv.type || conv.conversation_type;
+                    if (convType === 'roundtable' && typeof hydrateRoundtable === 'function') {
                         try { await hydrateRoundtable(conv); } catch {}
                         return navigate('/roundtable', { replace: true });
                     }

@@ -25,6 +25,8 @@ const RoundtableChat = () => {
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
   const transcriptRef = useRef(null);
+  const headerRef = useRef(null);
+  const [headerPad, setHeaderPad] = useState(96);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -39,6 +41,20 @@ const RoundtableChat = () => {
       navigate('/roundtable/setup');
     }
   }, [participants, navigate]);
+  
+  // Measure header height to prevent overlap
+  useEffect(() => {
+    const measure = () => {
+      try {
+        const h = headerRef.current?.offsetHeight || 96;
+        // Add a small cushion beneath the sticky header
+        setHeaderPad(h + 16);
+      } catch {}
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
   
   // Auto-start the first round if the flag was set during setup
   useEffect(() => {
@@ -87,6 +103,7 @@ const RoundtableChat = () => {
           children: [
             // Header with topic and participants
             _jsxs("div", {
+              ref: headerRef,
               className: "sticky top-20 md:top-24 z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
               children: [
                 /* Home link */
@@ -180,7 +197,6 @@ const RoundtableChat = () => {
                             } catch {/* fallthrough */}
                           }
                           await navigator.clipboard.writeText(url);
-                          alert('Public link copied to clipboard');
                         } catch (e) {
                           console.error('Failed to share roundtable:', e);
                         }
@@ -205,7 +221,8 @@ const RoundtableChat = () => {
             // Transcript
             _jsxs("div", {
               ref: transcriptRef,
-              className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 pt-20 md:pt-24 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
+              className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
+              style: { paddingTop: headerPad },
               children: [
                 messages.length === 0 ? (
                   _jsx("div", {
