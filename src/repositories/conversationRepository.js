@@ -440,8 +440,13 @@ export const conversationRepository = {
           content = messageData.content;
           messageRole = messageData.role;
           conversationId = messageData.conversation_id;
+          // Pass through metadata when available (e.g., roundtable speaker id)
+          const metadata = messageData.metadata || undefined;
+          const finalRole = messageRole || (metadata && metadata.speakerCharacterId ? 'assistant' : 'user');
+          return await chatRepository.addMessage(conversationId, content, finalRole, metadata);
         }
-        return await chatRepository.addMessage(conversationId, content, messageRole);
+        const finalRole = messageRole || 'user';
+        return await chatRepository.addMessage(conversationId, content, finalRole);
       }
       // Handle different parameter formats
       let content, messageRole, conversationId, metadata = {};

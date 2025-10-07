@@ -101,13 +101,15 @@ export const chatRepository = {
     },
     async addMessage(chatId, content, role, metadata) {
         if (useMock) {
-            return mockChatRepository.addMessage(chatId, content, role);
+            const finalRole = role || (metadata && metadata.speakerCharacterId ? 'assistant' : 'user');
+            return mockChatRepository.addMessage(chatId, content, finalRole);
         }
         try {
+            const finalRole = role || (metadata && metadata.speakerCharacterId ? 'assistant' : 'user');
             const baseMessage = {
                 chat_id: chatId,
                 content,
-                role
+                role: finalRole
             };
             // Attempt to include metadata when provided; if the column doesn't
             // exist in the DB, we'll retry without it.
