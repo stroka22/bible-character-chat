@@ -147,11 +147,11 @@ const RoundtableChat = () => {
                 
                 // Controls
                 _jsxs("div", {
-                  className: "flex justify-center gap-4 mb-4 flex-wrap",
+                  className: "flex justify-center gap-3 md:gap-4 mb-4 flex-wrap",
                   children: [
                     _jsx("button", {
                       onClick: () => navigate('/roundtable/setup'),
-                      className: "px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors",
+                      className: "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-yellow-400 hover:bg-yellow-500 text-blue-900",
                       children: "New Roundtable"
                     }),
                     _jsx("button", {
@@ -185,8 +185,8 @@ const RoundtableChat = () => {
                           console.error('Failed to share roundtable:', e);
                         }
                       },
-                      className: "px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm hover:bg-white/20 transition-colors",
-                      children: "Share public link"
+                      className: "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-yellow-400 hover:bg-yellow-500 text-blue-900",
+                      children: "Share"
                     })
                   ]
                 })
@@ -205,7 +205,7 @@ const RoundtableChat = () => {
             // Transcript
             _jsxs("div", {
               ref: transcriptRef,
-              className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 pt-6 md:pt-8 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
+              className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 pt-20 md:pt-24 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
               children: [
                 messages.length === 0 ? (
                   _jsx("div", {
