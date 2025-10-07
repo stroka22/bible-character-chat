@@ -46,7 +46,7 @@ const shouldFallback = (error) => {
     return false;
 };
 export const chatRepository = {
-    async createChat(userId, characterId, title) {
+    async createChat(userId, characterId, title, extra = {}) {
         // If already in mock mode, short-circuit
         if (useMock) {
             return mockChatRepository.createChat(userId, characterId, title);
@@ -58,15 +58,38 @@ export const chatRepository = {
                 character_id: characterId,
                 title: title || `Chat ${new Date().toLocaleString()}`,
                 is_favorite: false,
+                // Optional roundtable fields (ignored if columns don’t exist)
+                ...(['conversation_type','participants'].reduce((acc, key) => {
+                  if (Object.prototype.hasOwnProperty.call(extra, key)) acc[key] = extra[key];
+                  return acc;
+                }, {}))
             };
 
-            const { data, error } = await supabase
+            let { data, error } = await supabase
                 .from('chats')
                 .insert(newChat)
                 .select()
                 .single();
-
-            if (error) throw error;
+            if (error) {
+                // If optional columns aren’t present, retry without them
+                const msg = (error.message || '').toLowerCase();
+                if (msg.includes('column') && (msg.includes('conversation_type') || msg.includes('participants'))) {
+                    const fallbackChat = {
+                      user_id: userId,
+                      character_id: characterId,
+                      title: title || `Chat ${new Date().toLocaleString()}`,
+                      is_favorite: false,
+                    };
+                    ({ data, error } = await supabase
+                        .from('chats')
+                        .insert(fallbackChat)
+                        .select()
+                        .single());
+                    if (error) throw error;
+                } else {
+                    throw error;
+                }
+            }
             return data;
         } catch (error) {
             if (shouldFallback(error)) {

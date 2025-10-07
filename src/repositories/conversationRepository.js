@@ -155,7 +155,11 @@ export const conversationRepository = {
         const title = (typeof conversation.title === 'string' && conversation.title.trim())
           ? conversation.title.trim()
           : undefined;
-        const created = await chatRepository.createChat(uid, cid, title);
+        // Pass through optional roundtable fields if provided
+        const extra = {};
+        if (conversation.type) extra.conversation_type = conversation.type;
+        if (Array.isArray(conversation.participants)) extra.participants = conversation.participants;
+        const created = await chatRepository.createChat(uid, cid, title, extra);
         // Keep legacy activeConversationId in sync for addMessage(content, role)
         this.activeConversationId = created?.id || null;
         return created;
