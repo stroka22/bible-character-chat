@@ -224,6 +224,8 @@ export const RoundtableProvider = ({ children }) => {
     
     // Add to messages
     setMessages(prev => [...prev, userMessage]);
+    // Prepare a fresh snapshot including the just-added user message
+    const nextMessages = [...messages, userMessage];
     
     // Persist message if conversation exists
     if (conversationId && typeof addMessage === 'function') {
@@ -239,8 +241,9 @@ export const RoundtableProvider = ({ children }) => {
       }
     }
     
-    // Generate character replies
-    await generateRoundReplies();
+    // Generate character replies using the fresh snapshot so the latest
+    // user input is definitely included in context.
+    await generateRoundReplies(nextMessages);
     
     return userMessage;
   }, [participants, conversationId, generateMessageId, addMessage]);
@@ -254,19 +257,22 @@ export const RoundtableProvider = ({ children }) => {
       return false;
     }
     
-    await generateRoundReplies();
+    await generateRoundReplies(messages);
     return true;
-  }, [participants]);
+  }, [participants, messages]);
 
   /**
    * Internal function to generate replies from characters
    */
-  const generateRoundReplies = useCallback(async () => {
+  const generateRoundReplies = useCallback(async (baseMessages) => {
     if (!participants.length) return;
     
     setIsTyping(true);
     
     try {
+      // Work with a local copy of the message history to ensure
+      // within-round responses can see prior speakers in the same round.
+      const workingMessages = [...(baseMessages || messages)];
       // Determine which characters will speak in this round
       let speakers = [];
       
@@ -303,7 +309,7 @@ export const RoundtableProvider = ({ children }) => {
         
         // Create a simplified message history for the API
         // Include the last 10 messages for context
-        const recentMessages = messages.slice(-10).map(msg => {
+        const recentMessages = workingMessages.slice(-10).map(msg => {
           // For character messages, include the speaker's name
           if (msg.metadata?.speakerCharacterId) {
             const speakerChar = participants.find(p => p.id === msg.metadata.speakerCharacterId);
@@ -326,16 +332,20 @@ export const RoundtableProvider = ({ children }) => {
           .join(', ');
         
         // Detect latest user input (if any) to allow topical pivots
-        const latestUserInput = [...messages].reverse().find(m => m.role === 'user')?.content || '';
+        const latestUserInput = [...workingMessages].reverse().find(m => m.role === 'user')?.content || '';
 
+        const persona = speaker.persona_prompt || speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`;
+        const traits = Array.isArray(speaker.character_traits)
+          ? speaker.character_traits.join(', ')
+          : (speaker.character_traits || '');
         const systemMessage = {
           role: 'system',
-          content: `You are ${speaker.name}, ${speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`}. 
+          content: `You are ${speaker.name}. Persona: ${persona}. ${traits ? `Known traits: ${traits}.` : ''}
 You are participating in a roundtable discussion on the topic: "${topic}".
 The other participants are: ${otherParticipantNames}.
 Respond in first person as ${speaker.name}. You may reference other participants by name.
 Keep your response concise (${maxWordsPerReply} words or less).
-Critically: do not repeat or lightly rephrase points already made in this discussion. Bring a new perspective, deepen a prior point with a specific scripture, or challenge/affirm another speaker by name.
+Critically: do not repeat or lightly rephrase points already made. Bring a distinct perspective shaped by your background; cite specific scripture when helpful; or challenge/affirm another speaker by name.
 If the user's latest input shifts the focus, explicitly address that shift.
 ${latestUserInput ? `Latest user input to consider: "${latestUserInput}"` : ''}
 Stay in character and draw from biblical knowledge.`.trim()
@@ -357,8 +367,6 @@ Stay in character and draw from biblical knowledge.`.trim()
         
         // Generate response
         try {
-          const persona = speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`;
-          
           const reply = await generateCharacterResponse(
             speaker.name,
             persona,
@@ -381,6 +389,12 @@ Stay in character and draw from biblical knowledge.`.trim()
               content: limitedReply 
             } : m)
           );
+          // Also update our working snapshot so later speakers see this reply
+          workingMessages.push({
+            role: 'assistant',
+            content: limitedReply,
+            metadata: { speakerCharacterId: speaker.id }
+          });
           
           // Persist message
           if (conversationId && typeof addMessage === 'function') {
@@ -443,7 +457,7 @@ Stay in character and draw from biblical knowledge.`.trim()
         const followUpCandidates = candidates.slice(0, followUpsPerRound.current);
         
         // Get the most recent messages for context
-        const recentMessages = messages.slice(-10).map(msg => {
+        const recentMessages = workingMessages.slice(-10).map(msg => {
           // For character messages, include the speaker's name
           if (msg.metadata?.speakerCharacterId) {
             const speakerChar = participants.find(p => p.id === msg.metadata.speakerCharacterId);
@@ -467,10 +481,10 @@ Stay in character and draw from biblical knowledge.`.trim()
             .join(', ');
           
           // Create system message with follow-up instructions
-          const latestUserInputFU = [...messages].reverse().find(m => m.role === 'user')?.content || '';
+          const latestUserInputFU = [...workingMessages].reverse().find(m => m.role === 'user')?.content || '';
           const systemMessage = {
             role: 'system',
-            content: `You are ${candidate.name}, ${candidate.description || `a biblical figure known for ${candidate.scriptural_context || 'wisdom'}`}. 
+            content: `You are ${candidate.name}. Persona: ${candidate.persona_prompt || candidate.description || `a biblical figure known for ${candidate.scriptural_context || 'wisdom'}`}${candidate.character_traits ? `. Known traits: ${Array.isArray(candidate.character_traits) ? candidate.character_traits.join(', ') : candidate.character_traits}.` : ''}
 You are participating in a roundtable discussion on the topic: "${topic}".
 The other participants are: ${otherParticipantNames}.
 Only reply if you have a specific response to one of the last messages (agreement, disagreement, clarification). If not, respond exactly with (skip).
@@ -484,11 +498,9 @@ Stay in character and draw from biblical knowledge.`.trim()
           const apiMessages = [systemMessage, ...recentMessages];
           
           try {
-            const persona = candidate.description || `a biblical figure known for ${candidate.scriptural_context || 'wisdom'}`;
-            
             const reply = await generateCharacterResponse(
               candidate.name,
-              persona,
+              candidate.persona_prompt || candidate.description || `a biblical figure known for ${candidate.scriptural_context || 'wisdom'}`,
               apiMessages
             );
             
@@ -515,6 +527,12 @@ Stay in character and draw from biblical knowledge.`.trim()
               
               // Add to messages
               setMessages(prev => [...prev, followUpMessage]);
+              // And to working snapshot
+              workingMessages.push({
+                role: 'assistant',
+                content: limitedReply,
+                metadata: { speakerCharacterId: candidate.id }
+              });
               
               // Persist message
               if (conversationId && typeof addMessage === 'function') {
