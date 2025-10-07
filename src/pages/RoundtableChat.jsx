@@ -27,6 +27,7 @@ const RoundtableChat = () => {
   const transcriptRef = useRef(null);
   const headerRef = useRef(null);
   const [headerPad, setHeaderPad] = useState(128);
+  const [pageOffset, setPageOffset] = useState(0);
   const [isSharedView, setIsSharedView] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get('shared') === '1';
@@ -58,6 +59,18 @@ const RoundtableChat = () => {
         // Add a generous cushion beneath the sticky header to cover sticky offset variations
         const cushion = window.innerWidth < 768 ? 40 : 56;
         setHeaderPad(h + cushion);
+
+        // Also account for any global app header/banner that may be sticky/fixed
+        let globalH = 0;
+        try {
+          const globalHeader = document.querySelector('header, .site-header, #app-header');
+          if (globalHeader && typeof globalHeader.getBoundingClientRect === 'function') {
+            const rect = globalHeader.getBoundingClientRect();
+            globalH = Math.max(rect.height || 0, globalHeader.offsetHeight || 0);
+          }
+        } catch {}
+        // Add a bit of cushion so content never sits under the app header
+        setPageOffset(globalH ? globalH + 16 : 0);
       } catch {}
     };
     measure();
@@ -115,6 +128,7 @@ const RoundtableChat = () => {
   return (
     _jsxs("div", {
       className: "min-h-screen bg-gradient-to-b from-blue-950 via-indigo-900 to-indigo-800 py-6 px-4 md:px-6",
+      style: { marginTop: pageOffset },
       children: [
         _jsxs("div", {
           className: "max-w-4xl mx-auto bg-white/10 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/15 shadow-xl",
@@ -168,7 +182,7 @@ const RoundtableChat = () => {
                           children: _jsx("img", {
                             src: participant.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(participant.name)}&background=random`,
                             alt: participant.name,
-                            className: "w-full h-full object-cover"
+                            className: "w-full h-full object-cover object-top"
                           })
                         }),
                         _jsx("span", {
@@ -286,7 +300,7 @@ const RoundtableChat = () => {
                                     _jsx("img", {
                                       src: speaker.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(speaker.name)}&background=random`,
                                       alt: speaker.name,
-                                      className: "w-full h-full object-cover"
+                                      className: "w-full h-full object-cover object-top"
                                     })
                                   ) : (
                                     _jsx("div", {
