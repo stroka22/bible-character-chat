@@ -4,6 +4,7 @@ import { useChat } from '../../contexts/ChatContext.jsx';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useConversation } from '../../contexts/ConversationContext.jsx';
+import { useRoundtable } from '../../contexts/RoundtableContext.jsx';
 import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
@@ -69,6 +70,7 @@ const SimpleChatWithHistory = () => {
         shareConversation,
         getSharedConversation,
     } = useConversation();
+    const { hydrateFromConversation: hydrateRoundtable } = useRoundtable();
 
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -328,6 +330,12 @@ const SimpleChatWithHistory = () => {
             try {
                 const conv = await fetchConversationWithMessages(conversationId);
                 if (conv) {
+                    // If this is a roundtable conversation, hydrate roundtable and redirect
+                    if (conv.type === 'roundtable' && typeof hydrateRoundtable === 'function') {
+                        try { await hydrateRoundtable(conv); } catch {}
+                        navigate('/roundtable', { replace: true });
+                        return;
+                    }
                     // Fallback: if no messages returned (e.g., due to RLS),
                     // try to hydrate from local cache written during save/send.
                     if (ENABLE_LOCAL_CHAT_CACHE) {
@@ -357,7 +365,7 @@ const SimpleChatWithHistory = () => {
         };
         loadExisting();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [conversationId]);
+    }, [conversationId, hydrateRoundtable, navigate]);
 
     /* ------------------------------------------------------------------
      * Load shared conversation when /shared/:shareCode route is used
@@ -368,6 +376,10 @@ const SimpleChatWithHistory = () => {
             try {
                 const conv = await getSharedConversation(shareCode);
                 if (conv) {
+                    if (conv.type === 'roundtable' && typeof hydrateRoundtable === 'function') {
+                        try { await hydrateRoundtable(conv); } catch {}
+                        return navigate('/roundtable', { replace: true });
+                    }
                     hydrateFromConversation(conv);
                 }
             } catch (err) {
@@ -376,7 +388,7 @@ const SimpleChatWithHistory = () => {
         };
         loadShared();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [shareCode]);
+    }, [shareCode, hydrateRoundtable, navigate]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
