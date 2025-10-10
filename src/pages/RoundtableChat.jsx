@@ -27,6 +27,7 @@ const RoundtableChat = () => {
   const transcriptRef = useRef(null);
   const headerRef = useRef(null);
   const [headerPad, setHeaderPad] = useState(128);
+  const [stickyTop, setStickyTop] = useState(96);
   const [isSharedView, setIsSharedView] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get('shared') === '1';
@@ -50,19 +51,45 @@ const RoundtableChat = () => {
     }
   }, [participants, messages, navigate, isSharedView]);
   
-  // Measure header height to prevent overlap
+  // Measure header + lead banner to prevent overlap
   useEffect(() => {
     const measure = () => {
       try {
         const h = headerRef.current?.offsetHeight || 96;
-        // Add a generous cushion beneath the sticky header to cover sticky offset variations
+        // Add a generous cushion beneath the header to cover sticky offset variations
         const cushion = window.innerWidth < 768 ? 40 : 56;
+
+        // Compute sticky top so our header sits below any lead banner if present
+        let top = window.innerWidth < 768 ? 80 : 96;
+        const banner = document.getElementById('lead-banner');
+        if (banner) {
+          const rect = banner.getBoundingClientRect();
+          // rect.bottom is distance from viewport top
+          const belowBanner = Math.max(0, rect.bottom + 8);
+          top = Math.max(top, belowBanner);
+        }
+        setStickyTop(top);
         setHeaderPad(h + cushion);
       } catch {}
     };
     measure();
+    const t1 = setTimeout(measure, 100);
+    const t2 = setTimeout(measure, 400);
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    window.addEventListener('scroll', measure);
+    const banner = document.getElementById('lead-banner');
+    let obs;
+    if (banner && 'MutationObserver' in window) {
+      obs = new MutationObserver(measure);
+      obs.observe(banner, { attributes: true, subtree: true, childList: true });
+    }
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      obs?.disconnect();
+    };
   }, []);
 
   // Keep isSharedView in sync if URL changes
@@ -122,7 +149,8 @@ const RoundtableChat = () => {
             // Header with topic and participants
             _jsxs("div", {
               ref: headerRef,
-              className: "sticky top-20 md:top-24 z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
+              className: "sticky z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
+              style: { top: stickyTop },
               children: [
                 /* Home link */
                 _jsx("div", {
@@ -252,6 +280,22 @@ const RoundtableChat = () => {
                 ) : (
                   _jsxs(_Fragment, {
                     children: [
+                      // Normalize content (strip accidental JSON wrapper and redundant speaker names)
+                      const normalizeContent = (raw, speakerName) => {
+                        try {
+                          if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+                            const parsed = JSON.parse(raw);
+                            if (parsed && typeof parsed.content === 'string') {
+                              raw = parsed.content;
+                            }
+                          }
+                        } catch {/* ignore parse errors */}
+                        if (typeof raw === 'string' && speakerName) {
+                          const prefix = `${speakerName}: `;
+                          if (raw.startsWith(prefix)) return raw.slice(prefix.length);
+                        }
+                        return raw;
+                      };
                       messages.map((message, index) => {
                         // Skip system messages
                         if (message.role === 'system') return null;
@@ -307,7 +351,7 @@ const RoundtableChat = () => {
                                   }),
                                   _jsx("div", {
                                     className: "bg-white/10 text-white rounded-2xl rounded-tl-none px-4 py-3 shadow-md",
-                                    children: message.content || (
+                                    children: normalizeContent(message.content, speaker?.name) || (
                                       _jsx("span", {
                                         className: "text-white/50 italic",
                                         children: "Thinking..."
