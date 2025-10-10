@@ -297,6 +297,22 @@ const RoundtableChat = () => {
                 ) : (
                   _jsxs(_Fragment, {
                     children: [
+                      // Normalize content (strip accidental JSON wrapper and redundant speaker names)
+                      const normalizeContent = (raw, speakerName) => {
+                        try {
+                          if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+                            const parsed = JSON.parse(raw);
+                            if (parsed && typeof parsed.content === 'string') {
+                              raw = parsed.content;
+                            }
+                          }
+                        } catch {/* ignore parse errors */}
+                        if (typeof raw === 'string' && speakerName) {
+                          const prefix = `${speakerName}: `;
+                          if (raw.startsWith(prefix)) return raw.slice(prefix.length);
+                        }
+                        return raw;
+                      };
                       messages.map((message, index) => {
                         // Skip system messages
                         if (message.role === 'system') return null;
