@@ -129,6 +129,23 @@ const RoundtableChat = () => {
     await advanceRound();
   };
   
+  // Normalize content (strip accidental JSON wrapper and redundant speaker names)
+  const normalizeContent = (raw, speakerName) => {
+    try {
+      if (typeof raw === 'string' && raw.trim().startsWith('{')) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed.content === 'string') {
+          raw = parsed.content;
+        }
+      }
+    } catch {/* ignore parse errors */}
+    if (typeof raw === 'string' && speakerName) {
+      const prefix = `${speakerName}: `;
+      if (raw.startsWith(prefix)) return raw.slice(prefix.length);
+    }
+    return raw;
+  };
+
   // Find character by ID
   const getCharacterById = (id) => {
     return participants.find(p => p.id === id);
