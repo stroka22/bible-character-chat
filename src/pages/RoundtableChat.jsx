@@ -55,20 +55,16 @@ const RoundtableChat = () => {
   useEffect(() => {
     const measure = () => {
       try {
+        const headerEl = document.querySelector('header');
+        const fixedHeaderH = headerEl ? headerEl.getBoundingClientRect().height : 64;
         const h = headerRef.current?.offsetHeight || 96;
-        // Add a generous cushion beneath the header to cover sticky offset variations
-        const cushion = window.innerWidth < 768 ? 40 : 56;
-
-        // Compute sticky top so our header sits below any lead banner if present
-        let top = window.innerWidth < 768 ? 80 : 96;
         const banner = document.getElementById('lead-banner');
-        if (banner) {
-          const rect = banner.getBoundingClientRect();
-          // rect.bottom is distance from viewport top
-          const belowBanner = Math.max(0, rect.bottom + 8);
-          top = Math.max(top, belowBanner);
-        }
+        const bannerH = banner ? banner.getBoundingClientRect().height : 0;
+        // Sticky top = global fixed header + banner height + small gap
+        const top = Math.max(0, fixedHeaderH + bannerH + 8);
         setStickyTop(top);
+        // Add cushion under the sticky container to avoid overlap with content
+        const cushion = window.innerWidth < 768 ? 40 : 56;
         setHeaderPad(h + cushion);
       } catch {}
     };
@@ -139,17 +135,58 @@ const RoundtableChat = () => {
         }
       }
     } catch {/* ignore parse errors */}
-    if (typeof raw === 'string' && speakerName) {
-      const prefix = `${speakerName}: `;
-      if (raw.startsWith(prefix)) return raw.slice(prefix.length);
+    if (typeof raw === 'string') {
+      // Strip any known participant name prefixes (e.g., "Isaiah: ", "Jesus: ")
+      const names = Array.isArray(participants) ? participants.map(p => p.name).filter(Boolean) : [];
+      for (const name of names) {
+        const px = `${name}: `;
+        if (raw.startsWith(px)) {
+          raw = raw.slice(px.length);
+          break;
+        }
+      }
     }
     return raw;
   };
 
   // Find character by ID
   const getCharacterById = (id) => {
-    return participants.find(p => p.id === id);
+    const found = participants.find(p => p.id === id);
+    if (found) return found;
+    try {
+      const fallback = (window.__rt_backfill || []).find(p => p.id === id);
+      return fallback || null;
+    } catch { return null; }
   };
+
+  // Backfill participants from message metadata when missing (e.g., older shared conversations)
+  useEffect(() => {
+    (async () => {
+      try {
+        if (participants && participants.length > 0) return;
+        if (!Array.isArray(messages) || messages.length === 0) return;
+        // Collect unique speaker ids from metadata
+        const ids = Array.from(new Set(
+          messages
+            .map(m => m?.metadata?.speakerCharacterId)
+            .filter(Boolean)
+        ));
+        if (ids.length === 0) return;
+        const { characterRepository } = await import('../repositories/characterRepository');
+        const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
+        const valid = fetched.filter(Boolean);
+        if (valid.length > 0) {
+          // We do not have direct setter here; rely on RoundtableContext.hydration normally.
+          // As a fallback for shared view, temporarily map names for display by mutating a local ref
+          // but since participants come from context, we cannot set it here. Instead, we attach
+          // a minimal map via window for RoundtableContext to possibly consume in future updates.
+          try { window.__rt_backfill = valid; } catch {}
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [participants?.length, messages?.length]);
   
   // Clear error on click
   const handleClearError = () => {
