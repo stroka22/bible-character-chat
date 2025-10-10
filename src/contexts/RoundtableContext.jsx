@@ -344,6 +344,8 @@ export const RoundtableProvider = ({ children }) => {
 You are participating in a roundtable discussion on the topic: "${topic}".
 The other participants are: ${otherParticipantNames}.
 Respond in first person as ${speaker.name}. You may reference other participants by name.
+Do not include any name prefixes (e.g., "${speaker.name}:" or anyone else's name) at the start of your response.
+Do not output JSON or structured objects. Reply only with natural language.
 Keep your response concise (${maxWordsPerReply} words or less).
 Critically: do not repeat or lightly rephrase points already made. Bring a distinct perspective shaped by your background; cite specific scripture when helpful; or challenge/affirm another speaker by name.
 If the user's latest input shifts the focus, explicitly address that shift.
@@ -492,6 +494,8 @@ Do not repeat what has already been said; add a distinct insight, cite a specifi
 ${latestUserInputFU ? `Latest user input to consider: "${latestUserInputFU}"` : ''}
 Keep under ${maxWordsPerReply} words.
 Respond in first person as ${candidate.name}. You may reference other participants by name.
+Do not include any name prefixes (e.g., "${candidate.name}:" or anyone else's name) at the start of your response.
+Do not output JSON or structured objects. Reply only with natural language.
 Stay in character and draw from biblical knowledge.`.trim()
           };
           
