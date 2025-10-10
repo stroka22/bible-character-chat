@@ -602,6 +602,22 @@ Stay in character and draw from biblical knowledge.`.trim()
         if (ids.length > 0) {
           const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
           loadedParticipants = fetched.filter(Boolean);
+        } else {
+          // As a last resort, attempt to parse leading name prefixes from assistant messages (e.g., "Paul: ...")
+          const namePattern = /^\s*([A-Z][A-Za-z\s\-']{1,40}?):\s+/;
+          const candidateNames = Array.from(new Set(
+            conversation.messages
+              .filter(m => m.role === 'assistant' && typeof m.content === 'string')
+              .map(m => {
+                const match = m.content.match(namePattern);
+                return match ? match[1].trim() : null;
+              })
+              .filter(Boolean)
+          ));
+          if (candidateNames.length > 0) {
+            const fetchedByName = await Promise.all(candidateNames.map(n => characterRepository.getByName?.(n)));
+            loadedParticipants = (fetchedByName || []).filter(Boolean);
+          }
         }
       }
       if (loadedParticipants.length > 0) {
