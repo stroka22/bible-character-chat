@@ -152,6 +152,8 @@ export default function LeadCaptureBanner() {
 
   return (
     <div
+      id="lead-banner"
+      data-lead-banner="1"
       className="fixed left-0 right-0 z-40 bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg"
       style={{ top: offset }}
     >
