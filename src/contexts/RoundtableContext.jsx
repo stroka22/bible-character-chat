@@ -587,18 +587,27 @@ Stay in character and draw from biblical knowledge.`.trim()
         setTopic(conversation.title.substring('Roundtable: '.length));
       }
       
-      // Load participants if available
+      // Load participants if available, else backfill from message metadata
+      let loadedParticipants = [];
       if (Array.isArray(conversation.participants) && conversation.participants.length > 0) {
         const characterPromises = conversation.participants.map(id => characterRepository.getById(id));
         const fetchedCharacters = await Promise.all(characterPromises);
-        const validCharacters = fetchedCharacters.filter(Boolean);
-        
-        if (validCharacters.length > 0) {
-          setParticipants(validCharacters);
-          
-          // Reset turn counts
-          setTurnCounts({});
+        loadedParticipants = fetchedCharacters.filter(Boolean);
+      } else if (Array.isArray(conversation.messages) && conversation.messages.length > 0) {
+        const ids = Array.from(new Set(
+          conversation.messages
+            .map(m => m?.metadata?.speakerCharacterId)
+            .filter(Boolean)
+        ));
+        if (ids.length > 0) {
+          const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
+          loadedParticipants = fetched.filter(Boolean);
         }
+      }
+      if (loadedParticipants.length > 0) {
+        setParticipants(loadedParticipants);
+        // Reset turn counts
+        setTurnCounts({});
       }
       
       // Load messages

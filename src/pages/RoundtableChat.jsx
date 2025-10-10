@@ -59,9 +59,14 @@ const RoundtableChat = () => {
         const fixedHeaderH = headerEl ? headerEl.getBoundingClientRect().height : 64;
         const h = headerRef.current?.offsetHeight || 96;
         const banner = document.getElementById('lead-banner');
-        const bannerH = banner ? banner.getBoundingClientRect().height : 0;
-        // Sticky top = global fixed header + banner height + small gap
-        const top = Math.max(0, fixedHeaderH + bannerH + 8);
+        let top = fixedHeaderH + 8; // default under header
+        if (banner) {
+          const rect = banner.getBoundingClientRect();
+          // Use actual on-screen position of the banner
+          const belowBanner = Math.max(0, rect.bottom + 8);
+          // Ensure we never go above the header baseline
+          top = Math.max(top, belowBanner);
+        }
         setStickyTop(top);
         // Add cushion under the sticky container to avoid overlap with content
         const cushion = window.innerWidth < 768 ? 40 : 56;
