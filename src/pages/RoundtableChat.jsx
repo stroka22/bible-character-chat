@@ -260,8 +260,8 @@ const RoundtableChat = () => {
             // Header with topic and participants
             _jsxs("div", {
               ref: headerRef,
-              className: `${isSharedView ? '' : 'sticky'} z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl`,
-              style: isSharedView ? undefined : { top: stickyTop },
+              className: `z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl`,
+              style: undefined,
               children: [
                 /* Home link */
                 _jsx("div", {
@@ -375,8 +375,8 @@ const RoundtableChat = () => {
               })
             ),
             
-            // Spacer to keep content below sticky header
-            isSharedView ? null : _jsx("div", { "aria-hidden": true, style: { height: headerPad } }),
+            // Spacer not needed (header is no longer sticky)
+            null,
 
             // Transcript
             _jsxs("div", {

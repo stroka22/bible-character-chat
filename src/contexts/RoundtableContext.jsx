@@ -626,12 +626,37 @@ Stay in character and draw from biblical knowledge.`.trim()
         setTurnCounts({});
       }
       
+      // Helper: sanitize incoming content (strip code fences/JSON wrappers)
+      const sanitizeIncomingContent = (val) => {
+        if (val == null) return val;
+        let txt = String(val).trim();
+        const fence = txt.match(/```(?:json|javascript)?\n([\s\S]*?)```/i);
+        if (fence && fence[1]) {
+          txt = fence[1].trim();
+        }
+        try {
+          if (txt.startsWith('{') || txt.startsWith('[')) {
+            const parsed = JSON.parse(txt);
+            if (parsed && typeof parsed.content === 'string') return parsed.content;
+            if (Array.isArray(parsed)) {
+              const item = parsed.find(m => typeof m?.content === 'string') || null;
+              if (item) return item.content;
+            }
+            const m = txt.match(/"content"\s*:\s*"([\s\S]*?)"/);
+            if (m && m[1]) {
+              try { return JSON.parse(`"${m[1]}"`); } catch { return m[1]; }
+            }
+          }
+        } catch {}
+        return txt;
+      };
+
       // Load messages
       if (Array.isArray(conversation.messages)) {
         const normalizedMessages = conversation.messages.map(m => ({
           id: m.id || generateMessageId(),
           role: m.role,
-          content: m.content,
+          content: sanitizeIncomingContent(m.content),
           timestamp: m.created_at || new Date().toISOString(),
           metadata: m.metadata || {}
         }));
