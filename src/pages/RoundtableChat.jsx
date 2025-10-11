@@ -157,26 +157,53 @@ const RoundtableChat = () => {
   
   // Normalize content (strip accidental JSON wrapper and redundant speaker names)
   const normalizeContent = (raw, speakerName) => {
+    if (raw == null) return raw;
+    let txt = String(raw).trim();
+
+    // Strip code fences
+    const fence = txt.match(/```(?:json|javascript)?\n([\s\S]*?)```/i);
+    if (fence && fence[1]) {
+      txt = fence[1].trim();
+    }
+
+    // Attempt to parse JSON wrappers
     try {
-      if (typeof raw === 'string' && raw.trim().startsWith('{')) {
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed.content === 'string') {
-          raw = parsed.content;
+      if (txt.startsWith('{') || txt.startsWith('[')) {
+        const parsed = JSON.parse(txt);
+        if (parsed) {
+          if (typeof parsed.content === 'string') return parsed.content;
+          if (Array.isArray(parsed)) {
+            const item = parsed.find(m => typeof m?.content === 'string') || null;
+            if (item) return item.content;
+          }
+          // Fallback: look for "content": "..." pattern
+          const m = txt.match(/"content"\s*:\s*"([\s\S]*?)"/);
+          if (m && m[1]) {
+            try { return JSON.parse(`"${m[1]}"`); } catch { return m[1]; }
+          }
         }
       }
-    } catch {/* ignore parse errors */}
-    if (typeof raw === 'string') {
-      // Strip any known participant name prefixes (e.g., "Isaiah: ", "Jesus: ")
-      const names = Array.isArray(participants) ? participants.map(p => p.name).filter(Boolean) : [];
-      for (const name of names) {
-        const px = `${name}: `;
-        if (raw.startsWith(px)) {
-          raw = raw.slice(px.length);
+    } catch { /* ignore */ }
+
+    // Strip any known participant name prefixes (e.g., "Isaiah:", "Jesus – ")
+    try {
+      const names = (Array.isArray(participants) ? participants.map(p => p.name) : []).filter(Boolean);
+      const patterns = [];
+      for (const n of names) {
+        patterns.push(new RegExp(`^\n?\s*${n}\s*[:\-–—]\s+`, 'i'));
+      }
+      if (speakerName) {
+        patterns.push(new RegExp(`^\n?\s*${speakerName}\s*[:\-–—]\s+`, 'i'));
+      }
+      for (const rx of patterns) {
+        if (rx.test(txt)) {
+          txt = txt.replace(rx, '');
           break;
         }
       }
-    }
-    return raw;
+    } catch { /* ignore */ }
+
+    return txt;
   };
 
   // Find character by ID
@@ -233,8 +260,8 @@ const RoundtableChat = () => {
             // Header with topic and participants
             _jsxs("div", {
               ref: headerRef,
-              className: "sticky z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl",
-              style: { top: stickyTop },
+              className: `${isSharedView ? '' : 'sticky'} z-20 mb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 pb-3 bg-white/10 backdrop-blur-sm border-b border-white/10 rounded-t-2xl`,
+              style: isSharedView ? undefined : { top: stickyTop },
               children: [
                 /* Home link */
                 _jsx("div", {
@@ -280,7 +307,7 @@ const RoundtableChat = () => {
                           children: _jsx("img", {
                             src: participant.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(participant.name)}&background=random`,
                             alt: participant.name,
-                            className: "w-full h-full object-cover"
+                            className: "w-full h-full object-cover object-top"
                           })
                         }),
                         _jsx("span", {
@@ -349,7 +376,7 @@ const RoundtableChat = () => {
             ),
             
             // Spacer to keep content below sticky header
-            _jsx("div", { "aria-hidden": true, style: { height: headerPad } }),
+            isSharedView ? null : _jsx("div", { "aria-hidden": true, style: { height: headerPad } }),
 
             // Transcript
             _jsxs("div", {
@@ -410,7 +437,7 @@ const RoundtableChat = () => {
                                     _jsx("img", {
                                       src: speaker.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(speaker.name)}&background=random`,
                                       alt: speaker.name,
-                                      className: "w-full h-full object-cover"
+                                      className: "w-full h-full object-cover object-top"
                                     })
                                   ) : (
                                     _jsx("div", {
