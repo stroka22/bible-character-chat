@@ -54,13 +54,15 @@ import LeadCaptureModal from './components/LeadCaptureModal';
 function MobileLeadBannerGate(): JSX.Element | null {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
+  const isRoundtable = location.pathname.startsWith('/roundtable');
   // Hide banner on shared/public views to avoid layout overlap and distraction
   let isShared = false;
   try {
     const params = new URLSearchParams(location.search);
     isShared = params.get('shared') === '1' || location.pathname.startsWith('/shared/');
   } catch {}
-  if (isAdminPath || isShared) return null;
+  // Hide on Roundtable to prevent any overlap and keep focus on discussion
+  if (isAdminPath || isShared || isRoundtable) return null;
   return (
     <div className="md:hidden">
       <LeadCaptureBanner />
