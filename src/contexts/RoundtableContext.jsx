@@ -653,13 +653,29 @@ Stay in character and draw from biblical knowledge.`.trim()
 
       // Load messages
       if (Array.isArray(conversation.messages)) {
-        const normalizedMessages = conversation.messages.map(m => ({
-          id: m.id || generateMessageId(),
-          role: m.role,
-          content: sanitizeIncomingContent(m.content),
-          timestamp: m.created_at || new Date().toISOString(),
-          metadata: m.metadata || {}
-        }));
+        // Build a quick name->id map from participants to attach speakers
+        const nameToId = new Map();
+        (loadedParticipants || []).forEach(p => nameToId.set(String(p.name).toLowerCase(), p.id));
+
+        const normalizedMessages = conversation.messages.map(m => {
+          const originalContent = m.content;
+          let speakerId = m?.metadata?.speakerCharacterId || null;
+          // If speaker is missing and this is an assistant message, try to parse leading name prefix
+          if (!speakerId && m.role === 'assistant' && typeof originalContent === 'string') {
+            const match = originalContent.match(/^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/);
+            if (match) {
+              const nm = match[1].toLowerCase();
+              speakerId = nameToId.get(nm) || null;
+            }
+          }
+          return {
+            id: m.id || generateMessageId(),
+            role: m.role,
+            content: sanitizeIncomingContent(originalContent),
+            timestamp: m.created_at || new Date().toISOString(),
+            metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}) }
+          };
+        });
         
         setMessages(normalizedMessages);
         
