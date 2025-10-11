@@ -41,15 +41,10 @@ const RoundtableChat = () => {
     }
   }, [messages]);
   
-  // Redirect to setup if no participants
+  // No auto-redirect to setup: stay on Chat and show a friendly empty state instead
   useEffect(() => {
-    // For shared views, never redirect to setup
-    if (isSharedView) return;
-    // Only redirect to setup if there are no participants AND no messages
-    if ((!participants || participants.length === 0) && (!messages || messages.length === 0)) {
-      navigate('/roundtable/setup');
-    }
-  }, [participants, messages, navigate, isSharedView]);
+    // Intentionally left blank (we do not navigate away automatically)
+  }, [participants, messages, isSharedView]);
   
   // Measure header + lead banner to prevent overlap (robust to late insertions)
   useEffect(() => {
@@ -362,9 +357,21 @@ const RoundtableChat = () => {
               className: "bg-white/5 backdrop-blur-sm rounded-xl p-4 mb-4 h-[50vh] md:h-[60vh] overflow-y-auto",
               children: [
                 messages.length === 0 ? (
-                  _jsx("div", {
-                    className: "flex items-center justify-center h-full text-white/50 text-center",
-                    children: "The roundtable discussion will begin when you send a message or advance the round."
+                  _jsxs("div", {
+                    className: "flex flex-col items-center justify-center h-full text-white/80 text-center gap-4",
+                    children: [
+                      _jsx("div", {
+                        className: "text-white/70",
+                        children: (participants && participants.length > 0)
+                          ? "The roundtable will begin when you send a message or advance the round."
+                          : "No roundtable is active yet. Start one to begin the discussion."
+                      }),
+                      _jsx("button", {
+                        onClick: () => navigate('/roundtable/setup'),
+                        className: "px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-yellow-400 hover:bg-yellow-500 text-blue-900",
+                        children: "Start a Roundtable"
+                      })
+                    ]
                   })
                 ) : (
                   _jsxs(_Fragment, {
