@@ -51,7 +51,7 @@ const RoundtableChat = () => {
     }
   }, [participants, messages, navigate, isSharedView]);
   
-  // Measure header + lead banner to prevent overlap
+  // Measure header + lead banner to prevent overlap (robust to late insertions)
   useEffect(() => {
     const measure = () => {
       try {
@@ -62,34 +62,64 @@ const RoundtableChat = () => {
         let top = fixedHeaderH + 8; // default under header
         if (banner) {
           const rect = banner.getBoundingClientRect();
-          // Use actual on-screen position of the banner
           const belowBanner = Math.max(0, rect.bottom + 8);
-          // Ensure we never go above the header baseline
           top = Math.max(top, belowBanner);
         }
         setStickyTop(top);
-        // Add cushion under the sticky container to avoid overlap with content
         const cushion = window.innerWidth < 768 ? 40 : 56;
         setHeaderPad(h + cushion);
       } catch {}
     };
+
+    // Initial + staged re-measurements
     measure();
     const t1 = setTimeout(measure, 100);
     const t2 = setTimeout(measure, 400);
+
+    // Short RAF sampling window to catch animated header/menu and late banner mount
+    let rafId;
+    let frames = 0;
+    const sample = () => {
+      measure();
+      if (frames++ < 120) rafId = requestAnimationFrame(sample); // ~2s at 60fps
+    };
+    rafId = requestAnimationFrame(sample);
+
+    // Respond to viewport changes
     window.addEventListener('resize', measure);
     window.addEventListener('scroll', measure);
-    const banner = document.getElementById('lead-banner');
-    let obs;
-    if (banner && 'MutationObserver' in window) {
-      obs = new MutationObserver(measure);
-      obs.observe(banner, { attributes: true, subtree: true, childList: true });
-    }
+
+    // Observe DOM for banner insertion/removal and header mutations
+    let bodyObserver;
+    let bannerObserver;
+    try {
+      if ('MutationObserver' in window) {
+        bodyObserver = new MutationObserver(() => {
+          measure();
+          const b = document.getElementById('lead-banner');
+          if (b && !bannerObserver) {
+            bannerObserver = new MutationObserver(measure);
+            bannerObserver.observe(b, { attributes: true, childList: true, subtree: true });
+          }
+        });
+        bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+        const headerEl = document.querySelector('header');
+        if (headerEl) {
+          const headerObserver = new MutationObserver(measure);
+          headerObserver.observe(headerEl, { attributes: true, childList: true, subtree: true });
+        }
+      }
+    } catch {}
+
     return () => {
       window.removeEventListener('resize', measure);
       window.removeEventListener('scroll', measure);
       clearTimeout(t1);
       clearTimeout(t2);
-      obs?.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
+      bodyObserver?.disconnect();
+      bannerObserver?.disconnect();
     };
   }, []);
 
