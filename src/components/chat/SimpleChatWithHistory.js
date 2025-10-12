@@ -333,7 +333,15 @@ const SimpleChatWithHistory = () => {
                     // If this is a roundtable conversation, hydrate roundtable and redirect
                     const convType = (conv.type || conv.conversation_type || '').toLowerCase();
                     const isRoundtableByTitle = typeof conv.title === 'string' && conv.title.startsWith('Roundtable: ');
-                    if ((convType === 'roundtable' || isRoundtableByTitle) && typeof hydrateRoundtable === 'function') {
+                    // Heuristic: consider as roundtable if multiple participants OR
+                    // any assistant message has a speaker id OR looks like "Name:"
+                    const msgs = Array.isArray(conv.messages) ? conv.messages : [];
+                    const hasSpeakerIds = msgs.some(m => m?.role === 'assistant' && m?.metadata?.speakerCharacterId);
+                    const namePrefixRx = /^\s*[A-Z][A-Za-z\s\-']{1,40}\s*[:\-–—]\s+/;
+                    const hasNamePrefixes = msgs.some(m => m?.role === 'assistant' && typeof m.content === 'string' && namePrefixRx.test(m.content));
+                    const manyParticipants = Array.isArray(conv.participants) && conv.participants.length > 1;
+                    const shouldTreatAsRoundtable = (convType === 'roundtable' || isRoundtableByTitle || manyParticipants || hasSpeakerIds || hasNamePrefixes);
+                    if (shouldTreatAsRoundtable && typeof hydrateRoundtable === 'function') {
                         try { await hydrateRoundtable(conv); } catch {}
                         navigate('/roundtable', { replace: true });
                         return;
