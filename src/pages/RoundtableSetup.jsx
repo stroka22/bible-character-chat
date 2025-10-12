@@ -317,7 +317,7 @@ const RoundtableSetup = () => {
                                   src: character.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(character.name)}&background=random`,
                                   alt: character.name,
                                   className: "w-full h-full object-cover",
-                                  style: { objectPosition: 'center 8%' }
+                                  style: { objectPosition: 'center 0%' }
                                 })
                               }),
                               _jsxs("div", {

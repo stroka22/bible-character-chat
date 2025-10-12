@@ -341,8 +341,43 @@ const SimpleChatWithHistory = () => {
                     const hasNamePrefixes = msgs.some(m => m?.role === 'assistant' && typeof m.content === 'string' && namePrefixRx.test(m.content));
                     const manyParticipants = Array.isArray(conv.participants) && conv.participants.length > 1;
                     const shouldTreatAsRoundtable = (convType === 'roundtable' || isRoundtableByTitle || manyParticipants || hasSpeakerIds || hasNamePrefixes);
+                    // Optional override: URL param participants=Name1,Name2 to backfill participants by name
+                    // Useful for older conversations that predate participants metadata
+                    const params = new URLSearchParams(location.search);
+                    const participantsParam = params.get('participants') || params.get('rt');
+                    let convWithParticipants = conv;
+                    if (participantsParam && (!conv.participants || conv.participants.length === 0)) {
+                        const names = participantsParam.split(',').map(s => s.trim()).filter(Boolean);
+                        if (names.length) {
+                            const resolveByName = async (n) => {
+                                try {
+                                    const exact = await characterRepository.getByName?.(n);
+                                    if (exact) return exact.id;
+                                } catch {}
+                                try {
+                                    const results = await characterRepository.search?.(n);
+                                    if (Array.isArray(results) && results.length > 0) {
+                                        const lower = n.toLowerCase();
+                                        const best = results.find(r => String(r.name).toLowerCase() === lower)
+                                          || results.find(r => String(r.name).toLowerCase().startsWith(lower))
+                                          || results[0];
+                                        return best?.id || null;
+                                    }
+                                } catch {}
+                                return null;
+                            };
+                            const ids = [];
+                            for (const nm of names) {
+                                const id = await resolveByName(nm);
+                                if (id) ids.push(id);
+                            }
+                            if (ids.length) {
+                                convWithParticipants = { ...conv, participants: ids };
+                            }
+                        }
+                    }
                     if (shouldTreatAsRoundtable && typeof hydrateRoundtable === 'function') {
-                        try { await hydrateRoundtable(conv); } catch {}
+                        try { await hydrateRoundtable(convWithParticipants); } catch {}
                         navigate('/roundtable', { replace: true });
                         return;
                     }
