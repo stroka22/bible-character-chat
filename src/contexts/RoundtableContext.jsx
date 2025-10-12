@@ -603,8 +603,8 @@ Stay in character and draw from biblical knowledge.`.trim()
           const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
           loadedParticipants = fetched.filter(Boolean);
         } else {
-          // As a last resort, attempt to parse leading name prefixes from assistant messages (e.g., "Paul: ...")
-          const namePattern = /^\s*([A-Z][A-Za-z\s\-']{1,40}?):\s+/;
+          // As a last resort, attempt to parse leading name prefixes from assistant messages (e.g., "Paul: ..." or "Paul — ...")
+          const namePattern = /^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/;
           const candidateNames = Array.from(new Set(
             conversation.messages
               .filter(m => m.role === 'assistant' && typeof m.content === 'string')
@@ -615,13 +615,34 @@ Stay in character and draw from biblical knowledge.`.trim()
               .filter(Boolean)
           ));
           if (candidateNames.length > 0) {
-            const fetchedByName = await Promise.all(candidateNames.map(n => characterRepository.getByName?.(n)));
-            loadedParticipants = (fetchedByName || []).filter(Boolean);
+            // Try strict name match first; if not found, fall back to search and pick best candidate
+            const fetchedByName = [];
+            for (const n of candidateNames) {
+              let ch = null;
+              try {
+                ch = await characterRepository.getByName?.(n);
+              } catch {}
+              if (!ch && characterRepository.search) {
+                try {
+                  const results = await characterRepository.search(n);
+                  if (Array.isArray(results) && results.length > 0) {
+                    // Prefer exact case-insensitive match; else startsWith; else first
+                    const lower = n.toLowerCase();
+                    ch = results.find(r => String(r.name).toLowerCase() === lower)
+                      || results.find(r => String(r.name).toLowerCase().startsWith(lower))
+                      || results[0];
+                  }
+                } catch {}
+              }
+              if (ch) fetchedByName.push(ch);
+            }
+            loadedParticipants = fetchedByName.filter(Boolean);
           }
         }
       }
       if (loadedParticipants.length > 0) {
         setParticipants(loadedParticipants);
+        try { window.__rt_backfill = loadedParticipants; } catch {}
         // Reset turn counts
         setTurnCounts({});
       }
@@ -662,17 +683,21 @@ Stay in character and draw from biblical knowledge.`.trim()
           const originalContent = m.content;
           let speakerId = m?.metadata?.speakerCharacterId || null;
           // If speaker is missing and this is an assistant message, try to parse leading name prefix
+          let contentToUse = originalContent;
           if (!speakerId && m.role === 'assistant' && typeof originalContent === 'string') {
             const match = originalContent.match(/^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/);
             if (match) {
-              const nm = match[1].toLowerCase();
+              const nmRaw = match[1];
+              const nm = nmRaw.toLowerCase();
               speakerId = nameToId.get(nm) || null;
+              // Strip the prefix from content for display
+              contentToUse = originalContent.replace(/^\s*[A-Z][A-Za-z\s\-']{1,40}\s*[:\-–—]\s+/, '');
             }
           }
           const msg = {
             id: m.id || generateMessageId(),
             role: m.role,
-            content: sanitizeIncomingContent(originalContent),
+            content: sanitizeIncomingContent(contentToUse),
             timestamp: m.created_at || new Date().toISOString(),
             metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}) }
           };
