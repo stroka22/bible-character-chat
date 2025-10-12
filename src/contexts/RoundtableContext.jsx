@@ -657,6 +657,7 @@ Stay in character and draw from biblical knowledge.`.trim()
         const nameToId = new Map();
         (loadedParticipants || []).forEach(p => nameToId.set(String(p.name).toLowerCase(), p.id));
 
+        let countsSeed = {};
         const normalizedMessages = conversation.messages.map(m => {
           const originalContent = m.content;
           let speakerId = m?.metadata?.speakerCharacterId || null;
@@ -668,27 +669,49 @@ Stay in character and draw from biblical knowledge.`.trim()
               speakerId = nameToId.get(nm) || null;
             }
           }
-          return {
+          const msg = {
             id: m.id || generateMessageId(),
             role: m.role,
             content: sanitizeIncomingContent(originalContent),
             timestamp: m.created_at || new Date().toISOString(),
             metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}) }
           };
+          const sid = msg.metadata?.speakerCharacterId;
+          if (sid) countsSeed[sid] = (countsSeed[sid] || 0) + 1;
+          return msg;
         });
         
-        setMessages(normalizedMessages);
+        // Heuristic backfill: for assistant messages missing speaker, assign to the
+        // participant with the lowest current count (round-robin approximation)
+        const counts = { ...countsSeed };
+        const filledMessages = normalizedMessages.map(m => {
+          if (m.role === 'assistant' && !m.metadata?.speakerCharacterId && (loadedParticipants || []).length > 0) {
+            let pick = null;
+            let min = Infinity;
+            for (const p of loadedParticipants) {
+              const c = counts[p.id] || 0;
+              if (c < min) { min = c; pick = p.id; }
+            }
+            if (pick) {
+              counts[pick] = (counts[pick] || 0) + 1;
+              return { ...m, metadata: { ...(m.metadata || {}), speakerCharacterId: pick } };
+            }
+          }
+          return m;
+        });
+
+        setMessages(filledMessages);
         
         // Rebuild turn counts from messages
-        const counts = {};
-        normalizedMessages.forEach(msg => {
+        const finalCounts = {};
+        filledMessages.forEach(msg => {
           const speakerId = msg.metadata?.speakerCharacterId;
           if (speakerId) {
-            counts[speakerId] = (counts[speakerId] || 0) + 1;
+            finalCounts[speakerId] = (finalCounts[speakerId] || 0) + 1;
             lastSpeakerRef.current = speakerId;
           }
         });
-        setTurnCounts(counts);
+        setTurnCounts(finalCounts);
       }
       
       // Clear any errors

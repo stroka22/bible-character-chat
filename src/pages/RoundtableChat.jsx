@@ -308,7 +308,7 @@ const RoundtableChat = () => {
                             src: participant.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(participant.name)}&background=random`,
                             alt: participant.name,
                             className: "w-full h-full object-cover",
-                            style: { objectPosition: 'center 20%' }
+                            style: { objectPosition: 'center 8%' }
                           })
                         }),
                         _jsx("span", {
@@ -439,7 +439,7 @@ const RoundtableChat = () => {
                                       src: speaker.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(speaker.name)}&background=random`,
                                       alt: speaker.name,
                                       className: "w-full h-full object-cover",
-                                      style: { objectPosition: 'center 20%' }
+                                      style: { objectPosition: 'center 8%' }
                                     })
                                   ) : (
                                     _jsx("div", {
