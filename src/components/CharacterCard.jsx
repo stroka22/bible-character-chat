@@ -528,7 +528,7 @@ const CharacterCard = ({
                 _jsx("img", {
                     src: avatarUrl,
                     alt: character.name,
-                    className: "w-20 h-20 rounded-full object-cover object-[center_20%] mx-auto mb-3",
+                    className: "w-20 h-20 rounded-full object-cover object-[center_8%] mx-auto mb-3",
                     loading: "lazy",
                     decoding: "async",
                     width: "80",

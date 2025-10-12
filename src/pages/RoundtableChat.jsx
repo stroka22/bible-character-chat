@@ -33,6 +33,8 @@ const RoundtableChat = () => {
       return new URLSearchParams(window.location.search).get('shared') === '1';
     } catch { return false; }
   });
+  // Lowercase name -> id map for resolving prefixes in shared views
+  const [nameMap, setNameMap] = useState({});
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -187,7 +189,11 @@ const RoundtableChat = () => {
 
     // Strip any known participant name prefixes (e.g., "Isaiah:", "Jesus – ")
     try {
-      const names = (Array.isArray(participants) ? participants.map(p => p.name) : []).filter(Boolean);
+      const backfill = (() => { try { return window.__rt_backfill || []; } catch { return []; } })();
+      const names = [
+        ...(Array.isArray(participants) ? participants.map(p => p.name) : []),
+        ...backfill.map(p => p.name)
+      ].filter(Boolean);
       const patterns = [];
       for (const n of names) {
         patterns.push(new RegExp(`^\n?\s*${n}\s*[:\-–—]\s+`, 'i'));
@@ -216,6 +222,13 @@ const RoundtableChat = () => {
     } catch { return null; }
   };
 
+  // Helper: parse leading name prefix
+  const parseNamePrefix = (content) => {
+    if (typeof content !== 'string') return null;
+    const m = content.match(/^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/);
+    return m ? m[1] : null;
+  };
+
   // Backfill participants from message metadata when missing (e.g., older shared conversations)
   useEffect(() => {
     (async () => {
@@ -228,16 +241,32 @@ const RoundtableChat = () => {
             .map(m => m?.metadata?.speakerCharacterId)
             .filter(Boolean)
         ));
-        if (ids.length === 0) return;
         const { characterRepository } = await import('../repositories/characterRepository');
-        const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
-        const valid = fetched.filter(Boolean);
-        if (valid.length > 0) {
-          // We do not have direct setter here; rely on RoundtableContext.hydration normally.
-          // As a fallback for shared view, temporarily map names for display by mutating a local ref
-          // but since participants come from context, we cannot set it here. Instead, we attach
-          // a minimal map via window for RoundtableContext to possibly consume in future updates.
-          try { window.__rt_backfill = valid; } catch {}
+        if (ids.length > 0) {
+          const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
+          const valid = fetched.filter(Boolean);
+          if (valid.length > 0) {
+            try { window.__rt_backfill = valid; } catch {}
+            const map = Object.fromEntries(valid.map(v => [String(v.name).toLowerCase(), v.id]));
+            setNameMap(map);
+            return;
+          }
+        }
+        // Fallback: derive names from prefixes and fetch by name
+        const names = Array.from(new Set(
+          messages
+            .filter(m => m.role === 'assistant' && typeof m.content === 'string')
+            .map(m => parseNamePrefix(m.content))
+            .filter(Boolean)
+        ));
+        if (names.length > 0) {
+          const fetchedByName = await Promise.all(names.map(n => characterRepository.getByName?.(n)));
+          const validByName = (fetchedByName || []).filter(Boolean);
+          if (validByName.length > 0) {
+            try { window.__rt_backfill = validByName; } catch {}
+            const map = Object.fromEntries(validByName.map(v => [String(v.name).toLowerCase(), v.id]));
+            setNameMap(map);
+          }
         }
       } catch {
         /* ignore */
@@ -422,8 +451,16 @@ const RoundtableChat = () => {
                         }
                         
                         // Assistant message (character speaking)
-                        const speakerId = message.metadata?.speakerCharacterId;
-                        const speaker = speakerId ? getCharacterById(speakerId) : null;
+                        let speakerId = message.metadata?.speakerCharacterId;
+                        let speaker = speakerId ? getCharacterById(speakerId) : null;
+                        if (!speaker) {
+                          const nm = parseNamePrefix(message.content);
+                          if (nm) {
+                            const id = nameMap[nm.toLowerCase()] || null;
+                            if (id) speaker = getCharacterById(id);
+                            if (!speaker) speaker = { name: nm };
+                          }
+                        }
                         
                         return (
                           _jsxs("div", {
