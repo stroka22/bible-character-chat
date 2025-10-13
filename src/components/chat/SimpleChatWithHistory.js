@@ -379,7 +379,10 @@ const SimpleChatWithHistory = () => {
                     }
                     if (shouldTreatAsRoundtable && typeof hydrateRoundtable === 'function') {
                         try { await hydrateRoundtable(convWithParticipants); } catch {}
-                        navigate('/roundtable', { replace: true });
+                        // Keep a specific, self-describing URL when moving to roundtable UI
+                        const qp = new URLSearchParams(location.search);
+                        qp.set('conv', conversationId);
+                        navigate(`/roundtable?${qp.toString()}`, { replace: true });
                         return;
                     }
                     // Fallback: if no messages returned (e.g., due to RLS),
@@ -460,7 +463,11 @@ const SimpleChatWithHistory = () => {
                     }
                     if ((convType === 'roundtable' || isRoundtableByTitle || (Array.isArray(convWithParticipants.participants) && convWithParticipants.participants.length > 1)) && typeof hydrateRoundtable === 'function') {
                         try { await hydrateRoundtable(convWithParticipants); } catch {}
-                        return navigate('/roundtable?shared=1', { replace: true });
+                        // Preserve share code in URL for clarity when showing roundtable UI
+                        const qp = new URLSearchParams(location.search);
+                        qp.set('shared', '1');
+                        qp.set('code', shareCode);
+                        return navigate(`/roundtable?${qp.toString()}`, { replace: true });
                     }
                     hydrateFromConversation(convWithParticipants);
                 }

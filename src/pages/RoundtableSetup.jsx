@@ -73,15 +73,15 @@ const RoundtableSetup = () => {
     setIsLoading(true);
     
     try {
-      const success = await startRoundtable({
+      const newId = await startRoundtable({
         participantIds: selectedCharacterIds,
         topic,
         repliesPerRound,
         autoStart
       });
       
-      if (success) {
-        navigate('/roundtable');
+      if (newId) {
+        navigate(`/chat/${newId}`);
       } else {
         setError('Failed to start roundtable. Please try again.');
       }
