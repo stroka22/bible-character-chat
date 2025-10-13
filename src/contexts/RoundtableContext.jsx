@@ -189,12 +189,14 @@ export const RoundtableProvider = ({ children }) => {
               content: systemMessage.content
             });
           }
+          // Return the conversation id so callers can route to a stable URL
+          return newConversation.id;
         }
       } else {
         console.warn('[RoundtableContext] No createConversation function available - proceeding in memory only');
       }
       
-      return true;
+      return false;
     } catch (err) {
       console.error('Error starting roundtable:', err);
       setError(`Failed to start roundtable: ${err.message}`);
