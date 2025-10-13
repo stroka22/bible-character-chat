@@ -212,12 +212,14 @@ const RoundtableChat = () => {
     return txt;
   };
 
-  // Find character by ID
+  const normalizeId = (v) => v == null ? null : String(v);
+  // Find character by ID (normalize to strings for robust compare)
   const getCharacterById = (id) => {
-    const found = participants.find(p => p.id === id);
+    const nid = normalizeId(id);
+    const found = participants.find(p => normalizeId(p.id) === nid);
     if (found) return found;
     try {
-      const fallback = (window.__rt_backfill || []).find(p => p.id === id);
+      const fallback = (window.__rt_backfill || []).find(p => normalizeId(p.id) === nid);
       return fallback || null;
     } catch { return null; }
   };

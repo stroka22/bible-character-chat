@@ -424,11 +424,45 @@ const SimpleChatWithHistory = () => {
                 if (conv) {
                     const convType = (conv.type || conv.conversation_type || '').toLowerCase();
                     const isRoundtableByTitle = typeof conv.title === 'string' && conv.title.startsWith('Roundtable: ');
-                    if ((convType === 'roundtable' || isRoundtableByTitle) && typeof hydrateRoundtable === 'function') {
-                        try { await hydrateRoundtable(conv); } catch {}
+                    // Optional participants backfill via URL param
+                    const params = new URLSearchParams(location.search);
+                    const participantsParam = params.get('participants') || params.get('rt');
+                    let convWithParticipants = conv;
+                    if (participantsParam && (!conv.participants || conv.participants.length === 0)) {
+                        const names = participantsParam.split(',').map(s => s.trim()).filter(Boolean);
+                        if (names.length) {
+                            const resolveByName = async (n) => {
+                                try {
+                                    const exact = await characterRepository.getByName?.(n);
+                                    if (exact) return exact.id;
+                                } catch {}
+                                try {
+                                    const results = await characterRepository.search?.(n);
+                                    if (Array.isArray(results) && results.length > 0) {
+                                        const lower = n.toLowerCase();
+                                        const best = results.find(r => String(r.name).toLowerCase() === lower)
+                                          || results.find(r => String(r.name).toLowerCase().startsWith(lower))
+                                          || results[0];
+                                        return best?.id || null;
+                                    }
+                                } catch {}
+                                return null;
+                            };
+                            const ids = [];
+                            for (const nm of names) {
+                                const id = await resolveByName(nm);
+                                if (id) ids.push(id);
+                            }
+                            if (ids.length) {
+                                convWithParticipants = { ...conv, participants: ids };
+                            }
+                        }
+                    }
+                    if ((convType === 'roundtable' || isRoundtableByTitle || (Array.isArray(convWithParticipants.participants) && convWithParticipants.participants.length > 1)) && typeof hydrateRoundtable === 'function') {
+                        try { await hydrateRoundtable(convWithParticipants); } catch {}
                         return navigate('/roundtable?shared=1', { replace: true });
                     }
-                    hydrateFromConversation(conv);
+                    hydrateFromConversation(convWithParticipants);
                 }
             } catch (err) {
                 console.error('[SimpleChatWithHistory] Failed to load shared conversation:', err);

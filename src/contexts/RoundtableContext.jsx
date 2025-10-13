@@ -592,7 +592,8 @@ Stay in character and draw from biblical knowledge.`.trim()
       if (Array.isArray(conversation.participants) && conversation.participants.length > 0) {
         const characterPromises = conversation.participants.map(id => characterRepository.getById(id));
         const fetchedCharacters = await Promise.all(characterPromises);
-        loadedParticipants = fetchedCharacters.filter(Boolean);
+        // Normalize ids to strings for consistent comparisons in UI
+        loadedParticipants = fetchedCharacters.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
       } else if (Array.isArray(conversation.messages) && conversation.messages.length > 0) {
         const ids = Array.from(new Set(
           conversation.messages
@@ -601,7 +602,7 @@ Stay in character and draw from biblical knowledge.`.trim()
         ));
         if (ids.length > 0) {
           const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
-          loadedParticipants = fetched.filter(Boolean);
+          loadedParticipants = fetched.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
         } else {
           // As a last resort, attempt to parse leading name prefixes from assistant messages (e.g., "Paul: ..." or "Paul — ...")
           const namePattern = /^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/;
@@ -636,7 +637,7 @@ Stay in character and draw from biblical knowledge.`.trim()
               }
               if (ch) fetchedByName.push(ch);
             }
-            loadedParticipants = fetchedByName.filter(Boolean);
+            loadedParticipants = fetchedByName.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
           }
         }
       }
@@ -676,12 +677,12 @@ Stay in character and draw from biblical knowledge.`.trim()
       if (Array.isArray(conversation.messages)) {
         // Build a quick name->id map from participants to attach speakers
         const nameToId = new Map();
-        (loadedParticipants || []).forEach(p => nameToId.set(String(p.name).toLowerCase(), p.id));
+        (loadedParticipants || []).forEach(p => nameToId.set(String(p.name).toLowerCase(), String(p.id)));
 
         let countsSeed = {};
         const normalizedMessages = conversation.messages.map(m => {
           const originalContent = m.content;
-          let speakerId = m?.metadata?.speakerCharacterId || null;
+          let speakerId = m?.metadata?.speakerCharacterId != null ? String(m.metadata.speakerCharacterId) : null;
           // If speaker is missing and this is an assistant message, try to parse leading name prefix
           let contentToUse = originalContent;
           if (!speakerId && m.role === 'assistant' && typeof originalContent === 'string') {
@@ -701,7 +702,7 @@ Stay in character and draw from biblical knowledge.`.trim()
             timestamp: m.created_at || new Date().toISOString(),
             metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}) }
           };
-          const sid = msg.metadata?.speakerCharacterId;
+          const sid = msg.metadata?.speakerCharacterId != null ? String(msg.metadata.speakerCharacterId) : null;
           if (sid) countsSeed[sid] = (countsSeed[sid] || 0) + 1;
           return msg;
         });
@@ -714,12 +715,14 @@ Stay in character and draw from biblical knowledge.`.trim()
             let pick = null;
             let min = Infinity;
             for (const p of loadedParticipants) {
-              const c = counts[p.id] || 0;
+              const pid = String(p.id);
+              const c = counts[pid] || 0;
               if (c < min) { min = c; pick = p.id; }
             }
             if (pick) {
-              counts[pick] = (counts[pick] || 0) + 1;
-              return { ...m, metadata: { ...(m.metadata || {}), speakerCharacterId: pick } };
+              const sp = String(pick);
+              counts[sp] = (counts[sp] || 0) + 1;
+              return { ...m, metadata: { ...(m.metadata || {}), speakerCharacterId: sp } };
             }
           }
           return m;
@@ -730,7 +733,7 @@ Stay in character and draw from biblical knowledge.`.trim()
         // Rebuild turn counts from messages
         const finalCounts = {};
         filledMessages.forEach(msg => {
-          const speakerId = msg.metadata?.speakerCharacterId;
+          const speakerId = msg.metadata?.speakerCharacterId != null ? String(msg.metadata.speakerCharacterId) : null;
           if (speakerId) {
             finalCounts[speakerId] = (finalCounts[speakerId] || 0) + 1;
             lastSpeakerRef.current = speakerId;
