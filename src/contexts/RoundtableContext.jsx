@@ -682,10 +682,11 @@ Stay in character and draw from biblical knowledge.`.trim()
         let countsSeed = {};
         const normalizedMessages = conversation.messages.map(m => {
           const originalContent = m.content;
+          const role = (m.role === 'user') ? 'user' : (m.role === 'system' ? 'system' : 'assistant');
           let speakerId = m?.metadata?.speakerCharacterId != null ? String(m.metadata.speakerCharacterId) : null;
           // If speaker is missing and this is an assistant message, try to parse leading name prefix
           let contentToUse = originalContent;
-          if (!speakerId && m.role === 'assistant' && typeof originalContent === 'string') {
+          if (!speakerId && role === 'assistant' && typeof originalContent === 'string') {
             const match = originalContent.match(/^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/);
             if (match) {
               const nmRaw = match[1];
@@ -697,13 +698,13 @@ Stay in character and draw from biblical knowledge.`.trim()
           }
           const msg = {
             id: m.id || generateMessageId(),
-            role: m.role,
+            role,
             content: sanitizeIncomingContent(contentToUse),
             timestamp: m.created_at || new Date().toISOString(),
             metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}) }
           };
           const sid = msg.metadata?.speakerCharacterId != null ? String(msg.metadata.speakerCharacterId) : null;
-          if (sid) countsSeed[sid] = (countsSeed[sid] || 0) + 1;
+          if (sid && role === 'assistant') countsSeed[sid] = (countsSeed[sid] || 0) + 1;
           return msg;
         });
         
