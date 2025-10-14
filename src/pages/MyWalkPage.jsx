@@ -36,6 +36,38 @@ const MyWalkPage = () => {
   const [renamingConversationId, setRenamingConversationId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
   const [sortMode, setSortMode] = useState('recent'); // 'recent' | 'favorites'
+  // Selection state for bulk actions
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+
+  const visibleIds = useMemo(() => new Set((conversations || []).map(c => c.id)), [conversations]);
+  const allVisibleSelected = useMemo(() => {
+    const ids = new Set((sortedConversations || []).map(c => c.id));
+    if (ids.size === 0) return false;
+    for (const id of ids) if (!selectedIds.has(id)) return false;
+    return true;
+  }, [sortedConversations, selectedIds]);
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const toggleSelectAllVisible = () => {
+    const ids = (sortedConversations || []).map(c => c.id);
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      const allSelected = ids.every(id => next.has(id));
+      if (allSelected) {
+        ids.forEach(id => next.delete(id));
+      } else {
+        ids.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
 
   // Load favorite characters from server (fallback to localStorage)
   useEffect(() => {
@@ -299,6 +331,23 @@ const MyWalkPage = () => {
     }
   };
 
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (typeof deleteConversation !== 'function') return;
+    const ids = Array.from(selectedIds).filter(id => visibleIds.has(id));
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} conversation${ids.length>1?'s':''}? This cannot be undone.`)) return;
+    try {
+      for (const id of ids) {
+        try { await deleteConversation(id); } catch (e) { console.warn('Failed to delete', id, e); }
+      }
+      clearSelection();
+      await fetchConversations?.();
+    } catch (e) {
+      console.error('Bulk delete error:', e);
+    }
+  };
+
   // Helper: format date
   const formatDate = (iso) => {
     if (!iso) return '';
@@ -481,6 +530,37 @@ const MyWalkPage = () => {
             </div>
           </div>
 
+          {/* Bulk actions toolbar */}
+          {sortedConversations && sortedConversations.length > 0 && (
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <label className="inline-flex items-center gap-2 text-blue-100 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAllVisible}
+                  className="w-4 h-4 rounded border-blue-300"
+                />
+                <span className="text-sm">Select all</span>
+              </label>
+              <div className="flex items-center gap-2">
+                {selectedIds.size > 0 && (
+                  <span className="text-blue-200 text-sm">{selectedIds.size} selected</span>
+                )}
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={selectedIds.size === 0}
+                  className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+                    selectedIds.size === 0
+                      ? 'border-gray-500 text-gray-400 cursor-not-allowed'
+                      : 'border-red-500 text-red-200 hover:bg-red-500 hover:text-white'
+                  }`}
+                >
+                  Delete Selected
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Empty state for conversations */}
           {!conversationsLoading && (!conversations || conversations.length === 0) && (
             <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center">
@@ -551,6 +631,13 @@ const MyWalkPage = () => {
                       /* Normal title display */
                       <>
                         <h3 className="flex-1 text-xl font-semibold text-yellow-300 flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(conv.id)}
+                            onChange={(e) => { e.stopPropagation(); toggleSelect(conv.id); }}
+                            className="mr-3 w-4 h-4 rounded border-blue-300"
+                            title="Select conversation"
+                          />
                           {conv.title || 'Untitled Conversation'}
                           {/* ⭐ Toggle favourite */}
                           <button
