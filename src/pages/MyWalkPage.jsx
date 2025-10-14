@@ -36,6 +36,9 @@ const MyWalkPage = () => {
   const [renamingConversationId, setRenamingConversationId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
   const [sortMode, setSortMode] = useState('recent'); // 'recent' | 'favorites'
+  // Pagination
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
   // Selection state for bulk actions
   const [selectedIds, setSelectedIds] = useState(() => new Set());
 
@@ -57,7 +60,7 @@ const MyWalkPage = () => {
   };
   const clearSelection = () => setSelectedIds(new Set());
   const toggleSelectAllVisible = () => {
-    const ids = (sortedConversations || []).map(c => c.id);
+    const ids = (pagedConversations || []).map(c => c.id);
     setSelectedIds(prev => {
       const next = new Set(prev);
       const allSelected = ids.every(id => next.has(id));
@@ -384,6 +387,25 @@ const MyWalkPage = () => {
     return list;
   }, [conversations, sortMode]);
 
+  // Derive pagination
+  const totalPages = useMemo(() => {
+    const total = sortedConversations.length;
+    return total === 0 ? 1 : Math.ceil(total / PAGE_SIZE);
+  }, [sortedConversations.length]);
+  const pagedConversations = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return sortedConversations.slice(start, start + PAGE_SIZE);
+  }, [sortedConversations, currentPage]);
+
+  // Clamp current page when data/sort changes
+  useEffect(() => {
+    const tp = Math.max(1, Math.ceil((sortedConversations.length || 0) / PAGE_SIZE));
+    if (currentPage > tp) setCurrentPage(tp);
+    if (currentPage < 1) setCurrentPage(1);
+  }, [sortedConversations.length]);
+  // Reset to page 1 on sort change or when conversations set changes significantly
+  useEffect(() => { setCurrentPage(1); }, [sortMode]);
+
   // Placeholder when not logged in
   if (!user && !loading && hasAttemptedLoad) {
     return (
@@ -537,11 +559,15 @@ const MyWalkPage = () => {
               <label className="inline-flex items-center gap-2 text-blue-100 cursor-pointer select-none">
                 <input
                   type="checkbox"
-                  checked={allVisibleSelected}
+                  checked={(() => {
+                    const keys = (pagedConversations || []).map(c => c.id);
+                    if (keys.length === 0) return false;
+                    return keys.every(id => selectedIds.has(id));
+                  })()}
                   onChange={toggleSelectAllVisible}
                   className="w-4 h-4 rounded border-blue-300"
                 />
-                <span className="text-sm">Select all</span>
+                <span className="text-sm">Select all (this page)</span>
               </label>
               <div className="flex items-center gap-2">
                 {selectedIds.size > 0 && (
@@ -580,7 +606,7 @@ const MyWalkPage = () => {
           {/* Conversations list */}
           {sortedConversations && sortedConversations.length > 0 && (
             <div className="space-y-4">
-              {sortedConversations.map(conv => (
+              {pagedConversations.map(conv => (
                 <div
                   key={conv.id}
                   className={`p-4 rounded-lg transition-colors ${
@@ -751,6 +777,37 @@ const MyWalkPage = () => {
                   </Link>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination controls */}
+          {sortedConversations && sortedConversations.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+                  currentPage <= 1
+                    ? 'border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border-blue-400 text-blue-200 hover:bg-blue-500 hover:text-white'
+                }`}
+              >
+                Previous
+              </button>
+              <div className="text-blue-200 text-sm">
+                Page {currentPage} of {totalPages}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+                  currentPage >= totalPages
+                    ? 'border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border-blue-400 text-blue-200 hover:bg-blue-500 hover:text-white'
+                }`}
+              >
+                Next
+              </button>
             </div>
           )}
         </section>
