@@ -505,7 +505,14 @@ const RoundtableChat = () => {
                           if (!conversationId) return;
                           const shareCode = await shareConversation?.(conversationId);
                           if (!shareCode) return;
-                          const url = `${window.location.origin}/shared/${shareCode}`;
+                          // Include participants in the share URL so shared views can hydrate names/avatars
+                          const names = (participants && participants.length)
+                            ? participants.map(p => p.name)
+                            : (Array.isArray(window.__rt_backfill) ? window.__rt_backfill.map(p => p.name) : []);
+                          const qp = (names && names.length)
+                            ? `?participants=${encodeURIComponent(names.join(','))}`
+                            : '';
+                          const url = `${window.location.origin}/shared/${shareCode}${qp}`;
                           const title = `Roundtable: ${topic || 'Discussion'}`;
                           const text = `Join this roundtable on \"${topic}\"`;
                           if (navigator.share) {

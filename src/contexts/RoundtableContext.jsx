@@ -307,39 +307,42 @@ export const RoundtableProvider = ({ children }) => {
       }
       
       // Track speakers in this round to exclude them from follow-ups
-      const speakersInRound = new Set();
-      
-      // Generate replies sequentially for each speaker
-      for (const speaker of speakers) {
-        speakersInRound.add(speaker.id);
-        
-        // Create a simplified message history for the API
-        // Include the last 10 messages for context
+      const speakersInRound = new Set(speakers.map(s => s.id));
+
+      // 1) Pre-add placeholders for ALL speakers so all replies
+      // appear immediately in the UI while content streams in.
+      const placeholders = speakers.map((speaker) => ({
+        id: generateMessageId(),
+        role: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString(),
+        metadata: { speakerCharacterId: speaker.id }
+      }));
+      setMessages(prev => [...prev, ...placeholders]);
+
+      // 2) Generate replies sequentially, updating the corresponding
+      // placeholder by id and appending to workingMessages so that
+      // later speakers can reference earlier ones in the round.
+      for (let i = 0; i < speakers.length; i++) {
+        const speaker = speakers[i];
+        const messageId = placeholders[i].id;
+
+        // Create a simplified message history for the API (last 10)
         const recentMessages = workingMessages.slice(-10).map(msg => {
-          // For character messages, include the speaker's name
           if (msg.metadata?.speakerCharacterId) {
             const speakerChar = participants.find(p => p.id === msg.metadata.speakerCharacterId);
             const speakerName = speakerChar ? speakerChar.name : 'Unknown';
-            return {
-              role: 'assistant',
-              content: `${speakerName}: ${msg.content}`
-            };
+            return { role: 'assistant', content: `${speakerName}: ${msg.content}` };
           }
-          return {
-            role: msg.role,
-            content: msg.content
-          };
+          return { role: msg.role, content: msg.content };
         });
-        
-        // Create system message with roundtable context
+
         const otherParticipantNames = participants
           .filter(p => p.id !== speaker.id)
           .map(p => p.name)
           .join(', ');
-        
-        // Detect latest user input (if any) to allow topical pivots
-        const latestUserInput = [...workingMessages].reverse().find(m => m.role === 'user')?.content || '';
 
+        const latestUserInput = [...workingMessages].reverse().find(m => m.role === 'user')?.content || '';
         const persona = speaker.persona_prompt || speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`;
         const traits = Array.isArray(speaker.character_traits)
           ? speaker.character_traits.join(', ')
@@ -358,30 +361,14 @@ If the user's latest input shifts the focus, explicitly address that shift.
 ${latestUserInput ? `Latest user input to consider: "${latestUserInput}"` : ''}
 Stay in character and draw from biblical knowledge.`.trim()
         };
-        
         const apiMessages = [systemMessage, ...recentMessages];
-        
-        // Create placeholder message
-        const messageId = generateMessageId();
-        const placeholderMessage = {
-          id: messageId,
-          role: 'assistant',
-          content: '',
-          timestamp: new Date().toISOString(),
-          metadata: { speakerCharacterId: speaker.id }
-        };
-        
-        setMessages(prev => [...prev, placeholderMessage]);
-        
-        // Generate response
+
         try {
           const reply = await generateCharacterResponse(
             speaker.name,
             persona,
             apiMessages
           );
-          
-          // Limit reply length if needed
           let limitedReply = reply;
           if (reply) {
             const words = reply.split(/\s+/);
@@ -389,61 +376,20 @@ Stay in character and draw from biblical knowledge.`.trim()
               limitedReply = words.slice(0, maxWordsPerReply).join(' ') + '...';
             }
           }
-          
-          // Update message with response
-          setMessages(prev =>
-            prev.map(m => m.id === messageId ? { 
-              ...m, 
-              content: limitedReply 
-            } : m)
-          );
-          // Also update our working snapshot so later speakers see this reply
-          workingMessages.push({
-            role: 'assistant',
-            content: limitedReply,
-            metadata: { speakerCharacterId: speaker.id }
-          });
-          
-          // Persist message
+          setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: limitedReply } : m));
+          workingMessages.push({ role: 'assistant', content: limitedReply, metadata: { speakerCharacterId: speaker.id } });
           if (conversationId && typeof addMessage === 'function') {
-            await addMessage({
-              conversation_id: conversationId,
-              role: 'assistant',
-              content: limitedReply,
-              metadata: { speakerCharacterId: speaker.id }
-            });
+            await addMessage({ conversation_id: conversationId, role: 'assistant', content: limitedReply, metadata: { speakerCharacterId: speaker.id } });
           }
-          
-          // Update turn counts and last speaker
-          setTurnCounts(prev => ({
-            ...prev,
-            [speaker.id]: (prev[speaker.id] || 0) + 1
-          }));
+          setTurnCounts(prev => ({ ...prev, [speaker.id]: (prev[speaker.id] || 0) + 1 }));
           lastSpeakerRef.current = speaker.id;
-          
         } catch (err) {
           console.error(`Error generating response for ${speaker.name}:`, err);
-          
-          // Update message with error
-          setMessages(prev =>
-            prev.map(m => m.id === messageId ? { 
-              ...m, 
-              content: `(${speaker.name} is unable to respond at this moment.)` 
-            } : m)
-          );
-          
-          // Still persist the error message
+          setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: `(${speaker.name} is unable to respond at this moment.)` } : m));
           if (conversationId && typeof addMessage === 'function') {
-            await addMessage({
-              conversation_id: conversationId,
-              role: 'assistant',
-              content: `(${speaker.name} is unable to respond at this moment.)`,
-              metadata: { speakerCharacterId: speaker.id }
-            });
+            await addMessage({ conversation_id: conversationId, role: 'assistant', content: `(${speaker.name} is unable to respond at this moment.)`, metadata: { speakerCharacterId: speaker.id } });
           }
         }
-        
-        // Small delay between speakers for a more natural flow
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
