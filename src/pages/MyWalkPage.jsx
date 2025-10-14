@@ -40,12 +40,13 @@ const MyWalkPage = () => {
   const [selectedIds, setSelectedIds] = useState(() => new Set());
 
   const visibleIds = useMemo(() => new Set((conversations || []).map(c => c.id)), [conversations]);
+  // Note: compute against conversations to avoid referencing sortedConversations before it's defined
   const allVisibleSelected = useMemo(() => {
-    const ids = new Set((sortedConversations || []).map(c => c.id));
-    if (ids.size === 0) return false;
-    for (const id of ids) if (!selectedIds.has(id)) return false;
+    const list = Array.isArray(conversations) ? conversations : [];
+    if (list.length === 0) return false;
+    for (const c of list) if (!selectedIds.has(c.id)) return false;
     return true;
-  }, [sortedConversations, selectedIds]);
+  }, [conversations, selectedIds]);
 
   const toggleSelect = (id) => {
     setSelectedIds(prev => {
