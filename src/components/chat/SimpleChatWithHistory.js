@@ -717,6 +717,33 @@ const SimpleChatWithHistory = () => {
                                                       children: "Upgrade"
                                                     }) : null,
                                                     
+                                                    // Copy Transcript
+                                                    _jsx("button", {
+                                                        onClick: async () => {
+                                                            try {
+                                                                const lines = [];
+                                                                if (character?.name) {
+                                                                    lines.push(`Conversation with ${character.name}`);
+                                                                    lines.push('');
+                                                                }
+                                                                for (const m of messages) {
+                                                                    if (!m?.content || m.content.trim() === '') continue;
+                                                                    if (m.role === 'user') {
+                                                                        lines.push(`You: ${m.content}`);
+                                                                    } else {
+                                                                        lines.push(`${character?.name || 'Assistant'}: ${m.content}`);
+                                                                    }
+                                                                }
+                                                                const text = lines.join('\n');
+                                                                await navigator.clipboard.writeText(text);
+                                                            } catch (e) {
+                                                                console.warn('[SimpleChatWithHistory] Copy transcript failed:', e);
+                                                            }
+                                                        },
+                                                        className: "flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
+                                                        children: "Copy Transcript"
+                                                    }),
+                                                    
                                                     // Save button (only show if not already saved and user is authenticated)
                                                     isAuthenticated && !isChatSaved && messages.length > 0 && (
                                                         _jsxs("button", {
