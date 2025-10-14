@@ -72,6 +72,18 @@ const RoundtableChat = () => {
         }
         if (!conv) return;
         let convWithParticipants = conv;
+        // 0) LocalStorage backfill: if participants missing, use what Setup stashed
+        try {
+          if ((!conv.participants || conv.participants.length === 0) && conv.id) {
+            const raw = localStorage.getItem(`rt_participants_${conv.id}`);
+            if (raw) {
+              const ids = JSON.parse(raw);
+              if (Array.isArray(ids) && ids.length > 0) {
+                convWithParticipants = { ...convWithParticipants, participants: ids };
+              }
+            }
+          }
+        } catch {}
         // 1) Backfill from URL participants param when conversation lacks participants
         if (participantsParam && (!conv.participants || conv.participants.length === 0)) {
           const names = participantsParam.split(',').map(s => s.trim()).filter(Boolean);
@@ -101,11 +113,15 @@ const RoundtableChat = () => {
             } catch {}
           }
         }
-        // 2) If still missing participants, derive from message metadata
+        // 2) If still missing participants, derive from message metadata (support legacy keys)
         if ((!convWithParticipants.participants || convWithParticipants.participants.length === 0) && Array.isArray(convWithParticipants.messages)) {
           const ids = Array.from(new Set(
             convWithParticipants.messages
-              .map(m => m?.metadata?.speakerCharacterId)
+              .map(m => (
+                m?.metadata?.speakerCharacterId ??
+                m?.metadata?.speaker_id ??
+                m?.metadata?.speakerId
+              ))
               .filter(Boolean)
           ));
           if (ids.length) {
@@ -312,7 +328,11 @@ const RoundtableChat = () => {
         // Collect unique speaker ids from metadata
         const ids = Array.from(new Set(
           messages
-            .map(m => m?.metadata?.speakerCharacterId)
+            .map(m => (
+              m?.metadata?.speakerCharacterId ??
+              m?.metadata?.speaker_id ??
+              m?.metadata?.speakerId
+            ))
             .filter(Boolean)
         ));
         const { characterRepository } = await import('../repositories/characterRepository');
@@ -457,6 +477,7 @@ const RoundtableChat = () => {
                             let speakerId = message?.metadata?.speakerCharacterId;
                             let speaker = speakerId ? getCharacterById(speakerId) : null;
                             if (speaker) return speaker.name;
+                            if (message?.metadata?.speakerName) return message.metadata.speakerName;
                             const nm = parseNamePrefix(message?.content);
                             return nm || 'Unknown';
                           };
@@ -561,14 +582,24 @@ const RoundtableChat = () => {
                         }
                         
                         // Assistant message (character speaking)
-                        let speakerId = message.metadata?.speakerCharacterId;
+                        let speakerId = (
+                          message?.metadata?.speakerCharacterId ??
+                          message?.metadata?.speaker_id ??
+                          message?.metadata?.speakerId
+                        );
                         let speaker = speakerId ? getCharacterById(speakerId) : null;
                         if (!speaker) {
-                          const nm = parseNamePrefix(message.content);
-                          if (nm) {
-                            const id = nameMap[nm.toLowerCase()] || null;
-                            if (id) speaker = getCharacterById(id);
-                            if (!speaker) speaker = { name: nm };
+                          // Prefer explicitly derived speakerName from metadata when id is missing
+                          const metaName = message?.metadata?.speakerName;
+                          if (metaName) {
+                            speaker = { name: metaName };
+                          } else {
+                            const nm = parseNamePrefix(message.content);
+                            if (nm) {
+                              const id = nameMap[nm.toLowerCase()] || null;
+                              if (id) speaker = getCharacterById(id);
+                              if (!speaker) speaker = { name: nm };
+                            }
                           }
                         }
                         

@@ -15,6 +15,7 @@ const MyWalkPage = () => {
   const {
     conversations = [],
     fetchConversations,
+    fetchConversationWithMessages,
     updateConversation,
     deleteConversation,
     isLoading: conversationsLoading,
@@ -35,6 +36,42 @@ const MyWalkPage = () => {
   const [renamingConversationId, setRenamingConversationId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
   const [sortMode, setSortMode] = useState('recent'); // 'recent' | 'favorites'
+  // Pagination
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+  // Selection state for bulk actions
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+
+  const visibleIds = useMemo(() => new Set((conversations || []).map(c => c.id)), [conversations]);
+  // Note: compute against conversations to avoid referencing sortedConversations before it's defined
+  const allVisibleSelected = useMemo(() => {
+    const list = Array.isArray(conversations) ? conversations : [];
+    if (list.length === 0) return false;
+    for (const c of list) if (!selectedIds.has(c.id)) return false;
+    return true;
+  }, [conversations, selectedIds]);
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
+  const toggleSelectAllVisible = () => {
+    const ids = (pagedConversations || []).map(c => c.id);
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      const allSelected = ids.every(id => next.has(id));
+      if (allSelected) {
+        ids.forEach(id => next.delete(id));
+      } else {
+        ids.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
 
   // Load favorite characters from server (fallback to localStorage)
   useEffect(() => {
@@ -116,6 +153,69 @@ const MyWalkPage = () => {
       setFavoriteCharacters(favChars);
     } catch (e) {
       console.error('Failed to toggle favorite:', e);
+    }
+  };
+
+  // Copy transcript from a conversation (without navigating)
+  const handleCopyTranscript = async (conv) => {
+    try {
+      if (!conv?.id || typeof fetchConversationWithMessages !== 'function') return;
+      const full = await fetchConversationWithMessages(conv.id);
+      if (!full) return;
+
+      const lines = [];
+      if (full.title) {
+        lines.push(full.title);
+        lines.push('');
+      }
+
+      const nameCache = new Map();
+      const getNameById = async (id) => {
+        const key = String(id);
+        if (nameCache.has(key)) return nameCache.get(key);
+        try {
+          const c = await characterRepository.getById(key);
+          const nm = c?.name || 'Assistant';
+          nameCache.set(key, nm);
+          return nm;
+        } catch {
+          nameCache.set(key, 'Assistant');
+          return 'Assistant';
+        }
+      };
+
+      const defaultAssistant = full?.characters?.name || 'Assistant';
+      const msgs = Array.isArray(full.messages) ? [...full.messages] : [];
+      msgs.sort((a, b) => {
+        const da = a?.created_at ? new Date(a.created_at).getTime() : 0;
+        const db = b?.created_at ? new Date(b.created_at).getTime() : 0;
+        return da - db;
+      });
+
+      const namePrefixRx = /^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/;
+      for (const m of msgs) {
+        if (!m?.content || String(m.content).trim() === '') continue;
+        if (m.role === 'user') {
+          lines.push(`You: ${m.content}`);
+        } else {
+          let speaker = defaultAssistant;
+          const sid = m?.metadata?.speakerCharacterId || m?.metadata?.speaker_id || m?.metadata?.speakerId;
+          if (sid) {
+            try { speaker = await getNameById(sid); } catch {}
+          } else if (m?.metadata?.speakerName) {
+            speaker = m.metadata.speakerName;
+          } else if (typeof m.content === 'string') {
+            const mm = m.content.match(namePrefixRx);
+            if (mm) speaker = mm[1];
+          }
+          lines.push(`${speaker}: ${m.content}`);
+        }
+      }
+
+      const text = lines.join('\n');
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      console.warn('[MyWalkPage] Copy transcript failed:', e);
     }
   };
 
@@ -241,6 +341,23 @@ const MyWalkPage = () => {
     }
   };
 
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (typeof deleteConversation !== 'function') return;
+    const ids = Array.from(selectedIds).filter(id => visibleIds.has(id));
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} conversation${ids.length>1?'s':''}? This cannot be undone.`)) return;
+    try {
+      for (const id of ids) {
+        try { await deleteConversation(id); } catch (e) { console.warn('Failed to delete', id, e); }
+      }
+      clearSelection();
+      await fetchConversations?.();
+    } catch (e) {
+      console.error('Bulk delete error:', e);
+    }
+  };
+
   // Helper: format date
   const formatDate = (iso) => {
     if (!iso) return '';
@@ -275,6 +392,25 @@ const MyWalkPage = () => {
     }
     return list;
   }, [conversations, sortMode]);
+
+  // Derive pagination
+  const totalPages = useMemo(() => {
+    const total = sortedConversations.length;
+    return total === 0 ? 1 : Math.ceil(total / PAGE_SIZE);
+  }, [sortedConversations.length]);
+  const pagedConversations = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return sortedConversations.slice(start, start + PAGE_SIZE);
+  }, [sortedConversations, currentPage]);
+
+  // Clamp current page when data/sort changes
+  useEffect(() => {
+    const tp = Math.max(1, Math.ceil((sortedConversations.length || 0) / PAGE_SIZE));
+    if (currentPage > tp) setCurrentPage(tp);
+    if (currentPage < 1) setCurrentPage(1);
+  }, [sortedConversations.length]);
+  // Reset to page 1 on sort change or when conversations set changes significantly
+  useEffect(() => { setCurrentPage(1); }, [sortMode]);
 
   // Placeholder when not logged in
   if (!user && !loading && hasAttemptedLoad) {
@@ -423,6 +559,41 @@ const MyWalkPage = () => {
             </div>
           </div>
 
+          {/* Bulk actions toolbar */}
+          {sortedConversations && sortedConversations.length > 0 && (
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <label className="inline-flex items-center gap-2 text-blue-100 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={(() => {
+                    const keys = (pagedConversations || []).map(c => c.id);
+                    if (keys.length === 0) return false;
+                    return keys.every(id => selectedIds.has(id));
+                  })()}
+                  onChange={toggleSelectAllVisible}
+                  className="w-4 h-4 rounded border-blue-300"
+                />
+                <span className="text-sm">Select all (this page)</span>
+              </label>
+              <div className="flex items-center gap-2">
+                {selectedIds.size > 0 && (
+                  <span className="text-blue-200 text-sm">{selectedIds.size} selected</span>
+                )}
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={selectedIds.size === 0}
+                  className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+                    selectedIds.size === 0
+                      ? 'border-gray-500 text-gray-400 cursor-not-allowed'
+                      : 'border-red-500 text-red-200 hover:bg-red-500 hover:text-white'
+                  }`}
+                >
+                  Delete Selected
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Empty state for conversations */}
           {!conversationsLoading && (!conversations || conversations.length === 0) && (
             <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center">
@@ -441,7 +612,7 @@ const MyWalkPage = () => {
           {/* Conversations list */}
           {sortedConversations && sortedConversations.length > 0 && (
             <div className="space-y-4">
-              {sortedConversations.map(conv => (
+              {pagedConversations.map(conv => (
                 <div
                   key={conv.id}
                   className={`p-4 rounded-lg transition-colors ${
@@ -493,6 +664,13 @@ const MyWalkPage = () => {
                       /* Normal title display */
                       <>
                         <h3 className="flex-1 text-xl font-semibold text-yellow-300 flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(conv.id)}
+                            onChange={(e) => { e.stopPropagation(); toggleSelect(conv.id); }}
+                            className="mr-3 w-4 h-4 rounded border-blue-300"
+                            title="Select conversation"
+                          />
                           {conv.title || 'Untitled Conversation'}
                           {/* ⭐ Toggle favourite */}
                           <button
@@ -568,6 +746,13 @@ const MyWalkPage = () => {
                               />
                             </svg>
                           </button>
+                          <button
+                            onClick={() => handleCopyTranscript(conv)}
+                            className="ml-2 px-2 py-1 text-xs rounded border border-yellow-400 text-yellow-300 hover:bg-yellow-400 hover:text-blue-900 transition"
+                            title="Copy transcript to clipboard"
+                          >
+                            Copy Transcript
+                          </button>
                         </h3>
                         <span className="text-blue-200 text-sm flex-shrink-0">
                           {formatDate(conv.updated_at)}
@@ -598,6 +783,37 @@ const MyWalkPage = () => {
                   </Link>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination controls */}
+          {sortedConversations && sortedConversations.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between mt-4">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+                  currentPage <= 1
+                    ? 'border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border-blue-400 text-blue-200 hover:bg-blue-500 hover:text-white'
+                }`}
+              >
+                Previous
+              </button>
+              <div className="text-blue-200 text-sm">
+                Page {currentPage} of {totalPages}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className={`px-3 py-1.5 rounded-md text-sm font-semibold border transition-colors ${
+                  currentPage >= totalPages
+                    ? 'border-gray-500 text-gray-400 cursor-not-allowed'
+                    : 'border-blue-400 text-blue-200 hover:bg-blue-500 hover:text-white'
+                }`}
+              >
+                Next
+              </button>
             </div>
           )}
         </section>

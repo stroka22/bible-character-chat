@@ -109,11 +109,12 @@ export const RoundtableProvider = ({ children }) => {
 
       const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
       // Effective replies / words / follow-ups
-      const effReplies = clamp(
-        rpr || settings.defaults.repliesPerRound,
-        tierLimits.repliesPerRound.min,
-        tierLimits.repliesPerRound.max
-      );
+      // IMPORTANT: Do NOT clamp repliesPerRound by tier limits.
+      // Use provided rpr or defaults as-is (bounded only to sane minimum of 1).
+      let effReplies = parseInt(rpr ?? settings.defaults.repliesPerRound, 10);
+      if (!Number.isFinite(effReplies) || effReplies < 1) {
+        effReplies = settings.defaults.repliesPerRound;
+      }
       const effMaxWords = clamp(
         settings.defaults.maxWordsPerReply,
         tierLimits.maxWordsPerReply.min,
@@ -135,9 +136,7 @@ export const RoundtableProvider = ({ children }) => {
       
       // Set topic and replies per round
       setTopic(topicText);
-      if (rpr && !isNaN(parseInt(rpr))) {
-        setRepliesPerRound(parseInt(rpr));
-      }
+      // repliesPerRound already set from effective value above
       
       // Fetch full character data for each participant
       const characterPromises = participantIds.map(id => characterRepository.getById(id));
@@ -171,6 +170,11 @@ export const RoundtableProvider = ({ children }) => {
         
         if (newConversation?.id) {
           setConversationId(newConversation.id);
+          // Persist participants + repliesPerRound locally to assist hydration
+          try {
+            localStorage.setItem(`rt_participants_${newConversation.id}`, JSON.stringify(participantIds.map(String)));
+            localStorage.setItem(`rt_rpr_${newConversation.id}`, String(effReplies));
+          } catch {}
           
           // Add system message about the roundtable
           const systemMessage = {
@@ -595,7 +599,11 @@ Stay in character and draw from biblical knowledge.`.trim()
         if (Array.isArray(conversation.messages) && conversation.messages.length > 0) {
           const ids = Array.from(new Set(
             conversation.messages
-              .map(m => m?.metadata?.speakerCharacterId)
+              .map(m => (
+                m?.metadata?.speakerCharacterId ??
+                m?.metadata?.speaker_id ??
+                m?.metadata?.speakerId
+              ))
               .filter(Boolean)
           ));
           if (ids.length > 0) {
@@ -705,7 +713,13 @@ Stay in character and draw from biblical knowledge.`.trim()
         const normalizedMessages = conversation.messages.map(m => {
           const originalContent = m.content;
           const role = (m.role === 'user') ? 'user' : (m.role === 'system' ? 'system' : 'assistant');
-          let speakerId = m?.metadata?.speakerCharacterId != null ? String(m.metadata.speakerCharacterId) : null;
+          const rawSpeaker = (
+            m?.metadata?.speakerCharacterId ??
+            m?.metadata?.speaker_id ??
+            m?.metadata?.speakerId
+          );
+          let speakerId = rawSpeaker != null ? String(rawSpeaker) : null;
+          let derivedSpeakerName = m?.metadata?.speakerName || null;
           // If speaker is missing and this is an assistant message, try to parse leading name prefix
           let contentToUse = originalContent;
           if (!speakerId && role === 'assistant' && typeof originalContent === 'string') {
@@ -714,6 +728,10 @@ Stay in character and draw from biblical knowledge.`.trim()
               const nmRaw = match[1];
               const nm = nmRaw.toLowerCase();
               speakerId = nameToId.get(nm) || null;
+              // If we couldn't resolve to a participant id, keep the name so UI can display it
+              if (!speakerId) {
+                derivedSpeakerName = match[1];
+              }
               // Strip the prefix from content for display
               contentToUse = originalContent.replace(/^\s*[A-Z][A-Za-z\s\-']{1,40}\s*[:\-–—]\s+/, '');
             }
@@ -723,7 +741,7 @@ Stay in character and draw from biblical knowledge.`.trim()
             role,
             content: sanitizeIncomingContent(contentToUse),
             timestamp: m.created_at || new Date().toISOString(),
-            metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}) }
+            metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}), ...(derivedSpeakerName ? { speakerName: derivedSpeakerName } : {}) }
           };
           const sid = msg.metadata?.speakerCharacterId != null ? String(msg.metadata.speakerCharacterId) : null;
           if (sid && role === 'assistant') countsSeed[sid] = (countsSeed[sid] || 0) + 1;
