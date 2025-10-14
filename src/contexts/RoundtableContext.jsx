@@ -600,7 +600,11 @@ Stay in character and draw from biblical knowledge.`.trim()
         if (Array.isArray(conversation.messages) && conversation.messages.length > 0) {
           const ids = Array.from(new Set(
             conversation.messages
-              .map(m => m?.metadata?.speakerCharacterId)
+              .map(m => (
+                m?.metadata?.speakerCharacterId ??
+                m?.metadata?.speaker_id ??
+                m?.metadata?.speakerId
+              ))
               .filter(Boolean)
           ));
           if (ids.length > 0) {
@@ -710,7 +714,12 @@ Stay in character and draw from biblical knowledge.`.trim()
         const normalizedMessages = conversation.messages.map(m => {
           const originalContent = m.content;
           const role = (m.role === 'user') ? 'user' : (m.role === 'system' ? 'system' : 'assistant');
-          let speakerId = m?.metadata?.speakerCharacterId != null ? String(m.metadata.speakerCharacterId) : null;
+          const rawSpeaker = (
+            m?.metadata?.speakerCharacterId ??
+            m?.metadata?.speaker_id ??
+            m?.metadata?.speakerId
+          );
+          let speakerId = rawSpeaker != null ? String(rawSpeaker) : null;
           let derivedSpeakerName = m?.metadata?.speakerName || null;
           // If speaker is missing and this is an assistant message, try to parse leading name prefix
           let contentToUse = originalContent;

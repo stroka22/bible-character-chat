@@ -192,15 +192,21 @@ const MyWalkPage = () => {
         return da - db;
       });
 
+      const namePrefixRx = /^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/;
       for (const m of msgs) {
         if (!m?.content || String(m.content).trim() === '') continue;
         if (m.role === 'user') {
           lines.push(`You: ${m.content}`);
         } else {
           let speaker = defaultAssistant;
-          const sid = m?.metadata?.speakerCharacterId || m?.metadata?.speaker_id;
+          const sid = m?.metadata?.speakerCharacterId || m?.metadata?.speaker_id || m?.metadata?.speakerId;
           if (sid) {
             try { speaker = await getNameById(sid); } catch {}
+          } else if (m?.metadata?.speakerName) {
+            speaker = m.metadata.speakerName;
+          } else if (typeof m.content === 'string') {
+            const mm = m.content.match(namePrefixRx);
+            if (mm) speaker = mm[1];
           }
           lines.push(`${speaker}: ${m.content}`);
         }

@@ -113,11 +113,15 @@ const RoundtableChat = () => {
             } catch {}
           }
         }
-        // 2) If still missing participants, derive from message metadata
+        // 2) If still missing participants, derive from message metadata (support legacy keys)
         if ((!convWithParticipants.participants || convWithParticipants.participants.length === 0) && Array.isArray(convWithParticipants.messages)) {
           const ids = Array.from(new Set(
             convWithParticipants.messages
-              .map(m => m?.metadata?.speakerCharacterId)
+              .map(m => (
+                m?.metadata?.speakerCharacterId ??
+                m?.metadata?.speaker_id ??
+                m?.metadata?.speakerId
+              ))
               .filter(Boolean)
           ));
           if (ids.length) {
@@ -324,7 +328,11 @@ const RoundtableChat = () => {
         // Collect unique speaker ids from metadata
         const ids = Array.from(new Set(
           messages
-            .map(m => m?.metadata?.speakerCharacterId)
+            .map(m => (
+              m?.metadata?.speakerCharacterId ??
+              m?.metadata?.speaker_id ??
+              m?.metadata?.speakerId
+            ))
             .filter(Boolean)
         ));
         const { characterRepository } = await import('../repositories/characterRepository');
@@ -574,7 +582,11 @@ const RoundtableChat = () => {
                         }
                         
                         // Assistant message (character speaking)
-                        let speakerId = message.metadata?.speakerCharacterId;
+                        let speakerId = (
+                          message?.metadata?.speakerCharacterId ??
+                          message?.metadata?.speaker_id ??
+                          message?.metadata?.speakerId
+                        );
                         let speaker = speakerId ? getCharacterById(speakerId) : null;
                         if (!speaker) {
                           // Prefer explicitly derived speakerName from metadata when id is missing

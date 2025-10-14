@@ -336,7 +336,7 @@ const SimpleChatWithHistory = () => {
                     // Heuristic: consider as roundtable if multiple participants OR
                     // any assistant message has a speaker id OR looks like "Name:"
                     const msgs = Array.isArray(conv.messages) ? conv.messages : [];
-                    const hasSpeakerIds = msgs.some(m => m?.role === 'assistant' && m?.metadata?.speakerCharacterId);
+                    const hasSpeakerIds = msgs.some(m => m?.role === 'assistant' && (m?.metadata?.speakerCharacterId || m?.metadata?.speaker_id || m?.metadata?.speakerId));
                     const namePrefixRx = /^\s*[A-Z][A-Za-z\s\-']{1,40}\s*[:\-–—]\s+/;
                     const hasNamePrefixes = msgs.some(m => m?.role === 'assistant' && typeof m.content === 'string' && namePrefixRx.test(m.content));
                     const manyParticipants = Array.isArray(conv.participants) && conv.participants.length > 1;
