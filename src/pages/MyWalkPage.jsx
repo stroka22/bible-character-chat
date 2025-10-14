@@ -15,6 +15,7 @@ const MyWalkPage = () => {
   const {
     conversations = [],
     fetchConversations,
+    fetchConversationWithMessages,
     updateConversation,
     deleteConversation,
     isLoading: conversationsLoading,
@@ -116,6 +117,63 @@ const MyWalkPage = () => {
       setFavoriteCharacters(favChars);
     } catch (e) {
       console.error('Failed to toggle favorite:', e);
+    }
+  };
+
+  // Copy transcript from a conversation (without navigating)
+  const handleCopyTranscript = async (conv) => {
+    try {
+      if (!conv?.id || typeof fetchConversationWithMessages !== 'function') return;
+      const full = await fetchConversationWithMessages(conv.id);
+      if (!full) return;
+
+      const lines = [];
+      if (full.title) {
+        lines.push(full.title);
+        lines.push('');
+      }
+
+      const nameCache = new Map();
+      const getNameById = async (id) => {
+        const key = String(id);
+        if (nameCache.has(key)) return nameCache.get(key);
+        try {
+          const c = await characterRepository.getById(key);
+          const nm = c?.name || 'Assistant';
+          nameCache.set(key, nm);
+          return nm;
+        } catch {
+          nameCache.set(key, 'Assistant');
+          return 'Assistant';
+        }
+      };
+
+      const defaultAssistant = full?.characters?.name || 'Assistant';
+      const msgs = Array.isArray(full.messages) ? [...full.messages] : [];
+      msgs.sort((a, b) => {
+        const da = a?.created_at ? new Date(a.created_at).getTime() : 0;
+        const db = b?.created_at ? new Date(b.created_at).getTime() : 0;
+        return da - db;
+      });
+
+      for (const m of msgs) {
+        if (!m?.content || String(m.content).trim() === '') continue;
+        if (m.role === 'user') {
+          lines.push(`You: ${m.content}`);
+        } else {
+          let speaker = defaultAssistant;
+          const sid = m?.metadata?.speakerCharacterId || m?.metadata?.speaker_id;
+          if (sid) {
+            try { speaker = await getNameById(sid); } catch {}
+          }
+          lines.push(`${speaker}: ${m.content}`);
+        }
+      }
+
+      const text = lines.join('\n');
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      console.warn('[MyWalkPage] Copy transcript failed:', e);
     }
   };
 
@@ -567,6 +625,13 @@ const MyWalkPage = () => {
                                 clipRule="evenodd"
                               />
                             </svg>
+                          </button>
+                          <button
+                            onClick={() => handleCopyTranscript(conv)}
+                            className="ml-2 px-2 py-1 text-xs rounded border border-yellow-400 text-yellow-300 hover:bg-yellow-400 hover:text-blue-900 transition"
+                            title="Copy transcript to clipboard"
+                          >
+                            Copy Transcript
                           </button>
                         </h3>
                         <span className="text-blue-200 text-sm flex-shrink-0">
