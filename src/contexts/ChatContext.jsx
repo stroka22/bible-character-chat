@@ -397,7 +397,7 @@ export const ChatProvider = ({ children }) => {
       // store id early
       setChatId(newConversation.id);
 
-      // 2️⃣  Persist existing messages
+      // 2️⃣  Persist existing messages (preserve assistant speaker id)
       console.log(
         `[ChatContext] Persisting ${messages.length} messages to conversation ${newConversation.id}`,
       );
@@ -405,7 +405,15 @@ export const ChatProvider = ({ children }) => {
       for (const msg of messages) {
         if (typeof addMessage === 'function') {
           try {
-            await addMessage(msg.content, msg.role);
+            const meta = (msg.role === 'assistant' && character?.id)
+              ? { speakerCharacterId: character.id }
+              : undefined;
+            await addMessage({
+              conversation_id: newConversation.id,
+              role: msg.role,
+              content: msg.content,
+              ...(meta ? { metadata: meta } : {})
+            });
           } catch (msgErr) {
             console.error('[ChatContext] Error adding message:', msgErr);
           }

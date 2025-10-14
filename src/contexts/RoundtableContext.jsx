@@ -109,11 +109,12 @@ export const RoundtableProvider = ({ children }) => {
 
       const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
       // Effective replies / words / follow-ups
-      const effReplies = clamp(
-        rpr || settings.defaults.repliesPerRound,
-        tierLimits.repliesPerRound.min,
-        tierLimits.repliesPerRound.max
-      );
+      // IMPORTANT: Do NOT clamp repliesPerRound by tier limits.
+      // Use provided rpr or defaults as-is (bounded only to sane minimum of 1).
+      let effReplies = parseInt(rpr ?? settings.defaults.repliesPerRound, 10);
+      if (!Number.isFinite(effReplies) || effReplies < 1) {
+        effReplies = settings.defaults.repliesPerRound;
+      }
       const effMaxWords = clamp(
         settings.defaults.maxWordsPerReply,
         tierLimits.maxWordsPerReply.min,
@@ -135,9 +136,7 @@ export const RoundtableProvider = ({ children }) => {
       
       // Set topic and replies per round
       setTopic(topicText);
-      if (rpr && !isNaN(parseInt(rpr))) {
-        setRepliesPerRound(parseInt(rpr));
-      }
+      // repliesPerRound already set from effective value above
       
       // Fetch full character data for each participant
       const characterPromises = participantIds.map(id => characterRepository.getById(id));
