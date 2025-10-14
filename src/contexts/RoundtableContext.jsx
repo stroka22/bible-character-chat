@@ -706,6 +706,7 @@ Stay in character and draw from biblical knowledge.`.trim()
           const originalContent = m.content;
           const role = (m.role === 'user') ? 'user' : (m.role === 'system' ? 'system' : 'assistant');
           let speakerId = m?.metadata?.speakerCharacterId != null ? String(m.metadata.speakerCharacterId) : null;
+          let derivedSpeakerName = m?.metadata?.speakerName || null;
           // If speaker is missing and this is an assistant message, try to parse leading name prefix
           let contentToUse = originalContent;
           if (!speakerId && role === 'assistant' && typeof originalContent === 'string') {
@@ -714,6 +715,10 @@ Stay in character and draw from biblical knowledge.`.trim()
               const nmRaw = match[1];
               const nm = nmRaw.toLowerCase();
               speakerId = nameToId.get(nm) || null;
+              // If we couldn't resolve to a participant id, keep the name so UI can display it
+              if (!speakerId) {
+                derivedSpeakerName = match[1];
+              }
               // Strip the prefix from content for display
               contentToUse = originalContent.replace(/^\s*[A-Z][A-Za-z\s\-']{1,40}\s*[:\-–—]\s+/, '');
             }
@@ -723,7 +728,7 @@ Stay in character and draw from biblical knowledge.`.trim()
             role,
             content: sanitizeIncomingContent(contentToUse),
             timestamp: m.created_at || new Date().toISOString(),
-            metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}) }
+            metadata: { ...(m.metadata || {}), ...(speakerId ? { speakerCharacterId: speakerId } : {}), ...(derivedSpeakerName ? { speakerName: derivedSpeakerName } : {}) }
           };
           const sid = msg.metadata?.speakerCharacterId != null ? String(msg.metadata.speakerCharacterId) : null;
           if (sid && role === 'assistant') countsSeed[sid] = (countsSeed[sid] || 0) + 1;

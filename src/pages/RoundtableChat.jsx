@@ -457,6 +457,7 @@ const RoundtableChat = () => {
                             let speakerId = message?.metadata?.speakerCharacterId;
                             let speaker = speakerId ? getCharacterById(speakerId) : null;
                             if (speaker) return speaker.name;
+                            if (message?.metadata?.speakerName) return message.metadata.speakerName;
                             const nm = parseNamePrefix(message?.content);
                             return nm || 'Unknown';
                           };
@@ -564,11 +565,17 @@ const RoundtableChat = () => {
                         let speakerId = message.metadata?.speakerCharacterId;
                         let speaker = speakerId ? getCharacterById(speakerId) : null;
                         if (!speaker) {
-                          const nm = parseNamePrefix(message.content);
-                          if (nm) {
-                            const id = nameMap[nm.toLowerCase()] || null;
-                            if (id) speaker = getCharacterById(id);
-                            if (!speaker) speaker = { name: nm };
+                          // Prefer explicitly derived speakerName from metadata when id is missing
+                          const metaName = message?.metadata?.speakerName;
+                          if (metaName) {
+                            speaker = { name: metaName };
+                          } else {
+                            const nm = parseNamePrefix(message.content);
+                            if (nm) {
+                              const id = nameMap[nm.toLowerCase()] || null;
+                              if (id) speaker = getCharacterById(id);
+                              if (!speaker) speaker = { name: nm };
+                            }
                           }
                         }
                         
