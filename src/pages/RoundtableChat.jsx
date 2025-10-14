@@ -18,9 +18,10 @@ const RoundtableChat = () => {
     error,
     clearError,
     // Optional helper (may be undefined in older context versions)
-    consumeAutoStartFlag
+    consumeAutoStartFlag,
+    hydrateFromConversation
   } = useRoundtable();
-  const { shareConversation } = useConversation();
+  const { shareConversation, fetchConversationWithMessages, getSharedConversation } = useConversation();
   
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef(null);
@@ -47,6 +48,58 @@ const RoundtableChat = () => {
   useEffect(() => {
     // Intentionally left blank (we do not navigate away automatically)
   }, [participants, messages, isSharedView]);
+
+  // Hydrate when opened directly with ?code=<shareCode> or ?conv=<conversationId>
+  useEffect(() => {
+    (async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const convId = params.get('conv');
+        const participantsParam = params.get('participants') || params.get('rt');
+        let conv = null;
+        if (code && typeof getSharedConversation === 'function') {
+          conv = await getSharedConversation(code);
+        } else if (convId && typeof fetchConversationWithMessages === 'function') {
+          conv = await fetchConversationWithMessages(convId);
+        }
+        if (!conv) return;
+        let convWithParticipants = conv;
+        if (participantsParam && (!conv.participants || conv.participants.length === 0)) {
+          const names = participantsParam.split(',').map(s => s.trim()).filter(Boolean);
+          if (names.length) {
+            try {
+              const { characterRepository } = await import('../repositories/characterRepository');
+              const resolveByName = async (n) => {
+                try { const exact = await characterRepository.getByName?.(n); if (exact) return exact.id; } catch {}
+                try {
+                  const results = await characterRepository.search?.(n);
+                  if (Array.isArray(results) && results.length > 0) {
+                    const lower = n.toLowerCase();
+                    const best = results.find(r => String(r.name).toLowerCase() === lower)
+                      || results.find(r => String(r.name).toLowerCase().startsWith(lower))
+                      || results[0];
+                    return best?.id || null;
+                  }
+                } catch {}
+                return null;
+              };
+              const ids = [];
+              for (const nm of names) {
+                const id = await resolveByName(nm);
+                if (id) ids.push(id);
+              }
+              if (ids.length) convWithParticipants = { ...conv, participants: ids };
+            } catch {}
+          }
+        }
+        if (typeof hydrateFromConversation === 'function') {
+          await hydrateFromConversation(convWithParticipants);
+        }
+      } catch {}
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Measure header + lead banner to prevent overlap (robust to late insertions)
   useEffect(() => {
