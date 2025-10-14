@@ -65,6 +65,7 @@ const RoundtableChat = () => {
         }
         if (!conv) return;
         let convWithParticipants = conv;
+        // 1) Backfill from URL participants param when conversation lacks participants
         if (participantsParam && (!conv.participants || conv.participants.length === 0)) {
           const names = participantsParam.split(',').map(s => s.trim()).filter(Boolean);
           if (names.length) {
@@ -91,6 +92,17 @@ const RoundtableChat = () => {
               }
               if (ids.length) convWithParticipants = { ...conv, participants: ids };
             } catch {}
+          }
+        }
+        // 2) If still missing participants, derive from message metadata
+        if ((!convWithParticipants.participants || convWithParticipants.participants.length === 0) && Array.isArray(convWithParticipants.messages)) {
+          const ids = Array.from(new Set(
+            convWithParticipants.messages
+              .map(m => m?.metadata?.speakerCharacterId)
+              .filter(Boolean)
+          ));
+          if (ids.length) {
+            convWithParticipants = { ...convWithParticipants, participants: ids };
           }
         }
         if (typeof hydrateFromConversation === 'function') {

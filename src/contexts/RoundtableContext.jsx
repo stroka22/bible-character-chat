@@ -592,8 +592,23 @@ Stay in character and draw from biblical knowledge.`.trim()
       // Load participants if available, else backfill from message metadata
       let loadedParticipants = [];
       if (Array.isArray(conversation.participants) && conversation.participants.length > 0) {
-        const characterPromises = conversation.participants.map(id => characterRepository.getById(id));
-        const fetchedCharacters = await Promise.all(characterPromises);
+        // Support both array of IDs and array of character objects
+        const items = conversation.participants;
+        const fetchedCharacters = await Promise.all(items.map(async (item) => {
+          try {
+            if (item && typeof item === 'object') {
+              // Already a character-like object
+              const id = item.id ?? item.uuid ?? null;
+              const name = item.name ?? null;
+              // If it has both id and name, trust it after sanitization
+              if (id && name) return { ...characterRepository.sanitizeCharacter(item), id };
+              // Otherwise, try to refetch by id
+              if (id) return await characterRepository.getById(id);
+            }
+            // Primitive id path
+            return await characterRepository.getById(item);
+          } catch { return null; }
+        }));
         // Normalize ids to strings for consistent comparisons in UI
         loadedParticipants = fetchedCharacters.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
       } else if (Array.isArray(conversation.messages) && conversation.messages.length > 0) {
