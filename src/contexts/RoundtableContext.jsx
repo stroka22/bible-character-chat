@@ -589,7 +589,57 @@ Stay in character and draw from biblical knowledge.`.trim()
         setTopic(conversation.title.substring('Roundtable: '.length));
       }
       
-      // Load participants if available, else backfill from message metadata
+      // Helper to derive participants from messages (metadata or name prefixes)
+      const deriveParticipantsFromMessages = async () => {
+        let derived = [];
+        if (Array.isArray(conversation.messages) && conversation.messages.length > 0) {
+          const ids = Array.from(new Set(
+            conversation.messages
+              .map(m => m?.metadata?.speakerCharacterId)
+              .filter(Boolean)
+          ));
+          if (ids.length > 0) {
+            const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
+            derived = fetched.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
+          }
+          if (derived.length === 0) {
+            // As a last resort, parse leading name prefixes from assistant messages
+            const namePattern = /^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/;
+            const candidateNames = Array.from(new Set(
+              conversation.messages
+                .filter(m => m.role === 'assistant' && typeof m.content === 'string')
+                .map(m => {
+                  const match = m.content.match(namePattern);
+                  return match ? match[1].trim() : null;
+                })
+                .filter(Boolean)
+            ));
+            if (candidateNames.length > 0) {
+              const fetchedByName = [];
+              for (const n of candidateNames) {
+                let ch = null;
+                try { ch = await characterRepository.getByName?.(n); } catch {}
+                if (!ch && characterRepository.search) {
+                  try {
+                    const results = await characterRepository.search(n);
+                    if (Array.isArray(results) && results.length > 0) {
+                      const lower = n.toLowerCase();
+                      ch = results.find(r => String(r.name).toLowerCase() === lower)
+                        || results.find(r => String(r.name).toLowerCase().startsWith(lower))
+                        || results[0];
+                    }
+                  } catch {}
+                }
+                if (ch) fetchedByName.push(ch);
+              }
+              derived = fetchedByName.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
+            }
+          }
+        }
+        return derived;
+      };
+
+      // Load participants if available; if unresolved or missing, backfill from messages
       let loadedParticipants = [];
       if (Array.isArray(conversation.participants) && conversation.participants.length > 0) {
         // Support both array of IDs and array of character objects
@@ -597,66 +647,21 @@ Stay in character and draw from biblical knowledge.`.trim()
         const fetchedCharacters = await Promise.all(items.map(async (item) => {
           try {
             if (item && typeof item === 'object') {
-              // Already a character-like object
               const id = item.id ?? item.uuid ?? null;
               const name = item.name ?? null;
-              // If it has both id and name, trust it after sanitization
               if (id && name) return { ...characterRepository.sanitizeCharacter(item), id };
-              // Otherwise, try to refetch by id
               if (id) return await characterRepository.getById(id);
             }
-            // Primitive id path
             return await characterRepository.getById(item);
           } catch { return null; }
         }));
-        // Normalize ids to strings for consistent comparisons in UI
         loadedParticipants = fetchedCharacters.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
-      } else if (Array.isArray(conversation.messages) && conversation.messages.length > 0) {
-        const ids = Array.from(new Set(
-          conversation.messages
-            .map(m => m?.metadata?.speakerCharacterId)
-            .filter(Boolean)
-        ));
-        if (ids.length > 0) {
-          const fetched = await Promise.all(ids.map(id => characterRepository.getById(id)));
-          loadedParticipants = fetched.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
-        } else {
-          // As a last resort, attempt to parse leading name prefixes from assistant messages (e.g., "Paul: ..." or "Paul — ...")
-          const namePattern = /^\s*([A-Z][A-Za-z\s\-']{1,40})\s*[:\-–—]\s+/;
-          const candidateNames = Array.from(new Set(
-            conversation.messages
-              .filter(m => m.role === 'assistant' && typeof m.content === 'string')
-              .map(m => {
-                const match = m.content.match(namePattern);
-                return match ? match[1].trim() : null;
-              })
-              .filter(Boolean)
-          ));
-          if (candidateNames.length > 0) {
-            // Try strict name match first; if not found, fall back to search and pick best candidate
-            const fetchedByName = [];
-            for (const n of candidateNames) {
-              let ch = null;
-              try {
-                ch = await characterRepository.getByName?.(n);
-              } catch {}
-              if (!ch && characterRepository.search) {
-                try {
-                  const results = await characterRepository.search(n);
-                  if (Array.isArray(results) && results.length > 0) {
-                    // Prefer exact case-insensitive match; else startsWith; else first
-                    const lower = n.toLowerCase();
-                    ch = results.find(r => String(r.name).toLowerCase() === lower)
-                      || results.find(r => String(r.name).toLowerCase().startsWith(lower))
-                      || results[0];
-                  }
-                } catch {}
-              }
-              if (ch) fetchedByName.push(ch);
-            }
-            loadedParticipants = fetchedByName.filter(Boolean).map(c => ({ ...c, id: String(c.id) }));
-          }
+        // Fallback if none resolved
+        if (loadedParticipants.length === 0) {
+          loadedParticipants = await deriveParticipantsFromMessages();
         }
+      } else {
+        loadedParticipants = await deriveParticipantsFromMessages();
       }
       if (loadedParticipants.length > 0) {
         setParticipants(loadedParticipants);

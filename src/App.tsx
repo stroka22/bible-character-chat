@@ -322,9 +322,12 @@ function App(): JSX.Element {
     <Route path="/studies/:id/lesson/:lessonIndex" element={<StudyLesson />} />
     <Route path="/debug" element={<div className="min-h-screen bg-slate-800 text-white p-4"><h1 className="text-2xl mb-4">Debug Tools</h1><DebugPanel /></div>} />
     
-    {/* Chat & Shared conversation routes (public access) */}
+    {/* Chat & Shared conversation routes */}
     <Route path="/chat" element={<SimpleChatWithHistory />} />
-    <Route path="/chat/:conversationId" element={<SimpleChatWithHistory />} />
+    {/* Require login to view saved conversations by ID */}
+    <Route element={<ProtectedRoute redirectPath="/login" />}>
+      <Route path="/chat/:conversationId" element={<SimpleChatWithHistory />} />
+    </Route>
     <Route path="/shared/:shareCode" element={<SimpleChatWithHistory isSharedView={true} />} />
 
     {/* Protected routes */}

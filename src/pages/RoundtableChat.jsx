@@ -1,12 +1,14 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useRoundtable } from '../contexts/RoundtableContext';
 import { useConversation } from '../contexts/ConversationContext.jsx';
 import Footer from '../components/Footer';
 
 const RoundtableChat = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const {
     participants,
     topic,
@@ -57,6 +59,11 @@ const RoundtableChat = () => {
         const code = params.get('code');
         const convId = params.get('conv');
         const participantsParam = params.get('participants') || params.get('rt');
+        // Require login to view saved conversations by ID
+        if (convId && !isAuthenticated) {
+          const ret = encodeURIComponent(window.location.pathname + window.location.search);
+          return navigate(`/login?return=${ret}`, { replace: false });
+        }
         let conv = null;
         if (code && typeof getSharedConversation === 'function') {
           conv = await getSharedConversation(code);
@@ -434,6 +441,42 @@ const RoundtableChat = () => {
                           : 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
                       }`,
                       children: isTyping ? "Characters Responding..." : "Advance Round"
+                    }),
+                    _jsx("button", {
+                      onClick: async () => {
+                        try {
+                          const lines = [];
+                          if (topic) lines.push(`Roundtable: ${topic}`);
+                          const names = (participants && participants.length)
+                            ? participants.map(p => p.name)
+                            : (Array.isArray(window.__rt_backfill) ? window.__rt_backfill.map(p => p.name) : []);
+                          if (names.length) lines.push(`Participants: ${names.join(', ')}`);
+                          if (lines.length) lines.push('');
+                          const norm = (raw, n) => normalizeContent(raw, n);
+                          const resolveSpeakerName = (message) => {
+                            let speakerId = message?.metadata?.speakerCharacterId;
+                            let speaker = speakerId ? getCharacterById(speakerId) : null;
+                            if (speaker) return speaker.name;
+                            const nm = parseNamePrefix(message?.content);
+                            return nm || 'Unknown';
+                          };
+                          for (const m of messages) {
+                            if (m.role === 'system') continue;
+                            if (m.role === 'user') {
+                              lines.push(`You: ${m.content}`);
+                            } else {
+                              const nm = resolveSpeakerName(m);
+                              lines.push(`${nm}: ${norm(m.content, nm)}`);
+                            }
+                          }
+                          const text = lines.join('\n');
+                          await navigator.clipboard.writeText(text);
+                        } catch (e) {
+                          console.error('Failed to copy conversation:', e);
+                        }
+                      },
+                      className: "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-yellow-400 hover:bg-yellow-500 text-blue-900",
+                      children: "Copy Transcript"
                     }),
                     _jsx("button", {
                       onClick: async () => {
