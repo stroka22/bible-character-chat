@@ -171,6 +171,11 @@ export const RoundtableProvider = ({ children }) => {
         
         if (newConversation?.id) {
           setConversationId(newConversation.id);
+          // Persist participants + repliesPerRound locally to assist hydration
+          try {
+            localStorage.setItem(`rt_participants_${newConversation.id}`, JSON.stringify(participantIds.map(String)));
+            localStorage.setItem(`rt_rpr_${newConversation.id}`, String(effReplies));
+          } catch {}
           
           // Add system message about the roundtable
           const systemMessage = {

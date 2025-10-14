@@ -72,6 +72,18 @@ const RoundtableChat = () => {
         }
         if (!conv) return;
         let convWithParticipants = conv;
+        // 0) LocalStorage backfill: if participants missing, use what Setup stashed
+        try {
+          if ((!conv.participants || conv.participants.length === 0) && conv.id) {
+            const raw = localStorage.getItem(`rt_participants_${conv.id}`);
+            if (raw) {
+              const ids = JSON.parse(raw);
+              if (Array.isArray(ids) && ids.length > 0) {
+                convWithParticipants = { ...convWithParticipants, participants: ids };
+              }
+            }
+          }
+        } catch {}
         // 1) Backfill from URL participants param when conversation lacks participants
         if (participantsParam && (!conv.participants || conv.participants.length === 0)) {
           const names = participantsParam.split(',').map(s => s.trim()).filter(Boolean);

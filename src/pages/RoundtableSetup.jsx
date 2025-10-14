@@ -81,7 +81,12 @@ const RoundtableSetup = () => {
       });
       
       if (newId) {
-        navigate(`/chat/${newId}`);
+        // Navigate directly to the Roundtable UI so we retain
+        // in-memory participants and settings without relying on
+        // DB hydration before any messages exist.
+        const qp = new URLSearchParams();
+        qp.set('conv', newId);
+        navigate(`/roundtable?${qp.toString()}`);
       } else {
         setError('Failed to start roundtable. Please try again.');
       }
