@@ -225,50 +225,63 @@ export const ConversationProvider = ({ children }) => {
    * @param {string} content - Message content
    * @param {string} role - Message role ('user' or 'assistant')
    */
-  const addMessage = useCallback(async (content, role) => {
-    // Determine which conversation to append to.
-    let targetConversationId = activeConversation?.id;
-    // Fallback: the repo sets this synchronously when we create a conversation
-    if (!targetConversationId) {
-      targetConversationId = conversationRepository.activeConversationId;
-    }
-    if (!targetConversationId) {
-      console.warn('Cannot add message: No active conversation');
-      return null;
+  const addMessage = useCallback(async (arg1, arg2) => {
+    // Supports both legacy addMessage(content, role) and
+    // object form addMessage({ conversation_id, role, content, metadata })
+
+    // Resolve target conversation id from active context or repository fallback
+    const resolveConversationId = () => {
+      return activeConversation?.id || conversationRepository.activeConversationId || null;
+    };
+
+    // Build a normalized payload for the repository
+    let payload;
+    if (typeof arg1 === 'object' && arg1 !== null) {
+      payload = { ...arg1 };
+      if (!payload.conversation_id) {
+        const cid = resolveConversationId();
+        if (!cid) {
+          console.warn('Cannot add message: No active conversation');
+          return null;
+        }
+        payload.conversation_id = cid;
+      }
+    } else {
+      const cid = resolveConversationId();
+      if (!cid) {
+        console.warn('Cannot add message: No active conversation');
+        return null;
+      }
+      payload = {
+        conversation_id: cid,
+        role: arg2,
+        content: arg1,
+      };
     }
 
-    if (!content) {
+    if (!payload.content) {
       console.warn('Cannot add empty message');
       return null;
     }
 
     setIsSaving(true);
-    
+
     try {
-      const message = await conversationRepository.addMessage({
-        conversation_id: targetConversationId,
-        role,
-        content
-      });
-      
+      const message = await conversationRepository.addMessage(payload);
+
       // Update the active conversation with the new message
       setActiveConversation(prev => {
+        const targetId = payload.conversation_id;
         // If prev is missing or refers to another conversation, build a minimal base.
-        const base =
-          prev && prev.id === targetConversationId
-            ? prev
-            : { id: targetConversationId, messages: [] };
-
-        const updatedMessages = base.messages
-          ? [...base.messages, message]
-          : [message];
+        const base = prev && prev.id === targetId ? prev : { id: targetId, messages: [] };
+        const updatedMessages = base.messages ? [...base.messages, message] : [message];
         return {
           ...base,
           messages: updatedMessages,
           updated_at: new Date().toISOString(),
         };
       });
-      
+
       return message;
     } catch (err) {
       console.error('Error adding message:', err);
