@@ -235,6 +235,8 @@ const RoundtableChat = () => {
           ? consumeAutoStartFlag()
           : false;
       if (shouldStart) {
+        // Mark as kicked to prevent fallback from triggering a second time
+        autoKickedRef.current = true;
         advanceRound();
       }
     }

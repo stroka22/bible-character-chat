@@ -81,15 +81,6 @@ const RoundtableSetup = () => {
       });
       
       if (newId) {
-        // If auto-start is enabled, kick off the first round BEFORE navigating
-        // so placeholders are present immediately on the Chat screen.
-        try {
-          if (autoStart && typeof advanceRound === 'function') {
-            await advanceRound();
-          }
-        } catch (e) {
-          console.warn('Auto-start advance failed (will proceed anyway):', e);
-        }
         // Navigate directly to the Roundtable UI so we retain
         // in-memory participants and settings without relying on
         // DB hydration before any messages exist.
