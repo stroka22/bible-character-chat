@@ -62,6 +62,13 @@ const RoundtableChat = () => {
         const code = params.get('code');
         const convId = params.get('conv');
         const participantsParam = params.get('participants') || params.get('rt');
+        // IMPORTANT: If we already have local messages (e.g., placeholders
+        // created by advanceRound just before navigation), do NOT hydrate yet.
+        // Hydration would overwrite local placeholders with an empty DB state
+        // and break the in-flight round generation.
+        if (convId && Array.isArray(messages) && messages.length > 0 && !code) {
+          return;
+        }
         // Require login to view saved conversations by ID
         if (convId && !isAuthenticated) {
           const ret = encodeURIComponent(window.location.pathname + window.location.search);
