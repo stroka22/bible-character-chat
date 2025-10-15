@@ -15,7 +15,7 @@ const RoundtableSetup = () => {
   const [topic, setTopic] = useState('');
   const [repliesPerRound, setRepliesPerRound] = useState(3);
   // Auto-start toggle
-  const [autoStart, setAutoStart] = useState(false);
+  const [autoStart, setAutoStart] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
