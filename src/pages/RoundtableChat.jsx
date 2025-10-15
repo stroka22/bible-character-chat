@@ -31,6 +31,9 @@ const RoundtableChat = () => {
   const headerRef = useRef(null);
   const [headerPad, setHeaderPad] = useState(128);
   const [stickyTop, setStickyTop] = useState(96);
+  // Ensure we kick off the first round automatically when a new
+  // conversation is opened and there are no assistant messages yet.
+  const autoKickedRef = useRef(false);
   const [isSharedView, setIsSharedView] = useState(() => {
     try {
       return new URLSearchParams(window.location.search).get('shared') === '1';
@@ -230,6 +233,19 @@ const RoundtableChat = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [participants]);
+
+  // Fallback auto-start: if we land on a conversation with no assistant
+  // messages yet (freshly created) and not in shared view, kick off one round.
+  useEffect(() => {
+    if (isSharedView) return;
+    if (autoKickedRef.current) return;
+    if (!conversationId) return;
+    const hasAssistant = Array.isArray(messages) && messages.some(m => m.role === 'assistant');
+    if (!hasAssistant && Array.isArray(participants) && participants.length > 0) {
+      autoKickedRef.current = true;
+      advanceRound();
+    }
+  }, [conversationId, participants?.length, messages?.length, isSharedView]);
 
   // Handle message submission
   const handleSubmit = async (e) => {
