@@ -13,7 +13,6 @@ import { characterRepository } from '../../repositories/characterRepository';
 import UpgradeModal from '../modals/UpgradeModal';
 import { usePremium } from '../../hooks/usePremium';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
-import { bibleSeriesRepository } from '../../repositories/bibleSeriesRepository';
 
 // Feature flag: enable/disable local chat cache usage for resume fallback
 const ENABLE_LOCAL_CHAT_CACHE = false;
@@ -80,7 +79,7 @@ const SimpleChatWithHistory = () => {
     const [messageLimit, setMessageLimit] = useState(5);
     const [studyMeta, setStudyMeta] = useState(null);
     const [lessonMeta, setLessonMeta] = useState(null);
-    const [seriesMeta, setSeriesMeta] = useState(null);
+    // Series feature deprecated; keep studies functionality intact
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
@@ -146,50 +145,11 @@ const SimpleChatWithHistory = () => {
         setLessonContext(null);
         setStudyMeta(null);
         setLessonMeta(null);
-        setSeriesMeta(null);
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search, character, shareCode]);
 
-    /* ------------------------------------------------------------------
-     * Inject series introduction context when URL contains ?series=<slug>
-     * (and no study param). Also auto-post an intro assistant message.
-     * ----------------------------------------------------------------*/
-    useEffect(() => {
-      const run = async () => {
-        if (!character) return;
-        // Shared view: do not inject series intro
-        if (shareCode) return;
-        const params = new URLSearchParams(location.search);
-        if (params.get('study')) return; // handled by lesson context
-        const seriesSlug = params.get('series');
-        if (!seriesSlug) return;
-
-        try {
-          const s = await bibleSeriesRepository.getBySlug(seriesSlug);
-          if (!s) return;
-          setSeriesMeta(s);
-          const ctx = `You are guiding an introductory conversation for a Bible study series. ` +
-            `Series: ${s.title}. ` +
-            `${s.description ? `Description: ${s.description}` : ''}`.trim();
-          setLessonContext(ctx);
-
-          // If no user messages yet, post an intro assistant message
-          if (!messages.some(m => m.role === 'user')) {
-            let intro = `Welcome! I am here to introduce the series "${s.title}".`;
-            if (s.description) {
-              intro += `\n\n${s.description}`;
-            }
-            intro += `\n\nWhat would you like to focus on as we begin this series?`;
-            postAssistantMessage(intro);
-          }
-        } catch (err) {
-          console.warn('[SimpleChatWithHistory] Failed to inject series context:', err);
-        }
-      };
-      run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [location.search, character, messages.length, shareCode]);
+    // Series injection removed
 
     useEffect(() => {
       try {
