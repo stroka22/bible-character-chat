@@ -1,6 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import React, { useState, useEffect } from 'react';
-import AdminSeriesPage from './AdminSeriesPage.jsx';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 import { characterRepository } from '../../repositories/characterRepository';
 import { getOwnerSlug } from '../../services/tierSettingsService';
@@ -32,7 +31,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [showLessonForm, setShowLessonForm] = useState(false);
   const [ownerSlug, setOwnerSlug] = useState(getOwnerSlug());
   const [ownerOptions, setOwnerOptions] = useState(['__ALL__', (getOwnerSlug() || '').toLowerCase(), 'faithtalkai', 'default']);
-  const [showSeriesManager, setShowSeriesManager] = useState(false);
+  // Series UI deprecated – keep studies-only admin
   
   // Form states
   const [studyForm, setStudyForm] = useState({
@@ -362,34 +361,23 @@ const AdminStudiesPage = ({ embedded = false }) => {
           ]
         }),
 
-        /* Owner selector (visible only to superadmin) + Series quick actions */
-        _jsxs("div", {
+        /* Owner selector (visible only to superadmin) */
+        _jsx("div", {
           className: embedded ? "mb-6 bg-white rounded-lg p-4 border border-gray-200 shadow-md" : "mb-6 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15 shadow-lg",
-          children: [
-            _jsxs("div", { className: "flex flex-wrap items-center gap-3 mb-2", children: [
-              _jsx("h3", { className: embedded ? "text-lg font-semibold text-gray-800" : "text-lg font-semibold text-yellow-300", children: "Study Series" }),
-              (role === 'superadmin') && _jsxs("div", { className: "ml-auto flex items-center gap-2", children: [
-                _jsx("label", { className: embedded ? "text-sm text-gray-700" : "text-sm text-blue-200", children: "Owner" }),
-                _jsxs("select", {
-                  value: ownerSlug,
-                  onChange: handleOwnerChange,
-                  className: embedded
-                    ? "text-sm bg-white border border-gray-300 text-gray-900 rounded-md py-1 px-2"
-                    : "text-sm bg-white/80 text-blue-900 rounded-md py-1 px-2",
-                  children: ownerOptions.map(opt => (
-                    _jsx("option", { value: opt, children: opt === '__ALL__' ? 'All owners' : opt }, `owner-${opt}`)
-                  ))
-                })
-              ] })
-            ] }),
-            (role === 'superadmin') && _jsxs("div", { className: "flex flex-wrap gap-3", children: [
-              _jsx("button", { onClick: () => setShowSeriesManager(v => !v), className: embedded ? "px-3 py-1.5 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-lg" : "px-3 py-1.5 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg", children: showSeriesManager ? "Hide Manager" : "Manage Series" })
-            ] })
-          ]
+          children: (role === 'superadmin') && _jsxs("div", { className: "flex items-center gap-2", children: [
+            _jsx("label", { className: embedded ? "text-sm text-gray-700" : "text-sm text-blue-200", children: "Owner" }),
+            _jsxs("select", {
+              value: ownerSlug,
+              onChange: handleOwnerChange,
+              className: embedded
+                ? "text-sm bg-white border border-gray-300 text-gray-900 rounded-md py-1 px-2"
+                : "text-sm bg-white/80 text-blue-900 rounded-md py-1 px-2",
+              children: ownerOptions.map(opt => (
+                _jsx("option", { value: opt, children: opt === '__ALL__' ? 'All owners' : opt }, `owner-${opt}`)
+              ))
+            })
+          ] })
         }),
-        showSeriesManager && (
-          _jsx("div", { className: embedded ? "mb-8 bg-white rounded-lg border border-gray-200 shadow-md" : "mb-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/15 shadow-lg", children: _jsx("div", { className: "p-4 md:p-6", children: _jsx(AdminSeriesPage, { embedded: true }) }) })
-        ),
         
         /* Error message – enhanced visibility + RLS guidance */
         error &&
