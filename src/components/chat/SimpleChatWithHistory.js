@@ -149,7 +149,54 @@ const SimpleChatWithHistory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search, character, shareCode]);
 
-    // Series injection removed
+    // Study-only context (no lesson param): build intro based on study_type and study prompt
+    useEffect(() => {
+      (async () => {
+        if (!character) return;
+        if (shareCode) return;
+        const params = new URLSearchParams(location.search);
+        const studyId = params.get('study');
+        const lessonIx = params.get('lesson');
+        if (!studyId || lessonIx !== null) return; // handled by lesson effect or nothing to do
+
+        try {
+          const study = await bibleStudiesRepository.getStudyById(studyId);
+          if (!study) return;
+          setStudyMeta(study);
+
+          // Build lightweight context for the chat model
+          const ctx = `You are guiding a Bible study conversation. Study: ${study.title}. ` +
+            `${study.description ? `Description: ${study.description}` : ''} ` +
+            `${study.character_instructions ? `Study Prompt: ${study.character_instructions}` : ''}`.trim();
+          setLessonContext(ctx);
+
+          // Only auto-post an intro if user hasn't spoken yet
+          if (messages.some(m => m.role === 'user')) return;
+
+          // Determine intro based on study_type
+          const stype = (study.study_type || 'standalone').toLowerCase();
+          let intro = `Hi, I'm ${character.name}. Let's begin the study: "${study.title}".`;
+          if (study.description) intro += `\n\n${study.description}`;
+
+          if (stype === 'introduction') {
+            intro += `\n\nThis is an introduction to a series of lessons. I'll explain the big picture and help you get ready for what's ahead.`;
+          } else {
+            intro += `\n\nThis is a standalone study. I’ll guide the discussion and answer your questions as we go.`;
+          }
+
+          if (study.character_instructions) {
+            intro += `\n\n[Guiding Prompt]\n${study.character_instructions}`;
+          }
+
+          intro += `\n\nWhat would you like to focus on first?`;
+
+          postAssistantMessage(intro);
+        } catch (err) {
+          console.warn('[SimpleChatWithHistory] Failed to inject study-only context:', err);
+        }
+      })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.search, character, shareCode, messages.length]);
 
     useEffect(() => {
       try {

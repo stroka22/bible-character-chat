@@ -43,6 +43,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
     character_instructions: '',
     character_id: '',
     cover_image_url: '',
+    study_type: 'standalone',
     visibility: 'public',
     is_premium: false
   });
@@ -266,6 +267,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
       character_instructions: '',
       character_id: '',
       cover_image_url: '',
+      study_type: 'standalone',
       visibility: 'public',
       is_premium: false
     });
@@ -290,6 +292,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
       ...study,
       subject: study.subject || '',
       character_instructions: study.character_instructions || '',
+      study_type: study.study_type || 'standalone',
       is_premium: study.is_premium ? 'true' : 'false'
     });
     setShowStudyForm(true);
@@ -863,12 +866,12 @@ const AdminStudiesPage = ({ embedded = false }) => {
                       ]
                     }),
                     
-                    /* Character Instructions */
+                    /* Study Prompt (Character Instructions) */
                     _jsxs("div", {
                       children: [
                         _jsx("label", {
                           className: "block text-blue-200 mb-1",
-                          children: "Character Instructions"
+                          children: "Study Prompt (chat instructions)"
                         }),
                         _jsx("textarea", {
                           value: studyForm.character_instructions,
@@ -876,6 +879,26 @@ const AdminStudiesPage = ({ embedded = false }) => {
                           className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500 h-24",
                           placeholder: "Special guidance or persona prompt for the guiding character"
                         })
+                      ]
+                    }),
+
+                    /* Study Type */
+                    _jsxs("div", {
+                      children: [
+                        _jsx("label", {
+                          className: "block text-blue-200 mb-1",
+                          children: "Study Type"
+                        }),
+                        _jsxs("select", {
+                          value: studyForm.study_type || 'standalone',
+                          onChange: (e) => setStudyForm({ ...studyForm, study_type: e.target.value }),
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
+                          children: [
+                            _jsx("option", { value: "standalone", children: "Standalone" }),
+                            _jsx("option", { value: "introduction", children: "Introduction (with lessons)" })
+                          ]
+                        }),
+                        _jsx("p", { className: "text-xs text-blue-300 mt-1", children: "Standalone: 0+ lessons. Introduction: requires 1+ lessons (enforced when launching)." })
                       ]
                     }),
                     
