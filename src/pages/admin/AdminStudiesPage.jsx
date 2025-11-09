@@ -205,22 +205,28 @@ const AdminStudiesPage = ({ embedded = false }) => {
 
   const handleImportChooseFiles = async (filesMap) => {
     try {
-      setImportPreview({ studies: [], lessons: [], errors: [] });
       const errs = [];
+      const prev = importPreview || { studies: [], lessons: [] };
       const readFile = (f) => new Promise((res, rej) => {
         const fr = new FileReader();
         fr.onload = () => res(String(fr.result || ''));
         fr.onerror = (ev) => rej(ev);
         fr.readAsText(f);
       });
-      const studiesFile = filesMap.studies;
-      const lessonsFile = filesMap.lessons;
-      const [studiesCsv, lessonsCsv] = await Promise.all([
-        studiesFile ? readFile(studiesFile) : Promise.resolve(''),
-        lessonsFile ? readFile(lessonsFile) : Promise.resolve(''),
-      ]);
-      const studiesRows = studiesCsv ? await parseCsv(studiesCsv) : [];
-      const lessonsRows = lessonsCsv ? await parseCsv(lessonsCsv) : [];
+      const isBlobLike = (f) => !!(f && typeof f === 'object' && typeof f.size === 'number');
+
+      let studiesRows = prev.studies;
+      let lessonsRows = prev.lessons;
+
+      if (isBlobLike(filesMap.studies)) {
+        const csv = await readFile(filesMap.studies);
+        studiesRows = csv ? await parseCsv(csv) : [];
+      }
+      if (isBlobLike(filesMap.lessons)) {
+        const csv = await readFile(filesMap.lessons);
+        lessonsRows = csv ? await parseCsv(csv) : [];
+      }
+
       setImportPreview({ studies: studiesRows, lessons: lessonsRows, errors: errs });
     } catch (e) {
       console.error('Parse failed:', e);
@@ -278,14 +284,39 @@ const AdminStudiesPage = ({ embedded = false }) => {
             continue;
           }
           let scripture = [];
-          try {
-            scripture = row.scripture_refs_json ? JSON.parse(row.scripture_refs_json) : [];
-          } catch {}
+          // Prefer JSON column
+          if (row.scripture_refs_json) {
+            try { scripture = JSON.parse(row.scripture_refs_json); } catch {}
+          }
+          // Fallback: comma/semicolon separated string column
+          if ((!Array.isArray(scripture) || scripture.length === 0) && row.scripture_refs) {
+            scripture = String(row.scripture_refs)
+              .split(/[,;\n]/)
+              .map(s => s.trim())
+              .filter(Boolean);
+          }
+
           let prompts = [];
-          try {
-            const p = row.prompts_json ? JSON.parse(row.prompts_json) : [];
-            prompts = Array.isArray(p) ? p : [];
-          } catch {}
+          if (row.prompts_json) {
+            try {
+              const p = JSON.parse(row.prompts_json);
+              prompts = Array.isArray(p) ? p : [];
+            } catch {}
+          }
+          if (prompts.length === 0 && row.prompts) {
+            // Try parse as JSON first
+            try {
+              const pj = JSON.parse(row.prompts);
+              if (Array.isArray(pj)) prompts = pj;
+            } catch {
+              // Split plain text by | ; or newline
+              const parts = String(row.prompts)
+                .split(/[|;\n]/)
+                .map(s => s.trim())
+                .filter(Boolean);
+              prompts = parts;
+            }
+          }
           // Normalize prompts to [{text}]
           prompts = prompts.map(x => (typeof x === 'string' ? { text: x } : x));
 
