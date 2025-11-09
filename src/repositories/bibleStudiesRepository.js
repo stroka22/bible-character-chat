@@ -181,7 +181,8 @@ export const bibleStudiesRepository = {
 
       const { data, error } = await supabase
         .from('bible_study_lessons')
-        .upsert(payload)
+        // Allow updating by composite key when id is blank
+        .upsert(payload, { onConflict: 'study_id,order_index' })
         .select('*')
         .maybeSingle();
       
