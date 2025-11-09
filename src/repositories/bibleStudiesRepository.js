@@ -117,17 +117,41 @@ export const bibleStudiesRepository = {
         delete payload.id;
       }
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('bible_studies')
         .upsert(payload)
         .select('*')
         .maybeSingle();
-      
+
+      // Handle fresh-migration cache lag: if PostgREST hasn't picked up
+      // the new column yet, retry without study_type (DB default applies).
+      if (error) {
+        const msg = String(error.message || '').toLowerCase();
+        const details = String(error.details || '').toLowerCase();
+        const hint = String(error.hint || '').toLowerCase();
+        const text = `${msg} ${details} ${hint}`;
+        const looksLikeCacheLag =
+          text.includes("schema cache") ||
+          (text.includes('column') && text.includes('study_type')) ||
+          text.includes('could not find') && text.includes('study_type');
+
+        if (looksLikeCacheLag && 'study_type' in payload) {
+          // Remove field and retry so users can proceed immediately.
+          // The DB default of 'standalone' will be used server-side.
+          const { study_type, ...withoutType } = payload;
+          ({ data, error } = await supabase
+            .from('bible_studies')
+            .upsert(withoutType)
+            .select('*')
+            .maybeSingle());
+        }
+      }
+
       if (error) {
         console.error('[bibleStudiesRepository] Error upserting study:', error);
         throw new Error(`Failed to save study: ${error.message}`);
       }
-      
+
       return data;
     } catch (err) {
       console.error('[bibleStudiesRepository] Unexpected error upserting study:', err);
