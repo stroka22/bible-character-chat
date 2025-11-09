@@ -5,6 +5,7 @@ import { characterRepository } from '../../repositories/characterRepository';
 import { getOwnerSlug } from '../../services/tierSettingsService';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { toCsv, parseCsv, download } from '../../utils/csv';
 
 /**
  * AdminStudiesPage
@@ -32,6 +33,9 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [ownerSlug, setOwnerSlug] = useState(getOwnerSlug());
   const [ownerOptions, setOwnerOptions] = useState(['__ALL__', (getOwnerSlug() || '').toLowerCase(), 'faithtalkai', 'default']);
   // Series UI deprecated – keep studies-only admin
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importPreview, setImportPreview] = useState({ studies: [], lessons: [], errors: [] });
+  const [importBusy, setImportBusy] = useState(false);
   
   // Form states
   const [studyForm, setStudyForm] = useState({
@@ -135,6 +139,187 @@ const AdminStudiesPage = ({ embedded = false }) => {
       setLessons(data);
     } catch (err) {
       console.error('Error fetching lessons:', err);
+    }
+  };
+
+  // Export: download two CSVs for current owner selection
+  const handleExportCsv = async () => {
+    try {
+      setIsLoading(true);
+      const wantAll = ownerSlug === '__ALL__';
+      const exportStudies = await bibleStudiesRepository.listStudies({ ownerSlug, includePrivate: true, allOwners: wantAll });
+      const studyIds = exportStudies.map(s => s.id);
+      // Fetch all lessons for these studies
+      let exportLessons = [];
+      if (studyIds.length) {
+        const { data, error } = await supabase
+          .from('bible_study_lessons')
+          .select('*')
+          .in('study_id', studyIds)
+          .order('study_id')
+          .order('order_index');
+        if (!error && Array.isArray(data)) exportLessons = data;
+      }
+
+      const charMap = new Map((await characterRepository.getAll()).map(c => [c.id, c.name]));
+
+      const studiesRows = exportStudies.map(s => ({
+        id: s.id || '',
+        study_key: '', // optional external key for linking on import
+        owner_slug: s.owner_slug || ownerSlug || '',
+        title: s.title || '',
+        description: s.description || '',
+        subject: s.subject || '',
+        study_type: s.study_type || 'standalone',
+        character_id: s.character_id || '',
+        character_name: s.character_id ? (charMap.get(s.character_id) || '') : '',
+        visibility: s.visibility || 'public',
+        is_premium: !!s.is_premium,
+        cover_image_url: s.cover_image_url || '',
+        character_instructions: s.character_instructions || ''
+      }));
+
+      const lessonsRows = exportLessons.map(l => ({
+        id: l.id || '',
+        study_id: l.study_id || '',
+        study_key: '', // optional external key alternative to study_id
+        order_index: l.order_index ?? 0,
+        title: l.title || '',
+        scripture_refs_json: JSON.stringify(Array.isArray(l.scripture_refs) ? l.scripture_refs : []),
+        summary: l.summary || '',
+        prompts_json: JSON.stringify(Array.isArray(l.prompts) ? l.prompts : []),
+        character_id: l.character_id || '',
+        character_name: l.character_id ? (charMap.get(l.character_id) || '') : ''
+      }));
+
+      const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+      download(`studies-${ts}.csv`, toCsv(studiesRows));
+      download(`lessons-${ts}.csv`, toCsv(lessonsRows));
+    } catch (e) {
+      console.error('Export failed:', e);
+      setError('Export failed: ' + (e?.message || e));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleImportChooseFiles = async (filesMap) => {
+    try {
+      setImportPreview({ studies: [], lessons: [], errors: [] });
+      const errs = [];
+      const readFile = (f) => new Promise((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(String(fr.result || ''));
+        fr.onerror = (ev) => rej(ev);
+        fr.readAsText(f);
+      });
+      const studiesFile = filesMap.studies;
+      const lessonsFile = filesMap.lessons;
+      const [studiesCsv, lessonsCsv] = await Promise.all([
+        studiesFile ? readFile(studiesFile) : Promise.resolve(''),
+        lessonsFile ? readFile(lessonsFile) : Promise.resolve(''),
+      ]);
+      const studiesRows = studiesCsv ? await parseCsv(studiesCsv) : [];
+      const lessonsRows = lessonsCsv ? await parseCsv(lessonsCsv) : [];
+      setImportPreview({ studies: studiesRows, lessons: lessonsRows, errors: errs });
+    } catch (e) {
+      console.error('Parse failed:', e);
+      setImportPreview({ studies: [], lessons: [], errors: ['Failed to parse CSV files'] });
+    }
+  };
+
+  const handleRunImport = async () => {
+    if (!importPreview || importBusy) return;
+    setImportBusy(true);
+    const errors = [];
+    try {
+      // Character name fallback map
+      const allChars = await characterRepository.getAll();
+      const nameToId = new Map(allChars.map(c => [String(c.name || '').toLowerCase(), c.id]));
+
+      // 1) Upsert studies
+      const keyToId = new Map();
+      for (const row of importPreview.studies) {
+        try {
+          const payload = {
+            id: row.id || null,
+            owner_slug: row.owner_slug || ownerSlug,
+            title: row.title || '',
+            description: row.description || '',
+            subject: row.subject || '',
+            study_type: (row.study_type || 'standalone').toLowerCase(),
+            character_id: row.character_id || '',
+            visibility: row.visibility || 'public',
+            is_premium: String(row.is_premium) === 'true' || row.is_premium === true,
+            cover_image_url: row.cover_image_url || '',
+            character_instructions: row.character_instructions || ''
+          };
+          if (!payload.character_id && row.character_name) {
+            const id = nameToId.get(String(row.character_name).toLowerCase());
+            if (id) payload.character_id = id;
+          }
+          const saved = await bibleStudiesRepository.upsertStudy(payload);
+          const savedId = saved?.id;
+          if (row.study_key && savedId) keyToId.set(String(row.study_key), savedId);
+        } catch (e) {
+          errors.push(`Study failed: ${row.title || row.id || '(no id)'} – ${e.message || e}`);
+        }
+      }
+
+      // 2) Upsert lessons
+      for (const row of importPreview.lessons) {
+        try {
+          let studyId = row.study_id || '';
+          if (!studyId && row.study_key) {
+            studyId = keyToId.get(String(row.study_key)) || '';
+          }
+          if (!studyId) {
+            errors.push(`Lesson "${row.title}" skipped: missing study_id/study_key`);
+            continue;
+          }
+          let scripture = [];
+          try {
+            scripture = row.scripture_refs_json ? JSON.parse(row.scripture_refs_json) : [];
+          } catch {}
+          let prompts = [];
+          try {
+            const p = row.prompts_json ? JSON.parse(row.prompts_json) : [];
+            prompts = Array.isArray(p) ? p : [];
+          } catch {}
+          // Normalize prompts to [{text}]
+          prompts = prompts.map(x => (typeof x === 'string' ? { text: x } : x));
+
+          const lessonPayload = {
+            id: row.id || null,
+            study_id: studyId,
+            order_index: parseInt(row.order_index ?? 0, 10),
+            title: row.title || '',
+            scripture_refs: scripture,
+            summary: row.summary || '',
+            prompts,
+            character_id: row.character_id || ''
+          };
+          if (!lessonPayload.character_id && row.character_name) {
+            const id = nameToId.get(String(row.character_name).toLowerCase());
+            if (id) lessonPayload.character_id = id;
+          }
+          await bibleStudiesRepository.upsertLesson(lessonPayload);
+        } catch (e) {
+          errors.push(`Lesson failed: ${row.title || row.id || '(no id)'} – ${e.message || e}`);
+        }
+      }
+
+      if (errors.length) {
+        setImportPreview(prev => ({ ...prev, errors }));
+        setError('Import completed with errors. See details in the dialog.');
+      } else {
+        setImportPreview({ studies: [], lessons: [], errors: [] });
+        setShowImportModal(false);
+      }
+      await fetchStudies();
+      if (selectedStudy) await fetchLessons(selectedStudy.id);
+    } finally {
+      setImportBusy(false);
     }
   };
   
@@ -458,26 +643,38 @@ const AdminStudiesPage = ({ embedded = false }) => {
                       className: `text-xl font-bold ${embedded ? 'text-gray-800' : 'text-yellow-400'}`,
                       children: "Bible Studies"
                     }),
-                    _jsx("button", {
-                      onClick: handleNewStudy,
-                      className: `${embedded ? 'bg-primary-600 hover:bg-primary-700' : 'bg-green-600 hover:bg-green-700'} text-white px-3 py-1 rounded-lg text-sm flex items-center`,
-                      children: _jsxs(_Fragment, {
-                        children: [
-                          _jsx("svg", {
-                            xmlns: "http://www.w3.org/2000/svg",
-                            className: "h-4 w-4 mr-1",
-                            viewBox: "0 0 20 20",
-                            fill: "currentColor",
-                            children: _jsx("path", {
-                              fillRule: "evenodd",
-                              d: "M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z",
-                              clipRule: "evenodd"
-                            })
-                          }),
-                          "New Study"
-                        ]
+                    _jsxs("div", { className: "flex gap-2", children: [
+                      _jsx("button", {
+                        onClick: handleExportCsv,
+                        className: `${embedded ? 'bg-primary-50 border border-primary-300 text-primary-700 hover:bg-primary-100' : 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30'} px-3 py-1 rounded-lg text-sm`,
+                        children: "Export CSV"
+                      }),
+                      _jsx("button", {
+                        onClick: () => setShowImportModal(true),
+                        className: `${embedded ? 'bg-primary-50 border border-primary-300 text-primary-700 hover:bg-primary-100' : 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30'} px-3 py-1 rounded-lg text-sm`,
+                        children: "Import CSV"
+                      }),
+                      _jsx("button", {
+                        onClick: handleNewStudy,
+                        className: `${embedded ? 'bg-primary-600 hover:bg-primary-700' : 'bg-green-600 hover:bg-green-700'} text-white px-3 py-1 rounded-lg text-sm flex items-center`,
+                        children: _jsxs(_Fragment, {
+                          children: [
+                            _jsx("svg", {
+                              xmlns: "http://www.w3.org/2000/svg",
+                              className: "h-4 w-4 mr-1",
+                              viewBox: "0 0 20 20",
+                              fill: "currentColor",
+                              children: _jsx("path", {
+                                fillRule: "evenodd",
+                                d: "M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z",
+                                clipRule: "evenodd"
+                              })
+                            }),
+                            "New Study"
+                          ]
+                        })
                       })
-                    })
+                    ] })
                   ]
                 }),
                 
@@ -782,6 +979,36 @@ const AdminStudiesPage = ({ embedded = false }) => {
     _jsxs(_Fragment, {
       children: [
         page,
+        /* Import CSV Modal */
+        showImportModal ? (
+          _jsx("div", { className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4", children: _jsxs("div", { className: "bg-blue-900 rounded-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto", children: [
+            _jsxs("div", { className: "flex justify-between items-center mb-6", children: [
+              _jsx("h2", { className: "text-2xl font-bold text-yellow-400", children: "Import Studies & Lessons (CSV)" }),
+              _jsx("button", { onClick: () => setShowImportModal(false), className: "text-white hover:text-yellow-300", children: _jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-6 w-6", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M6 18L18 6M6 6l12 12" }) }) })
+            ] }),
+            _jsx("p", { className: "text-blue-100 mb-4", children: "Upload two files: studies.csv and lessons.csv. For new records, leave 'id' blank. You can link lessons to new studies using a shared 'study_key'. Character can be set via 'character_id' or 'character_name'." }),
+            _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
+              _jsxs("div", { children: [
+                _jsx("label", { className: "block text-blue-200 mb-1", children: "studies.csv" }),
+                _jsx("input", { type: "file", accept: ".csv", onChange: async (e) => { await handleImportChooseFiles({ studies: e.target.files?.[0], lessons: null }); } , className: "w-full" })
+              ] }),
+              _jsxs("div", { children: [
+                _jsx("label", { className: "block text-blue-200 mb-1", children: "lessons.csv" }),
+                _jsx("input", { type: "file", accept: ".csv", onChange: async (e) => { await handleImportChooseFiles({ studies: importPreview.studies.length ? { name: 'kept' } : null, lessons: e.target.files?.[0] }); }, className: "w-full" })
+              ] })
+            ] }),
+            _jsxs("div", { className: "mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm", children: [
+              _jsxs("div", { className: "bg-white/5 border border-white/10 rounded p-3", children: [ _jsx("div", { className: "text-blue-300", children: "Studies" }), _jsx("div", { className: "text-yellow-300 text-xl font-bold", children: importPreview.studies?.length || 0 }) ] }),
+              _jsxs("div", { className: "bg-white/5 border border-white/10 rounded p-3", children: [ _jsx("div", { className: "text-blue-300", children: "Lessons" }), _jsx("div", { className: "text-yellow-300 text-xl font-bold", children: importPreview.lessons?.length || 0 }) ] }),
+              _jsxs("div", { className: "bg-white/5 border border-white/10 rounded p-3", children: [ _jsx("div", { className: "text-blue-300", children: "Errors" }), _jsx("div", { className: "text-red-300 text-xl font-bold", children: importPreview.errors?.length || 0 }) ] })
+            ] }),
+            (importPreview.errors?.length ? _jsx("div", { className: "mt-4 bg-red-900/40 border border-red-600 rounded p-3 text-sm text-red-100 max-h-40 overflow-auto", children: _jsx("ul", { className: "list-disc list-inside", children: importPreview.errors.map((e,i) => _jsx("li", { children: e }, `err-${i}`)) }) }) : null),
+            _jsxs("div", { className: "mt-6 flex justify-end gap-3", children: [
+              _jsx("button", { onClick: () => setShowImportModal(false), className: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg", children: "Cancel" }),
+              _jsx("button", { onClick: handleRunImport, disabled: importBusy || (!importPreview.studies.length && !importPreview.lessons.length), className: `px-4 py-2 ${importBusy ? 'bg-yellow-500/40' : 'bg-yellow-400 hover:bg-yellow-300'} text-blue-900 rounded-lg font-semibold`, children: importBusy ? 'Importing…' : 'Run Import' })
+            ] })
+          ] }) })
+        ) : null,
         showStudyForm ? (
           _jsx("div", {
             className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4",
