@@ -55,7 +55,8 @@ const AdminStudiesPage = ({ embedded = false }) => {
     title: '',
     scripture_refs: [],
     summary: '',
-    prompts: []
+    prompts: [],
+    character_id: ''
   });
   
   // Load studies on mount
@@ -282,7 +283,8 @@ const AdminStudiesPage = ({ embedded = false }) => {
       title: '',
       scripture_refs: [],
       summary: '',
-      prompts: []
+      prompts: [],
+      character_id: ''
     });
   };
   
@@ -312,7 +314,8 @@ const AdminStudiesPage = ({ embedded = false }) => {
     
     setLessonForm({
       ...lesson,
-      prompts: formattedPrompts
+      prompts: formattedPrompts,
+      character_id: lesson.character_id || ''
     });
     setShowLessonForm(true);
   };
@@ -666,7 +669,8 @@ const AdminStudiesPage = ({ embedded = false }) => {
                                     _jsxs("h3", {
                                       className: `font-semibold ${embedded ? 'text-gray-800' : 'text-yellow-300'} mb-1`,
                                       children: [
-                                        "Lesson ", lesson.order_index + 1, ": ", lesson.title
+                                        "Lesson ", lesson.order_index + 1, ": ", lesson.title,
+                                        lesson.character_id ? _jsx("span", { className: embedded ? "ml-2 text-xs text-blue-700" : "ml-2 text-xs text-blue-300", children: "(Has guide)" }) : null
                                       ]
                                     }),
                                     _jsxs("div", {
@@ -1117,6 +1121,25 @@ const AdminStudiesPage = ({ embedded = false }) => {
                           className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500 h-24",
                           required: true
                         })
+                      ]
+                    }),
+
+                    /* Lesson Character (optional; overrides study's guide) */
+                    _jsxs("div", {
+                      children: [
+                        _jsx("label", { className: "block text-blue-200 mb-1", children: "Lesson Character (optional)" }),
+                        _jsxs("select", {
+                          value: lessonForm.character_id || '',
+                          onChange: (e) => setLessonForm({ ...lessonForm, character_id: e.target.value }),
+                          className: "w-full bg-white border border-gray-300 text-gray-900 rounded-lg py-2 px-3 focus:border-primary-500 focus:ring-primary-500",
+                          children: [
+                            _jsx("option", { value: "", children: "-- Inherit from study --" }),
+                            characters.map(character => (
+                              _jsx("option", { value: character.id, children: character.name }, character.id)
+                            ))
+                          ]
+                        }),
+                        _jsx("p", { className: "text-xs text-blue-300 mt-1", children: "If set, this lesson will be led by the selected character. Otherwise it inherits the study's character." })
                       ]
                     }),
                     

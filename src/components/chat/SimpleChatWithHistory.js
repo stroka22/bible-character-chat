@@ -124,6 +124,19 @@ const SimpleChatWithHistory = () => {
           setStudyMeta(study);
           setLessonMeta(lesson);
 
+          // If lesson has a specific character, switch the chat guide to it.
+          try {
+            const targetCharId = lesson.character_id || study.character_id || null;
+            if (targetCharId && (!character || character.id !== targetCharId)) {
+              const nextChar = await characterRepository.getById(targetCharId);
+              if (nextChar) {
+                selectCharacter(nextChar);
+              }
+            }
+          } catch (e) {
+            console.warn('[SimpleChatWithHistory] Failed to apply lesson character:', e);
+          }
+
           const ctx = `You are guiding a Bible study conversation. ` +
             `Study: ${study.title}. ` +
             `Lesson ${lesson.order_index + 1}: ${lesson.title}. ` +
