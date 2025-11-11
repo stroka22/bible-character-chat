@@ -275,42 +275,72 @@ const AdminStudiesPage = ({ embedded = false }) => {
       // 2) Upsert lessons
       for (const row of importPreview.lessons) {
         try {
-          let studyId = row.study_id || '';
-          if (!studyId && row.study_key) {
-            studyId = keyToId.get(String(row.study_key)) || '';
+          // Normalize keys for flexible header matching
+          const normalize = (k) => String(k || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+          const rowNorm = {};
+          for (const [k, v] of Object.entries(row)) rowNorm[normalize(k)] = v;
+          const get = (...keys) => {
+            for (const k of keys) {
+              const kk = normalize(k);
+              if (kk in rowNorm) return rowNorm[kk];
+            }
+            return undefined;
+          };
+
+          let studyId = get('study_id') || '';
+          const studyKey = get('study_key', 'study external key', 'study-external-key');
+          if (!studyId && studyKey) {
+            studyId = keyToId.get(String(studyKey)) || '';
           }
           if (!studyId) {
             errors.push(`Lesson "${row.title}" skipped: missing study_id/study_key`);
             continue;
           }
           let scripture = [];
-          // Prefer JSON column
-          if (row.scripture_refs_json) {
-            try { scripture = JSON.parse(row.scripture_refs_json); } catch {}
+          // Prefer JSON column (accept several aliases)
+          const sJson = get(
+            'scripture_refs_json',
+            'scriptures_json',
+            'scripture_json',
+            'scripture_references_json',
+            'scripture references json'
+          );
+          if (sJson) {
+            try { scripture = JSON.parse(sJson); } catch {}
           }
-          // Fallback: comma/semicolon separated string column
-          if ((!Array.isArray(scripture) || scripture.length === 0) && row.scripture_refs) {
-            scripture = String(row.scripture_refs)
+          // Fallback: plain string with common delimiters (accept several aliases)
+          const sPlain = get(
+            'scripture_refs',
+            'scriptures',
+            'scripture',
+            'scripture_references',
+            'scripture references',
+            'verses'
+          );
+          if ((!Array.isArray(scripture) || scripture.length === 0) && sPlain) {
+            scripture = String(sPlain)
               .split(/[,;\n]/)
               .map(s => s.trim())
               .filter(Boolean);
           }
 
           let prompts = [];
-          if (row.prompts_json) {
+          const pJson = get('prompts_json', 'prompt_json', 'questions_json');
+          if (pJson) {
             try {
-              const p = JSON.parse(row.prompts_json);
+              const p = JSON.parse(pJson);
               prompts = Array.isArray(p) ? p : [];
             } catch {}
           }
-          if (prompts.length === 0 && row.prompts) {
+          const pPlain = get('prompts', 'prompt', 'questions', 'discussion_questions', 'lesson_prompts');
+          if (prompts.length === 0 && pPlain) {
             // Try parse as JSON first
             try {
-              const pj = JSON.parse(row.prompts);
+              const pj = JSON.parse(pPlain);
               if (Array.isArray(pj)) prompts = pj;
             } catch {
               // Split plain text by | ; or newline
-              const parts = String(row.prompts)
+              const parts = String(pPlain)
                 .split(/[|;\n]/)
                 .map(s => s.trim())
                 .filter(Boolean);
@@ -321,17 +351,18 @@ const AdminStudiesPage = ({ embedded = false }) => {
           prompts = prompts.map(x => (typeof x === 'string' ? { text: x } : x));
 
           const lessonPayload = {
-            id: row.id || null,
+            id: get('id') || null,
             study_id: studyId,
-            order_index: parseInt(row.order_index ?? 0, 10),
-            title: row.title || '',
+            order_index: parseInt(get('order_index') ?? 0, 10),
+            title: get('title') || '',
             scripture_refs: scripture,
-            summary: row.summary || '',
+            summary: get('summary') || '',
             prompts,
-            character_id: row.character_id || ''
+            character_id: get('character_id') || ''
           };
-          if (!lessonPayload.character_id && row.character_name) {
-            const id = nameToId.get(String(row.character_name).toLowerCase());
+          const characterName = get('character_name', 'lesson_character', 'guide_name');
+          if (!lessonPayload.character_id && characterName) {
+            const id = nameToId.get(String(characterName).toLowerCase());
             if (id) lessonPayload.character_id = id;
           }
           await bibleStudiesRepository.upsertLesson(lessonPayload);
