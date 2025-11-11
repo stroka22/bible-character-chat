@@ -323,7 +323,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
               scripture = parts.length ? parts : [raw];
             }
           } else {
-            // Otherwise, allow JSON alias columns
+            // Otherwise, allow JSON alias columns; if not valid JSON, treat as plain text
             const sJson = get(
               'scripture_refs_json',
               'scriptures_json',
@@ -331,8 +331,22 @@ const AdminStudiesPage = ({ embedded = false }) => {
               'scripture_references_json',
               'scripture references json'
             );
-            if (sJson) {
-              try { scripture = JSON.parse(sJson); } catch {}
+            if (sJson && String(sJson).trim()) {
+              const raw = String(sJson).trim();
+              if (raw.startsWith('[') || raw.startsWith('"[')) {
+                // Looks like JSON
+                try {
+                  const arr = JSON.parse(raw);
+                  if (Array.isArray(arr)) scripture = arr.map(x => String(x).trim()).filter(Boolean);
+                } catch {
+                  // JSON-ish but failed: strip outer brackets then split
+                  const inner = raw.replace(/^"?\[/, '').replace(/\]"?$/, '');
+                  scripture = inner.split(/[,;\n]/).map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+                }
+              } else {
+                // Plain string in a *_json column
+                scripture = raw.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+              }
             }
           }
 
@@ -355,13 +369,27 @@ const AdminStudiesPage = ({ embedded = false }) => {
               prompts = parts.length ? parts : [raw];
             }
           } else {
-            // Otherwise, allow JSON alias columns
+            // Otherwise, allow JSON alias columns; if not valid JSON, treat as plain text
             const pJson = get('prompts_json', 'prompt_json', 'questions_json');
-            if (pJson) {
-              try {
-                const p = JSON.parse(pJson);
-                prompts = Array.isArray(p) ? p : [];
-              } catch {}
+            if (pJson && String(pJson).trim()) {
+              const raw = String(pJson).trim();
+              if (raw.startsWith('[')) {
+                try {
+                  const p = JSON.parse(raw);
+                  prompts = Array.isArray(p) ? p : [];
+                } catch {
+                  // JSON-ish but failed: treat as single/multi-line text
+                  const parts = raw
+                    .replace(/^\[/, '').replace(/\]$/, '')
+                    .split(/[|;\n]/)
+                    .map(s => s.trim().replace(/^"|"$/g, ''))
+                    .filter(Boolean);
+                  prompts = parts.length ? parts : [raw];
+                }
+              } else {
+                const parts = raw.split(/[|;\n]/).map(s => s.trim()).filter(Boolean);
+                prompts = parts.length ? parts : [raw];
+              }
             }
           }
           // Normalize prompts to [{text}]
