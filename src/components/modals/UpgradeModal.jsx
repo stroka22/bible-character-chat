@@ -23,7 +23,9 @@ const UpgradeModal = ({
   limitType = 'character', 
   characterName = '', 
   messageCount = 0,
-  messageLimit = 5
+  messageLimit = 5,
+  featureName = '',
+  studyTitle = ''
 }) => {
   // Handle escape key to close modal
   useEffect(() => {
@@ -63,6 +65,20 @@ const UpgradeModal = ({
         return {
           title: 'Message Limit Reached',
           description: `You've sent ${messageCount} messages in this conversation (free limit: ${messageLimit}). Upgrade to continue.`
+        };
+      case 'study':
+        return {
+          title: 'This Study Requires Premium',
+          description: studyTitle
+            ? `The study "${studyTitle}" is available to Premium members. Upgrade to access this Bible study.`
+            : 'This Bible study is available to Premium members. Upgrade to access it.'
+        };
+      case 'roundtable':
+        return {
+          title: 'This Roundtable Option Requires Premium',
+          description: featureName
+            ? `${featureName} is a Premium feature for this organization. Upgrade to use it.`
+            : 'This roundtable option is a Premium feature. Upgrade to use it.'
         };
       default:
         return {

@@ -79,6 +79,7 @@ const SimpleChatWithHistory = () => {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeLimitType, setUpgradeLimitType] = useState('character');
     const [messageLimit, setMessageLimit] = useState(5);
+    const [premiumStudyIds, setPremiumStudyIds] = useState([]);
     const [studyMeta, setStudyMeta] = useState(null);
     const [lessonMeta, setLessonMeta] = useState(null);
     // Series feature deprecated; keep studies functionality intact
@@ -213,12 +214,13 @@ const SimpleChatWithHistory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search, character, shareCode, messages.length]);
 
-    // Keep messageLimit in sync with per‑org tier settings (local + remote)
+    // Keep messageLimit and premiumStudyIds in sync with per‑org tier settings (local + remote)
     useEffect(() => {
       const updateFromLocal = () => {
         try {
           const s = loadAccountTierSettings();
           if (s && s.freeMessageLimit) setMessageLimit(s.freeMessageLimit);
+          if (Array.isArray(s?.premiumStudyIds)) setPremiumStudyIds(s.premiumStudyIds);
         } catch {}
       };
 
@@ -229,6 +231,7 @@ const SimpleChatWithHistory = () => {
         try {
           const remote = await getTierSettings();
           if (remote && remote.freeMessageLimit) setMessageLimit(remote.freeMessageLimit);
+          if (Array.isArray(remote?.premiumStudyIds)) setPremiumStudyIds(remote.premiumStudyIds);
         } catch {}
       })();
 
@@ -246,6 +249,19 @@ const SimpleChatWithHistory = () => {
         window.removeEventListener('accountTierSettingsChanged', onCustom);
       };
     }, []);
+
+    // Gate premium studies: if non-premium user attempts to open a gated study, show modal
+    useEffect(() => {
+      if (!studyMeta) return;
+      if (isPremium) return;
+      try {
+        const id = studyMeta.id;
+        if (id && Array.isArray(premiumStudyIds) && premiumStudyIds.includes(id)) {
+          setUpgradeLimitType('study');
+          setShowUpgradeModal(true);
+        }
+      } catch {}
+    }, [studyMeta, isPremium, premiumStudyIds]);
     
     useEffect(() => {
       if (!error || typeof error !== 'string') return;
@@ -1089,7 +1105,8 @@ const SimpleChatWithHistory = () => {
                                       limitType: upgradeLimitType,
                                       characterName: character?.name,
                                       messageCount: userMessageCount,
-                                      messageLimit: messageLimit
+                                      messageLimit: messageLimit,
+                                      studyTitle: studyMeta?.title || ''
                                     })
                                 ] 
                             })
