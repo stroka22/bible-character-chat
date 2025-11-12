@@ -62,7 +62,7 @@ const UpgradeModal = ({
       case 'message':
         return {
           title: 'Message Limit Reached',
-          description: `You've sent ${messageCount} messages in this conversation, which is the limit for free accounts.`
+          description: `You've sent ${messageCount} messages in this conversation (free limit: ${messageLimit}). Upgrade to continue.`
         };
       default:
         return {
@@ -102,6 +102,22 @@ const UpgradeModal = ({
         {/* Content */}
         <div className="px-6 py-5">
           <p className="text-gray-700 mb-4">{description}</p>
+          {limitType === 'message' && (
+            <div className="mb-5">
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                <span>Free messages</span>
+                <span>
+                  {Math.min(messageCount, messageLimit)} / {messageLimit}
+                </span>
+              </div>
+              <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-2 bg-yellow-400"
+                  style={{ width: `${Math.min(100, Math.round((messageCount / Math.max(1, messageLimit)) * 100))}%` }}
+                />
+              </div>
+            </div>
+          )}
           
           <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-5">
             <h3 className="text-blue-900 font-semibold mb-3">Premium Benefits:</h3>
@@ -131,6 +147,18 @@ const UpgradeModal = ({
                 <span className="text-gray-700">Priority support</span>
               </li>
             </ul>
+          </div>
+
+          {/* Kingdom impact message */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5">
+            <div className="flex items-start">
+              <svg className="h-5 w-5 text-amber-600 mr-2 mt-0.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 4.22 2.53C11.09 5.01 12.76 4 14.5 4 17 4 19 6 19 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              <p className="text-amber-900 text-sm">
+                Your subscription helps advance God’s Kingdom by supporting the ongoing development and outreach of FaithTalk AI.
+              </p>
+            </div>
           </div>
           
           <div className="text-sm text-gray-500 mb-4">
