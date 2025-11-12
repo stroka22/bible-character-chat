@@ -13,6 +13,8 @@ import { characterRepository } from '../../repositories/characterRepository';
 import UpgradeModal from '../modals/UpgradeModal';
 import { usePremium } from '../../hooks/usePremium';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
+import { loadAccountTierSettings } from '../../utils/accountTier';
+import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 
 // Feature flag: enable/disable local chat cache usage for resume fallback
 const ENABLE_LOCAL_CHAT_CACHE = false;
@@ -211,14 +213,38 @@ const SimpleChatWithHistory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search, character, shareCode, messages.length]);
 
+    // Keep messageLimit in sync with per‑org tier settings (local + remote)
     useEffect(() => {
-      try {
-        const s = localStorage.getItem('accountTierSettings');
-        if (s) {
-          const j = JSON.parse(s);
-          if (j.freeMessageLimit) setMessageLimit(j.freeMessageLimit);
+      const updateFromLocal = () => {
+        try {
+          const s = loadAccountTierSettings();
+          if (s && s.freeMessageLimit) setMessageLimit(s.freeMessageLimit);
+        } catch {}
+      };
+
+      updateFromLocal();
+
+      // Hydrate from Supabase once to ensure correctness without hard refresh
+      (async () => {
+        try {
+          const remote = await getTierSettings();
+          if (remote && remote.freeMessageLimit) setMessageLimit(remote.freeMessageLimit);
+        } catch {}
+      })();
+
+      // Listen for updates from admin page (same tab or other tabs)
+      const onStorage = (e) => {
+        if (e && e.key && String(e.key).startsWith('accountTierSettings')) {
+          updateFromLocal();
         }
-      } catch {}
+      };
+      const onCustom = () => updateFromLocal();
+      window.addEventListener('storage', onStorage);
+      window.addEventListener('accountTierSettingsChanged', onCustom);
+      return () => {
+        window.removeEventListener('storage', onStorage);
+        window.removeEventListener('accountTierSettingsChanged', onCustom);
+      };
     }, []);
     
     useEffect(() => {
@@ -232,6 +258,14 @@ const SimpleChatWithHistory = () => {
         setShowUpgradeModal(true);
       }
     }, [error]);
+
+    // Defensive: also trigger modal based on computed counts/limits
+    useEffect(() => {
+      if (!isPremium && userMessageCount >= messageLimit) {
+        setUpgradeLimitType('message');
+        setShowUpgradeModal(true);
+      }
+    }, [isPremium, userMessageCount, messageLimit]);
     
     const userMessageCount = messages.filter((m) => m.role === 'user').length;
 
