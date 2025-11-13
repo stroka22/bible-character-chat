@@ -33,6 +33,7 @@ import CareersPage from './pages/CareersPage.jsx';
 import PastorsPage from './pages/PastorsPage.jsx';
 import SalesPage from './pages/SalesPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import InviteAccept from './pages/InviteAccept.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
@@ -302,6 +303,8 @@ function App(): JSX.Element {
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />
     <Route path="/pricing" element={<PricingPage />} />
+    {/* Invite links: allow first-time users to click and join */}
+    <Route path="/invite/:code" element={<InviteAccept />} />
     <Route path="/how-it-works" element={<HowItWorksPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/contact" element={<ContactPage />} />
