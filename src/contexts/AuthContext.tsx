@@ -48,6 +48,7 @@ interface Profile {
   email?: string;
   display_name?: string;
   avatar_url?: string;
+  owner_slug?: string | null;
 }
 
 // Provider component that wraps the app and makes auth available to any child component
@@ -99,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { data, error, status } = await supabase
         .from('profiles')
-        .select('id, role, email, display_name, avatar_url')
+        .select('id, role, email, display_name, avatar_url, owner_slug')
         .eq('id', uid)
         .maybeSingle();
 
@@ -144,6 +145,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setProfile(data);
       setRole(data.role ?? 'unknown');
       dbg(`fetchProfile: User role set to "${data.role || 'unknown'}"`);
+
+      // Persist the current owner slug for org-scoped settings across the app.
+      try {
+        const owner = (data.owner_slug && String(data.owner_slug).trim()) || null;
+        if (owner) {
+          localStorage.setItem('ownerSlug', owner);
+        } else {
+          // Fallback to env-configured slug or 'default'
+          const envSlug = (import.meta as any)?.env?.VITE_OWNER_SLUG;
+          localStorage.setItem('ownerSlug', (envSlug && String(envSlug).trim()) || 'default');
+        }
+        // Notify listeners that org context changed
+        try { window.dispatchEvent(new Event('ownerSlugChanged')); } catch {}
+      } catch {}
     } catch (unexpectedError) {
       console.error('fetchProfile: Unexpected error during profile fetch:', unexpectedError);
       setProfile(null);
@@ -286,6 +301,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // clear local profile/role
       setProfile(null);
       setRole('unknown');
+      // Clear persisted owner slug to avoid leaking previous org context
+      try {
+        const envSlug = (import.meta as any)?.env?.VITE_OWNER_SLUG;
+        if (envSlug && String(envSlug).trim()) {
+          localStorage.setItem('ownerSlug', String(envSlug).trim());
+        } else {
+          localStorage.setItem('ownerSlug', 'default');
+        }
+        try { window.dispatchEvent(new Event('ownerSlugChanged')); } catch {}
+      } catch {}
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
