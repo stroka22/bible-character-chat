@@ -9,9 +9,12 @@ import { useChat } from '../contexts/ChatContext';
 import CharacterCard from './CharacterCard';
 import siteSettingsRepository from '../repositories/siteSettingsRepository';
 import { userSettingsRepository } from '../repositories/userSettingsRepository';
-import { getOwnerSlug } from '../services/tierSettingsService';
+import { getOwnerSlug, getSettings as getTierSettings } from '../services/tierSettingsService';
 import { useAuth } from '../contexts/AuthContext';
 import userFavoritesRepository from '../repositories/userFavoritesRepository';
+import { isCharacterFree } from '../utils/accountTier';
+import { usePremium } from '../hooks/usePremium';
+import UpgradeModal from './UpgradeModal';
 
 // Define Bible books for filtering
 
@@ -64,6 +67,8 @@ const ScalableCharacterSelection: React.FC = () => {
   const [activeFilters, setActiveFilters] = useState<{type: string, value: string}[]>([]);
   const [featuredCharacter, setFeaturedCharacter] = useState<Character | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<(string | number)[]>([]);
+  const [tierSettings, setTierSettings] = useState<any>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   /** When user clicks a card we show a quick “loading” overlay until ChatContext
    * finishes selecting the character.  This prevents a confusing pause where
    * nothing appears to happen, especially on slower connections. */
@@ -75,6 +80,7 @@ const ScalableCharacterSelection: React.FC = () => {
   // Get the chat context
   const { selectCharacter, character: selectedCharacter } = useChat();
   const { user } = useAuth();
+  const { isPremium } = usePremium();
 
   // Load user's favorite character IDs
   useEffect(() => {
@@ -171,6 +177,34 @@ const ScalableCharacterSelection: React.FC = () => {
     console.log('🪄 ScalableCharacterSelection useEffect (mount) fired');
     fetchCharacters();
   }, [fetchCharacters]);
+
+  // Load org-scoped tier settings (remote-first, cached per org)
+  useEffect(() => {
+    (async () => {
+      try {
+        const owner = getOwnerSlug();
+        const settings = await getTierSettings(owner);
+        setTierSettings(settings);
+      } catch (e) {
+        console.warn('Failed to load tier settings; falling back to local cache via utils:', e);
+        // utils will fall back to env/local cache when used without explicit settings
+        setTierSettings(null);
+      }
+    })();
+    // Refresh if org changes (owner slug may be overridden locally in dev)
+    // Also react to in-tab changes from admin saves
+    const onChanged = () => {
+      const owner = getOwnerSlug();
+      getTierSettings(owner).then(setTierSettings).catch(() => {});
+    };
+    window.addEventListener('accountTierSettingsChanged', onChanged);
+    window.addEventListener('storage', (ev) => {
+      if ((ev.key || '').startsWith('accountTierSettings:')) onChanged();
+    });
+    return () => {
+      window.removeEventListener('accountTierSettingsChanged', onChanged);
+    };
+  }, []);
 
   // Fetch groups for filtering
   useEffect(() => {
@@ -329,6 +363,7 @@ const ScalableCharacterSelection: React.FC = () => {
   // Render character card or list item
   const renderCharacterItem = useCallback((index: number) => {
     const character = paginatedCharacters[index];
+    const canChat = isPremium || isCharacterFree(character, tierSettings || undefined);
     if (viewMode === 'grid') {
       return (
         <div className="p-2" key={character.id}>
@@ -337,6 +372,8 @@ const ScalableCharacterSelection: React.FC = () => {
             onSelect={handleSelectCharacter}
             isSelected={selectedCharacter?.id === character.id}
             isFavorite={favoriteIds.includes(character.id)}
+            canChat={canChat}
+            onRequireUpgrade={() => setUpgradeOpen(true)}
             onToggleFavorite={async () => {
               if (!user?.id) return;
               const isFav = favoriteIds.includes(character.id);
@@ -394,12 +431,18 @@ const ScalableCharacterSelection: React.FC = () => {
           <button
             className={`
               px-4 py-2 rounded-lg text-sm font-medium
-              ${selectedCharacter?.id === character.id 
-                ? 'bg-yellow-400 text-blue-900' 
-                : 'bg-white/10 text-white hover:bg-white/20'}
+              ${canChat
+                ? (selectedCharacter?.id === character.id 
+                    ? 'bg-yellow-400 text-blue-900' 
+                    : 'bg-white/10 text-white hover:bg-white/20')
+                : 'bg-gray-400 text-gray-800'}
             `}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!canChat) setUpgradeOpen(true);
+            }}
           >
-            {selectedCharacter?.id === character.id ? 'Continue' : 'Chat'}
+            {canChat ? (selectedCharacter?.id === character.id ? 'Continue' : 'Chat') : 'Upgrade'}
           </button>
         </div>
       );
@@ -878,6 +921,14 @@ const ScalableCharacterSelection: React.FC = () => {
       >
         Scalable&nbsp;UI
       </span>
+
+      {/* Upgrade modal for premium-gated characters */}
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        title="Upgrade to chat with premium characters"
+        message="This character is premium for this organization. Upgrade to unlock all characters and features."
+      />
     </div>
   );
 };
