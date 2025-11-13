@@ -22,9 +22,9 @@ const AdminInvitesPage = () => {
   const [formData, setFormData] = useState({
     role: 'user',
     ownerSlug: '',
-    maxUses: 1,
+    maxUses: 1, // can be number | 'custom' | 'unlimited'
     expiresInDays: 7,
-    customMaxUses: 1
+    customMaxUses: 100, // sensible default
   });
   
   // State for create invite status
@@ -130,10 +130,15 @@ const AdminInvitesPage = () => {
         expiresAt.setDate(expiresAt.getDate() + days);
       }
       
-      // Determine max uses
-      const maxUses = formData.maxUses === 'custom' 
-        ? parseInt(formData.customMaxUses, 10) 
-        : parseInt(formData.maxUses, 10);
+      // Determine max uses (null means unlimited)
+      let maxUses = null;
+      if (formData.maxUses === 'custom') {
+        maxUses = Math.max(1, parseInt(formData.customMaxUses, 10) || 1);
+      } else if (formData.maxUses === 'unlimited') {
+        maxUses = null;
+      } else {
+        maxUses = parseInt(formData.maxUses, 10);
+      }
       
       // Create invite
       const { data, error } = await createInvite({
@@ -320,6 +325,10 @@ const AdminInvitesPage = () => {
                     <option value="1">1 use</option>
                     <option value="5">5 uses</option>
                     <option value="10">10 uses</option>
+                    <option value="100">100 uses</option>
+                    <option value="1000">1,000 uses</option>
+                    <option value="10000">10,000 uses</option>
+                    <option value="unlimited">Unlimited</option>
                     <option value="custom">Custom</option>
                   </select>
                   
@@ -330,13 +339,13 @@ const AdminInvitesPage = () => {
                       value={formData.customMaxUses}
                       onChange={handleInputChange}
                       min="1"
-                      max="100"
+                      max="1000000"
                       className="w-24 px-3 py-2 bg-blue-700 border border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     />
                   )}
                 </div>
                 <p className="text-xs text-gray-300 mt-1">
-                  How many times this invite code can be used
+                  How many times this invite code can be used. Choose Unlimited to allow infinite uses.
                 </p>
               </div>
               
@@ -440,7 +449,7 @@ const AdminInvitesPage = () => {
                           </td>
                         )}
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {invite.use_count} / {invite.max_uses}
+                          {invite.use_count} / {invite.max_uses == null ? '∞' : invite.max_uses}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {formatDate(invite.expires_at)}

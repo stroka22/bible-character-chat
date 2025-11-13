@@ -277,7 +277,7 @@ const SuperadminUsersPage = () => {
     try {
       const { error } = await supabase
         .from('owners')
-        .insert({ owner_slug: slug, display_name: name });
+        .insert({ owner_slug: slug, display_name: name, created_by: currentProfile?.id });
       if (error) throw error;
 
       // refresh owners list, select new one
