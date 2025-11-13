@@ -275,6 +275,9 @@ const SimpleChatWithHistory = () => {
       }
     }, [error]);
 
+    // Compute user message count early so effects can depend on it safely
+    const userMessageCount = messages.filter((m) => m.role === 'user').length;
+
     // Defensive: also trigger modal based on computed counts/limits
     useEffect(() => {
       if (!isPremium && userMessageCount >= messageLimit) {
@@ -282,8 +285,20 @@ const SimpleChatWithHistory = () => {
         setShowUpgradeModal(true);
       }
     }, [isPremium, userMessageCount, messageLimit]);
-    
-    const userMessageCount = messages.filter((m) => m.role === 'user').length;
+
+    // Listen for explicit upgrade events from ChatContext (e.g., message limit reached)
+    useEffect(() => {
+      const onUpgrade = (e) => {
+        try {
+          const detail = e?.detail || {};
+          if (detail.limitType) setUpgradeLimitType(detail.limitType);
+          if (typeof detail.messageLimit === 'number') setMessageLimit(detail.messageLimit);
+          setShowUpgradeModal(true);
+        } catch {}
+      };
+      window.addEventListener('upgrade:show', onUpgrade);
+      return () => window.removeEventListener('upgrade:show', onUpgrade);
+    }, []);
 
     const autoSavedRef = useRef(false); // retained but unused with autosave disabled
     const introPostedRef = useRef(false);
