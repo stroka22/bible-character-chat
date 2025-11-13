@@ -58,7 +58,7 @@ function generateInviteCode() {
  * @param {string} options.ownerSlug - Owner slug
  * @param {string} [options.role='admin'] - Role to assign ('admin' or 'user')
  * @param {Date|null} [options.expiresAt=null] - Expiration date
- * @param {number} [options.maxUses=1] - Maximum number of uses
+ * @param {number|null} [options.maxUses=1] - Maximum number of uses (null = unlimited)
  * @param {string} [options.code] - Custom invite code (generated if not provided)
  * @returns {Promise<{data: Object, error: Object}>} - Created invite or error
  */

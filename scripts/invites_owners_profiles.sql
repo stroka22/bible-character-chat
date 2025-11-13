@@ -241,7 +241,7 @@ BEGIN
   FROM public.invites
   WHERE code = p_code
     AND (expires_at IS NULL OR expires_at > v_now)
-    AND use_count < max_uses;
+    AND (max_uses IS NULL OR use_count < max_uses);
 
   IF v_invite IS NULL THEN
     RETURN jsonb_build_object('success', false, 'error', 'Invalid or expired invite code');
