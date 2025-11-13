@@ -206,6 +206,19 @@ export const ChatProvider = ({ children }) => {
       setError(
         'You’ve reached the free conversation limit. Upgrade to a Premium account for unlimited conversations and all premium features.'
       );
+      // Proactively notify UI to show the Upgrade modal without relying on string matching
+      try {
+        const detail = {
+          limitType: 'message',
+          messageLimit: (tierSettings && tierSettings.freeMessageLimit) || 5,
+          messageCount: userMessageCount,
+        };
+        console.info('[ChatContext] Dispatching upgrade:show', detail);
+        const evt = new CustomEvent('upgrade:show', { detail });
+        window.dispatchEvent(evt);
+      } catch (err) {
+        console.warn('[ChatContext] Failed to dispatch upgrade:show', err);
+      }
       return;
     }
 

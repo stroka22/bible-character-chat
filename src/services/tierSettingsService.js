@@ -54,6 +54,21 @@ function normalizeRecord(record) {
     freeCharacterLimit: record.free_character_limit || 10,
     freeCharacters: record.free_characters || [],
     freeCharacterNames: record.free_character_names || [],
+    // New premium gating fields (JSONB)
+    premiumRoundtableGates: (() => {
+      try {
+        const v = record.premium_roundtable_gates;
+        if (v && typeof v === 'object') return v;
+      } catch {}
+      return { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null };
+    })(),
+    premiumStudyIds: (() => {
+      try {
+        const arr = record.premium_study_ids;
+        if (Array.isArray(arr)) return arr;
+      } catch {}
+      return [];
+    })(),
     lastUpdated: record.updated_at || new Date().toISOString()
   };
 }
@@ -69,6 +84,8 @@ function denormalizeSettings(settings) {
     free_character_limit: settings.freeCharacterLimit || 10,
     free_characters: settings.freeCharacters || [],
     free_character_names: settings.freeCharacterNames || [],
+    premium_roundtable_gates: settings.premiumRoundtableGates || { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null },
+    premium_study_ids: settings.premiumStudyIds || [],
     updated_at: new Date().toISOString()
   };
 }
@@ -171,6 +188,8 @@ function getDefaultSettings() {
     freeCharacterLimit: 10,
     freeCharacters: [],
     freeCharacterNames: [],
+    premiumRoundtableGates: { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null },
+    premiumStudyIds: [],
     lastUpdated: new Date().toISOString()
   };
 }

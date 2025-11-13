@@ -4,16 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import { characterRepository } from '../repositories/characterRepository';
 import { useRoundtable } from '../contexts/RoundtableContext';
 import Footer from '../components/Footer';
+import { usePremium } from '../hooks/usePremium';
+import UpgradeModal from '../components/modals/UpgradeModal';
+import { getSettings as getTierSettings } from '../services/tierSettingsService';
 
 const RoundtableSetup = () => {
   const navigate = useNavigate();
   const { startRoundtable, advanceRound } = useRoundtable();
+  const { isPremium } = usePremium();
   
   // State
   const [characters, setCharacters] = useState([]);
   const [selectedCharacterIds, setSelectedCharacterIds] = useState([]);
   const [topic, setTopic] = useState('');
   const [repliesPerRound, setRepliesPerRound] = useState(3);
+  const [premiumGates, setPremiumGates] = useState({ repliesPerRoundMin: null });
+  const [showUpgrade, setShowUpgrade] = useState(false);
   // Auto-start toggle
   const [autoStart, setAutoStart] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +34,11 @@ const RoundtableSetup = () => {
         // Get all non-hidden characters
         const data = await characterRepository.getAll(false);
         setCharacters(data);
+        // Load premium gates (per-org)
+        try {
+          const ts = await getTierSettings();
+          if (ts && ts.premiumRoundtableGates) setPremiumGates(ts.premiumRoundtableGates);
+        } catch {}
       } catch (err) {
         console.error('Failed to fetch characters:', err);
         setError('Failed to load characters. Please try again later.');
@@ -213,7 +224,16 @@ const RoundtableSetup = () => {
                         min: "1",
                         max: "5",
                         value: repliesPerRound,
-                        onChange: (e) => setRepliesPerRound(parseInt(e.target.value)),
+                        onChange: (e) => {
+                          const next = parseInt(e.target.value);
+                          const gate = premiumGates?.repliesPerRoundMin;
+                          if (!isPremium && gate != null && next > gate) {
+                            setShowUpgrade(true);
+                            setRepliesPerRound(gate);
+                          } else {
+                            setRepliesPerRound(next);
+                          }
+                        },
                         className: "flex-1 accent-yellow-400"
                       }),
                       _jsx("span", {
@@ -371,6 +391,8 @@ const RoundtableSetup = () => {
           })
         }),
         _jsx(Footer, {})
+        ,
+        _jsx(UpgradeModal, { isOpen: showUpgrade, onClose: () => setShowUpgrade(false), limitType: 'roundtable', featureName: 'Higher Replies Per Round' })
       ]
     })
   );

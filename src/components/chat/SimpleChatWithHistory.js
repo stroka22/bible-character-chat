@@ -13,6 +13,8 @@ import { characterRepository } from '../../repositories/characterRepository';
 import UpgradeModal from '../modals/UpgradeModal';
 import { usePremium } from '../../hooks/usePremium';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
+import { loadAccountTierSettings } from '../../utils/accountTier';
+import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 
 // Feature flag: enable/disable local chat cache usage for resume fallback
 const ENABLE_LOCAL_CHAT_CACHE = false;
@@ -77,6 +79,7 @@ const SimpleChatWithHistory = () => {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeLimitType, setUpgradeLimitType] = useState('character');
     const [messageLimit, setMessageLimit] = useState(5);
+    const [premiumStudyIds, setPremiumStudyIds] = useState([]);
     const [studyMeta, setStudyMeta] = useState(null);
     const [lessonMeta, setLessonMeta] = useState(null);
     // Series feature deprecated; keep studies functionality intact
@@ -211,15 +214,54 @@ const SimpleChatWithHistory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.search, character, shareCode, messages.length]);
 
+    // Keep messageLimit and premiumStudyIds in sync with per‑org tier settings (local + remote)
     useEffect(() => {
+      const updateFromLocal = () => {
+        try {
+          const s = loadAccountTierSettings();
+          if (s && s.freeMessageLimit) setMessageLimit(s.freeMessageLimit);
+          if (Array.isArray(s?.premiumStudyIds)) setPremiumStudyIds(s.premiumStudyIds);
+        } catch {}
+      };
+
+      updateFromLocal();
+
+      // Hydrate from Supabase once to ensure correctness without hard refresh
+      (async () => {
+        try {
+          const remote = await getTierSettings();
+          if (remote && remote.freeMessageLimit) setMessageLimit(remote.freeMessageLimit);
+          if (Array.isArray(remote?.premiumStudyIds)) setPremiumStudyIds(remote.premiumStudyIds);
+        } catch {}
+      })();
+
+      // Listen for updates from admin page (same tab or other tabs)
+      const onStorage = (e) => {
+        if (e && e.key && String(e.key).startsWith('accountTierSettings')) {
+          updateFromLocal();
+        }
+      };
+      const onCustom = () => updateFromLocal();
+      window.addEventListener('storage', onStorage);
+      window.addEventListener('accountTierSettingsChanged', onCustom);
+      return () => {
+        window.removeEventListener('storage', onStorage);
+        window.removeEventListener('accountTierSettingsChanged', onCustom);
+      };
+    }, []);
+
+    // Gate premium studies: if non-premium user attempts to open a gated study, show modal
+    useEffect(() => {
+      if (!studyMeta) return;
+      if (isPremium) return;
       try {
-        const s = localStorage.getItem('accountTierSettings');
-        if (s) {
-          const j = JSON.parse(s);
-          if (j.freeMessageLimit) setMessageLimit(j.freeMessageLimit);
+        const id = studyMeta.id;
+        if (id && Array.isArray(premiumStudyIds) && premiumStudyIds.includes(id)) {
+          setUpgradeLimitType('study');
+          setShowUpgradeModal(true);
         }
       } catch {}
-    }, []);
+    }, [studyMeta, isPremium, premiumStudyIds]);
     
     useEffect(() => {
       if (!error || typeof error !== 'string') return;
@@ -232,8 +274,31 @@ const SimpleChatWithHistory = () => {
         setShowUpgradeModal(true);
       }
     }, [error]);
-    
+
+    // Compute user message count early so effects can depend on it safely
     const userMessageCount = messages.filter((m) => m.role === 'user').length;
+
+    // Defensive: also trigger modal based on computed counts/limits
+    useEffect(() => {
+      if (!isPremium && userMessageCount >= messageLimit) {
+        setUpgradeLimitType('message');
+        setShowUpgradeModal(true);
+      }
+    }, [isPremium, userMessageCount, messageLimit]);
+
+    // Listen for explicit upgrade events from ChatContext (e.g., message limit reached)
+    useEffect(() => {
+      const onUpgrade = (e) => {
+        try {
+          const detail = e?.detail || {};
+          if (detail.limitType) setUpgradeLimitType(detail.limitType);
+          if (typeof detail.messageLimit === 'number') setMessageLimit(detail.messageLimit);
+          setShowUpgradeModal(true);
+        } catch {}
+      };
+      window.addEventListener('upgrade:show', onUpgrade);
+      return () => window.removeEventListener('upgrade:show', onUpgrade);
+    }, []);
 
     const autoSavedRef = useRef(false); // retained but unused with autosave disabled
     const introPostedRef = useRef(false);
@@ -1055,7 +1120,8 @@ const SimpleChatWithHistory = () => {
                                       limitType: upgradeLimitType,
                                       characterName: character?.name,
                                       messageCount: userMessageCount,
-                                      messageLimit: messageLimit
+                                      messageLimit: messageLimit,
+                                      studyTitle: studyMeta?.title || ''
                                     })
                                 ] 
                             })

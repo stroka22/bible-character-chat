@@ -12,6 +12,7 @@ import {
   roundtableSettingsRepository,
   DEFAULT_ROUNDTABLE_SETTINGS,
 } from '../../repositories/roundtableSettingsRepository';
+import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 
 /**
  * Account Tier Management Component
@@ -31,6 +32,15 @@ const AccountTierManagement = ({ mode = 'full' }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
+  /* Premium gates */
+  const [premiumGates, setPremiumGates] = useState({
+    allowAllSpeak: false,
+    strictRotation: false,
+    followUpsMin: null,
+    repliesPerRoundMin: null,
+  });
+  const [premiumStudyIds, setPremiumStudyIds] = useState([]);
+  const [studies, setStudies] = useState([]);
   /* ------------------------------------------------------------------
    * UI helpers
    * ---------------------------------------------------------------- */
@@ -72,6 +82,13 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         setFreeMessageLimit(supabaseSettings.freeMessageLimit || 5);
         setFreeCharacterLimit(supabaseSettings.freeCharacterLimit || 10);
         setFreeCharacters(supabaseSettings.freeCharacters || []);
+        setPremiumGates({
+          allowAllSpeak: !!supabaseSettings?.premiumRoundtableGates?.allowAllSpeak,
+          strictRotation: !!supabaseSettings?.premiumRoundtableGates?.strictRotation,
+          followUpsMin: supabaseSettings?.premiumRoundtableGates?.followUpsMin ?? null,
+          repliesPerRoundMin: supabaseSettings?.premiumRoundtableGates?.repliesPerRoundMin ?? null,
+        });
+        setPremiumStudyIds(Array.isArray(supabaseSettings?.premiumStudyIds) ? supabaseSettings.premiumStudyIds : []);
 
         // If none selected create default first-5
         if (
@@ -88,6 +105,8 @@ const AccountTierManagement = ({ mode = 'full' }) => {
       setFreeMessageLimit(local.freeMessageLimit || 5);
       setFreeCharacterLimit(local.freeCharacterLimit || 10);
       setFreeCharacters(local.freeCharacters || []);
+      setPremiumGates(local.premiumRoundtableGates || premiumGates);
+      setPremiumStudyIds(local.premiumStudyIds || []);
     } catch (err) {
       console.error('Failed to fetch tier settings:', err);
     }
@@ -145,6 +164,15 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         const allChars = await characterRepository.getAll();
         setCharacters(allChars);
         setAllCharacters(allChars);
+
+        // Load studies for this org for Premium selection
+        try {
+          const st = await bibleStudiesRepository.listStudies({ ownerSlug: getOwnerSlug(), includePrivate: true });
+          setStudies(st || []);
+        } catch (e) {
+          console.warn('Failed to load studies list:', e);
+          setStudies([]);
+        }
 
         // Get the current owner slug
         const slug = getOwnerSlug();
@@ -308,7 +336,9 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         freeCharacterLimit,
         freeCharacters,
         freeCharacterNames: freeNames,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        premiumRoundtableGates: premiumGates,
+        premiumStudyIds: premiumStudyIds,
       };
       
       // Save to Supabase via tierSettingsService
@@ -580,6 +610,101 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         <>
           {mode === 'full' && activeTab === 'tier' && (
             <>
+              {/* Premium Gates Section */}
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-blue-800 mb-2">Premium Gates</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Mark specific features as Premium-only for this organization.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Roundtable Feature Gates */}
+                  <div className="space-y-3 p-4 border rounded-md">
+                    <h4 className="font-medium text-blue-800 mb-1">Roundtable Options</h4>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        checked={!!premiumGates.allowAllSpeak}
+                        onChange={(e) => setPremiumGates({ ...premiumGates, allowAllSpeak: e.target.checked })}
+                      />
+                      <span className="text-sm text-gray-700">All-Speak requires Premium</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        checked={!!premiumGates.strictRotation}
+                        onChange={(e) => setPremiumGates({ ...premiumGates, strictRotation: e.target.checked })}
+                      />
+                      <span className="text-sm text-gray-700">Strict Rotation requires Premium</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Follow-Ups min for Premium</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="10"
+                          value={premiumGates.followUpsMin ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value === '' ? null : (parseInt(e.target.value, 10) || 0);
+                            setPremiumGates({ ...premiumGates, followUpsMin: v });
+                          }}
+                          placeholder="e.g. 1"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="text-[11px] text-gray-500 mt-1">Any follow-ups ≥ this value require Premium. Leave blank to disable.</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Replies Per Round above</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={premiumGates.repliesPerRoundMin ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value === '' ? null : (parseInt(e.target.value, 10) || 1);
+                            setPremiumGates({ ...premiumGates, repliesPerRoundMin: v });
+                          }}
+                          placeholder="e.g. 3"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="text-[11px] text-gray-500 mt-1">Replies above this number require Premium. Leave blank to disable.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Premium Studies */}
+                  <div className="space-y-3 p-4 border rounded-md">
+                    <h4 className="font-medium text-blue-800 mb-1">Premium Bible Studies</h4>
+                    <p className="text-xs text-gray-600">Select studies that require Premium access.</p>
+                    <div className="max-h-60 overflow-y-auto border rounded">
+                      {studies.length === 0 ? (
+                        <div className="p-3 text-sm text-gray-500">No studies found for this organization.</div>
+                      ) : (
+                        studies.map((s) => {
+                          const checked = premiumStudyIds.includes(s.id);
+                          return (
+                            <label key={s.id} className="flex items-center gap-2 p-2 border-b last:border-b-0">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                                checked={checked}
+                                onChange={(e) => {
+                                  setPremiumStudyIds((prev) => (
+                                    e.target.checked ? Array.from(new Set([...prev, s.id])) : prev.filter((id) => id !== s.id)
+                                  ));
+                                }}
+                              />
+                              <span className="text-sm text-gray-800">{s.title}</span>
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* Featured Character Section */}
               <div className="mb-8">
                 <h3 className="text-xl font-semibold text-blue-800 mb-4">Featured Character</h3>
