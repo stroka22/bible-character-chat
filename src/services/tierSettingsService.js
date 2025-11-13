@@ -149,7 +149,7 @@ export async function getSettings(ownerSlug) {
     
     if (error) {
       console.error('[tierSettingsService] Supabase error:', error);
-      // Fall back to cache on error
+      // Fall back to cache on error (use correct org slug)
       return loadFromCache(slug) || getDefaultSettings();
     }
     

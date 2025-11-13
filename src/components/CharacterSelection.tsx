@@ -6,6 +6,10 @@ import { type Character } from '../services/supabase';
 import { useChat } from '../contexts/ChatContext';
 import CharacterCard from './CharacterCard';
 import type { CharacterGroup } from '../repositories/groupRepository';
+import { isCharacterFree } from '../utils/accountTier';
+import { usePremium } from '../hooks/usePremium';
+import { getOwnerSlug, getSettings as getTierSettings } from '../services/tierSettingsService';
+import UpgradeModal from './UpgradeModal';
 
 // View modes: grid or list (replacing the previous grid/timeline/book)
 type ViewMode = 'grid' | 'list';
@@ -82,7 +86,10 @@ const CharacterSelection: React.FC = () => {
   const [currentLetter, setCurrentLetter] = useState<string>('all');
   const [groups, setGroups] = useState<CharacterGroup[]>([]);
   const [activeFilters, setActiveFilters] = useState<{type: string, value: string}[]>([]);
-  
+  const { isPremium } = usePremium();
+  const [tierSettings, setTierSettings] = useState<any>(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+
   // Pagination settings
   const itemsPerPage = 20;
   
@@ -107,6 +114,20 @@ const CharacterSelection: React.FC = () => {
   useEffect(() => {
     fetchCharacters();
   }, [fetchCharacters]);
+
+  // Load org-scoped tier settings (remote-first)
+  useEffect(() => {
+    (async () => {
+      try {
+        const owner = getOwnerSlug();
+        const settings = await getTierSettings(owner);
+        setTierSettings(settings);
+      } catch (e) {
+        console.warn('CharacterSelection: failed to load tier settings; falling back to utils cache');
+        setTierSettings(null);
+      }
+    })();
+  }, []);
 
   // Fetch groups for filtering
   useEffect(() => {
@@ -660,6 +681,8 @@ const CharacterSelection: React.FC = () => {
                   character={character}
                   onSelect={handleSelectCharacter}
                   isSelected={selectedCharacter?.id === character.id}
+                  canChat={isPremium || isCharacterFree(character, tierSettings || undefined)}
+                  onRequireUpgrade={() => setUpgradeOpen(true)}
                 />
               ) : (
                 <div 
@@ -690,12 +713,21 @@ const CharacterSelection: React.FC = () => {
                   <button
                     className={`
                       px-4 py-2 rounded-lg text-sm font-medium
-                      ${selectedCharacter?.id === character.id 
-                        ? 'bg-yellow-400 text-blue-900' 
-                        : 'bg-white/10 text-white hover:bg-white/20'}
+                      ${(isPremium || isCharacterFree(character, tierSettings || undefined))
+                        ? (selectedCharacter?.id === character.id 
+                            ? 'bg-yellow-400 text-blue-900' 
+                            : 'bg-white/10 text-white hover:bg-white/20')
+                        : 'bg-gray-400 text-gray-800'}
                     `}
+                    onClick={(e) => {
+                      const canChat = isPremium || isCharacterFree(character, tierSettings || undefined);
+                      if (!canChat) {
+                        e.stopPropagation();
+                        setUpgradeOpen(true);
+                      }
+                    }}
                   >
-                    {selectedCharacter?.id === character.id ? 'Continue' : 'Chat'}
+                    {(isPremium || isCharacterFree(character, tierSettings || undefined)) ? (selectedCharacter?.id === character.id ? 'Continue' : 'Chat') : 'Upgrade'}
                   </button>
                 </div>
               )
@@ -706,6 +738,7 @@ const CharacterSelection: React.FC = () => {
         {/* Pagination */}
         {renderPagination()}
       </div>
+      <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} />
     </div>
   );
 };
