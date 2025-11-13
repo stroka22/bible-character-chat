@@ -8,6 +8,10 @@ import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
 import CharacterInsightsPanel from './CharacterInsightsPanel';
+import UpgradeModal from '../modals/UpgradeModal';
+import { usePremium } from '../../hooks/usePremium';
+import { loadAccountTierSettings } from '../../utils/accountTier';
+import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
@@ -44,11 +48,16 @@ const ChatInterface = () => {
     } = useChat();
     const { shareConversation } = useConversation();
     const { isAuthenticated } = useAuth();
+    const { isPremium } = usePremium();
     const location = useLocation();
     const navigate = useNavigate();
     const [showInsightsPanel, setShowInsightsPanel] = useState(false);
     /* Compact actions pop-up on mobile */
     const [showMobileActions, setShowMobileActions] = useState(false);
+    // Upgrade modal state
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [upgradeLimitType, setUpgradeLimitType] = useState('character');
+    const [messageLimit, setMessageLimit] = useState(5);
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
@@ -142,6 +151,60 @@ const ChatInterface = () => {
             console.info('[ChatInterface] Rendering a resumed conversation');
         }
     }, [isResumed]);
+
+    // Keep messageLimit in sync with per‑org tier settings (local + remote)
+    useEffect(() => {
+        const updateFromLocal = () => {
+            try {
+                const s = loadAccountTierSettings();
+                if (s && s.freeMessageLimit) setMessageLimit(s.freeMessageLimit);
+            } catch {}
+        };
+        updateFromLocal();
+        (async () => {
+            try {
+                const remote = await getTierSettings();
+                if (remote && remote.freeMessageLimit) setMessageLimit(remote.freeMessageLimit);
+            } catch {}
+        })();
+        const onStorage = (e) => {
+            if (e && e.key && String(e.key).startsWith('accountTierSettings')) {
+                updateFromLocal();
+            }
+        };
+        const onCustom = () => updateFromLocal();
+        window.addEventListener('storage', onStorage);
+        window.addEventListener('accountTierSettingsChanged', onCustom);
+        return () => {
+            window.removeEventListener('storage', onStorage);
+            window.removeEventListener('accountTierSettingsChanged', onCustom);
+        };
+    }, []);
+
+    // Derive user message count
+    const userMessageCount = messages.filter((m) => m.role === 'user').length;
+
+    // Defensive: open modal when limit reached
+    useEffect(() => {
+        if (!isPremium && userMessageCount >= messageLimit) {
+            setUpgradeLimitType('message');
+            setShowUpgradeModal(true);
+        }
+    }, [isPremium, userMessageCount, messageLimit]);
+
+    // Listen for global upgrade events (emitted by ChatContext)
+    useEffect(() => {
+        const onUpgrade = (e) => {
+            try {
+                const detail = e?.detail || {};
+                if (detail.limitType) setUpgradeLimitType(detail.limitType);
+                if (typeof detail.messageLimit === 'number') setMessageLimit(detail.messageLimit);
+                setShowUpgradeModal(true);
+            } catch {}
+        };
+        window.addEventListener('upgrade:show', onUpgrade);
+        return () => window.removeEventListener('upgrade:show', onUpgrade);
+    }, []);
 
     if (!character) {
         return (
@@ -431,7 +494,7 @@ const ChatInterface = () => {
                                         })
                                     ),
                                     
-                                    error && (
+                                    error && !showUpgradeModal && (
                                         _jsx("div", { 
                                             className: "mx-auto my-4 max-w-md rounded-lg bg-red-900/50 border border-red-500 p-4", 
                                             children: _jsxs("div", { 
@@ -453,7 +516,7 @@ const ChatInterface = () => {
                                                         children: [
                                                             _jsx("p", { 
                                                                 className: "text-sm text-red-200", 
-                                                                children: "Sorry, something went wrong. Please try again." 
+                                                                children: typeof error === 'string' ? error : 'Sorry, something went wrong. Please try again.' 
                                                             }),
                                                             _jsx("button", { 
                                                                 onClick: handleRetryLastMessage, 
@@ -517,7 +580,17 @@ const ChatInterface = () => {
                 }),
 
                 // Chat actions (hidden on mobile)
-                _jsx("div", { className: "hidden md:block", children: _jsx(ChatActions, {}) })
+                _jsx("div", { className: "hidden md:block", children: _jsx(ChatActions, {}) }),
+
+                // Upgrade Modal
+                _jsx(UpgradeModal, {
+                  isOpen: showUpgradeModal,
+                  onClose: () => setShowUpgradeModal(false),
+                  limitType: upgradeLimitType,
+                  characterName: character?.name,
+                  messageCount: userMessageCount,
+                  messageLimit: messageLimit
+                })
             ] 
         })
     );
