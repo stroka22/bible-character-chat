@@ -117,6 +117,9 @@ const ChatInterface: React.FC = () => {
       try {
         const anyEvt = e as CustomEvent<any>;
         const detail = anyEvt?.detail || {};
+        // Debug log
+        // eslint-disable-next-line no-console
+        console.info('[ChatInterface.tsx] Received upgrade:show', detail);
         if (detail.limitType) setUpgradeLimitType(detail.limitType);
         if (typeof detail.messageLimit === 'number') setMessageLimit(detail.messageLimit);
         setShowUpgradeModal(true);

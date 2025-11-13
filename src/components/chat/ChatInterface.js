@@ -187,6 +187,7 @@ const ChatInterface = () => {
     // Defensive: open modal when limit reached
     useEffect(() => {
         if (!isPremium && userMessageCount >= messageLimit) {
+            console.info('[ChatInterface.js] Auto-open UpgradeModal: count>=limit', { userMessageCount, messageLimit });
             setUpgradeLimitType('message');
             setShowUpgradeModal(true);
         }
@@ -197,6 +198,7 @@ const ChatInterface = () => {
         const onUpgrade = (e) => {
             try {
                 const detail = e?.detail || {};
+                console.info('[ChatInterface.js] Received upgrade:show', detail);
                 if (detail.limitType) setUpgradeLimitType(detail.limitType);
                 if (typeof detail.messageLimit === 'number') setMessageLimit(detail.messageLimit);
                 setShowUpgradeModal(true);
