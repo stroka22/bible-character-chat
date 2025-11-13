@@ -4,6 +4,10 @@ import ChatBubble from './ChatBubble';
 import ChatInput from './ChatInput';
 import ChatActions from './ChatActions';
 import CharacterInsightsPanel from './CharacterInsightsPanel'; // Import the CharacterInsightsPanel component
+import UpgradeModal from '../modals/UpgradeModal';
+import { usePremium } from '../../hooks/usePremium';
+import { loadAccountTierSettings } from '../../utils/accountTier';
+import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 
 /**
  * --------------------------------------------------------------------------
@@ -52,15 +56,75 @@ const ChatInterface: React.FC = () => {
     retryLastMessage,
     resetChat
   } = useChat();
+  const { isPremium } = usePremium();
 
   // State to track whether the insights panel is open
   const [showInsightsPanel, setShowInsightsPanel] = useState(false);
+  // Upgrade modal state
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeLimitType, setUpgradeLimitType] = useState<'message' | 'character' | 'study' | 'roundtable'>('character');
+  const [messageLimit, setMessageLimit] = useState<number>(5);
 
   // Reference for auto-scrolling to the bottom of the chat
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Detect if this is a resumed chat (there are already messages present)
   const isResumed = messages.length > 0;
+
+  // Keep messageLimit in sync with per‑org tier settings (local + remote)
+  useEffect(() => {
+    const updateFromLocal = () => {
+      try {
+        const s: any = loadAccountTierSettings();
+        if (s && s.freeMessageLimit) setMessageLimit(s.freeMessageLimit);
+      } catch {}
+    };
+    updateFromLocal();
+    (async () => {
+      try {
+        const remote: any = await getTierSettings();
+        if (remote && remote.freeMessageLimit) setMessageLimit(remote.freeMessageLimit);
+      } catch {}
+    })();
+    const onStorage = (e: StorageEvent) => {
+      if (e && e.key && String(e.key).startsWith('accountTierSettings')) {
+        updateFromLocal();
+      }
+    };
+    const onCustom = () => updateFromLocal();
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('accountTierSettingsChanged', onCustom as any);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('accountTierSettingsChanged', onCustom as any);
+    };
+  }, []);
+
+  // Derive user message count
+  const userMessageCount = messages.filter((m) => m.role === 'user').length;
+
+  // Defensive: open modal when limit reached
+  useEffect(() => {
+    if (!isPremium && userMessageCount >= messageLimit) {
+      setUpgradeLimitType('message');
+      setShowUpgradeModal(true);
+    }
+  }, [isPremium, userMessageCount, messageLimit]);
+
+  // Listen for global upgrade events (emitted by ChatContext)
+  useEffect(() => {
+    const onUpgrade = (e: Event) => {
+      try {
+        const anyEvt = e as CustomEvent<any>;
+        const detail = anyEvt?.detail || {};
+        if (detail.limitType) setUpgradeLimitType(detail.limitType);
+        if (typeof detail.messageLimit === 'number') setMessageLimit(detail.messageLimit);
+        setShowUpgradeModal(true);
+      } catch {}
+    };
+    window.addEventListener('upgrade:show', onUpgrade as any);
+    return () => window.removeEventListener('upgrade:show', onUpgrade as any);
+  }, []);
 
   // Auto-scroll to bottom when messages change or when typing
   useEffect(() => {
@@ -228,16 +292,14 @@ const ChatInterface: React.FC = () => {
             )}
             
             {/* Error message with retry button */}
-            {error && (
+            {error && !showUpgradeModal && (
               <div className="mx-auto my-4 max-w-md rounded-lg bg-red-50 p-4">
                 <div className="flex">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                   <div>
-                    <p className="text-sm text-red-800">
-                      Sorry, something went wrong. Please try again.
-                    </p>
+                    <p className="text-sm text-red-800">{typeof error === 'string' ? error : 'Sorry, something went wrong. Please try again.'}</p>
                     <button
                       onClick={retryLastMessage}
                       className="mt-2 rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 transition-colors"
@@ -271,6 +333,16 @@ const ChatInterface: React.FC = () => {
       <ChatInput 
         disabled={isLoading} 
         placeholder={`Ask ${character.name} anything...`}
+      />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        limitType={upgradeLimitType}
+        characterName={character?.name}
+        messageCount={userMessageCount}
+        messageLimit={messageLimit}
       />
     </div>
   );
