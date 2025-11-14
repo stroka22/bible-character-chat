@@ -42,6 +42,34 @@ const ConversationsPage = () => {
   const [favoriteCharacters, setFavoriteCharacters] = useState([]);
   const [favLoading, setFavLoading] = useState(true);
 
+  // Handle Stripe checkout success: trigger premium refresh and confirmation email
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const success = params.get('checkout') === 'success';
+      if (success && user?.email) {
+        // Signal all tabs/hooks to refresh subscription status
+        try {
+          localStorage.setItem('subscription:refresh', String(Date.now()));
+          window.dispatchEvent(new Event('subscriptionUpdated'));
+        } catch {}
+        // Avoid duplicate emails per session
+        const key = `premiumEmailSent:${user.id}`;
+        if (!sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, '1');
+          // Fire-and-forget confirmation email API if available
+          fetch('/api/premium-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email })
+          }).catch(() => {});
+        }
+      }
+    } catch (e) {
+      // no-op
+    }
+  }, [user?.id, user?.email]);
+
   useEffect(() => {
     // Load favorite characters once on mount
     const loadFavorites = async () => {
