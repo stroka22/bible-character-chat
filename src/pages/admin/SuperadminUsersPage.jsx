@@ -12,6 +12,7 @@ const SuperadminUsersPage = () => {
   
   // State for users list
   const [profiles, setProfiles] = useState([]);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [totalProfiles, setTotalProfiles] = useState(0);
   
@@ -122,6 +123,8 @@ const SuperadminUsersPage = () => {
       if (error) throw error;
       
       setProfiles(data || []);
+      // Clear selections if list changed
+      setSelectedUserIds([]);
       setTotalProfiles(count || 0);
     } catch (error) {
       console.error('Error loading profiles:', error);
@@ -220,6 +223,43 @@ const SuperadminUsersPage = () => {
       // Reset to page 1 when filters change
       ...(name !== 'page' && { page: 1 })
     }));
+  };
+
+  // Selection helpers
+  const isAllSelected = profiles.length > 0 && selectedUserIds.length === profiles.length;
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(profiles.map(p => p.id));
+    }
+  };
+  const toggleSelectOne = (id) => {
+    setSelectedUserIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const bulkDelete = async () => {
+    if (selectedUserIds.length === 0) return;
+    if (!window.confirm(`Delete ${selectedUserIds.length} user(s)? This cannot be undone.`)) return;
+    setActionInProgress('bulk');
+    setActionMessage({ text: '', type: '' });
+    try {
+      for (const id of selectedUserIds) {
+        try {
+          const { error } = await supabase.functions.invoke('delete-user', { body: { userId: id } });
+          if (error) throw new Error(error.message || 'Edge function failed');
+        } catch (e) {
+          console.warn('Bulk delete failed for id', id, e);
+        }
+      }
+      await loadProfiles();
+      setActionMessage({ text: 'Selected users deleted', type: 'success' });
+    } catch (e) {
+      setActionMessage({ text: e?.message || 'Bulk delete failed', type: 'error' });
+    } finally {
+      setActionInProgress(null);
+      setTimeout(() => setActionMessage({ text: '', type: '' }), 3000);
+    }
   };
   
   // Apply filters when they change
@@ -683,6 +723,13 @@ const SuperadminUsersPage = () => {
                 <table className="min-w-full divide-y divide-blue-700">
                   <thead>
                     <tr>
+                      <th className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={isAllSelected}
+                          onChange={toggleSelectAll}
+                        />
+                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                         Email / Name
                       </th>
@@ -703,6 +750,13 @@ const SuperadminUsersPage = () => {
                   <tbody className="divide-y divide-blue-700">
                     {profiles.map(profile => (
                       <tr key={profile.id} className="hover:bg-blue-700">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedUserIds.includes(profile.id)}
+                            onChange={() => toggleSelectOne(profile.id)}
+                          />
+                        </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium">{profile.email}</div>
                           {profile.display_name && (
@@ -809,6 +863,20 @@ const SuperadminUsersPage = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Bulk actions */}
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-sm text-blue-200">
+                  Selected: {selectedUserIds.length}
+                </div>
+                <button
+                  onClick={bulkDelete}
+                  disabled={selectedUserIds.length === 0 || actionInProgress === 'bulk'}
+                  className={`px-3 py-2 rounded ${selectedUserIds.length === 0 || actionInProgress === 'bulk' ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500'}`}
+                >
+                  {actionInProgress === 'bulk' ? 'Deleting…' : 'Delete Selected'}
+                </button>
               </div>
               
               {/* Pagination */}
