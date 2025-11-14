@@ -50,6 +50,7 @@ interface Profile {
   display_name?: string;
   avatar_url?: string;
   owner_slug?: string | null;
+  premium_override?: boolean | null;
 }
 
 // Provider component that wraps the app and makes auth available to any child component
@@ -101,7 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const { data, error, status } = await supabase
         .from('profiles')
-        .select('id, role, email, display_name, avatar_url, owner_slug')
+        .select('id, role, email, display_name, avatar_url, owner_slug, premium_override')
         .eq('id', uid)
         .maybeSingle();
 

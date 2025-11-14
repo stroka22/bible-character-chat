@@ -90,6 +90,7 @@ const SuperadminUsersPage = () => {
           email,
           role,
           owner_slug,
+          premium_override,
           display_name,
           created_at
         `, { count: 'exact' });
@@ -762,6 +763,9 @@ const SuperadminUsersPage = () => {
                           {profile.display_name && (
                             <div className="text-xs text-gray-300">{profile.display_name}</div>
                           )}
+                          {profile.premium_override && (
+                            <div className="text-[10px] mt-1 inline-block bg-purple-600 px-2 py-0.5 rounded-full">Premium Override</div>
+                          )}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs rounded-full ${
@@ -826,6 +830,40 @@ const SuperadminUsersPage = () => {
                                 </option>
                               ))}
                             </select>
+
+                            {/* Premium Override Toggle */}
+                            <button
+                              onClick={async () => {
+                                if (actionInProgress) return;
+                                setActionInProgress(profile.id + ':premium');
+                                setActionMessage({ text: '', type: '' });
+                                try {
+                                  const next = !profile.premium_override;
+                                  const { error } = await supabase
+                                    .from('profiles')
+                                    .update({ premium_override: next })
+                                    .eq('id', profile.id);
+                                  if (error) throw error;
+                                  setProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, premium_override: next } : p));
+                                  setActionMessage({ text: next ? 'Premium granted (override)' : 'Premium override removed', type: 'success' });
+                                } catch (e) {
+                                  setActionMessage({ text: e?.message || 'Failed to update premium override', type: 'error' });
+                                } finally {
+                                  setActionInProgress(null);
+                                  setTimeout(() => setActionMessage({ text: '', type: '' }), 2500);
+                                }
+                              }}
+                              disabled={actionInProgress === profile.id + ':premium' || !isSuperAdmin}
+                              className={`mt-2 px-2 py-1 text-xs rounded ${
+                                actionInProgress === profile.id + ':premium' || !isSuperAdmin
+                                  ? 'bg-gray-600 cursor-not-allowed'
+                                  : profile.premium_override
+                                    ? 'bg-purple-700 hover:bg-purple-600'
+                                    : 'bg-purple-600 hover:bg-purple-500'
+                              }`}
+                            >
+                              {profile.premium_override ? 'Remove Premium' : 'Grant Premium'}
+                            </button>
 
                             {/* Delete User */}
                             <button
