@@ -59,7 +59,7 @@ const ScalableCharacterSelection = () => {
      * Premium / tier gating state
      * ----------------------------------------------------------- */
     const { isPremium } = usePremium();
-  const { user, isAdmin, profile } = useAuth();
+  const { user, isAdmin, profile, refreshProfile } = useAuth();
   // Re-use helper pattern from Header – isAdmin is a function
   const isAdminUser = isAdmin && isAdmin();
     const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
@@ -912,9 +912,16 @@ const ScalableCharacterSelection = () => {
                                                     
                                                     /* CTA Button */
                                                     _jsx("button", {
-                                                        onClick: () => {
-                                                            const premiumOverride = !!(profile && profile.premium_override);
-                                                            const canChatBanner = premiumOverride || isPremium || isCharacterFree(featuredCharacter, tierSettings);
+                                                        onClick: async () => {
+                                                            let premiumOverride = !!(profile && profile.premium_override);
+                                                            let canChatBanner = premiumOverride || isPremium || isCharacterFree(featuredCharacter, tierSettings);
+                                                            if (!canChatBanner) {
+                                                                // One-shot freshness check: pull latest profile before blocking
+                                                                try { await refreshProfile?.(); } catch {}
+                                                                premiumOverride = !!(typeof window !== 'undefined' ? (JSON.parse(JSON.stringify(profile || {}))?.premium_override) : (profile && profile.premium_override));
+                                                                // Note: profile is stateful; after refreshProfile it will update via context
+                                                                canChatBanner = premiumOverride || isPremium || isCharacterFree(featuredCharacter, tierSettings);
+                                                            }
                                                             if (canChatBanner) {
                                                                 handleSelectCharacter(featuredCharacter);
                                                             } else {
