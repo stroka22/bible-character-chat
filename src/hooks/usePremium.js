@@ -11,7 +11,7 @@ import { getActiveSubscription } from '../services/stripe-safe';
  * @property {string|null} error - Error message if subscription check failed
  */
 export function usePremium() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -73,6 +73,14 @@ export function usePremium() {
       }
     }
 
+    // If admin has granted manual premium override, short-circuit to premium
+    if (profile?.premium_override) {
+      setIsPremium(true);
+      setLastCheckedUserId(user.id);
+      setLoading(false);
+      return;
+    }
+
     if (forceRefresh) {
       checkPremiumStatus();
     }
@@ -108,7 +116,7 @@ export function usePremium() {
         pollingRef.current = null;
       }
     };
-  }, [user, lastCheckedUserId]);
+  }, [user, lastCheckedUserId, profile?.premium_override]);
 
   // React to cross-tab and focus events to refresh status
   useEffect(() => {
