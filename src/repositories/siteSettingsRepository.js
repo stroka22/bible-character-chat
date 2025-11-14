@@ -5,27 +5,30 @@ export const siteSettingsRepository = {
     if (!ownerSlug) return null;
     try {
       // 1) Try direct Supabase first (fast path on desktop and most devices)
-      try {
+      // Use maybeSingle() so missing rows don't trigger 406 Not Acceptable
+      {
         const { data, error } = await supabase
           .from('site_settings')
           .select('default_featured_character_id,enforce_admin_default')
           .eq('owner_slug', ownerSlug)
-          .single();
+          .maybeSingle();
         if (!error && data) {
           return {
             defaultId: data?.default_featured_character_id || null,
             enforceAdminDefault: !!data?.enforce_admin_default
           };
         }
-      } catch (e) {
-        // If column doesn't exist yet, fall back to default-only select
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('default_featured_character_id')
-          .eq('owner_slug', ownerSlug)
-          .single();
-        if (!error && data) {
-          return { defaultId: data?.default_featured_character_id || null, enforceAdminDefault: false };
+        // If the enforce_admin_default column doesn't exist in this env yet,
+        // fall back to selecting only the default id.
+        if (error) {
+          const fallback = await supabase
+            .from('site_settings')
+            .select('default_featured_character_id')
+            .eq('owner_slug', ownerSlug)
+            .maybeSingle();
+          if (!fallback.error && fallback.data) {
+            return { defaultId: fallback.data?.default_featured_character_id || null, enforceAdminDefault: false };
+          }
         }
       }
 
