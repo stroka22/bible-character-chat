@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../services/supabase';
+import { supabase, SUPABASE_ANON_KEY } from '../../services/supabase';
 import { getMyProfile } from '../../services/invitesService';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -253,7 +253,9 @@ const SuperadminUsersPage = () => {
         try {
           const { error } = await supabase.functions.invoke('delete-user', {
             body: { userId: id },
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: token
+              ? { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON_KEY }
+              : undefined,
           });
           if (error) throw new Error(error.message || 'Edge function failed');
           success += 1;
@@ -893,7 +895,9 @@ const SuperadminUsersPage = () => {
                                   const token = session?.access_token || null;
                                   const { data, error } = await supabase.functions.invoke('delete-user', {
                                     body: { userId: profile.id },
-                                    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                                    headers: token
+                                      ? { Authorization: `Bearer ${token}`, apikey: SUPABASE_ANON_KEY }
+                                      : undefined,
                                   });
                                   if (error) throw new Error(error.message || 'Failed to delete');
                                   // Refresh list
