@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import { getMyProfile } from '../../services/invitesService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const SuperadminUsersPage = () => {
   // State for current user profile
+  const { session, user: authUser, refreshProfile } = useAuth();
   const [currentProfile, setCurrentProfile] = useState(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -245,16 +247,22 @@ const SuperadminUsersPage = () => {
     setActionInProgress('bulk');
     setActionMessage({ text: '', type: '' });
     try {
+      let success = 0;
+      const token = session?.access_token || null;
       for (const id of selectedUserIds) {
         try {
-          const { error } = await supabase.functions.invoke('delete-user', { body: { userId: id } });
+          const { error } = await supabase.functions.invoke('delete-user', {
+            body: { userId: id },
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
           if (error) throw new Error(error.message || 'Edge function failed');
+          success += 1;
         } catch (e) {
           console.warn('Bulk delete failed for id', id, e);
         }
       }
       await loadProfiles();
-      setActionMessage({ text: 'Selected users deleted', type: 'success' });
+      setActionMessage({ text: `Deleted ${success} of ${selectedUserIds.length} users`, type: success === selectedUserIds.length ? 'success' : 'error' });
     } catch (e) {
       setActionMessage({ text: e?.message || 'Bulk delete failed', type: 'error' });
     } finally {
@@ -846,6 +854,16 @@ const SuperadminUsersPage = () => {
                                   if (error) throw error;
                                   setProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, premium_override: next } : p));
                                   setActionMessage({ text: next ? 'Premium granted (override)' : 'Premium override removed', type: 'success' });
+                                  // If toggling for the currently logged-in user, refresh their profile
+                                  try {
+                                    if (authUser?.id && authUser.id === profile.id) {
+                                      await refreshProfile(authUser.id);
+                                      try {
+                                        localStorage.setItem('subscription:refresh', String(Date.now()));
+                                        window.dispatchEvent(new Event('subscriptionUpdated'));
+                                      } catch {}
+                                    }
+                                  } catch {}
                                 } catch (e) {
                                   setActionMessage({ text: e?.message || 'Failed to update premium override', type: 'error' });
                                 } finally {
@@ -872,8 +890,10 @@ const SuperadminUsersPage = () => {
                                 setActionInProgress(profile.id);
                                 setActionMessage({ text: '', type: '' });
                                 try {
+                                  const token = session?.access_token || null;
                                   const { data, error } = await supabase.functions.invoke('delete-user', {
-                                    body: { userId: profile.id }
+                                    body: { userId: profile.id },
+                                    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
                                   });
                                   if (error) throw new Error(error.message || 'Failed to delete');
                                   // Refresh list
