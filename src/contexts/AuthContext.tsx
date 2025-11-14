@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 // TypeScript support.
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
+import { redeemInvite } from '../services/invitesService';
 
 // Define the shape of our auth context
 interface AuthContextType {
@@ -188,12 +189,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
         
         // Set up auth state listener for future changes
         const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-          (_event, newSession) => {
+          async (_event, newSession) => {
             setSession(newSession);
             setUser(newSession?.user ?? null);
             // when auth state changes, refresh profile
             if (newSession?.user) {
-              fetchProfile(newSession.user.id);
+              await fetchProfile(newSession.user.id);
+              // If user just signed in and there is a pending invite code, redeem it automatically
+              try {
+                const pendingCode = sessionStorage.getItem('pendingInviteCode');
+                if (pendingCode) {
+                  const { data, error } = await redeemInvite(pendingCode);
+                  sessionStorage.removeItem('pendingInviteCode');
+                  if (error || !data || data.success === false) {
+                    console.error('[Auth] Auto-redeem failed:', error?.message || data?.error);
+                  } else {
+                    // Pull fresh profile/org context
+                    await fetchProfile(newSession.user.id);
+                  }
+                }
+              } catch {}
             } else {
               setProfile(null);
               setRole('unknown');
