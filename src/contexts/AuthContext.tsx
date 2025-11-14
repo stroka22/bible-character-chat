@@ -184,6 +184,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // gives us so the effect can clean it up **synchronously**, instead of
     // trying to await an async function's return value.
     let cleanup: (() => void) | undefined;
+    // Realtime channel for own profile updates so premium_override and org
+    // changes apply instantly across devices without reload.
+    let profileChannel: ReturnType<typeof supabase.channel> | undefined;
 
     const initAuth = async () => {
       try {
@@ -205,6 +208,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
             // when auth state changes, refresh profile
             if (newSession?.user) {
               await fetchProfile(newSession.user.id);
+              // Re-subscribe realtime to this user's profile row
+              try {
+                if (profileChannel) {
+                  try { await profileChannel.unsubscribe(); } catch {}
+                }
+                profileChannel = supabase
+                  .channel(`profiles-updates-${newSession.user.id}`)
+                  .on(
+                    'postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${newSession.user.id}` },
+                    (_payload) => {
+                      // Pull fresh profile when our row changes (e.g., premium_override)
+                      fetchProfile(newSession.user!.id);
+                    },
+                  )
+                  .subscribe();
+              } catch (e) {
+                console.warn('Failed to subscribe to profile realtime updates', e);
+              }
               // If user just signed in and there is a pending invite code, redeem it automatically
               try {
                 const pendingCode = sessionStorage.getItem('pendingInviteCode');
@@ -227,7 +249,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         );
 
         // Assign the unsubscribe function so it can be called later
-        cleanup = () => subscription.unsubscribe();
+        cleanup = () => {
+          try { subscription.unsubscribe(); } catch {}
+          try { if (profileChannel) profileChannel.unsubscribe(); } catch {}
+        };
       } catch (error) {
         if (error instanceof Error) {
           setError(error.message);
