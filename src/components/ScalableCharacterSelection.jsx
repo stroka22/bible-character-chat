@@ -12,6 +12,7 @@ import { usePremium } from '../hooks/usePremium';
 import { loadAccountTierSettings, isCharacterFree } from '../utils/accountTier';
 import UpgradeModal from './modals/UpgradeModal.jsx';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabase';
 import userSettingsRepository from '../repositories/userSettingsRepository';
 import { getOwnerSlug, getSettings as getTierSettings } from '../services/tierSettingsService';
 
@@ -359,12 +360,24 @@ const ScalableCharacterSelection = () => {
                  * Premium gating – block if character is premium
                  * and user does not have premium subscription.
                  * ------------------------------------------------ */
-                const premiumOverride = !!(profile && profile.premium_override);
-                const canChatWith = premiumOverride || isPremium || isCharacterFree(characterObj, tierSettings);
+                let premiumOverride = !!(profile && profile.premium_override);
+                let canChatWith = premiumOverride || isPremium || isCharacterFree(characterObj, tierSettings);
+                if (!canChatWith && user?.id) {
+                    // One-shot fresh read from DB to catch recent admin toggle
+                    try {
+                        const { data } = await supabase
+                          .from('profiles')
+                          .select('premium_override')
+                          .eq('id', user.id)
+                          .maybeSingle();
+                        premiumOverride = !!data?.premium_override;
+                        canChatWith = premiumOverride || isPremium || isCharacterFree(characterObj, tierSettings);
+                    } catch {}
+                }
                 if (!canChatWith) {
-                    setUpgradeCharacter(characterObj);
-                    setShowUpgrade(true);
-                    return;
+                  setUpgradeCharacter(characterObj);
+                  setShowUpgrade(true);
+                  return;
                 }
 
                 await selectCharacter(characterObj);
@@ -553,8 +566,27 @@ const ScalableCharacterSelection = () => {
                         isFeatured,
                         onSetAsFeatured: () => handleSetAsFeatured(character),
                         canChat: canChat,
-                        onRequireUpgrade: () => {
-                            setUpgradeCharacter(character);
+                        onRequireUpgrade: async (c) => {
+                            // Freshness check: before blocking, pull latest override
+                            try { await refreshProfile?.(); } catch {}
+                            try {
+                                let freshOverride = !!(profile && profile.premium_override);
+                                if (user?.id) {
+                                    const { data } = await supabase
+                                        .from('profiles')
+                                        .select('premium_override')
+                                        .eq('id', user.id)
+                                        .maybeSingle();
+                                    freshOverride = !!data?.premium_override || freshOverride;
+                                }
+                                const target = c || character;
+                                const allowed = freshOverride || isPremium || isCharacterFree(target, tierSettings);
+                                if (allowed) {
+                                    await handleSelectCharacter(target);
+                                    return;
+                                }
+                            } catch {}
+                            setUpgradeCharacter(c || character);
                             setShowUpgrade(true);
                         }
                     }),
