@@ -63,6 +63,11 @@ const ScalableCharacterSelection = () => {
   const { user, isAdmin, profile, refreshProfile } = useAuth();
   // Re-use helper pattern from Header – isAdmin is a function
   const isAdminUser = isAdmin && isAdmin();
+  // Track effective admin override so UI labels update immediately
+  const [effectiveOverride, setEffectiveOverride] = useState(!!(profile && profile.premium_override));
+  useEffect(() => {
+    setEffectiveOverride(!!(profile && profile.premium_override));
+  }, [profile?.premium_override]);
     const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
     const [showUpgrade, setShowUpgrade] = useState(false);
     const [upgradeCharacter, setUpgradeCharacter] = useState(null);
@@ -379,6 +384,7 @@ const ScalableCharacterSelection = () => {
                   setShowUpgrade(true);
                   return;
                 }
+                if (premiumOverride) setEffectiveOverride(true);
 
                 await selectCharacter(characterObj);
             } catch (err) {
@@ -549,8 +555,7 @@ const ScalableCharacterSelection = () => {
 
         const isFavorite = favoriteCharacters.includes(character.id);
         const isFeatured = featuredCharacter?.id === character.id;
-        const premiumOverride = !!(profile && profile.premium_override);
-        const canChat = premiumOverride || isPremium || isCharacterFree(character, tierSettings);
+        const canChat = effectiveOverride || isPremium || isCharacterFree(character, tierSettings);
 
         /* ---------- GRID VIEW ---------- */
         if (viewMode === 'grid') {
@@ -582,6 +587,7 @@ const ScalableCharacterSelection = () => {
                                 const target = c || character;
                                 const allowed = freshOverride || isPremium || isCharacterFree(target, tierSettings);
                                 if (allowed) {
+                                    if (freshOverride) setEffectiveOverride(true);
                                     await handleSelectCharacter(target);
                                     return;
                                 }
@@ -955,6 +961,7 @@ const ScalableCharacterSelection = () => {
                                                                 canChatBanner = premiumOverride || isPremium || isCharacterFree(featuredCharacter, tierSettings);
                                                             }
                                                             if (canChatBanner) {
+                                                                if (premiumOverride) setEffectiveOverride(true);
                                                                 handleSelectCharacter(featuredCharacter);
                                                             } else {
                                                                 setUpgradeCharacter(featuredCharacter);
@@ -962,11 +969,11 @@ const ScalableCharacterSelection = () => {
                                                             }
                                                         },
                                                         className: `px-6 py-3 rounded-lg font-medium text-base transition-colors ${
-                                                            (profile?.premium_override || isPremium || isCharacterFree(featuredCharacter, tierSettings))
+                                                            (effectiveOverride || isPremium || isCharacterFree(featuredCharacter, tierSettings))
                                                                 ? 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
                                                                 : 'bg-gray-400 text-gray-800 hover:bg-gray-500'
                                                         }`,
-                                                        children: (profile?.premium_override || isPremium || isCharacterFree(featuredCharacter, tierSettings))
+                                                        children: (effectiveOverride || isPremium || isCharacterFree(featuredCharacter, tierSettings))
                                                             ? `Chat with ${featuredCharacter.name}`
                                                             : 'Upgrade to Chat'
                                                     })
