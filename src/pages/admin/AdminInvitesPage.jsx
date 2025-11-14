@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { listInvites, createInvite, getMyProfile } from '../../services/invitesService';
+import { listInvites, createInvite, getMyProfile, deleteInvite } from '../../services/invitesService';
 
 const AdminInvitesPage = () => {
   const { user } = useAuth();
@@ -97,6 +97,16 @@ const AdminInvitesPage = () => {
     navigator.clipboard?.writeText(text).then(() => alert('Copied to clipboard!'));
   };
 
+  const handleDelete = async (invite) => {
+    if (!window.confirm(`Delete invite ${invite.code}?`)) return;
+    const { error } = await deleteInvite(invite.id);
+    if (error) {
+      alert(error.message || 'Failed to delete invite');
+      return;
+    }
+    await reloadInvites(formData.ownerSlug);
+  };
+
   const formatDate = (v) => (v ? new Date(v).toLocaleString() : 'Never');
 
   if (loading) {
@@ -115,6 +125,11 @@ const AdminInvitesPage = () => {
             <span>Invites</span>
           </div>
           <h1 className="text-2xl font-bold mt-2">Manage Invites</h1>
+          <div className="mt-3">
+            <Link to="/admin" className="inline-block px-3 py-2 bg-yellow-400 text-blue-900 rounded">
+              ← Back to Admin
+            </Link>
+          </div>
         </div>
 
         <div className="bg-blue-800 rounded-lg shadow-lg p-6 mb-8">
@@ -208,6 +223,12 @@ const AdminInvitesPage = () => {
                           onClick={() => copyToClipboard(`${window.location.origin}/invite/${i.code}`)}
                         >
                           Copy Link
+                        </button>
+                        <button
+                          className="text-red-300 underline"
+                          onClick={() => handleDelete(i)}
+                        >
+                          Delete
                         </button>
                       </td>
                     </tr>
