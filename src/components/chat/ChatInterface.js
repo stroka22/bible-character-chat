@@ -47,7 +47,7 @@ const ChatInterface = () => {
         saveChat
     } = useChat();
     const { shareConversation } = useConversation();
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, profile } = useAuth();
     const { isPremium } = usePremium();
     const location = useLocation();
     const navigate = useNavigate();
@@ -186,12 +186,13 @@ const ChatInterface = () => {
 
     // Defensive: open modal when limit reached
     useEffect(() => {
-        if (!isPremium && userMessageCount >= messageLimit) {
+        const premiumEffective = isPremium || !!profile?.premium_override;
+        if (!premiumEffective && userMessageCount >= messageLimit) {
             console.info('[ChatInterface.js] Auto-open UpgradeModal: count>=limit', { userMessageCount, messageLimit });
             setUpgradeLimitType('message');
             setShowUpgradeModal(true);
         }
-    }, [isPremium, userMessageCount, messageLimit]);
+    }, [isPremium, profile?.premium_override, userMessageCount, messageLimit]);
 
     // Listen for global upgrade events (emitted by ChatContext)
     useEffect(() => {

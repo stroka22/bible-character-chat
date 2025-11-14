@@ -4,6 +4,7 @@ import { characterRepository } from '../repositories/characterRepository';
 import { groupRepository } from '../repositories/groupRepository';
 import { type Character } from '../services/supabase';
 import { useChat } from '../contexts/ChatContext';
+import { useAuth } from '../contexts/AuthContext';
 import CharacterCard from './CharacterCard';
 import type { CharacterGroup } from '../repositories/groupRepository';
 import { isCharacterFree } from '../utils/accountTier';
@@ -87,6 +88,7 @@ const CharacterSelection: React.FC = () => {
   const [groups, setGroups] = useState<CharacterGroup[]>([]);
   const [activeFilters, setActiveFilters] = useState<{type: string, value: string}[]>([]);
   const { isPremium } = usePremium();
+  const { profile } = useAuth();
   const [tierSettings, setTierSettings] = useState<any>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
@@ -681,7 +683,7 @@ const CharacterSelection: React.FC = () => {
                   character={character}
                   onSelect={handleSelectCharacter}
                   isSelected={selectedCharacter?.id === character.id}
-                  canChat={isPremium || isCharacterFree(character, tierSettings || undefined)}
+                  canChat={!!profile?.premium_override || isPremium || isCharacterFree(character, tierSettings || undefined)}
                   onRequireUpgrade={() => setUpgradeOpen(true)}
                 />
               ) : (

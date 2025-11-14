@@ -6,6 +6,7 @@ import ChatActions from './ChatActions';
 import CharacterInsightsPanel from './CharacterInsightsPanel'; // Import the CharacterInsightsPanel component
 import UpgradeModal from '../modals/UpgradeModal';
 import { usePremium } from '../../hooks/usePremium';
+import { useAuth } from '../../contexts/AuthContext';
 import { loadAccountTierSettings } from '../../utils/accountTier';
 import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 
@@ -57,6 +58,7 @@ const ChatInterface: React.FC = () => {
     resetChat
   } = useChat();
   const { isPremium } = usePremium();
+  const { profile } = useAuth();
 
   // State to track whether the insights panel is open
   const [showInsightsPanel, setShowInsightsPanel] = useState(false);
@@ -105,11 +107,12 @@ const ChatInterface: React.FC = () => {
 
   // Defensive: open modal when limit reached
   useEffect(() => {
-    if (!isPremium && userMessageCount >= messageLimit) {
+    const premiumEffective = isPremium || !!profile?.premium_override;
+    if (!premiumEffective && userMessageCount >= messageLimit) {
       setUpgradeLimitType('message');
       setShowUpgradeModal(true);
     }
-  }, [isPremium, userMessageCount, messageLimit]);
+  }, [isPremium, profile?.premium_override, userMessageCount, messageLimit]);
 
   // Listen for global upgrade events (emitted by ChatContext)
   useEffect(() => {
