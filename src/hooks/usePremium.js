@@ -11,7 +11,7 @@ import { getActiveSubscription } from '../services/stripe-safe';
  * @property {string|null} error - Error message if subscription check failed
  */
 export function usePremium() {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -120,8 +120,11 @@ export function usePremium() {
 
   // React to cross-tab and focus events to refresh status
   useEffect(() => {
-    const triggerRefresh = () => {
-      if (user) setLastCheckedUserId(null);
+    const triggerRefresh = async () => {
+      if (user) {
+        setLastCheckedUserId(null);
+        try { await refreshProfile(); } catch {}
+      }
     };
     const onStorage = (ev) => {
       if (ev.key === 'subscription:refresh') triggerRefresh();

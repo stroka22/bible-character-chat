@@ -11,20 +11,21 @@ serve(async (req: Request) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        // Allow Supabase JS client headers used by functions.invoke
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, X-Client-Info, x-client-info',
       },
     });
   }
 
   try {
     if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
 
     const authHeader = req.headers.get('Authorization') || '';
     const accessToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!accessToken) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
 
     const client = createClient(supabaseUrl, serviceKey, {
@@ -33,12 +34,12 @@ serve(async (req: Request) => {
     const admin = createClient(supabaseUrl, serviceKey);
 
     const { userId } = await req.json();
-    if (!userId) return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400 });
+    if (!userId) return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400, headers: { 'Access-Control-Allow-Origin': '*' } });
 
     // Get requester
     const { data: meData, error: meErr } = await client.auth.getUser();
     if (meErr || !meData?.user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
     const requesterId = meData.user.id;
 
@@ -48,7 +49,7 @@ serve(async (req: Request) => {
       .select('id, role, owner_slug')
       .eq('id', requesterId)
       .maybeSingle();
-    if (!meProfile) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+    if (!meProfile) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
 
     // Load target profile
     const { data: target } = await admin
@@ -56,7 +57,7 @@ serve(async (req: Request) => {
       .select('id, role, owner_slug')
       .eq('id', userId)
       .maybeSingle();
-    if (!target) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+    if (!target) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404, headers: { 'Access-Control-Allow-Origin': '*' } });
 
     // Authorization rules:
     // - superadmin can delete anyone except another superadmin
@@ -65,14 +66,14 @@ serve(async (req: Request) => {
     const isAdmin = meProfile.role === 'admin';
     if (isSuperadmin) {
       if (target.role === 'superadmin') {
-        return new Response(JSON.stringify({ error: 'Cannot delete superadmin' }), { status: 403 });
+        return new Response(JSON.stringify({ error: 'Cannot delete superadmin' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
       }
     } else if (isAdmin) {
       if (target.owner_slug !== meProfile.owner_slug || target.role !== 'user') {
-        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+        return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
       }
     } else {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
 
     // Delete dependent data if needed (conversations, etc.) – optional
@@ -83,6 +84,6 @@ serve(async (req: Request) => {
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
   } catch (e) {
     console.error('delete-user error', e);
-    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } });
   }
 });
