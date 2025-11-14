@@ -739,7 +739,7 @@ const ScalableCharacterSelection = () => {
                 ],
             }, character?.id || `character-item-${index}`)
         );
-    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite, featuredCharacter, handleSetAsFeatured, isPremium, tierSettings]);
+    }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteCharacters, handleToggleFavorite, featuredCharacter, handleSetAsFeatured, isPremium, tierSettings, effectiveOverride]);
     
     const renderPagination = () => {
         if (totalPages <= 1)
