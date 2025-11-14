@@ -772,6 +772,37 @@ const SuperadminUsersPage = () => {
                                 </option>
                               ))}
                             </select>
+
+                            {/* Delete User */}
+                            <button
+                              onClick={async () => {
+                                if (!window.confirm('Delete this user? This cannot be undone.')) return;
+                                setActionInProgress(profile.id);
+                                setActionMessage({ text: '', type: '' });
+                                try {
+                                  const { data, error } = await supabase.functions.invoke('delete-user', {
+                                    body: { userId: profile.id }
+                                  });
+                                  if (error) throw new Error(error.message || 'Failed to delete');
+                                  // Refresh list
+                                  await loadProfiles();
+                                  setActionMessage({ text: 'User deleted', type: 'success' });
+                                } catch (e) {
+                                  setActionMessage({ text: e?.message || 'Failed to delete user', type: 'error' });
+                                } finally {
+                                  setActionInProgress(null);
+                                  setTimeout(() => setActionMessage({ text: '', type: '' }), 3000);
+                                }
+                              }}
+                              disabled={actionInProgress === profile.id || profile.role === 'superadmin' || (!isSuperAdmin && profile.role !== 'user')}
+                              className={`mt-2 px-2 py-1 text-xs rounded ${
+                                actionInProgress === profile.id || profile.role === 'superadmin' || (!isSuperAdmin && profile.role !== 'user')
+                                  ? 'bg-gray-600 cursor-not-allowed'
+                                  : 'bg-red-600 hover:bg-red-500'
+                              }`}
+                            >
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>

@@ -138,7 +138,10 @@ serve(async (req: Request) => {
       line_items: lineItems,
       customer: customerId, // Optional: Associates checkout with an existing customer
       customer_email: customerEmail, // Optional: Pre-fills email on checkout page
-      success_url: successUrl,
+      // Ensure we get the session_id in the return URL so the app can persist customer/sub
+      success_url: successUrl.includes('?')
+        ? `${successUrl}&session_id={CHECKOUT_SESSION_ID}`
+        : `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl,
       metadata: sessionMetadata, // Optional: Pass extra info for webhooks
       allow_promotion_codes: true, // Allow users to enter discount codes
