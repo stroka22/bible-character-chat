@@ -59,7 +59,7 @@ const ScalableCharacterSelection = () => {
      * Premium / tier gating state
      * ----------------------------------------------------------- */
     const { isPremium } = usePremium();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, profile } = useAuth();
   // Re-use helper pattern from Header – isAdmin is a function
   const isAdminUser = isAdmin && isAdmin();
     const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
@@ -359,7 +359,8 @@ const ScalableCharacterSelection = () => {
                  * Premium gating – block if character is premium
                  * and user does not have premium subscription.
                  * ------------------------------------------------ */
-                const canChatWith = isPremium || isCharacterFree(characterObj, tierSettings);
+                const premiumOverride = !!(profile && profile.premium_override);
+                const canChatWith = premiumOverride || isPremium || isCharacterFree(characterObj, tierSettings);
                 if (!canChatWith) {
                     setUpgradeCharacter(characterObj);
                     setShowUpgrade(true);
@@ -535,7 +536,8 @@ const ScalableCharacterSelection = () => {
 
         const isFavorite = favoriteCharacters.includes(character.id);
         const isFeatured = featuredCharacter?.id === character.id;
-        const canChat = isPremium || isCharacterFree(character, tierSettings);
+        const premiumOverride = !!(profile && profile.premium_override);
+        const canChat = premiumOverride || isPremium || isCharacterFree(character, tierSettings);
 
         /* ---------- GRID VIEW ---------- */
         if (viewMode === 'grid') {
@@ -920,11 +922,11 @@ const ScalableCharacterSelection = () => {
                                                             }
                                                         },
                                                         className: `px-6 py-3 rounded-lg font-medium text-base transition-colors ${
-                                                            isPremium || isCharacterFree(featuredCharacter, tierSettings)
+                                                            (profile?.premium_override || isPremium || isCharacterFree(featuredCharacter, tierSettings))
                                                                 ? 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
                                                                 : 'bg-gray-400 text-gray-800 hover:bg-gray-500'
                                                         }`,
-                                                        children: isPremium || isCharacterFree(featuredCharacter, tierSettings)
+                                                        children: (profile?.premium_override || isPremium || isCharacterFree(featuredCharacter, tierSettings))
                                                             ? `Chat with ${featuredCharacter.name}`
                                                             : 'Upgrade to Chat'
                                                     })
