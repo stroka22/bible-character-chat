@@ -913,7 +913,8 @@ const ScalableCharacterSelection = () => {
                                                     /* CTA Button */
                                                     _jsx("button", {
                                                         onClick: () => {
-                                                            const canChatBanner = isPremium || isCharacterFree(featuredCharacter, tierSettings);
+                                                            const premiumOverride = !!(profile && profile.premium_override);
+                                                            const canChatBanner = premiumOverride || isPremium || isCharacterFree(featuredCharacter, tierSettings);
                                                             if (canChatBanner) {
                                                                 handleSelectCharacter(featuredCharacter);
                                                             } else {
