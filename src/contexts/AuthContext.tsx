@@ -143,6 +143,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         hasAvatar: !!data.avatar_url
       });
       
+      // Default owner_slug for new signups without an organization
+      if (!data.owner_slug) {
+        try {
+          await supabase.from('profiles').update({ owner_slug: 'default' }).eq('id', uid);
+          data.owner_slug = 'default';
+        } catch (e) {
+          console.warn('Failed to set default owner_slug for profile', e);
+        }
+      }
       setProfile(data);
       setRole(data.role ?? 'unknown');
       dbg(`fetchProfile: User role set to "${data.role || 'unknown'}"`);

@@ -44,30 +44,42 @@ const ConversationsPage = () => {
 
   // Handle Stripe checkout success: trigger premium refresh and confirmation email
   useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search || '');
-      const success = params.get('checkout') === 'success';
-      if (success && user?.email) {
-        // Signal all tabs/hooks to refresh subscription status
-        try {
-          localStorage.setItem('subscription:refresh', String(Date.now()));
-          window.dispatchEvent(new Event('subscriptionUpdated'));
-        } catch {}
-        // Avoid duplicate emails per session
-        const key = `premiumEmailSent:${user.id}`;
-        if (!sessionStorage.getItem(key)) {
-          sessionStorage.setItem(key, '1');
-          // Fire-and-forget confirmation email API if available
-          fetch('/api/premium-confirmation', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: user.email })
-          }).catch(() => {});
+    (async () => {
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        const success = params.get('checkout') === 'success';
+        const sessionId = params.get('session_id');
+        if (success && user?.email) {
+          // Signal all tabs/hooks to refresh subscription status
+          try {
+            localStorage.setItem('subscription:refresh', String(Date.now()));
+            window.dispatchEvent(new Event('subscriptionUpdated'));
+          } catch {}
+          // Link Stripe customer/subscription to profile using Edge Function
+          if (sessionId && !sessionStorage.getItem(`postCheckoutLinked:${sessionId}`)) {
+            sessionStorage.setItem(`postCheckoutLinked:${sessionId}`, '1');
+            try {
+              await window?.supabase?.functions?.invoke?.('post-checkout-session', {
+                body: { sessionId, userId: user.id }
+              });
+            } catch {}
+          }
+          // Avoid duplicate emails per session
+          const key = `premiumEmailSent:${user.id}`;
+          if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, '1');
+            // Fire-and-forget confirmation email API if available
+            fetch('/api/premium-confirmation', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: user.email })
+            }).catch(() => {});
+          }
         }
+      } catch (e) {
+        // no-op
       }
-    } catch (e) {
-      // no-op
-    }
+    })();
   }, [user?.id, user?.email]);
 
   useEffect(() => {
