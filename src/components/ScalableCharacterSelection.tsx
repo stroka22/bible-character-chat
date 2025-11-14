@@ -79,7 +79,7 @@ const ScalableCharacterSelection: React.FC = () => {
   
   // Get the chat context
   const { selectCharacter, character: selectedCharacter } = useChat();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { isPremium } = usePremium();
 
   // Load user's favorite character IDs
@@ -363,7 +363,8 @@ const ScalableCharacterSelection: React.FC = () => {
   // Render character card or list item
   const renderCharacterItem = useCallback((index: number) => {
     const character = paginatedCharacters[index];
-    const canChat = isPremium || isCharacterFree(character, tierSettings || undefined);
+    const premiumOverride = !!profile?.premium_override;
+    const canChat = premiumOverride || isPremium || isCharacterFree(character, tierSettings || undefined);
     if (viewMode === 'grid') {
       return (
         <div className="p-2" key={character.id}>
@@ -447,7 +448,7 @@ const ScalableCharacterSelection: React.FC = () => {
         </div>
       );
     }
-  }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteIds, user?.id]);
+  }, [paginatedCharacters, viewMode, handleSelectCharacter, selectedCharacter, favoriteIds, user?.id, profile?.premium_override, isPremium, tierSettings]);
 
   // Generate pagination controls
   const renderPagination = () => {
