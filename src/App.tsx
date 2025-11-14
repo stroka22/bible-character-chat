@@ -35,6 +35,7 @@ import SalesPage from './pages/SalesPage.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import InviteAccept from './pages/InviteAccept.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
+import AdminPremiumCustomers from './pages/admin/AdminPremiumCustomers.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
@@ -338,6 +339,7 @@ function App(): JSX.Element {
       <Route element={<AdminRoute redirectPath="/login" />}>
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/admin/invites" element={<AdminInvitesPage />} />
+        <Route path="/admin/premium" element={<AdminPremiumCustomers />} />
         <Route path="/admin/users" element={<SuperadminUsersPage />} />
         <Route path="/admin/studies" element={<AdminStudiesPage />} />
       </Route>

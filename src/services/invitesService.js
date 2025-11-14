@@ -116,6 +116,17 @@ export async function redeemInvite(code) {
 }
 
 /**
+ * Delete an invite by ID
+ * @param {string} id - Invite ID
+ * @returns {Promise<{error: Object|null}>}
+ */
+export async function deleteInvite(id) {
+  if (!id) return { error: { message: 'Missing invite id' } };
+  const { error } = await supabase.from('invites').delete().eq('id', id);
+  return { error };
+}
+
+/**
  * Get the current user's profile
  * @returns {Promise<{data: Object, error: Object}>} - User profile or error
  */

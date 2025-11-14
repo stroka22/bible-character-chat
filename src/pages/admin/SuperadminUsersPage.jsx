@@ -19,6 +19,10 @@ const SuperadminUsersPage = () => {
   const [owners, setOwners] = useState([]);
   const [loadingOwners, setLoadingOwners] = useState(false);
   
+  // Aggregated premium vs free stats per organization (superadmin only)
+  const [orgStats, setOrgStats] = useState([]);
+  const [loadingOrgStats, setLoadingOrgStats] = useState(false);
+  
   // Filters state
   const [filters, setFilters] = useState({
     search: '',
@@ -58,6 +62,8 @@ const SuperadminUsersPage = () => {
             loadProfiles(),
             loadOwners()
           ]);
+          // After owners are loaded, compute org stats
+          await loadOrgStats();
         } else if (data.role === 'admin') {
           await loadProfiles();
         }
@@ -139,6 +145,70 @@ const SuperadminUsersPage = () => {
       console.error('Error loading owners:', error);
     } finally {
       setLoadingOwners(false);
+    }
+  };
+
+  // Load aggregated org stats: total vs premium (active/trialing) users
+  const loadOrgStats = async () => {
+    if (!isSuperAdmin) return;
+    setLoadingOrgStats(true);
+    try {
+      // Ensure owners list is available
+      let ownersList = owners;
+      if (!ownersList || ownersList.length === 0) {
+        const { data } = await supabase
+          .from('owners')
+          .select('owner_slug, display_name')
+          .order('display_name');
+        ownersList = data || [];
+        setOwners(ownersList);
+      }
+
+      const results = [];
+      for (const o of ownersList) {
+        // Fetch profiles for this org with needed fields
+        const { data: members, error } = await supabase
+          .from('profiles')
+          .select('id, stripe_customer_id')
+          .eq('owner_slug', o.owner_slug);
+        if (error) {
+          console.warn('Failed to load profiles for', o.owner_slug, error);
+          continue;
+        }
+        const total = members?.length || 0;
+        let premium = 0;
+        // For each member with stripe_customer_id, check subscription
+        for (const m of (members || [])) {
+          if (!m.stripe_customer_id) continue;
+          try {
+            const resp = await supabase.functions.invoke('get-subscription', {
+              body: { customerId: m.stripe_customer_id }
+            });
+            if (!resp.error) {
+              const subs = resp.data?.subscriptions || [];
+              if (subs.length > 0) {
+                const s = subs[0];
+                const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
+                if (isActive) premium += 1;
+              }
+            }
+          } catch (e) {
+            // skip errors for individual member
+          }
+        }
+        results.push({
+          owner_slug: o.owner_slug,
+          display_name: o.display_name,
+          total,
+          premium,
+          free: Math.max(0, total - premium)
+        });
+      }
+      setOrgStats(results);
+    } catch (e) {
+      console.error('Error loading org stats:', e);
+    } finally {
+      setLoadingOrgStats(false);
     }
   };
   
@@ -529,6 +599,56 @@ const SuperadminUsersPage = () => {
           </div>
         </div>
         
+        {/* Org Premium vs Free Chart (Superadmin) */}
+        {isSuperAdmin && (
+          <div className="bg-blue-800 rounded-lg shadow-lg p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Organizations – Premium vs Free</h2>
+              <button
+                onClick={loadOrgStats}
+                className="px-3 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg"
+              >
+                {loadingOrgStats ? 'Refreshing…' : 'Refresh'}
+              </button>
+            </div>
+            {loadingOrgStats ? (
+              <div className="flex justify-center items-center h-24">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-yellow-400"></div>
+              </div>
+            ) : orgStats.length === 0 ? (
+              <div className="text-blue-200">No organizations found.</div>
+            ) : (
+              <div className="space-y-3">
+                {orgStats.map((s) => {
+                  const total = Math.max(1, s.total); // avoid div by zero
+                  const pctPremium = Math.round((s.premium / total) * 100);
+                  const pctFree = 100 - pctPremium;
+                  return (
+                    <div key={s.owner_slug} className="">
+                      <div className="flex justify-between text-sm mb-1">
+                        <div className="font-medium">{s.display_name} <span className="text-blue-300">({s.owner_slug})</span></div>
+                        <div className="text-blue-200">Total: {s.total} • Premium: {s.premium} • Free: {s.free}</div>
+                      </div>
+                      <div className="w-full h-4 bg-blue-900 rounded overflow-hidden">
+                        <div
+                          className="h-4 bg-purple-500 inline-block"
+                          style={{ width: `${pctPremium}%` }}
+                          title={`Premium ${pctPremium}%`}
+                        />
+                        <div
+                          className="h-4 bg-blue-500 inline-block"
+                          style={{ width: `${pctFree}%` }}
+                          title={`Free ${pctFree}%`}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Users Table */}
         <div className="bg-blue-800 rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-center mb-4">
