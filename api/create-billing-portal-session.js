@@ -44,6 +44,17 @@ export default async function handler(req) {
     let json;
     try { json = JSON.parse(text); } catch { json = { error: 'Invalid JSON from edge', raw: text }; }
 
+    if (!upstream.ok) {
+      // Bubble up rich error details for easier debugging
+      const enriched = {
+        error: json?.error || 'Upstream error',
+        upstreamStatus: upstream.status,
+        upstreamBody: json?.raw ? undefined : json,
+        upstreamRaw: json?.raw || text,
+      };
+      return new Response(JSON.stringify(enriched), { status: upstream.status, headers: corsHeaders });
+    }
+
     return new Response(JSON.stringify(json), { status: upstream.status, headers: corsHeaders });
   } catch (err) {
     return new Response(JSON.stringify({ error: 'Server error' }), { status: 500, headers: corsHeaders });
