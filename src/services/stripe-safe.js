@@ -216,15 +216,11 @@ export async function getActiveSubscription(userId) {
 export async function openBillingPortal({ userId, returnUrl }) {
     try {
         if (!userId) throw new Error('Missing userId');
-        // Call Edge Function directly with fetch to avoid supabase-js auto x-client-info header
-        const fnUrl = `${SUPABASE_URL}/functions/v1/create-billing-portal-session`;
-        const resp = await fetch(fnUrl, {
+        // Call same-origin Vercel API route to avoid browser CORS
+        const resp = await fetch('/api/create-billing-portal-session', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                Accept: 'application/json',
             },
             body: JSON.stringify({ userId, returnUrl }),
         });
