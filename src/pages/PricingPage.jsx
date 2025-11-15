@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabase';
 import { getPublicKey, createCheckoutSession, SUBSCRIPTION_PRICES, testStripeConfiguration } from '../services/stripe';
 import Footer from '../components/Footer';
 import { usePremium } from '../hooks/usePremium';
@@ -17,8 +18,9 @@ stripePromise.then((stripe) => {
 });
 
 const PricingPage = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { isPremium } = usePremium();
+  const [hasStripeCustomer, setHasStripeCustomer] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   const location = useLocation();
   const navigate = useNavigate();
@@ -44,6 +46,30 @@ const PricingPage = () => {
       }
     })();
   }, []);
+
+  // Detect if the user has a Stripe customer on file — show Manage button in that case too
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!user?.id) {
+          setHasStripeCustomer(false);
+          return;
+        }
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('stripe_customer_id')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (error) {
+          setHasStripeCustomer(false);
+          return;
+        }
+        setHasStripeCustomer(!!data?.stripe_customer_id);
+      } catch {
+        setHasStripeCustomer(false);
+      }
+    })();
+  }, [user?.id]);
 
   // Redirect to login if deep-linked checkout and not logged in
   useEffect(() => {
@@ -237,7 +263,7 @@ const PricingPage = () => {
                 ))}
               </ul>
 
-              {isPremium ? (
+              {(isPremium || profile?.premium_override || hasStripeCustomer) ? (
                 <button
                   onClick={handleManageSubscription}
                   className="w-full bg-yellow-500 hover:bg-yellow-400 text-blue-900 py-3 rounded-lg font-bold text-lg transition-all shadow-lg"
