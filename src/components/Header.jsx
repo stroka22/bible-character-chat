@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { openBillingPortal } from '../services/stripe-safe';
 import FaithLogo from './FaithLogo';
 
 /**
@@ -116,6 +117,16 @@ const Header = () => {
       }
       // Hard redirect to login so the app remounts fresh
       window.location.href = '/login?loggedOut=1';
+    }
+  };
+
+  // Open Stripe Billing Portal
+  const handleManageSubscription = async () => {
+    try {
+      if (!user?.id) return;
+      await openBillingPortal({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' });
+    } catch (e) {
+      console.error('[Header] Billing portal error:', e);
     }
   };
 
@@ -274,6 +285,12 @@ const Header = () => {
                       Admin Panel
                     </Link>
                   )}
+                  <button 
+                    onClick={handleManageSubscription}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
+                  >
+                    Manage Subscription
+                  </button>
                   <button 
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
@@ -458,6 +475,12 @@ const Header = () => {
                     Admin Panel
                   </Link>
                 )}
+                <button 
+                  onClick={handleManageSubscription}
+                  className="block w-full px-3 py-2 mt-2 text-sm text-center text-blue-900 bg-yellow-400 rounded-lg hover:bg-yellow-300 transition-colors"
+                >
+                  Manage Subscription
+                </button>
                 <button 
                   onClick={handleLogout}
                   className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-red-700 rounded-lg hover:bg-red-600 transition-colors"
