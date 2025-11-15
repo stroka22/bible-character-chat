@@ -285,12 +285,12 @@ const Header = () => {
                       Admin Panel
                     </Link>
                   )}
-                  <button 
-                    onClick={handleManageSubscription}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
+                  <Link 
+                    to="/account?open=1"
+                    className="block px-4 py-2 text-sm text-gray-900 hover:bg-gray-100"
                   >
                     Manage Subscription
-                  </button>
+                  </Link>
                   <button 
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
@@ -475,12 +475,12 @@ const Header = () => {
                     Admin Panel
                   </Link>
                 )}
-                <button 
-                  onClick={handleManageSubscription}
+                <Link 
+                  to="/account?open=1"
                   className="block w-full px-3 py-2 mt-2 text-sm text-center text-blue-900 bg-yellow-400 rounded-lg hover:bg-yellow-300 transition-colors"
                 >
                   Manage Subscription
-                </button>
+                </Link>
                 <button 
                   onClick={handleLogout}
                   className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-red-700 rounded-lg hover:bg-red-600 transition-colors"
