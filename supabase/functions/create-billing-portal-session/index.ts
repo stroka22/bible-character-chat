@@ -12,26 +12,31 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 });
 
 serve(async (req: Request) => {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, apikey, Content-Type, X-Client-Info',
+  } as const;
+
   // CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
-      },
-    });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
     if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
     }
 
     const { userId, returnUrl } = await req.json();
     if (!userId) {
-      return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing userId' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
     }
 
     // Verify the caller and fetch the user's stripe_customer_id securely
@@ -44,10 +49,16 @@ serve(async (req: Request) => {
 
     if (error) {
       console.error('DB error:', error);
-      return new Response(JSON.stringify({ error: 'Database error' }), { status: 500 });
+      return new Response(JSON.stringify({ error: 'Database error' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
     }
     if (!profile?.stripe_customer_id) {
-      return new Response(JSON.stringify({ error: 'No Stripe customer on file' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'No Stripe customer on file' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
     }
 
     const session = await stripe.billingPortal.sessions.create({
@@ -59,13 +70,13 @@ serve(async (req: Request) => {
 
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
   } catch (e) {
     console.error('create-billing-portal-session error', e);
-    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
   }
 });

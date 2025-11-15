@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { supabase } from './supabase';
+import { supabase, SUPABASE_ANON_KEY } from './supabase';
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '';
 const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY ?? '';
 const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY ?? '';
@@ -216,8 +216,19 @@ export async function getActiveSubscription(userId) {
 export async function openBillingPortal({ userId, returnUrl }) {
     try {
         if (!userId) throw new Error('Missing userId');
+        // Explicit headers to satisfy edge function CORS expectations
+        let accessToken;
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            accessToken = session?.access_token;
+        } catch {}
         const { data, error } = await supabase.functions.invoke('create-billing-portal-session', {
             body: { userId, returnUrl },
+            headers: {
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                apikey: SUPABASE_ANON_KEY,
+                'X-Client-Info': 'supabase-js-web',
+            },
         });
         if (error) throw new Error(error.message || 'Failed to create billing portal session');
         const url = data?.url;
