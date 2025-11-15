@@ -15,6 +15,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import PricingPage from './pages/PricingPage';
+import AccountBilling from './pages/AccountBilling.jsx';
 import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
 import FavoritesPage from './pages/FavoritesPage.jsx';
@@ -304,6 +305,7 @@ function App(): JSX.Element {
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />
     <Route path="/pricing" element={<PricingPage />} />
+    <Route path="/account" element={<AccountBilling />} />
     {/* Invite links: allow first-time users to click and join */}
     <Route path="/invite/:code" element={<InviteAccept />} />
     <Route path="/how-it-works" element={<HowItWorksPage />} />
