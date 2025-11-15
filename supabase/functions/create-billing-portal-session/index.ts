@@ -43,7 +43,7 @@ serve(async (req: Request) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { data: profile, error } = await admin
       .from('profiles')
-      .select('id, stripe_customer_id')
+      .select('id, email, stripe_customer_id')
       .eq('id', userId)
       .maybeSingle();
 
@@ -54,15 +54,24 @@ serve(async (req: Request) => {
         headers: { 'Content-Type': 'application/json', ...corsHeaders },
       });
     }
-    if (!profile?.stripe_customer_id) {
-      return new Response(JSON.stringify({ error: 'No Stripe customer on file' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    let customerId = profile?.stripe_customer_id || null;
+    if (!customerId) {
+      // Create a Customer on-the-fly if missing, then persist to the profile
+      const customer = await stripe.customers.create({
+        email: profile?.email || undefined,
       });
+      customerId = customer.id;
+      const { error: updErr } = await admin
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', userId);
+      if (updErr) {
+        console.error('Failed to persist stripe_customer_id:', updErr);
+      }
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: customerId,
       return_url: typeof returnUrl === 'string' && returnUrl.startsWith('http')
         ? returnUrl
         : req.headers.get('origin') || 'https://faithtalkai.com',
