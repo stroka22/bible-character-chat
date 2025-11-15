@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { openBillingPortal } from '../services/stripe-safe';
 
 const AccountBilling = () => {
   const { user } = useAuth();
@@ -17,7 +16,15 @@ const AccountBilling = () => {
     (async () => {
       try {
         setLaunching(true);
-        await openBillingPortal({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' });
+        const resp = await fetch('/api/create-billing-portal-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' })
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const { url } = await resp.json();
+        if (!url) throw new Error('Missing billing portal URL');
+        window.location.href = url;
       } catch (e) {
         setError(e?.message || 'Failed to open billing portal');
       } finally {
@@ -30,7 +37,15 @@ const AccountBilling = () => {
     if (!user?.id) return;
     try {
       setLaunching(true);
-      await openBillingPortal({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' });
+      const resp = await fetch('/api/create-billing-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' })
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const { url } = await resp.json();
+      if (!url) throw new Error('Missing billing portal URL');
+      window.location.href = url;
     } catch (e) {
       setError(e?.message || 'Failed to open billing portal');
     } finally {
