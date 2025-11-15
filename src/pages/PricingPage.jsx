@@ -103,7 +103,7 @@ const PricingPage = () => {
   const handleManageSubscription = async () => {
     if (!user?.id) return;
     try {
-      await openBillingPortal({ userId: user.id, returnUrl: window.location.origin + '/conversations' });
+      await openBillingPortal({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' });
     } catch (e) {
       setErrMsg(e?.message || 'Failed to open billing portal');
     }
