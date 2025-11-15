@@ -211,6 +211,24 @@ export async function getActiveSubscription(userId) {
         return null;
     }
 }
+
+// Open Stripe Billing Portal for the current user
+export async function openBillingPortal({ userId, returnUrl }) {
+    try {
+        if (!userId) throw new Error('Missing userId');
+        const { data, error } = await supabase.functions.invoke('create-billing-portal-session', {
+            body: { userId, returnUrl },
+        });
+        if (error) throw new Error(error.message || 'Failed to create billing portal session');
+        const url = data?.url;
+        if (!url) throw new Error('Billing portal URL missing');
+        window.location.href = url;
+    }
+    catch (e) {
+        console.warn('[Stripe] ⚠️ Billing portal error:', e);
+        throw e;
+    }
+}
 export function getPublicKey() {
     if (!STRIPE_ENABLED) {
         console.warn('[Stripe] ⚠️ Requested public key but Stripe is not configured');
