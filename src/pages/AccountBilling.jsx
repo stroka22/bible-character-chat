@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const AccountBilling = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [launching, setLaunching] = useState(false);
 
@@ -13,6 +14,15 @@ const AccountBilling = () => {
     const shouldOpen = params.get('open') === '1';
     if (!shouldOpen) return;
     if (!user?.id) return;
+    // One-shot guard: do this once per session, then strip ?open=1
+    try {
+      if (sessionStorage.getItem('billingPortalOpened') === '1') {
+        navigate('/account', { replace: true });
+        return;
+      }
+      sessionStorage.setItem('billingPortalOpened', '1');
+      navigate('/account', { replace: true });
+    } catch {}
     (async () => {
       try {
         setLaunching(true);
@@ -36,7 +46,7 @@ const AccountBilling = () => {
         setLaunching(false);
       }
     })();
-  }, [location.search, user?.id]);
+  }, [location.search, user?.id, navigate]);
 
   const handleOpen = async () => {
     if (!user?.id) return;
