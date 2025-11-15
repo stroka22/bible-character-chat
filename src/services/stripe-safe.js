@@ -216,22 +216,18 @@ export async function getActiveSubscription(userId) {
 export async function openBillingPortal({ userId, returnUrl }) {
     try {
         if (!userId) throw new Error('Missing userId');
-        // Explicit headers to satisfy edge function CORS expectations
-        let accessToken;
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            accessToken = session?.access_token;
-        } catch {}
-        const { data, error } = await supabase.functions.invoke('create-billing-portal-session', {
-            body: { userId, returnUrl },
+        // Call same-origin Vercel API route to avoid browser CORS
+        const resp = await fetch('/api/create-billing-portal-session', {
+            method: 'POST',
             headers: {
-                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-                apikey: SUPABASE_ANON_KEY,
-                'X-Client-Info': 'supabase-js-web',
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ userId, returnUrl }),
         });
-        if (error) throw new Error(error.message || 'Failed to create billing portal session');
-        const url = data?.url;
+        if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+        }
+        const { url } = await resp.json();
         if (!url) throw new Error('Billing portal URL missing');
         window.location.href = url;
     }
