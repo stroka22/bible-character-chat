@@ -16,7 +16,7 @@ import './styles/tooltips.css'; // Custom tooltip system
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import PricingPage from './pages/PricingPage';
+import PricingPage from './pages/PricingPage.jsx';
 import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
 import FavoritesPage from './pages/FavoritesPage.jsx';
