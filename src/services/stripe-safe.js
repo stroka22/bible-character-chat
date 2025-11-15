@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { supabase, SUPABASE_ANON_KEY } from './supabase';
+import { supabase, SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '';
 const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY ?? '';
 const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY ?? '';
@@ -216,22 +216,20 @@ export async function getActiveSubscription(userId) {
 export async function openBillingPortal({ userId, returnUrl }) {
     try {
         if (!userId) throw new Error('Missing userId');
-        // Explicit headers to satisfy edge function CORS expectations
-        let accessToken;
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            accessToken = session?.access_token;
-        } catch {}
-        const { data, error } = await supabase.functions.invoke('create-billing-portal-session', {
-            body: { userId, returnUrl },
+        // Call Edge Function directly with fetch to avoid supabase-js auto x-client-info header
+        const fnUrl = `${SUPABASE_URL}/functions/v1/create-billing-portal-session`;
+        const resp = await fetch(fnUrl, {
+            method: 'POST',
             headers: {
-                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                'Content-Type': 'application/json',
                 apikey: SUPABASE_ANON_KEY,
-                'X-Client-Info': 'supabase-js-web',
             },
+            body: JSON.stringify({ userId, returnUrl }),
         });
-        if (error) throw new Error(error.message || 'Failed to create billing portal session');
-        const url = data?.url;
+        if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}`);
+        }
+        const { url } = await resp.json();
         if (!url) throw new Error('Billing portal URL missing');
         window.location.href = url;
     }
