@@ -15,7 +15,7 @@ serve(async (req: Request) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Authorization, apikey, Content-Type, X-Client-Info',
+    'Access-Control-Allow-Headers': 'Authorization, apikey, Content-Type, X-Client-Info, X-Supabase-ApiVersion, X-Supabase-Authorization, Accept',
   } as const;
 
   // CORS preflight
