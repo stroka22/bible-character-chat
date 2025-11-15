@@ -223,6 +223,8 @@ export async function openBillingPortal({ userId, returnUrl }) {
             headers: {
                 'Content-Type': 'application/json',
                 apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+                Accept: 'application/json',
             },
             body: JSON.stringify({ userId, returnUrl }),
         });
