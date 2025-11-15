@@ -21,7 +21,12 @@ const AccountBilling = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' })
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        if (!resp.ok) {
+          const text = await resp.text();
+          let msg = `HTTP ${resp.status}`;
+          try { const j = JSON.parse(text); msg = j?.error || msg; } catch {}
+          throw new Error(msg);
+        }
         const { url } = await resp.json();
         if (!url) throw new Error('Missing billing portal URL');
         window.location.href = url;
@@ -42,7 +47,12 @@ const AccountBilling = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, returnUrl: 'https://faithtalkai.com/account' })
       });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      if (!resp.ok) {
+        const text = await resp.text();
+        let msg = `HTTP ${resp.status}`;
+        try { const j = JSON.parse(text); msg = j?.error || msg; } catch {}
+        throw new Error(msg);
+      }
       const { url } = await resp.json();
       if (!url) throw new Error('Missing billing portal URL');
       window.location.href = url;
