@@ -17,6 +17,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import PricingPage from './pages/PricingPage.jsx';
+import AccountBilling from './pages/AccountBilling.jsx';
 import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
 import FavoritesPage from './pages/FavoritesPage.jsx';
@@ -186,6 +187,7 @@ function App() {
         _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }),
         _jsx(Route, { path: "/signup", element: _jsx(SignupPage, {}) }),
         _jsx(Route, { path: "/pricing", element: _jsx(PricingPage, {}) }),
+        _jsx(Route, { path: "/account", element: _jsx(AccountBilling, {}) }),
         _jsx(Route, { path: "/how-it-works", element: _jsx(HowItWorksPage, {}) }),
         _jsx(Route, { path: "/about", element: _jsx(AboutPage, {}) }),
         _jsx(Route, { path: "/contact", element: _jsx(ContactPage, {}) }),
