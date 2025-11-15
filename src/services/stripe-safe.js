@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { supabase, SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase';
+import { supabase, SUPABASE_ANON_KEY } from './supabase';
 const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? '';
 const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY ?? '';
 const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY ?? '';
