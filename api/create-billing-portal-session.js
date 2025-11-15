@@ -12,12 +12,28 @@ export default async function handler(req) {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405, headers: corsHeaders });
-  }
+  // Accept both POST (preferred) and GET (fallback for quick testing)
 
   try {
-    const { userId, returnUrl } = await req.json();
+    let userId, returnUrl;
+    if (req.method === 'POST') {
+      try {
+        const body = await req.json();
+        userId = body?.userId;
+        returnUrl = body?.returnUrl;
+      } catch {
+        // Fall back to URL params if body parse fails
+        const url = new URL(req.url);
+        userId = url.searchParams.get('userId');
+        returnUrl = url.searchParams.get('returnUrl');
+      }
+    } else if (req.method === 'GET') {
+      const url = new URL(req.url);
+      userId = url.searchParams.get('userId');
+      returnUrl = url.searchParams.get('returnUrl');
+    } else {
+      return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405, headers: corsHeaders });
+    }
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400, headers: corsHeaders });
     }
