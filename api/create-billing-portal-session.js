@@ -4,7 +4,7 @@ export const config = { runtime: 'edge' };
 export default async function handler(req) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json'
   };
@@ -41,7 +41,13 @@ export default async function handler(req) {
     const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
     const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return new Response(JSON.stringify({ error: 'Missing Supabase env configuration' }), { status: 500, headers: corsHeaders });
+      const missing = [];
+      if (!SUPABASE_URL) missing.push('SUPABASE_URL');
+      if (!SUPABASE_ANON_KEY) missing.push('SUPABASE_ANON_KEY');
+      return new Response(
+        JSON.stringify({ error: 'Missing Supabase env configuration', missing }),
+        { status: 500, headers: corsHeaders }
+      );
     }
 
     const fnUrl = `${SUPABASE_URL}/functions/v1/create-billing-portal-session`;
