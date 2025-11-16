@@ -24,6 +24,18 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Basic env validation for clearer diagnostics
+    const missingEnv: string[] = [];
+    if (!STRIPE_SECRET_KEY) missingEnv.push('STRIPE_SECRET_KEY');
+    if (!SUPABASE_URL) missingEnv.push('SUPABASE_URL');
+    if (!SERVICE_ROLE_KEY) missingEnv.push('SUPABASE_SERVICE_ROLE_KEY');
+    if (missingEnv.length > 0) {
+      return new Response(JSON.stringify({ error: 'Missing required env', missing: missingEnv }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
     if (req.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
@@ -83,7 +95,8 @@ serve(async (req: Request) => {
     });
   } catch (e) {
     console.error('create-billing-portal-session error', e);
-    return new Response(JSON.stringify({ error: 'Server error' }), {
+    const message = (e && typeof e === 'object' && 'message' in e) ? String((e as any).message) : 'Unknown error';
+    return new Response(JSON.stringify({ error: 'Server error', message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...corsHeaders },
     });
