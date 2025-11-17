@@ -145,7 +145,7 @@ export async function createCustomer(userId: string, email: string): Promise<str
   try {
     // First check if the user already has a customer ID
     const { data: userData, error: dbError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('stripe_customer_id')
       .eq('id', userId)
       .maybeSingle();
@@ -182,7 +182,7 @@ export async function createCustomer(userId: string, email: string): Promise<str
 
     // Update the user record with the new customer ID
     const { error: updateError } = await supabase
-      .from('users')
+      .from('profiles')
       .update({ stripe_customer_id: customerId })
       .eq('id', userId);
 
@@ -377,7 +377,7 @@ export async function getActiveSubscription(userId: string): Promise<Subscriptio
     try {
         // First get the customer ID from the database
         const { data: userData, error: dbError } = await supabase
-            .from('users')
+            .from('profiles')
             .select('stripe_customer_id')
             .eq('id', userId)
             .maybeSingle();
