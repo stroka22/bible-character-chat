@@ -26,6 +26,7 @@
     "react-virtualized-auto-sizer": "^1.0.26",
     "react-virtuoso": "^4.13.0",
     "react-window": "^1.8.11",
+    "resend": "6.4.2",
     "stripe": "^18.3.0"
   },
   "devDependencies": {
