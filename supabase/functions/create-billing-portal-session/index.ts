@@ -57,17 +57,38 @@ serve(async (req: Request) => {
     }
     let customerId = profile?.stripe_customer_id || null;
     if (!customerId) {
-      // Create a Customer on-the-fly if missing, then persist to the profile
-      const customer = await stripe.customers.create({
-        email: profile?.email || undefined,
-      });
-      customerId = customer.id;
-      const { error: updErr } = await admin
-        .from('profiles')
-        .update({ stripe_customer_id: customerId })
-        .eq('id', userId);
-      if (updErr) {
-        console.error('Failed to persist stripe_customer_id:', updErr);
+      // SAFER: try to find an existing Stripe customer by email first
+      let foundId: string | null = null;
+      const email = profile?.email || undefined;
+      try {
+        if (email) {
+          const existing = await stripe.customers.list({ email, limit: 1 });
+          if (existing.data && existing.data.length > 0) {
+            foundId = existing.data[0].id;
+          }
+        }
+      } catch (listErr) {
+        console.error('Stripe list customers failed:', listErr);
+      }
+
+      if (foundId) {
+        customerId = foundId;
+      } else {
+        // No existing customer found — create one
+        const customer = await stripe.customers.create({ email });
+        customerId = customer.id;
+      }
+
+      // Persist only when we have a value, and never overwrite a non-null id
+      if (customerId) {
+        const { error: updErr } = await admin
+          .from('profiles')
+          .update({ stripe_customer_id: customerId })
+          .eq('id', userId)
+          .is('stripe_customer_id', null);
+        if (updErr) {
+          console.error('Failed to persist stripe_customer_id:', updErr);
+        }
       }
     }
 
