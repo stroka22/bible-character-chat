@@ -3,6 +3,7 @@ import Stripe from 'https://esm.sh/stripe@12.0.0?target=deno';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.8';
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') || '';
+const STRIPE_PORTAL_CONFIGURATION_ID = Deno.env.get('STRIPE_PORTAL_CONFIGURATION_ID') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
@@ -70,12 +71,20 @@ serve(async (req: Request) => {
       }
     }
 
-    const session = await stripe.billingPortal.sessions.create({
+    const payload: Record<string, unknown> = {
       customer: customerId,
-      return_url: typeof returnUrl === 'string' && returnUrl.startsWith('http')
-        ? returnUrl
-        : req.headers.get('origin') || 'https://faithtalkai.com',
-    });
+      return_url:
+        typeof returnUrl === 'string' && returnUrl.startsWith('http')
+          ? returnUrl
+          : req.headers.get('origin') || 'https://faithtalkai.com',
+    };
+
+    // If provided, pin to a specific Customer Portal configuration (bpc_...)
+    if (STRIPE_PORTAL_CONFIGURATION_ID) {
+      payload['configuration'] = STRIPE_PORTAL_CONFIGURATION_ID;
+    }
+
+    const session = await stripe.billingPortal.sessions.create(payload as any);
 
     return new Response(JSON.stringify({ url: session.url }), {
       status: 200,
