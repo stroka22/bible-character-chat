@@ -1,0 +1,2 @@
+[functions.handle-stripe-webhook]
+verify_jwt = false
