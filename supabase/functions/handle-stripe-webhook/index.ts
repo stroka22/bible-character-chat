@@ -14,6 +14,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 });
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 function cors(headers: HeadersInit = {}) {
   return {
@@ -88,7 +89,13 @@ serve(async (req: Request) => {
   let event: Stripe.Event;
   try {
     // Verify signature using the raw payload
-    event = stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET);
+    event = await stripe.webhooks.constructEventAsync(
+      rawBody,
+      signature,
+      STRIPE_WEBHOOK_SECRET,
+      undefined,
+      cryptoProvider
+    );
   } catch (err) {
     console.error('Webhook signature verification failed', err);
     return new Response(JSON.stringify({ error: 'Invalid signature' }), {
