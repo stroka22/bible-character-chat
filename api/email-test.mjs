@@ -5,8 +5,14 @@ export default async function handler(req, res) {
     res.status(204).end();
     return;
   }
+  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const debug = url.searchParams.get('debug') === '1';
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    res.status(200).json({ ok: true, endpoint: 'email-test', debugTips: debug ? {
+      hasApiKey: !!process.env.RESEND_API_KEY,
+      from: process.env.EMAIL_FROM || null,
+      replyTo: process.env.EMAIL_REPLY_TO || null,
+    } : undefined });
     return;
   }
 
@@ -17,11 +23,8 @@ export default async function handler(req, res) {
     const html = body.html || '<p>This is a test email sent via Resend.</p>';
 
     const result = await sendEmail({ to, subject, html });
-    if (!result.ok) {
-      res.status(500).json({ error: result.error });
-      return;
-    }
-    res.status(200).json({ id: result.id });
+    const payload = debug ? { ok: result.ok, id: result.id, error: result.error, code: result.code } : { id: result.id };
+    res.status(result.ok ? 200 : 500).json(payload);
   } catch (e) {
     res.status(400).json({ error: e?.message || 'Invalid request' });
   }

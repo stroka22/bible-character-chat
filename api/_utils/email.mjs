@@ -30,9 +30,20 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, replyT
       html,
       reply_to: replyTo,
     });
-    return { ok: true, id: result?.data?.id || null };
+    const id = result?.data?.id || result?.id || null;
+    return { ok: !!id, id, result: sanitizeResult(result) };
   } catch (e) {
-    return { ok: false, error: e?.message || 'Send failed' };
+    const code = e?.status || e?.code || undefined;
+    const message = e?.message || 'Send failed';
+    return { ok: false, error: message, code };
+  }
+}
+
+function sanitizeResult(result) {
+  try {
+    return typeof result === 'object' ? JSON.parse(JSON.stringify(result)) : result;
+  } catch {
+    return null;
   }
 }
 
