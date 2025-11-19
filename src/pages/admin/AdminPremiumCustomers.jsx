@@ -13,8 +13,10 @@ async function getActiveSubscriptionByCustomerId(customerId) {
     if (response.error) return null;
     const subs = response.data?.subscriptions || [];
     if (!subs.length) return null;
-    const sub = subs[0];
-    const isActive = ['active', 'trialing'].includes(sub.status) && !sub.cancel_at_period_end;
+    // Prefer an actually active/trialing subscription if present
+    const sub = subs.find((s) => ['active', 'trialing'].includes(s.status)) || subs[0];
+    // Treat cancel_at_period_end as still premium until period ends
+    const isActive = ['active', 'trialing'].includes(sub.status);
     return {
       id: sub.id,
       status: sub.status,
@@ -33,6 +35,7 @@ export default function AdminPremiumCustomers() {
   const { user } = useAuth();
   const [ownerSlug, setOwnerSlug] = useState('default');
   const [members, setMembers] = useState([]);
+  const [filterMode, setFilterMode] = useState('all'); // all | stripe | overrides
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -87,6 +90,12 @@ export default function AdminPremiumCustomers() {
     return { total, premiumStripe, premiumOverrides, premiumCombined };
   }, [members]);
 
+  const filteredMembers = useMemo(() => {
+    if (filterMode === 'stripe') return members.filter(m => m.subscription?.isActive);
+    if (filterMode === 'overrides') return members.filter(m => !m.subscription?.isActive && m.premium_override);
+    return members;
+  }, [members, filterMode]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
@@ -125,7 +134,26 @@ export default function AdminPremiumCustomers() {
         </div>
 
         <div className="bg-blue-800 rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Members</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Members</h2>
+            <div className="flex items-center gap-2 text-xs">
+              <button
+                className={`px-3 py-1 rounded-full border ${filterMode==='all'?'bg-blue-600 text-white border-blue-500':'bg-blue-900 text-blue-100 border-blue-700'}`}
+                onClick={() => setFilterMode('all')}
+              >All</button>
+              <button
+                className={`px-3 py-1 rounded-full border ${filterMode==='stripe'?'bg-purple-600 text-white border-purple-500':'bg-blue-900 text-blue-100 border-blue-700'}`}
+                onClick={() => setFilterMode('stripe')}
+                title="Show members with active/trialing Stripe subscriptions"
+              >Stripe</button>
+              <button
+                className={`px-3 py-1 rounded-full border ${filterMode==='overrides'?'bg-pink-600 text-white border-pink-500':'bg-blue-900 text-blue-100 border-blue-700'}`}
+                onClick={() => setFilterMode('overrides')}
+                title="Show members with premium overrides only"
+              >Overrides</button>
+            </div>
+          </div>
+          <div className="text-blue-200 text-xs mb-3">Showing {filteredMembers.length} of {members.length} members</div>
           {loading ? (
             <div>Loading…</div>
           ) : error ? (
@@ -146,7 +174,7 @@ export default function AdminPremiumCustomers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {members.map(m => (
+                  {filteredMembers.map(m => (
                     <tr key={m.id} className="border-t border-blue-700">
                       <td className="px-3 py-2">{m.display_name || '—'}</td>
                       <td className="px-3 py-2">{m.email || '—'}</td>

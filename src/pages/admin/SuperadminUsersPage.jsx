@@ -195,8 +195,9 @@ const SuperadminUsersPage = () => {
               if (!resp.error) {
                 const subs = resp.data?.subscriptions || [];
                 if (subs.length > 0) {
-                  const s = subs[0];
-                  const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
+                  const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
+                  // Treat cancel_at_period_end as still premium until period end
+                  const isActive = ['active', 'trialing'].includes(s.status);
                   if (isActive) {
                     premium += 1;
                     hasActiveStripe = true;
