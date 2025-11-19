@@ -407,7 +407,11 @@ const AdminPage = () => {
         _jsxs("div", { className: "mb-6 flex flex-wrap gap-3", children: [
                 _jsx(Link, { to: "/admin/invites", className: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700", children: "Manage Invites" }),
                 _jsx(Link, { to: "/admin/premium", className: "inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700", children: "Premium Customers" }),
-                isSuperadmin && (_jsx(Link, { to: "/admin/users", className: "inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600", children: "Superadmin: Manage Users & Organizations" }))
+                (isSuperadmin() ? (
+                  _jsx(Link, { to: "/admin/users", className: "inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600", children: "Superadmin: Manage Users & Organizations" })
+                ) : (
+                  _jsx(Link, { to: "/admin/premium", className: "inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600", children: "Manage Users" })
+                ))
             ] }), 
         
         <div className="mb-8 border-b border-gray-200">
