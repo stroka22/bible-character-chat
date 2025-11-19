@@ -4,6 +4,30 @@ import { supabase, SUPABASE_ANON_KEY } from '../../services/supabase';
 import { getMyProfile } from '../../services/invitesService';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Helper: fetch active Stripe subscription info for a customer id
+async function fetchActiveSubscription(customerId) {
+  if (!customerId) return null;
+  try {
+    const resp = await supabase.functions.invoke('get-subscription', {
+      body: { customerId }
+    });
+    if (resp.error) return null;
+    const subs = resp.data?.subscriptions || [];
+    if (!subs.length) return null;
+    const s = subs[0];
+    const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
+    return {
+      id: s.id,
+      status: s.status,
+      isActive,
+      currentPeriodEnd: s.current_period_end,
+      cancelAtPeriodEnd: s.cancel_at_period_end,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 const SuperadminUsersPage = () => {
   // State for current user profile
   const { session, user: authUser, refreshProfile } = useAuth();
@@ -124,8 +148,17 @@ const SuperadminUsersPage = () => {
       const { data, error, count } = await query;
       
       if (error) throw error;
-      
-      setProfiles(data || []);
+      // Enrich each profile with subscription state (active Stripe?) so UI
+      // can suppress the "Premium Override" badge when a real subscription exists.
+      const enriched = await Promise.all(
+        (data || []).map(async (p) => {
+          const sub = p.stripe_customer_id
+            ? await fetchActiveSubscription(p.stripe_customer_id)
+            : null;
+          return { ...p, subscription: sub };
+        })
+      );
+      setProfiles(enriched);
       // Clear selections if list changed
       setSelectedUserIds([]);
       setTotalProfiles(count || 0);
@@ -790,7 +823,7 @@ const SuperadminUsersPage = () => {
                           {profile.display_name && (
                             <div className="text-xs text-gray-300">{profile.display_name}</div>
                           )}
-                          {profile.premium_override && (
+                        {profile.premium_override && !profile.subscription?.isActive && (
                             <div className="text-[10px] mt-1 inline-block bg-purple-600 px-2 py-0.5 rounded-full">Premium Override</div>
                           )}
                         </td>
