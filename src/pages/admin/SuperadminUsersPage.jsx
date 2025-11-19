@@ -117,6 +117,7 @@ const SuperadminUsersPage = () => {
           role,
           owner_slug,
           premium_override,
+          stripe_customer_id,
           display_name,
           created_at
         `, { count: 'exact' });
