@@ -665,13 +665,19 @@ const SuperadminUsersPage = () => {
         {isSuperAdmin && (
           <div className="bg-blue-800 rounded-lg shadow-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Organizations – Premium vs Free</h2>
+              <h2 className="text-xl font-semibold">Organizations – Premium vs Overrides vs Free</h2>
               <button
                 onClick={loadOrgStats}
                 className="px-3 py-2 bg-blue-700 hover:bg-blue-600 rounded-lg"
               >
                 {loadingOrgStats ? 'Refreshing…' : 'Refresh'}
               </button>
+            </div>
+            {/* Legend */}
+            <div className="flex items-center gap-4 text-xs text-blue-200 mb-3">
+              <div className="flex items-center gap-2"><span className="inline-block w-3 h-3 bg-purple-500 rounded-sm" /> Premium</div>
+              <div className="flex items-center gap-2"><span className="inline-block w-3 h-3 bg-pink-500 rounded-sm" /> Premium Overrides</div>
+              <div className="flex items-center gap-2"><span className="inline-block w-3 h-3 bg-blue-500 rounded-sm" /> Free</div>
             </div>
             {loadingOrgStats ? (
               <div className="flex justify-center items-center h-24">

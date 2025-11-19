@@ -53,7 +53,7 @@ export default function AdminPremiumCustomers() {
         // Fetch profiles for this org
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, email, display_name, owner_slug, stripe_customer_id')
+          .select('id, email, display_name, owner_slug, stripe_customer_id, premium_override')
           .eq('owner_slug', ownerSlug)
           .order('display_name', { ascending: true });
         if (error) throw error;
@@ -81,8 +81,10 @@ export default function AdminPremiumCustomers() {
 
   const stats = useMemo(() => {
     const total = members.length;
-    const premium = members.filter(m => m.subscription?.isActive).length;
-    return { total, premium };
+    const premiumStripe = members.filter(m => m.subscription?.isActive).length;
+    const premiumOverrides = members.filter(m => !m.subscription?.isActive && m.premium_override).length;
+    const premiumCombined = premiumStripe + premiumOverrides;
+    return { total, premiumStripe, premiumOverrides, premiumCombined };
   }, [members]);
 
   return (
@@ -103,14 +105,22 @@ export default function AdminPremiumCustomers() {
           <p className="text-sm text-blue-200 mt-2">Organization: <span className="font-mono">{ownerSlug}</span></p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-800 rounded-lg p-4">
             <div className="text-blue-200 text-sm">Total Members</div>
             <div className="text-3xl font-bold">{stats.total}</div>
           </div>
           <div className="bg-blue-800 rounded-lg p-4">
-            <div className="text-blue-200 text-sm">Active Premium</div>
-            <div className="text-3xl font-bold">{stats.premium}</div>
+            <div className="text-blue-200 text-sm">Premium (Stripe)</div>
+            <div className="text-3xl font-bold">{stats.premiumStripe}</div>
+          </div>
+          <div className="bg-blue-800 rounded-lg p-4">
+            <div className="text-blue-200 text-sm">Premium Overrides</div>
+            <div className="text-3xl font-bold">{stats.premiumOverrides}</div>
+          </div>
+          <div className="bg-blue-800 rounded-lg p-4">
+            <div className="text-blue-200 text-sm">Premium (Combined)</div>
+            <div className="text-3xl font-bold">{stats.premiumCombined}</div>
           </div>
         </div>
 
@@ -130,6 +140,7 @@ export default function AdminPremiumCustomers() {
                     <th className="px-3 py-2">Name</th>
                     <th className="px-3 py-2">Email</th>
                     <th className="px-3 py-2">Premium</th>
+                    <th className="px-3 py-2">Override</th>
                     <th className="px-3 py-2">Status</th>
                     <th className="px-3 py-2">Renews</th>
                   </tr>
@@ -139,7 +150,8 @@ export default function AdminPremiumCustomers() {
                     <tr key={m.id} className="border-t border-blue-700">
                       <td className="px-3 py-2">{m.display_name || '—'}</td>
                       <td className="px-3 py-2">{m.email || '—'}</td>
-                      <td className="px-3 py-2">{m.subscription?.isActive ? 'Yes' : 'No'}</td>
+                      <td className="px-3 py-2">{m.subscription?.isActive || m.premium_override ? 'Yes' : 'No'}</td>
+                      <td className="px-3 py-2">{m.premium_override ? 'Yes' : 'No'}</td>
                       <td className="px-3 py-2">{m.subscription?.status || '—'}</td>
                       <td className="px-3 py-2">{m.subscription?.currentPeriodEnd ? new Date(m.subscription.currentPeriodEnd * 1000).toLocaleDateString() : '—'}</td>
                     </tr>
