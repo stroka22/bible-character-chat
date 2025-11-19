@@ -154,7 +154,7 @@ const SuperadminUsersPage = () => {
     }
   };
 
-  // Load aggregated org stats: total vs premium (active/trialing) users
+  // Load aggregated org stats: total vs premium (active/trialing) vs premium_override users
   const loadOrgStats = async () => {
     if (!isSuperAdmin) return;
     setLoadingOrgStats(true);
@@ -175,7 +175,7 @@ const SuperadminUsersPage = () => {
         // Fetch profiles for this org with needed fields
         const { data: members, error } = await supabase
           .from('profiles')
-          .select('id, stripe_customer_id')
+          .select('id, stripe_customer_id, premium_override')
           .eq('owner_slug', o.owner_slug);
         if (error) {
           console.warn('Failed to load profiles for', o.owner_slug, error);
@@ -183,23 +183,33 @@ const SuperadminUsersPage = () => {
         }
         const total = members?.length || 0;
         let premium = 0;
+        let overrides = 0;
         // For each member with stripe_customer_id, check subscription
         for (const m of (members || [])) {
-          if (!m.stripe_customer_id) continue;
-          try {
-            const resp = await supabase.functions.invoke('get-subscription', {
-              body: { customerId: m.stripe_customer_id }
-            });
-            if (!resp.error) {
-              const subs = resp.data?.subscriptions || [];
-              if (subs.length > 0) {
-                const s = subs[0];
-                const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
-                if (isActive) premium += 1;
+          let hasActiveStripe = false;
+          if (m.stripe_customer_id) {
+            try {
+              const resp = await supabase.functions.invoke('get-subscription', {
+                body: { customerId: m.stripe_customer_id }
+              });
+              if (!resp.error) {
+                const subs = resp.data?.subscriptions || [];
+                if (subs.length > 0) {
+                  const s = subs[0];
+                  const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
+                  if (isActive) {
+                    premium += 1;
+                    hasActiveStripe = true;
+                  }
+                }
               }
+            } catch (e) {
+              // skip errors for individual member
             }
-          } catch (e) {
-            // skip errors for individual member
+          }
+          // Count premium_override only when no active Stripe subscription to avoid double-counting
+          if (!hasActiveStripe && m.premium_override) {
+            overrides += 1;
           }
         }
         results.push({
@@ -207,7 +217,8 @@ const SuperadminUsersPage = () => {
           display_name: o.display_name,
           total,
           premium,
-          free: Math.max(0, total - premium)
+          overrides,
+          free: Math.max(0, total - premium - overrides)
         });
       }
       setOrgStats(results);
@@ -673,18 +684,24 @@ const SuperadminUsersPage = () => {
                 {orgStats.map((s) => {
                   const total = Math.max(1, s.total); // avoid div by zero
                   const pctPremium = Math.round((s.premium / total) * 100);
-                  const pctFree = 100 - pctPremium;
+                  const pctOverrides = Math.round((s.overrides / total) * 100);
+                  const pctFree = Math.max(0, 100 - pctPremium - pctOverrides);
                   return (
                     <div key={s.owner_slug} className="">
                       <div className="flex justify-between text-sm mb-1">
                         <div className="font-medium">{s.display_name} <span className="text-blue-300">({s.owner_slug})</span></div>
-                        <div className="text-blue-200">Total: {s.total} • Premium: {s.premium} • Free: {s.free}</div>
+                        <div className="text-blue-200">Total: {s.total} • Premium: {s.premium} • Premium Overrides: {s.overrides} • Free: {s.free}</div>
                       </div>
                       <div className="w-full h-4 bg-blue-900 rounded overflow-hidden">
                         <div
                           className="h-4 bg-purple-500 inline-block"
                           style={{ width: `${pctPremium}%` }}
                           title={`Premium ${pctPremium}%`}
+                        />
+                        <div
+                          className="h-4 bg-pink-500 inline-block"
+                          style={{ width: `${pctOverrides}%` }}
+                          title={`Premium Overrides ${pctOverrides}%`}
                         />
                         <div
                           className="h-4 bg-blue-500 inline-block"
