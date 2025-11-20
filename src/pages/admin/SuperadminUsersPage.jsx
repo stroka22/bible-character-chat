@@ -206,8 +206,22 @@ const SuperadminUsersPage = () => {
 
       const results = [];
       for (const o of ownersList) {
+        // Prefer local subscriptions table first (active/trialing) to avoid API mismatches
+        let activeByUserId = new Set();
+        try {
+          const ids = (members || []).map(m => m.id);
+          if (ids.length) {
+            const { data: subsRows } = await supabase
+              .from('subscriptions')
+              .select('user_id,status')
+              .in('user_id', ids);
+            (subsRows || [])
+              .filter(r => ['active','trialing'].includes(r.status))
+              .forEach(r => activeByUserId.add(r.user_id));
+          }
+        } catch (_e) {}
         // Fetch profiles for this org with needed fields
-        const { data: members, error } = await supabase
+          let hasActiveStripe = activeByUserId.has(m.id);
           .from('profiles')
           .select('id, email, stripe_customer_id, premium_override')
           .eq('owner_slug', o.owner_slug);
@@ -218,7 +232,7 @@ const SuperadminUsersPage = () => {
         const total = members?.length || 0;
         let premium = 0;
         let overrides = 0;
-        // For each member with stripe_customer_id, check subscription
+                    premium += 1;
         for (const m of (members || [])) {
           let hasActiveStripe = false;
           if (m.stripe_customer_id) {
@@ -226,7 +240,12 @@ const SuperadminUsersPage = () => {
               const resp = await supabase.functions.invoke('get-subscription', {
                 body: { customerId: m.stripe_customer_id }
               });
+          }
               if (!resp.error) {
+          // If already active via local table, skip external lookups
+          if (hasActiveStripe) {
+            continue;
+          }
                 const subs = resp.data?.subscriptions || [];
                 if (subs.length > 0) {
                   const s = subs[0];
@@ -246,6 +265,8 @@ const SuperadminUsersPage = () => {
           if (!hasActiveStripe && m.email) {
             try {
               const resp2 = await supabase.functions.invoke('get-subscription-by-email', {
+        // If local table marked active, no overrides should be counted regardless of lookups above
+        // (already enforced by hasActiveStripe check per member)
                 body: { email: m.email }
               });
               if (!resp2.error) {
