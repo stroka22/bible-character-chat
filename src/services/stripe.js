@@ -384,14 +384,18 @@ async function getActiveSubscription(userId) {
             return null;
         }
         console.log(`[Stripe] 🔄 Fetching subscriptions for customer ${userData.stripe_customer_id}`);
-        const response = await supabase.functions.invoke('get-subscription', {
-            body: { customerId: userData.stripe_customer_id },
+        const resp = await fetch('/api/proxy-get-subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customerId: userData.stripe_customer_id })
         });
-        if (response.error) {
-            console.error(`[Stripe] 🔴 Edge Function error: ${response.error.message}`);
-            throw new StripeEndpointError(`Edge Function error: ${response.error.message}`);
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            const msg = err?.error || 'Proxy lookup failed';
+            console.error(`[Stripe] 🔴 Proxy error: ${msg}`);
+            throw new StripeEndpointError(`Proxy error: ${msg}`);
         }
-        const subscriptions = response.data?.subscriptions;
+        const { subscriptions } = await resp.json();
         if (!subscriptions || subscriptions.length === 0) {
             console.log(`[Stripe] ℹ️ No active subscriptions found for customer ${userData.stripe_customer_id}`);
             return null;
