@@ -8,7 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 async function fetchActiveSubscription(customerId) {
   if (!customerId) return null;
   try {
-    const resp = await fetch('/api/proxy-get-subscription', {
+    const resp = await fetch('/api/stripe-get-subscriptions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ customerId })
@@ -249,7 +249,7 @@ const SuperadminUsersPage = () => {
           // Check by customer id if not yet active
           if (!hasActiveStripe && m.stripe_customer_id) {
             try {
-              const resp = await fetch('/api/proxy-get-subscription', {
+              const resp = await fetch('/api/stripe-get-subscriptions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ customerId: m.stripe_customer_id })
@@ -273,7 +273,7 @@ const SuperadminUsersPage = () => {
           // Fallback: if no active Stripe by customer id, try by email
           if (!hasActiveStripe && m.email) {
             try {
-              const resp2 = await fetch('/api/proxy-get-subscription-by-email', {
+              const resp2 = await fetch('/api/stripe-get-subscriptions-by-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: m.email })
@@ -463,7 +463,7 @@ const SuperadminUsersPage = () => {
     setActionInProgress(profile.id + ':link');
     setActionMessage({ text: '', type: '' });
     try {
-      const resp = await fetch('/api/proxy-get-subscription-by-email', {
+      const resp = await fetch('/api/stripe-get-subscriptions-by-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: profile.email })

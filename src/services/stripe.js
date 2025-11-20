@@ -384,7 +384,7 @@ async function getActiveSubscription(userId) {
             return null;
         }
         console.log(`[Stripe] 🔄 Fetching subscriptions for customer ${userData.stripe_customer_id}`);
-        const resp = await fetch('/api/proxy-get-subscription', {
+        const resp = await fetch('/api/stripe-get-subscriptions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ customerId: userData.stripe_customer_id })
