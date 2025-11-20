@@ -8,11 +8,13 @@ import { useAuth } from '../../contexts/AuthContext';
 async function fetchActiveSubscription(customerId) {
   if (!customerId) return null;
   try {
-    const resp = await supabase.functions.invoke('get-subscription', {
-      body: { customerId }
+    const resp = await fetch('/api/proxy-get-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId })
     });
-    if (resp.error) return null;
-    const subs = resp.data?.subscriptions || [];
+    if (!resp.ok) return null;
+    const { subscriptions: subs = [] } = await resp.json();
     if (!subs.length) return null;
     const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
     const isActive = ['active', 'trialing'].includes(s.status);
@@ -247,11 +249,13 @@ const SuperadminUsersPage = () => {
           // Check by customer id if not yet active
           if (!hasActiveStripe && m.stripe_customer_id) {
             try {
-              const resp = await supabase.functions.invoke('get-subscription', {
-                body: { customerId: m.stripe_customer_id }
+              const resp = await fetch('/api/proxy-get-subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId: m.stripe_customer_id })
               });
-              if (!resp.error) {
-                const subs = resp.data?.subscriptions || [];
+              if (resp.ok) {
+                const { subscriptions: subs = [] } = await resp.json();
                 if (subs.length > 0) {
                   const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
                   const isActive = ['active', 'trialing'].includes(s.status);
@@ -269,11 +273,13 @@ const SuperadminUsersPage = () => {
           // Fallback: if no active Stripe by customer id, try by email
           if (!hasActiveStripe && m.email) {
             try {
-              const resp2 = await supabase.functions.invoke('get-subscription-by-email', {
-                body: { email: m.email }
+              const resp2 = await fetch('/api/proxy-get-subscription-by-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: m.email })
               });
-              if (!resp2.error) {
-                const subs2 = resp2.data?.subscriptions || [];
+              if (resp2.ok) {
+                const { subscriptions: subs2 = [] } = await resp2.json();
                 const s2 = subs2.find((x) => ['active', 'trialing'].includes(x.status)) || subs2[0];
                 if (s2 && ['active', 'trialing'].includes(s2.status)) {
                   premium += 1;
@@ -457,11 +463,14 @@ const SuperadminUsersPage = () => {
     setActionInProgress(profile.id + ':link');
     setActionMessage({ text: '', type: '' });
     try {
-      const resp = await supabase.functions.invoke('get-subscription-by-email', {
-        body: { email: profile.email }
+      const resp = await fetch('/api/proxy-get-subscription-by-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: profile.email })
       });
-      if (resp.error) throw new Error(resp.error.message || 'Lookup failed');
-      const subs = resp.data?.subscriptions || [];
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || 'Lookup failed');
+      const subs = data?.subscriptions || [];
       const s = subs.find(x => ['active','trialing'].includes(x.status)) || subs[0];
       if (!s) throw new Error('No Stripe subscriptions found for this email');
       const customerId = typeof s.customer === 'string' ? s.customer : (s.customer?.id || null);
