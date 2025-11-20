@@ -9,7 +9,7 @@ async function getActiveSubscriptionForProfile(profile) {
   try {
     let subs = [];
     if (profile?.stripe_customer_id) {
-      const r = await fetch('/api/proxy-get-subscription', {
+      const r = await fetch('/api/stripe-get-subscriptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ customerId: profile.stripe_customer_id })
@@ -20,7 +20,7 @@ async function getActiveSubscriptionForProfile(profile) {
       }
     }
     if ((!subs || subs.length === 0) && profile?.email) {
-      const r2 = await fetch('/api/proxy-get-subscription-by-email', {
+      const r2 = await fetch('/api/stripe-get-subscriptions-by-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: profile.email })
