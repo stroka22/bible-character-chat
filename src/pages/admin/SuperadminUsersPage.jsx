@@ -14,7 +14,7 @@ async function fetchActiveSubscription(customerId) {
     if (resp.error) return null;
     const subs = resp.data?.subscriptions || [];
     if (!subs.length) return null;
-    const s = subs[0];
+    const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
     const isActive = ['active', 'trialing'].includes(s.status);
     return {
       id: s.id,
