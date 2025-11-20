@@ -9,16 +9,26 @@ async function getActiveSubscriptionForProfile(profile) {
   try {
     let subs = [];
     if (profile?.stripe_customer_id) {
-      const byId = await supabase.functions.invoke('get-subscription', {
-        body: { customerId: profile.stripe_customer_id }
+      const r = await fetch('/api/proxy-get-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId: profile.stripe_customer_id })
       });
-      if (!byId.error) subs = byId.data?.subscriptions || [];
+      if (r.ok) {
+        const d = await r.json();
+        subs = d?.subscriptions || [];
+      }
     }
     if ((!subs || subs.length === 0) && profile?.email) {
-      const byEmail = await supabase.functions.invoke('get-subscription-by-email', {
-        body: { email: profile.email }
+      const r2 = await fetch('/api/proxy-get-subscription-by-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: profile.email })
       });
-      if (!byEmail.error) subs = byEmail.data?.subscriptions || [];
+      if (r2.ok) {
+        const d2 = await r2.json();
+        subs = d2?.subscriptions || [];
+      }
     }
     if (!subs || subs.length === 0) return null;
     const sub = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
