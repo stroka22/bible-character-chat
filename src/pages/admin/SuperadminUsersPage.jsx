@@ -4,18 +4,25 @@ import { supabase, SUPABASE_ANON_KEY } from '../../services/supabase';
 import { getMyProfile } from '../../services/invitesService';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Helper: fetch active Stripe subscription info for a customer id
-async function fetchActiveSubscription(customerId) {
-  if (!customerId) return null;
+// Helper: fetch active Stripe subscription info for a profile (by customer id, then email fallback)
+async function fetchActiveSubscriptionForProfile(profile) {
   try {
-    const resp = await supabase.functions.invoke('get-subscription', {
-      body: { customerId }
-    });
-    if (resp.error) return null;
-    const subs = resp.data?.subscriptions || [];
-    if (!subs.length) return null;
-    const s = subs[0];
-    const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
+    let subs = [];
+    if (profile?.stripe_customer_id) {
+      const byId = await supabase.functions.invoke('get-subscription', {
+        body: { customerId: profile.stripe_customer_id }
+      });
+      if (!byId.error) subs = byId.data?.subscriptions || [];
+    }
+    if ((!subs || subs.length === 0) && profile?.email) {
+      const byEmail = await supabase.functions.invoke('get-subscription-by-email', {
+        body: { email: profile.email }
+      });
+      if (!byEmail.error) subs = byEmail.data?.subscriptions || [];
+    }
+    if (!subs || subs.length === 0) return null;
+    const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
+    const isActive = ['active', 'trialing'].includes(s.status);
     return {
       id: s.id,
       status: s.status,
@@ -146,10 +153,8 @@ const SuperadminUsersPage = () => {
       query = query.range(from, to).order('email', { ascending: true });
       
       // Execute query
-      const { data, error, count } = await query;
-      
-      if (error) throw error;
-      // Enrich each profile with subscription state (active Stripe?) so UI
+          const sub = await fetchActiveSubscriptionForProfile(p);
+          return { ...p, subscription: sub };
       // can suppress the "Premium Override" badge when a real subscription exists.
       const enriched = await Promise.all(
         (data || []).map(async (p) => {
@@ -204,7 +209,7 @@ const SuperadminUsersPage = () => {
         setOwners(ownersList);
       }
 
-      const results = [];
+          .select('id, email, stripe_customer_id, premium_override')
       for (const o of ownersList) {
         // Fetch profiles for this org with needed fields
         const { data: members, error } = await supabase
@@ -213,29 +218,20 @@ const SuperadminUsersPage = () => {
           .eq('owner_slug', o.owner_slug);
         if (error) {
           console.warn('Failed to load profiles for', o.owner_slug, error);
-          continue;
-        }
-        const total = members?.length || 0;
-        let premium = 0;
-        let overrides = 0;
-        // For each member with stripe_customer_id, check subscription
         for (const m of (members || [])) {
           let hasActiveStripe = false;
-          if (m.stripe_customer_id) {
-            try {
-              const resp = await supabase.functions.invoke('get-subscription', {
-                body: { customerId: m.stripe_customer_id }
-              });
-              if (!resp.error) {
-                const subs = resp.data?.subscriptions || [];
-                if (subs.length > 0) {
-                  const s = subs[0];
-                  const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
-                  if (isActive) {
-                    premium += 1;
-                    hasActiveStripe = true;
-                  }
-                }
+          try {
+            const sub = await fetchActiveSubscriptionForProfile(m);
+            if (sub?.isActive) {
+              premium += 1;
+              hasActiveStripe = true;
+            }
+          } catch (e) {}
+          // Count premium_override only when no active Stripe subscription to avoid double-counting
+          if (!hasActiveStripe && m.premium_override) {
+            overrides += 1;
+          }
+        }
               }
             } catch (e) {
               // skip errors for individual member
