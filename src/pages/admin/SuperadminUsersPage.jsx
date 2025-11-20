@@ -307,34 +307,6 @@ const SuperadminUsersPage = () => {
       setLoadingOrgStats(false);
     }
   };
-                  hasActiveStripe = true;
-                }
-              }
-            } catch (e) {
-              // ignore
-            }
-          }
-          // Count premium_override only when no active Stripe subscription to avoid double-counting
-          if (!hasActiveStripe && m.premium_override) {
-            overrides += 1;
-          }
-        }
-        results.push({
-          owner_slug: o.owner_slug,
-          display_name: o.display_name,
-          total,
-          premium,
-          overrides,
-          free: Math.max(0, total - premium - overrides)
-        });
-      }
-      setOrgStats(results);
-    } catch (e) {
-      console.error('Error loading org stats:', e);
-    } finally {
-      setLoadingOrgStats(false);
-    }
-  };
   
   // Handle filter changes
   const handleFilterChange = (name, value) => {
@@ -475,6 +447,36 @@ const SuperadminUsersPage = () => {
     } finally {
       setActionInProgress(null);
       // Clear message after 3 seconds
+      setTimeout(() => setActionMessage({ text: '', type: '' }), 3000);
+    }
+  };
+
+  // Link Stripe customer to profile by email (superadmin only)
+  const linkStripeByEmail = async (profile) => {
+    if (!isSuperAdmin || actionInProgress) return;
+    setActionInProgress(profile.id + ':link');
+    setActionMessage({ text: '', type: '' });
+    try {
+      const resp = await supabase.functions.invoke('get-subscription-by-email', {
+        body: { email: profile.email }
+      });
+      if (resp.error) throw new Error(resp.error.message || 'Lookup failed');
+      const subs = resp.data?.subscriptions || [];
+      const s = subs.find(x => ['active','trialing'].includes(x.status)) || subs[0];
+      if (!s) throw new Error('No Stripe subscriptions found for this email');
+      const customerId = typeof s.customer === 'string' ? s.customer : (s.customer?.id || null);
+      if (!customerId) throw new Error('Unable to determine Stripe customer id');
+      const { error: upErr } = await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', profile.id);
+      if (upErr) throw new Error(upErr.message || 'Failed to update profile');
+      setActionMessage({ text: `Linked Stripe customer ${customerId} to user`, type: 'success' });
+      await Promise.all([loadProfiles(), loadOrgStats()]);
+    } catch (e) {
+      setActionMessage({ text: e?.message || 'Link failed', type: 'error' });
+    } finally {
+      setActionInProgress(null);
       setTimeout(() => setActionMessage({ text: '', type: '' }), 3000);
     }
   };
@@ -1008,6 +1010,21 @@ const SuperadminUsersPage = () => {
                             >
                               {profile.premium_override ? 'Remove Premium' : 'Grant Premium'}
                             </button>
+
+                            {/* Link Stripe by Email (superadmin) */}
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => linkStripeByEmail(profile)}
+                                disabled={actionInProgress === profile.id + ':link'}
+                                className={`px-2 py-1 text-xs rounded ${
+                                  actionInProgress === profile.id + ':link'
+                                    ? 'bg-gray-600 cursor-not-allowed'
+                                    : 'bg-green-600 hover:bg-green-500'
+                                }`}
+                              >
+                                Link Stripe
+                              </button>
+                            )}
 
                             {/* Delete User */}
                             <button
