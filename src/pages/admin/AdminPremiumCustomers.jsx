@@ -4,16 +4,24 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 
 // Lightweight checker that mirrors stripe-safe behavior for listing subscriptions
-async function getActiveSubscriptionByCustomerId(customerId) {
-  if (!customerId) return null;
+// Fetch active subscription by customer id, falling back to email if needed
+async function getActiveSubscriptionForProfile(profile) {
   try {
-    const response = await supabase.functions.invoke('get-subscription', {
-      body: { customerId }
-    });
-    if (response.error) return null;
-    const subs = response.data?.subscriptions || [];
-    if (!subs.length) return null;
-    const sub = subs[0];
+    let subs = [];
+    if (profile?.stripe_customer_id) {
+      const byId = await supabase.functions.invoke('get-subscription', {
+        body: { customerId: profile.stripe_customer_id }
+      });
+      if (!byId.error) subs = byId.data?.subscriptions || [];
+    }
+    if ((!subs || subs.length === 0) && profile?.email) {
+      const byEmail = await supabase.functions.invoke('get-subscription-by-email', {
+        body: { email: profile.email }
+      });
+      if (!byEmail.error) subs = byEmail.data?.subscriptions || [];
+    }
+    if (!subs || subs.length === 0) return null;
+    const sub = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
     const isActive = ['active', 'trialing'].includes(sub.status);
     return {
       id: sub.id,
@@ -24,7 +32,7 @@ async function getActiveSubscriptionByCustomerId(customerId) {
       cancelAtPeriodEnd: sub.cancel_at_period_end,
     };
   } catch (e) {
-    console.warn('[AdminPremiumCustomers] failed to fetch subscription for', customerId, e);
+    console.warn('[AdminPremiumCustomers] failed to fetch subscription for', profile?.email || profile?.stripe_customer_id, e);
     return null;
   }
 }
@@ -58,12 +66,10 @@ export default function AdminPremiumCustomers() {
           .order('display_name', { ascending: true });
         if (error) throw error;
 
-        // For each member with a customer id, fetch active subscription
+        // For each member, fetch active subscription (by customer id or email fallback)
         const enriched = await Promise.all(
           (data || []).map(async (p) => {
-            const sub = p.stripe_customer_id
-              ? await getActiveSubscriptionByCustomerId(p.stripe_customer_id)
-              : null;
+            const sub = await getActiveSubscriptionForProfile(p);
             return { ...p, subscription: sub };
           })
         );
