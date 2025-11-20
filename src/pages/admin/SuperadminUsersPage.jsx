@@ -206,6 +206,19 @@ const SuperadminUsersPage = () => {
 
       const results = [];
       for (const o of ownersList) {
+        // Fetch profiles for this org with needed fields
+        const { data: members, error } = await supabase
+          .from('profiles')
+          .select('id, email, stripe_customer_id, premium_override')
+          .eq('owner_slug', o.owner_slug);
+        if (error) {
+          console.warn('Failed to load profiles for', o.owner_slug, error);
+          continue;
+        }
+        const total = members?.length || 0;
+        let premium = 0;
+        let overrides = 0;
+
         // Prefer local subscriptions table first (active/trialing) to avoid API mismatches
         let activeByUserId = new Set();
         try {
@@ -220,35 +233,27 @@ const SuperadminUsersPage = () => {
               .forEach(r => activeByUserId.add(r.user_id));
           }
         } catch (_e) {}
-        // Fetch profiles for this org with needed fields
-          let hasActiveStripe = activeByUserId.has(m.id);
-          .from('profiles')
-          .select('id, email, stripe_customer_id, premium_override')
-          .eq('owner_slug', o.owner_slug);
-        if (error) {
-          console.warn('Failed to load profiles for', o.owner_slug, error);
-          continue;
-        }
-        const total = members?.length || 0;
-        let premium = 0;
-        let overrides = 0;
-                    premium += 1;
+
+        // For each member, check local table first then fall back to Stripe lookups
         for (const m of (members || [])) {
           let hasActiveStripe = false;
-          if (m.stripe_customer_id) {
+
+          // Local table indicates active
+          if (activeByUserId.has(m.id)) {
+            premium += 1;
+            hasActiveStripe = true;
+          }
+
+          // Check by customer id if not yet active
+          if (!hasActiveStripe && m.stripe_customer_id) {
             try {
               const resp = await supabase.functions.invoke('get-subscription', {
                 body: { customerId: m.stripe_customer_id }
               });
-          }
               if (!resp.error) {
-          // If already active via local table, skip external lookups
-          if (hasActiveStripe) {
-            continue;
-          }
                 const subs = resp.data?.subscriptions || [];
                 if (subs.length > 0) {
-                  const s = subs[0];
+                  const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
                   const isActive = ['active', 'trialing'].includes(s.status);
                   if (isActive) {
                     premium += 1;
@@ -265,8 +270,6 @@ const SuperadminUsersPage = () => {
           if (!hasActiveStripe && m.email) {
             try {
               const resp2 = await supabase.functions.invoke('get-subscription-by-email', {
-        // If local table marked active, no overrides should be counted regardless of lookups above
-        // (already enforced by hasActiveStripe check per member)
                 body: { email: m.email }
               });
               if (!resp2.error) {
@@ -274,6 +277,36 @@ const SuperadminUsersPage = () => {
                 const s2 = subs2.find((x) => ['active', 'trialing'].includes(x.status)) || subs2[0];
                 if (s2 && ['active', 'trialing'].includes(s2.status)) {
                   premium += 1;
+                  hasActiveStripe = true;
+                }
+              }
+            } catch (e) {
+              // ignore
+            }
+          }
+
+          // Count premium_override only when no active Stripe subscription to avoid double-counting
+          if (!hasActiveStripe && m.premium_override) {
+            overrides += 1;
+          }
+        }
+
+        results.push({
+          owner_slug: o.owner_slug,
+          display_name: o.display_name,
+          total,
+          premium,
+          overrides,
+          free: Math.max(0, total - premium - overrides)
+        });
+      }
+      setOrgStats(results);
+    } catch (e) {
+      console.error('Error loading org stats:', e);
+    } finally {
+      setLoadingOrgStats(false);
+    }
+  };
                   hasActiveStripe = true;
                 }
               }
