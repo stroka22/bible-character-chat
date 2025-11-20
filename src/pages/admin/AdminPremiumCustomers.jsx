@@ -14,7 +14,7 @@ async function getActiveSubscriptionByCustomerId(customerId) {
     const subs = response.data?.subscriptions || [];
     if (!subs.length) return null;
     const sub = subs[0];
-    const isActive = ['active', 'trialing'].includes(sub.status) && !sub.cancel_at_period_end;
+    const isActive = ['active', 'trialing'].includes(sub.status);
     return {
       id: sub.id,
       status: sub.status,
