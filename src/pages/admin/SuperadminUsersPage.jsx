@@ -15,7 +15,7 @@ async function fetchActiveSubscription(customerId) {
     const subs = resp.data?.subscriptions || [];
     if (!subs.length) return null;
     const s = subs[0];
-    const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
+    const isActive = ['active', 'trialing'].includes(s.status);
     return {
       id: s.id,
       status: s.status,
@@ -209,7 +209,7 @@ const SuperadminUsersPage = () => {
         // Fetch profiles for this org with needed fields
         const { data: members, error } = await supabase
           .from('profiles')
-          .select('id, stripe_customer_id, premium_override')
+          .select('id, email, stripe_customer_id, premium_override')
           .eq('owner_slug', o.owner_slug);
         if (error) {
           console.warn('Failed to load profiles for', o.owner_slug, error);
@@ -230,7 +230,7 @@ const SuperadminUsersPage = () => {
                 const subs = resp.data?.subscriptions || [];
                 if (subs.length > 0) {
                   const s = subs[0];
-                  const isActive = ['active', 'trialing'].includes(s.status) && !s.cancel_at_period_end;
+                  const isActive = ['active', 'trialing'].includes(s.status);
                   if (isActive) {
                     premium += 1;
                     hasActiveStripe = true;
@@ -239,6 +239,25 @@ const SuperadminUsersPage = () => {
               }
             } catch (e) {
               // skip errors for individual member
+            }
+          }
+
+          // Fallback: if no active Stripe by customer id, try by email
+          if (!hasActiveStripe && m.email) {
+            try {
+              const resp2 = await supabase.functions.invoke('get-subscription-by-email', {
+                body: { email: m.email }
+              });
+              if (!resp2.error) {
+                const subs2 = resp2.data?.subscriptions || [];
+                const s2 = subs2.find((x) => ['active', 'trialing'].includes(x.status)) || subs2[0];
+                if (s2 && ['active', 'trialing'].includes(s2.status)) {
+                  premium += 1;
+                  hasActiveStripe = true;
+                }
+              }
+            } catch (e) {
+              // ignore
             }
           }
           // Count premium_override only when no active Stripe subscription to avoid double-counting
