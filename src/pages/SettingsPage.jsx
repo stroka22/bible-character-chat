@@ -6,12 +6,13 @@ import { redeemInvite } from '../services/invitesService';
 import Footer from '../components/Footer';
 
 const SettingsPage = () => {
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [theme, setTheme] = useState('system');
   const [resetMessage, setResetMessage] = useState({ text: '', type: '' });
   const [isResetting, setIsResetting] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
+  const [savingWeeklyCsv, setSavingWeeklyCsv] = useState(false);
 
   /* ------------------------------------------------------------------
    * Invite-code redemption
@@ -35,6 +36,28 @@ const SettingsPage = () => {
       }
     }
   }, []);
+
+  // Weekly CSV toggle (self)
+  const onWeeklyToggle = async (e) => {
+    if (!user) return;
+    setSavingWeeklyCsv(true);
+    try {
+      const next = !!e.target.checked;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ weekly_csv_enabled: next })
+        .eq('id', user.id);
+      if (error) throw error;
+      try { await refreshProfile(user.id); } catch {}
+      showSaveMessage('Weekly CSV preference saved!');
+    } catch (err) {
+      console.error('Failed to update weekly_csv_enabled', err);
+      setSaveMessage({ text: 'Failed to update Weekly CSV preference', type: 'error' });
+      setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
+    } finally {
+      setSavingWeeklyCsv(false);
+    }
+  };
 
   // Handle redeeming invite code
   const handleRedeemCode = async () => {
@@ -179,6 +202,28 @@ const SettingsPage = () => {
                 <option value="system">System Default</option>
               </select>
               <p className="text-sm text-gray-300 mt-1">Select your preferred theme</p>
+            </div>
+          </div>
+
+          {/* Reports Section */}
+          <div className="bg-blue-800 rounded-lg shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">Reports</h2>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium">Weekly CSV Email</h3>
+                <p className="text-sm text-gray-300">Org summary + member details every Monday 9:00 AM EST</p>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5"
+                  checked={!!(profile && profile.weekly_csv_enabled)}
+                  onChange={onWeeklyToggle}
+                />
+                <span className="ml-2 text-sm">
+                  {savingWeeklyCsv ? 'Saving…' : (!!(profile && profile.weekly_csv_enabled) ? 'On' : 'Off')}
+                </span>
+              </div>
             </div>
           </div>
 
