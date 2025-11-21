@@ -17,7 +17,9 @@ async function fetchActiveSubscription(customerId) {
     const { subscriptions: subs = [] } = await resp.json();
     if (!subs.length) return null;
     const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
-    const isActive = ['active', 'trialing'].includes(s.status);
+    const nowMs = Date.now();
+    const periodEndMs = (s?.current_period_end ? s.current_period_end * 1000 : 0);
+    const isActive = ['active', 'trialing'].includes(s.status) || (!!s?.cancel_at_period_end && periodEndMs > nowMs);
     return {
       id: s.id,
       status: s.status,
@@ -258,7 +260,9 @@ const SuperadminUsersPage = () => {
                 const { subscriptions: subs = [] } = await resp.json();
                 if (subs.length > 0) {
                   const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
-                  const isActive = ['active', 'trialing'].includes(s.status);
+                  const nowMs = Date.now();
+                  const periodEndMs = (s?.current_period_end ? s.current_period_end * 1000 : 0);
+                  const isActive = ['active', 'trialing'].includes(s.status) || (!!s?.cancel_at_period_end && periodEndMs > nowMs);
                   if (isActive) {
                     premium += 1;
                     hasActiveStripe = true;
@@ -281,7 +285,9 @@ const SuperadminUsersPage = () => {
               if (resp2.ok) {
                 const { subscriptions: subs2 = [] } = await resp2.json();
                 const s2 = subs2.find((x) => ['active', 'trialing'].includes(x.status)) || subs2[0];
-                if (s2 && ['active', 'trialing'].includes(s2.status)) {
+                const nowMs = Date.now();
+                const periodEndMs = (s2?.current_period_end ? s2.current_period_end * 1000 : 0);
+                if (s2 && (['active', 'trialing'].includes(s2.status) || (!!s2?.cancel_at_period_end && periodEndMs > nowMs))) {
                   premium += 1;
                   hasActiveStripe = true;
                 }

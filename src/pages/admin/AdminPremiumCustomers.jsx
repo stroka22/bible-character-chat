@@ -32,7 +32,9 @@ async function getActiveSubscriptionForProfile(profile) {
     }
     if (!subs || subs.length === 0) return null;
     const sub = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
-    const isActive = ['active', 'trialing'].includes(sub.status);
+    const nowMs = Date.now();
+    const periodEndMs = (sub?.current_period_end ? sub.current_period_end * 1000 : 0);
+    const isActive = ['active', 'trialing'].includes(sub.status) || (!!sub?.cancel_at_period_end && periodEndMs > nowMs);
     return {
       id: sub.id,
       status: sub.status,
