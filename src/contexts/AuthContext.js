@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
         dbg(`fetchProfile: Fetching profile for user ID ${uid} ` +
             `(attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
         try {
-            const { data, error, status } = await supabase
+            let { data, error, status } = await supabase
                 .from('profiles')
                 .select('id, role, email, display_name, avatar_url, owner_slug, weekly_csv_enabled')
                 .eq('id', uid)
@@ -47,10 +47,29 @@ export function AuthProvider({ children }) {
             console.log(`fetchProfile: Query completed with status ${status}`);
             dbg(`fetchProfile: data ${data ? 'received' : 'null'} | error ${error ? 'present' : 'none'}`);
             if (error) {
-                console.error('fetchProfile: Failed to fetch profile:', error);
-                setProfile(null);
-                setRole('unknown');
-                return;
+                // Fallback if the weekly_csv_enabled column does not exist in production yet
+                if (error.code === '42703') {
+                    dbgwarn('fetchProfile: weekly_csv_enabled column missing; retrying without it');
+                    const fallback = await supabase
+                        .from('profiles')
+                        .select('id, role, email, display_name, avatar_url, owner_slug')
+                        .eq('id', uid)
+                        .maybeSingle();
+                    status = fallback.status;
+                    data = fallback.data;
+                    // Preserve error only if fallback also failed
+                    if (fallback.error) {
+                        console.error('fetchProfile: Fallback profile fetch failed:', fallback.error);
+                        setProfile(null);
+                        setRole('unknown');
+                        return;
+                    }
+                } else {
+                    console.error('fetchProfile: Failed to fetch profile:', error);
+                    setProfile(null);
+                    setRole('unknown');
+                    return;
+                }
             }
             if (!data && retryCount < MAX_RETRIES) {
                 dbgwarn(`fetchProfile: No profile found for user ${uid}, retrying in ${RETRY_DELAY}ms...`);
