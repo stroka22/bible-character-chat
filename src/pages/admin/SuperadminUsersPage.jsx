@@ -157,9 +157,36 @@ const SuperadminUsersPage = () => {
       // can suppress the "Premium Override" badge when a real subscription exists.
       const enriched = await Promise.all(
         (data || []).map(async (p) => {
-          const sub = p.stripe_customer_id
+          // Try by customer id first
+          let sub = p.stripe_customer_id
             ? await fetchActiveSubscription(p.stripe_customer_id)
             : null;
+          // Fallback: try Stripe by email if not active
+          if ((!sub || !sub.isActive) && p.email) {
+            try {
+              const resp = await fetch('/api/stripe-get-subscriptions-by-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: p.email })
+              });
+              if (resp.ok) {
+                const { subscriptions: subs = [] } = await resp.json();
+                if (subs.length > 0) {
+                  const s = subs.find((x) => ['active', 'trialing'].includes(x.status)) || subs[0];
+                  const nowMs = Date.now();
+                  const periodEndMs = (s?.current_period_end ? s.current_period_end * 1000 : 0);
+                  const isActive = ['active', 'trialing'].includes(s.status) || (!!s?.cancel_at_period_end && periodEndMs > nowMs);
+                  sub = s ? {
+                    id: s.id,
+                    status: s.status,
+                    isActive,
+                    currentPeriodEnd: s.current_period_end,
+                    cancelAtPeriodEnd: s.cancel_at_period_end,
+                  } : null;
+                }
+              }
+            } catch (_) {}
+          }
           return { ...p, subscription: sub };
         })
       );
