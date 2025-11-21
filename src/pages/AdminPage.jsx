@@ -24,7 +24,7 @@ const AdminPage = () => {
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState('characters');
+    const [activeTab, setActiveTab] = useState('overview');
     const [editingCharacterId, setEditingCharacterId] = useState(null);
     // New state for selected characters
     const [selectedCharacters, setSelectedCharacters] = useState([]);
@@ -443,35 +443,20 @@ const AdminPage = () => {
                 ))
             ] }), 
 
-        <div className="mb-6 p-4 bg-white rounded-md shadow border">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-gray-900 font-medium">Weekly CSV Email</div>
-              <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
-            </div>
-            <label className="flex items-center space-x-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                className="w-5 h-5"
-                checked={weeklyCsvEnabled}
-                onChange={onWeeklyToggle}
-                disabled={savingWeeklyCsv}
-              />
-              <span className="text-sm text-gray-900">On/Off</span>
-            </label>
-          </div>
-        </div>, 
+        (activeTab === 'overview') && (_jsx("div", { className: "mb-6 p-4 bg-white rounded-md shadow border", children: _jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { children: [_jsx("div", { className: "text-gray-900 font-medium", children: "Weekly CSV Email" }), _jsx("div", { className: "text-sm text-gray-600", children: "Org summary + member details every Monday 9:00 AM EST" })] }), _jsxs("label", { className: "flex items-center space-x-2 cursor-pointer select-none", children: [_jsx("input", { type: "checkbox", className: "w-5 h-5", checked: weeklyCsvEnabled, onChange: onWeeklyToggle, disabled: savingWeeklyCsv }), _jsx("span", { className: "text-sm text-gray-900", children: "On/Off" })] })] }) })), 
+        (activeTab === 'overview') && (_jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8", children: _jsxs(_Fragment, { children: [_jsxs("div", { className: "p-4 bg-white rounded-md shadow border", children: [_jsx("div", { className: "text-gray-900 font-semibold", children: "Premium Members" }), _jsx("div", { className: "text-sm text-gray-600 mb-3", children: "View members with active subscriptions under your organization." }), _jsx(Link, { to: "/admin/premium", className: "inline-block px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700", children: "Open" })] }), _jsxs("div", { className: "p-4 bg-white rounded-md shadow border", children: [_jsx("div", { className: "text-gray-900 font-semibold", children: "Groups" }), _jsx("div", { className: "text-sm text-gray-600 mb-3", children: "Create and manage member groups." }), _jsx("button", { onClick: () => setActiveTab('groups'), className: "inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700", children: "Manage" })] }), _jsxs("div", { className: "p-4 bg-white rounded-md shadow border", children: [_jsx("div", { className: "text-gray-900 font-semibold", children: "Featured Character" }), _jsx("div", { className: "text-sm text-gray-600 mb-3", children: "Set the character featured on your org's home." }), _jsx("button", { onClick: () => setActiveTab('featured'), className: "inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700", children: "Set Featured" })] }), _jsxs("div", { className: "p-4 bg-white rounded-md shadow border", children: [_jsx("div", { className: "text-gray-900 font-semibold", children: "Bible Studies" }), _jsx("div", { className: "text-sm text-gray-600 mb-3", children: "Manage studies and lessons." }), _jsx("button", { onClick: () => setActiveTab('studies'), className: "inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700", children: "Open" })] }), _jsxs("div", { className: "p-4 bg-white rounded-md shadow border", children: [_jsx("div", { className: "text-gray-900 font-semibold", children: "Characters" }), _jsx("div", { className: "text-sm text-gray-600 mb-3", children: "Add characters, customize prompts to your beliefs, and toggle active/dormant." }), _jsx("button", { onClick: () => setActiveTab('characters'), className: "inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700", children: "Manage" })] }), _jsxs("div", { className: "p-4 bg-white rounded-md shadow border", children: [_jsx("div", { className: "text-gray-900 font-semibold", children: "FAQ" }), _jsx("div", { className: "text-sm text-gray-600 mb-3", children: "Edit frequently asked questions." }), _jsx("button", { onClick: () => setActiveTab('faq'), className: "inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700", children: "Edit" })] })] }) })), 
         
         <div className="mb-8 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8" aria-label="Admin Tabs">
+          <nav className="-mb-px flex flex-wrap gap-4" aria-label="Admin Tabs">
+            <button onClick={() => setActiveTab('overview')} className={`whitespace-nowrap py-2 px-3 rounded font-medium text-sm ${activeTab === 'overview' ? 'bg-gray-200 text-gray-900' : 'text-gray-900 hover:bg-gray-100'}`}>Overview</button>
             <button onClick={() => setActiveTab('characters')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'characters' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>Characters</button>
             <button onClick={() => setActiveTab('groups')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'groups' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>Groups</button>
             <button onClick={() => setActiveTab('featured')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'featured' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>Featured Character</button>
             <button onClick={() => setActiveTab('favorites')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'favorites' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>User Favorites</button>
             <button onClick={() => setActiveTab('faq')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'faq' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>FAQ Editor</button>
             <button onClick={() => setActiveTab('studies')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'studies' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>Bible Studies</button>
-            <button onClick={() => setActiveTab('roundtable')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'roundtable' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>Roundtable</button>
-            <button onClick={() => setActiveTab('accountTiers')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'accountTiers' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`}>Account Tiers</button>
+            {isSuperadmin() && (_jsx("button", { onClick: () => setActiveTab('roundtable'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'roundtable' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`, children: "Roundtable" }))}
+            {isSuperadmin() && (_jsx("button", { onClick: () => setActiveTab('accountTiers'), className: `whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'accountTiers' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-900 hover:text-gray-900 hover:border-gray-300'}`, children: "Account Tiers" }))}
           </nav>
         </div>,
         
