@@ -2,6 +2,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabase';
 import { characterRepository } from '../repositories/characterRepository';
 import GroupManagement from '../components/admin/GroupManagement';
 import AdminFAQEditor from '../components/admin/AdminFAQEditor';
@@ -12,11 +13,12 @@ import AdminStudiesPage from './admin/AdminStudiesPage';
 // Robust CSV utilities (handles quoted commas/newlines, escaped quotes, etc.)
 import { parseCSV, tryParseJson } from '../utils/csvParser';
 const AdminPage = () => {
-    const { user, isSuperadmin } = useAuth();
+    const { user, profile, isSuperadmin } = useAuth();
     const bypassAuth = typeof window !== 'undefined' &&
         localStorage.getItem('bypass_auth') === 'true';
     const isAdmin = true;
     const [characters, setCharacters] = useState([]);
+    const [savingWeeklyCsv, setSavingWeeklyCsv] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
@@ -60,6 +62,24 @@ const AdminPage = () => {
         setFormRelationships('');
         setFormStudyQuestions('');
     }, []);
+
+    const onWeeklyToggle = async (e) => {
+        if (!user) return;
+        setSavingWeeklyCsv(true);
+        try {
+            const next = !!e.target.checked;
+            const { error } = await supabase
+                .from('profiles')
+                .update({ weekly_csv_enabled: next })
+                .eq('id', user.id);
+            if (error) throw error;
+        } catch (err) {
+            console.error('Failed to update weekly_csv_enabled', err);
+            alert('Failed to update preference');
+        } finally {
+            setSavingWeeklyCsv(false);
+        }
+    };
     const fetchCharacters = useCallback(async () => {
         setIsLoading(true);
         setError(null);
@@ -413,6 +433,26 @@ const AdminPage = () => {
                   _jsx(Link, { to: "/admin/premium", className: "inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600", children: "Manage Users" })
                 ))
             ] }), 
+
+        <div className="mb-6 p-4 bg-white rounded-md shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-gray-900 font-medium">Weekly CSV Email</div>
+              <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                className="w-5 h-5"
+                checked={!!(profile && profile.weekly_csv_enabled)}
+                onChange={onWeeklyToggle}
+              />
+              <span className="ml-2 text-sm text-gray-900">
+                {savingWeeklyCsv ? 'Saving...' : (!!(profile && profile.weekly_csv_enabled) ? 'On' : 'Off')}
+              </span>
+            </div>
+          </div>
+        </div>, 
         
         <div className="mb-8 border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Admin Tabs">
