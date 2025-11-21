@@ -941,8 +941,16 @@ const SuperadminUsersPage = () => {
                           {profile.display_name && (
                             <div className="text-xs text-gray-300">{profile.display_name}</div>
                           )}
-                        {profile.premium_override && !profile.subscription?.isActive && (
-                            <div className="text-[10px] mt-1 inline-block bg-purple-600 px-2 py-0.5 rounded-full">Premium Override</div>
+                          {/* Premium indicators */}
+                          {profile.subscription?.isActive && (
+                            <div className="text-[10px] mt-1 inline-block bg-green-500 text-blue-900 font-semibold px-2 py-0.5 rounded-full">
+                              Premium
+                            </div>
+                          )}
+                          {!profile.subscription?.isActive && profile.premium_override && (
+                            <div className="text-[10px] mt-1 inline-block bg-purple-600 px-2 py-0.5 rounded-full">
+                              Premium Override
+                            </div>
                           )}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -1041,16 +1049,20 @@ const SuperadminUsersPage = () => {
                                   setTimeout(() => setActionMessage({ text: '', type: '' }), 2500);
                                 }
                               }}
-                              disabled={actionInProgress === profile.id + ':premium' || !isSuperAdmin}
+                              disabled={actionInProgress === profile.id + ':premium' || !isSuperAdmin || profile.subscription?.isActive}
                               className={`mt-2 px-2 py-1 text-xs rounded ${
-                                actionInProgress === profile.id + ':premium' || !isSuperAdmin
+                                actionInProgress === profile.id + ':premium' || !isSuperAdmin || profile.subscription?.isActive
                                   ? 'bg-gray-600 cursor-not-allowed'
                                   : profile.premium_override
                                     ? 'bg-purple-700 hover:bg-purple-600'
                                     : 'bg-purple-600 hover:bg-purple-500'
                               }`}
                             >
-                              {profile.premium_override ? 'Remove Premium' : 'Grant Premium'}
+                              {profile.subscription?.isActive
+                                ? 'Premium (Stripe)'
+                                : profile.premium_override
+                                  ? 'Remove Premium'
+                                  : 'Grant Premium'}
                             </button>
 
                             {/* Link Stripe by Email (superadmin) */}
