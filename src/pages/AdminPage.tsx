@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabase';
 import { characterRepository } from '../repositories/characterRepository';
 import { type Character } from '../services/supabase';
 import GroupManagement from '../components/admin/GroupManagement';
@@ -32,7 +33,7 @@ function tryParseJson(str: string) {
 }
 
 const AdminPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   /* ------------------------------------------------------------
    * ADMIN / BYPASS ACCESS CHECK
@@ -54,6 +55,7 @@ const AdminPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isAdmin = true;
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [savingWeeklyCsv, setSavingWeeklyCsv] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -123,6 +125,25 @@ const AdminPage: React.FC = () => {
       setIsLoading(false);
     }
   }, []);
+
+  // Weekly CSV toggle handler (self only)
+  const onWeeklyToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) return;
+    setSavingWeeklyCsv(true);
+    try {
+      const next = !!e.target.checked;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ weekly_csv_enabled: next })
+        .eq('id', user.id);
+      if (error) throw error;
+    } catch (err) {
+      console.error('Failed to update weekly_csv_enabled', err);
+      alert('Failed to update preference');
+    } finally {
+      setSavingWeeklyCsv(false);
+    }
+  };
 
   // Fetch characters after the access flags are set
   useEffect(() => {
@@ -313,6 +334,27 @@ const AdminPage: React.FC = () => {
       <p className="text-gray-700 mb-4">
         Welcome, Admin! Here you can manage Bible characters.
       </p>
+
+      {/* Weekly CSV Email self-toggle */}
+      <div className="mb-6 p-4 bg-white rounded-md shadow border">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-gray-900 font-medium">Weekly CSV Email</div>
+            <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
+          </div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              className="w-5 h-5"
+              checked={!!(profile && (profile as any).weekly_csv_enabled)}
+              onChange={onWeeklyToggle}
+            />
+            <span className="ml-2 text-sm text-gray-900">
+              {savingWeeklyCsv ? 'Saving...' : (!!(profile && (profile as any).weekly_csv_enabled) ? 'On' : 'Off')}
+            </span>
+          </div>
+        </div>
+      </div>
 
       {/* Top-level tab navigation */}
       <div className="mb-8 border-b border-gray-200">
