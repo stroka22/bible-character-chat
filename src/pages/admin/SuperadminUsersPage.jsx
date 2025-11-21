@@ -123,7 +123,8 @@ const SuperadminUsersPage = () => {
           premium_override,
           stripe_customer_id,
           display_name,
-          created_at
+          created_at,
+          weekly_csv_enabled
         `, { count: 'exact' });
       
       // Apply filters
@@ -1064,6 +1065,40 @@ const SuperadminUsersPage = () => {
                                   ? 'Remove Premium'
                                   : 'Grant Premium'}
                             </button>
+
+                            {/* Weekly CSV toggle (self only) */}
+                            {authUser?.id === profile.id && (
+                              <button
+                                onClick={async () => {
+                                  if (actionInProgress) return;
+                                  setActionInProgress(profile.id + ':weekly');
+                                  try {
+                                    const next = !profile.weekly_csv_enabled;
+                                    const { error } = await supabase
+                                      .from('profiles')
+                                      .update({ weekly_csv_enabled: next })
+                                      .eq('id', profile.id);
+                                    if (error) throw error;
+                                    setProfiles(prev => prev.map(p => p.id === profile.id ? { ...p, weekly_csv_enabled: next } : p));
+                                  } catch (e) {
+                                    console.error('Failed to update weekly_csv_enabled', e);
+                                    alert('Failed to update Weekly CSV preference');
+                                  } finally {
+                                    setActionInProgress(null);
+                                  }
+                                }}
+                                disabled={actionInProgress === profile.id + ':weekly'}
+                                className={`px-2 py-1 text-xs rounded ${
+                                  actionInProgress === profile.id + ':weekly'
+                                    ? 'bg-gray-600 cursor-not-allowed'
+                                    : profile.weekly_csv_enabled
+                                      ? 'bg-green-600 hover:bg-green-500'
+                                      : 'bg-blue-600 hover:bg-blue-500'
+                                }`}
+                              >
+                                Weekly CSV: {profile.weekly_csv_enabled ? 'On' : 'Off'}
+                              </button>
+                            )}
 
                             {/* Link Stripe by Email (superadmin) */}
                             {isSuperAdmin && (

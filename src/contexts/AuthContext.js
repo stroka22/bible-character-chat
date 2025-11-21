@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
         try {
             const { data, error, status } = await supabase
                 .from('profiles')
-                .select('id, role, email, display_name, avatar_url')
+                .select('id, role, email, display_name, avatar_url, owner_slug, weekly_csv_enabled')
                 .eq('id', uid)
                 .maybeSingle();
             console.log(`fetchProfile: Query completed with status ${status}`);
