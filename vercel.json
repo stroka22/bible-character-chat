@@ -60,5 +60,11 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/weekly-admin-csv",
+      "schedule": "0 14 * * 1" 
+    }
+  ]
 }

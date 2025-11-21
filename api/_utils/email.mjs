@@ -18,7 +18,7 @@ if (RESEND_API_KEY) {
   }
 }
 
-export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, replyTo = DEFAULT_REPLY_TO }) {
+export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, replyTo = DEFAULT_REPLY_TO, attachments = [] }) {
   if (!resend) return { ok: false, error: 'Email disabled: missing RESEND_API_KEY' };
   if (!to || !subject || !html) return { ok: false, error: 'Missing to/subject/html' };
 
@@ -29,6 +29,7 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, replyT
       subject,
       html,
       reply_to: replyTo,
+      attachments: Array.isArray(attachments) && attachments.length ? attachments : undefined,
     });
     const id = result?.data?.id || result?.id || null;
     return { ok: !!id, id, result: sanitizeResult(result) };
