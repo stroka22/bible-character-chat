@@ -111,11 +111,22 @@ async function buildCsvForRecipient(admin, owners, supa, stripe) {
   const summary = [];
 
   for (const org of orgs) {
-    const { data: members, error } = await supa
-      .from('profiles')
-      .select('id,email,display_name,role,owner_slug,stripe_customer_id,premium_override,created_at')
-      .eq('owner_slug', org.owner_slug);
-    if (error) continue;
+    // Try selecting optional first_name/last_name; fall back if columns do not exist
+    let members = [];
+    {
+      let q = await supa
+        .from('profiles')
+        .select('id,email,display_name,first_name,last_name,role,owner_slug,stripe_customer_id,premium_override,created_at')
+        .eq('owner_slug', org.owner_slug);
+      if (q.error && /column .* does not exist/i.test(q.error.message || '')) {
+        q = await supa
+          .from('profiles')
+          .select('id,email,display_name,role,owner_slug,stripe_customer_id,premium_override,created_at')
+          .eq('owner_slug', org.owner_slug);
+      }
+      if (q.error) continue;
+      members = q.data || [];
+    }
 
     let total = members?.length || 0;
     let premium = 0; let overrides = 0; let free = 0;
@@ -124,20 +135,10 @@ async function buildCsvForRecipient(admin, owners, supa, stripe) {
       const status = await computeMemberStatus(stripe, m);
       if (status.premium === 'Stripe') premium++; else if (status.premium === 'Override') overrides++; else free++;
       const s = status.sub;
-      // Derive first/last from display_name if present; fallback to email local-part
       const displayName = m.display_name || '';
-      let firstName = '';
-      let lastName = '';
-      if (displayName) {
-        const parts = String(displayName).trim().split(/\s+/);
-        firstName = parts[0] || '';
-        lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
-      } else if (m.email) {
-        const local = String(m.email).split('@')[0].replace(/[._-]+/g, ' ').trim();
-        const parts = local.split(/\s+/);
-        firstName = parts[0] || '';
-        lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
-      }
+      // Only use explicit values from DB; leave blank if not provided
+      const firstName = (m.first_name || '').trim();
+      const lastName = (m.last_name || '').trim();
 
       rows.push([
         csvEscape(org.owner_slug),
