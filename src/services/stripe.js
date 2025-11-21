@@ -371,36 +371,46 @@ async function getActiveSubscription(userId) {
     }
     try {
         const { data: userData, error: dbError } = await supabase
-            .from('users')
-            .select('stripe_customer_id')
+            .from('profiles')
+            .select('stripe_customer_id, email')
             .eq('id', userId)
             .maybeSingle();
         if (dbError) {
             console.error(`[Stripe] 🔴 Database error when fetching customer ID: ${dbError.message}`);
             throw new Error(`Database error: ${dbError.message}`);
         }
-        if (!userData?.stripe_customer_id) {
-            console.log(`[Stripe] ℹ️ No Stripe customer ID found for user ${userId}`);
-            return null;
+        let subscriptions = [];
+        // Try by customer ID first if available
+        if (userData?.stripe_customer_id) {
+            console.log(`[Stripe] 🔄 Fetching subscriptions for customer ${userData.stripe_customer_id}`);
+            const resp = await fetch('/api/stripe-get-subscriptions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId: userData.stripe_customer_id })
+            });
+            if (resp.ok) {
+                const d = await resp.json();
+                subscriptions = d?.subscriptions || [];
+            }
         }
-        console.log(`[Stripe] 🔄 Fetching subscriptions for customer ${userData.stripe_customer_id}`);
-        const resp = await fetch('/api/stripe-get-subscriptions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customerId: userData.stripe_customer_id })
-        });
-        if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            const msg = err?.error || 'Proxy lookup failed';
-            console.error(`[Stripe] 🔴 Proxy error: ${msg}`);
-            throw new StripeEndpointError(`Proxy error: ${msg}`);
+        // Fallback by email when none found or no customer id
+        if ((!subscriptions || subscriptions.length === 0) && userData?.email) {
+            console.log(`[Stripe] 🔄 No subs by customer ID; trying email fallback for ${userData.email}`);
+            const r2 = await fetch('/api/stripe-get-subscriptions-by-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: userData.email })
+            });
+            if (r2.ok) {
+                const d2 = await r2.json();
+                subscriptions = d2?.subscriptions || [];
+            }
         }
-        const { subscriptions } = await resp.json();
         if (!subscriptions || subscriptions.length === 0) {
-            console.log(`[Stripe] ℹ️ No active subscriptions found for customer ${userData.stripe_customer_id}`);
+            console.log('[Stripe] ℹ️ No subscriptions found via customerId or email');
             return null;
         }
-        const sub = subscriptions[0];
+        const sub = subscriptions.find(s => ['active','trialing'].includes(s.status)) || subscriptions[0];
         console.log(`[Stripe] ✅ Found active subscription: ${sub.id} (${sub.status})`);
         return {
             id: sub.id,
