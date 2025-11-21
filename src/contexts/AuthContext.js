@@ -95,7 +95,11 @@ export function AuthProvider({ children }) {
             setSubscription(sub);
             
             // Set premium status based on subscription status
-            const premiumStatus = sub && (sub.status === 'active' || sub.status === 'trialing');
+            const premiumStatus = !!sub && (
+              sub.status === 'active' ||
+              sub.status === 'trialing' ||
+              (sub.cancelAtPeriodEnd && (sub.currentPeriodEnd * 1000) > Date.now())
+            );
             setIsPremium(premiumStatus);
             
             dbg(`refreshSubscription: User premium status: ${premiumStatus ? 'PREMIUM' : 'FREE'}`);
