@@ -91,7 +91,20 @@ async function buildCsvForRecipient(admin, owners, supa, stripe) {
   }
 
   const header = [
-    'organization_slug','organization_name','user_id','email','role','premium_status','stripe_status','cancel_at_period_end','current_period_end','stripe_customer_id','created_at'
+    'organization_slug',
+    'organization_name',
+    'user_id',
+    'email',
+    'display_name',
+    'first_name',
+    'last_name',
+    'role',
+    'premium_status',
+    'stripe_status',
+    'cancel_at_period_end',
+    'current_period_end',
+    'stripe_customer_id',
+    'created_at'
   ];
   const rows = [header.join(',')];
 
@@ -100,7 +113,7 @@ async function buildCsvForRecipient(admin, owners, supa, stripe) {
   for (const org of orgs) {
     const { data: members, error } = await supa
       .from('profiles')
-      .select('id,email,role,owner_slug,stripe_customer_id,premium_override,created_at')
+      .select('id,email,display_name,role,owner_slug,stripe_customer_id,premium_override,created_at')
       .eq('owner_slug', org.owner_slug);
     if (error) continue;
 
@@ -111,11 +124,29 @@ async function buildCsvForRecipient(admin, owners, supa, stripe) {
       const status = await computeMemberStatus(stripe, m);
       if (status.premium === 'Stripe') premium++; else if (status.premium === 'Override') overrides++; else free++;
       const s = status.sub;
+      // Derive first/last from display_name if present; fallback to email local-part
+      const displayName = m.display_name || '';
+      let firstName = '';
+      let lastName = '';
+      if (displayName) {
+        const parts = String(displayName).trim().split(/\s+/);
+        firstName = parts[0] || '';
+        lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
+      } else if (m.email) {
+        const local = String(m.email).split('@')[0].replace(/[._-]+/g, ' ').trim();
+        const parts = local.split(/\s+/);
+        firstName = parts[0] || '';
+        lastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
+      }
+
       rows.push([
         csvEscape(org.owner_slug),
         csvEscape(org.display_name || ''),
         csvEscape(m.id),
         csvEscape(m.email || ''),
+        csvEscape(displayName),
+        csvEscape(firstName),
+        csvEscape(lastName),
         csvEscape(m.role || ''),
         csvEscape(status.premium),
         csvEscape(s?.status || ''),
@@ -146,6 +177,10 @@ export default async function handler(req, res) {
   const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: '2024-12-18.acacia' });
 
   try {
+    // Parse query/body
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const forceTo = url.searchParams.get('force_to') || url.searchParams.get('to') || req.query?.force_to || req.body?.force_to || null;
+
     // Owners list
     const { data: owners, error: ownersErr } = await supa
       .from('owners')
@@ -153,22 +188,33 @@ export default async function handler(req, res) {
     const ownersList = ownersErr ? [] : (owners || []);
 
     // Target recipients
-    const { data: admins, error: adminsErr } = await supa
-      .from('profiles')
-      .select('id,email,role,owner_slug,weekly_csv_enabled')
-      .in('role', ['admin','superadmin'])
-      .eq('weekly_csv_enabled', true)
-      .not('email', 'is', null);
+    let admins = [];
+    let adminsErr = null;
+    if (!forceTo) {
+      const q = await supa
+        .from('profiles')
+        .select('id,email,role,owner_slug,weekly_csv_enabled')
+        .in('role', ['admin','superadmin'])
+        .eq('weekly_csv_enabled', true)
+        .not('email', 'is', null);
+      admins = q.data;
+      adminsErr = q.error;
+    }
 
-    if (adminsErr) {
+    if (!forceTo && adminsErr) {
       return json(res, 500, { error: adminsErr.message });
     }
 
     const targets = (admins || []).filter(a => ADMIN_ROLES.has(a.role) && a.email);
 
-    // Optional manual test: only ?email=...
+    // Optional manual test: only ?email=... (must still be admin)
     const onlyEmail = req.query?.email || req.body?.email || null;
-    const recipients = onlyEmail ? targets.filter(t => t.email === onlyEmail) : targets;
+    let recipients = onlyEmail ? targets.filter(t => t.email === onlyEmail) : targets;
+
+    // Force mode: send to arbitrary address as superadmin (includes all orgs)
+    if (forceTo) {
+      recipients = [{ email: forceTo, role: 'superadmin', owner_slug: null, weekly_csv_enabled: true }];
+    }
 
     const results = [];
     for (const admin of recipients) {
