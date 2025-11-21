@@ -440,17 +440,16 @@ const AdminPage = () => {
               <div className="text-gray-900 font-medium">Weekly CSV Email</div>
               <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
             </div>
-            <div className="flex items-center">
+            <label className="flex items-center space-x-2 cursor-pointer select-none">
               <input
                 type="checkbox"
                 className="w-5 h-5"
                 checked={!!(profile && profile.weekly_csv_enabled)}
                 onChange={onWeeklyToggle}
+                disabled={savingWeeklyCsv}
               />
-              <span className="ml-2 text-sm text-gray-900">
-                {savingWeeklyCsv ? 'Saving...' : (!!(profile && profile.weekly_csv_enabled) ? 'On' : 'Off')}
-              </span>
-            </div>
+              <span className="text-sm text-gray-900">On/Off</span>
+            </label>
           </div>
         </div>, 
         
