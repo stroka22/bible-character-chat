@@ -345,28 +345,23 @@ const AdminPage: React.FC = () => {
         Welcome, Admin! Here you can manage Bible characters.
       </p>
 
-      {/* Weekly CSV Email self-toggle */}
+      {/* Weekly CSV Email self-toggle (checkbox + static label) */}
       <div className="mb-6 p-4 bg-white rounded-md shadow border">
         <div className="flex items-center justify-between">
           <div>
             <div className="text-gray-900 font-medium">Weekly CSV Email</div>
             <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
           </div>
-          <button
-            onClick={onWeeklyToggle}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              weeklyCsvEnabled ? 'bg-green-500' : 'bg-gray-400'
-            } disabled:opacity-60`}
-            disabled={savingWeeklyCsv}
-            aria-pressed={weeklyCsvEnabled}
-            aria-label="Toggle Weekly CSV Email"
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                weeklyCsvEnabled ? 'translate-x-6' : 'translate-x-1'
-              }`}
+          <label className="flex items-center space-x-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="h-5 w-5 rounded border-gray-300"
+              checked={weeklyCsvEnabled}
+              onChange={() => onWeeklyToggle()}
+              disabled={savingWeeklyCsv}
             />
-          </button>
+            <span className="text-sm text-gray-900">On/Off</span>
+          </label>
         </div>
       </div>
 
