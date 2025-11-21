@@ -13,12 +13,13 @@ import AdminStudiesPage from './admin/AdminStudiesPage';
 // Robust CSV utilities (handles quoted commas/newlines, escaped quotes, etc.)
 import { parseCSV, tryParseJson } from '../utils/csvParser';
 const AdminPage = () => {
-    const { user, profile, isSuperadmin } = useAuth();
+    const { user, profile, isSuperadmin, refreshProfile } = useAuth();
     const bypassAuth = typeof window !== 'undefined' &&
         localStorage.getItem('bypass_auth') === 'true';
     const isAdmin = true;
     const [characters, setCharacters] = useState([]);
     const [savingWeeklyCsv, setSavingWeeklyCsv] = useState(false);
+    const [weeklyCsvEnabled, setWeeklyCsvEnabled] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
@@ -63,18 +64,26 @@ const AdminPage = () => {
         setFormStudyQuestions('');
     }, []);
 
+    // Mirror profile -> local toggle state
+    useEffect(() => {
+        setWeeklyCsvEnabled(!!(profile && profile.weekly_csv_enabled));
+    }, [profile]);
+
     const onWeeklyToggle = async (e) => {
         if (!user) return;
+        const next = !!e.target.checked;
+        setWeeklyCsvEnabled(next); // optimistic
         setSavingWeeklyCsv(true);
         try {
-            const next = !!e.target.checked;
             const { error } = await supabase
                 .from('profiles')
                 .update({ weekly_csv_enabled: next })
                 .eq('id', user.id);
             if (error) throw error;
+            try { await refreshProfile(user.id); } catch {}
         } catch (err) {
             console.error('Failed to update weekly_csv_enabled', err);
+            setWeeklyCsvEnabled(!next); // revert on error
             alert('Failed to update preference');
         } finally {
             setSavingWeeklyCsv(false);
@@ -444,7 +453,7 @@ const AdminPage = () => {
               <input
                 type="checkbox"
                 className="w-5 h-5"
-                checked={!!(profile && profile.weekly_csv_enabled)}
+                checked={weeklyCsvEnabled}
                 onChange={onWeeklyToggle}
                 disabled={savingWeeklyCsv}
               />
