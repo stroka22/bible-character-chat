@@ -221,21 +221,16 @@ const SettingsPage = () => {
                 <h3 className="font-medium">Weekly CSV Email</h3>
                 <p className="text-sm text-gray-300">Org summary + member details every Monday 9:00 AM EST</p>
               </div>
-              <button 
-                onClick={onWeeklyToggle}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  weeklyCsvEnabled ? 'bg-yellow-400' : 'bg-gray-500'
-                } disabled:opacity-60`}
-                disabled={savingWeeklyCsv}
-                aria-pressed={weeklyCsvEnabled}
-                aria-label="Toggle Weekly CSV Email"
-              >
-                <span 
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    weeklyCsvEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`} 
+              <label className="flex items-center space-x-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 rounded border-gray-300"
+                  checked={weeklyCsvEnabled}
+                  onChange={() => onWeeklyToggle()}
+                  disabled={savingWeeklyCsv}
                 />
-              </button>
+                <span className="text-sm">On/Off</span>
+              </label>
             </div>
           </div>
 
