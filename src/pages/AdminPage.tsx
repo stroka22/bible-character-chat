@@ -33,7 +33,7 @@ function tryParseJson(str: string) {
 }
 
 const AdminPage: React.FC = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
 
   /* ------------------------------------------------------------
    * ADMIN / BYPASS ACCESS CHECK
@@ -56,6 +56,7 @@ const AdminPage: React.FC = () => {
   const isAdmin = true;
   const [characters, setCharacters] = useState<Character[]>([]);
   const [savingWeeklyCsv, setSavingWeeklyCsv] = useState<boolean>(false);
+  const [weeklyCsvEnabled, setWeeklyCsvEnabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -126,19 +127,28 @@ const AdminPage: React.FC = () => {
     }
   }, []);
 
-  // Weekly CSV toggle handler (self only)
-  const onWeeklyToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Mirror profile -> local toggle state
+  useEffect(() => {
+    setWeeklyCsvEnabled(!!(profile as any)?.weekly_csv_enabled);
+  }, [profile]);
+
+  // Weekly CSV toggle handler (self only) with optimistic UI
+  const onWeeklyToggle = async () => {
     if (!user) return;
+    const next = !weeklyCsvEnabled;
+    setWeeklyCsvEnabled(next);
     setSavingWeeklyCsv(true);
     try {
-      const next = !!e.target.checked;
       const { error } = await supabase
         .from('profiles')
         .update({ weekly_csv_enabled: next })
         .eq('id', user.id);
       if (error) throw error;
+      try { await refreshProfile(user.id); } catch {}
     } catch (err) {
       console.error('Failed to update weekly_csv_enabled', err);
+      // revert on error
+      setWeeklyCsvEnabled(!next);
       alert('Failed to update preference');
     } finally {
       setSavingWeeklyCsv(false);
@@ -342,17 +352,21 @@ const AdminPage: React.FC = () => {
             <div className="text-gray-900 font-medium">Weekly CSV Email</div>
             <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
           </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              className="w-5 h-5"
-              checked={!!(profile && (profile as any).weekly_csv_enabled)}
-              onChange={onWeeklyToggle}
+          <button
+            onClick={onWeeklyToggle}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              weeklyCsvEnabled ? 'bg-green-500' : 'bg-gray-400'
+            } disabled:opacity-60`}
+            disabled={savingWeeklyCsv}
+            aria-pressed={weeklyCsvEnabled}
+            aria-label="Toggle Weekly CSV Email"
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                weeklyCsvEnabled ? 'translate-x-6' : 'translate-x-1'
+              }`}
             />
-            <span className="ml-2 text-sm text-gray-900">
-              {savingWeeklyCsv ? 'Saving...' : (!!(profile && (profile as any).weekly_csv_enabled) ? 'On' : 'Off')}
-            </span>
-          </div>
+          </button>
         </div>
       </div>
 
