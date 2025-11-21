@@ -13,6 +13,7 @@ const SettingsPage = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ text: '', type: '' });
   const [savingWeeklyCsv, setSavingWeeklyCsv] = useState(false);
+  const [weeklyCsvEnabled, setWeeklyCsvEnabled] = useState(false);
 
   /* ------------------------------------------------------------------
    * Invite-code redemption
@@ -37,12 +38,18 @@ const SettingsPage = () => {
     }
   }, []);
 
-  // Weekly CSV toggle (self)
-  const onWeeklyToggle = async (e) => {
+  // Mirror profile -> local toggle state
+  useEffect(() => {
+    setWeeklyCsvEnabled(!!(profile && profile.weekly_csv_enabled));
+  }, [profile]);
+
+  // Weekly CSV toggle (self) with optimistic UI
+  const onWeeklyToggle = async () => {
     if (!user) return;
+    const next = !weeklyCsvEnabled;
+    setWeeklyCsvEnabled(next);
     setSavingWeeklyCsv(true);
     try {
-      const next = !!e.target.checked;
       const { error } = await supabase
         .from('profiles')
         .update({ weekly_csv_enabled: next })
@@ -52,6 +59,7 @@ const SettingsPage = () => {
       showSaveMessage('Weekly CSV preference saved!');
     } catch (err) {
       console.error('Failed to update weekly_csv_enabled', err);
+      setWeeklyCsvEnabled(!next);
       setSaveMessage({ text: 'Failed to update Weekly CSV preference', type: 'error' });
       setTimeout(() => setSaveMessage({ text: '', type: '' }), 3000);
     } finally {
@@ -213,17 +221,21 @@ const SettingsPage = () => {
                 <h3 className="font-medium">Weekly CSV Email</h3>
                 <p className="text-sm text-gray-300">Org summary + member details every Monday 9:00 AM EST</p>
               </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5"
-                  checked={!!(profile && profile.weekly_csv_enabled)}
-                  onChange={onWeeklyToggle}
+              <button 
+                onClick={onWeeklyToggle}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  weeklyCsvEnabled ? 'bg-yellow-400' : 'bg-gray-500'
+                } disabled:opacity-60`}
+                disabled={savingWeeklyCsv}
+                aria-pressed={weeklyCsvEnabled}
+                aria-label="Toggle Weekly CSV Email"
+              >
+                <span 
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    weeklyCsvEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`} 
                 />
-                <span className="ml-2 text-sm">
-                  {savingWeeklyCsv ? 'Saving…' : (!!(profile && profile.weekly_csv_enabled) ? 'On' : 'Off')}
-                </span>
-              </div>
+              </button>
             </div>
           </div>
 
