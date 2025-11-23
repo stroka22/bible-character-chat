@@ -17,6 +17,8 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import PricingPage from './pages/PricingPage.jsx';
+import PastorsPage from './pages/PastorsPage.jsx';
+import AdminUpgrade from './pages/AdminUpgrade.jsx';
 import AccountBilling from './pages/AccountBilling.jsx';
 import AdminPage from './pages/AdminPage';
 import ConversationsPage from './pages/ConversationsPage.jsx';
@@ -187,6 +189,7 @@ function App() {
         _jsx(Route, { path: "/login", element: _jsx(LoginPage, {}) }),
         _jsx(Route, { path: "/signup", element: _jsx(SignupPage, {}) }),
         _jsx(Route, { path: "/pricing", element: _jsx(PricingPage, {}) }),
+        _jsx(Route, { path: "/leaders", element: _jsx(PastorsPage, {}) }),
         _jsx(Route, { path: "/account", element: _jsx(AccountBilling, {}) }),
         _jsx(Route, { path: "/how-it-works", element: _jsx(HowItWorksPage, {}) }),
         _jsx(Route, { path: "/about", element: _jsx(AboutPage, {}) }),
@@ -218,6 +221,7 @@ function App() {
         _jsx(Route, { element: _jsx(ProtectedRoute, { redirectPath: "/login" }), children: [
             _jsx(Route, { element: _jsx(AdminRoute, { redirectPath: "/login" }), children: _jsxs(React.Fragment, { children: [
                 _jsx(Route, { path: "/admin", element: _jsx(AdminPage, {}) }),
+                _jsx(Route, { path: "/admin/upgrade", element: _jsx(AdminUpgrade, {}) }),
                 _jsx(Route, { path: "/admin/invites", element: _jsx(AdminInvitesPage, {}) }),
                 _jsx(Route, { path: "/admin/users", element: _jsx(SuperadminUsersPage, {}) }),
                 _jsx(Route, { path: "/admin/studies", element: _jsx(AdminStudiesPage, {}) })
