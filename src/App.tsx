@@ -33,6 +33,7 @@ import PressKitPage from './pages/PressKitPage.jsx';
 import CareersPage from './pages/CareersPage.jsx';
 import PastorsPage from './pages/PastorsPage.jsx';
 import SalesPage from './pages/SalesPage.jsx';
+import AdminUpgrade from './pages/AdminUpgrade.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import InviteAccept from './pages/InviteAccept.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
@@ -305,6 +306,7 @@ function App(): JSX.Element {
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />
     <Route path="/pricing" element={<PricingPage />} />
+    <Route path="/leaders" element={<PastorsPage />} />
     <Route path="/account" element={<AccountBilling />} />
     {/* Invite links: allow first-time users to click and join */}
     <Route path="/invite/:code" element={<InviteAccept />} />
@@ -340,6 +342,7 @@ function App(): JSX.Element {
     <Route element={<ProtectedRoute redirectPath="/login" />}>
       <Route element={<AdminRoute redirectPath="/login" />}>
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/upgrade" element={<AdminUpgrade />} />
         <Route path="/admin/invites" element={<AdminInvitesPage />} />
         <Route path="/admin/premium" element={<AdminPremiumCustomers />} />
         <Route path="/admin/users" element={<SuperadminUsersPage />} />
