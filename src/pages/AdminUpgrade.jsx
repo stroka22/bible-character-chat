@@ -24,6 +24,7 @@ export default function AdminUpgrade() {
   }, []);
   const [runtimeMonthly, setRuntimeMonthly] = useState('');
   const [runtimeYearly, setRuntimeYearly] = useState('');
+  const [serverPresence, setServerPresence] = useState(null);
   const legacySinglePrice = useMemo(() => (
     import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG ||
     import.meta.env.VITE_ADMIN_ORG_PRICE_ID ||
@@ -49,6 +50,7 @@ export default function AdminUpgrade() {
         .then(r => r.ok ? r.json() : null)
         .then((d) => {
           if (!d) return;
+          if (d.presence) setServerPresence(d.presence);
           if (!priceMonthly && d.monthly) setRuntimeMonthly(d.monthly);
           if (!priceYearly && d.yearly) setRuntimeYearly(d.yearly);
         })
@@ -173,6 +175,12 @@ export default function AdminUpgrade() {
               {(!priceMonthly || !priceYearly) && (runtimeMonthly || runtimeYearly) && (
                 <div className="mt-1">
                   <span className="font-semibold">Runtime fallback from server env:</span> yes
+                </div>
+              )}
+              {serverPresence && (
+                <div className="mt-1 text-gray-600">
+                  <div>Server sees <code>VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY</code>: {serverPresence.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY ? 'yes' : 'no'}</div>
+                  <div>Server sees <code>VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY</code>: {serverPresence.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY ? 'yes' : 'no'}</div>
                 </div>
               )}
             </div>
