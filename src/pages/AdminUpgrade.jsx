@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createCheckoutSession, StripeConfigurationError } from '../services/stripe';
 
@@ -12,30 +12,28 @@ export default function AdminUpgrade() {
   // Support either env var name to avoid confusion
   const priceMonthly = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    const override = params.get('price') || params.get('price_monthly');
-    return (
-      override ||
-      import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY ||
-      ''
-    );
+    const override = params.get('price_monthly');
+    const envVal = (import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY || '').trim();
+    return (override?.trim() || envVal);
   }, []);
   const priceYearly = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    const override = params.get('price') || params.get('price_yearly');
-    return (
-      override ||
-      import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY ||
-      ''
-    );
+    const override = params.get('price_yearly');
+    const envVal = (import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY || '').trim();
+    return (override?.trim() || envVal);
   }, []);
+  const [runtimeMonthly, setRuntimeMonthly] = useState('');
+  const [runtimeYearly, setRuntimeYearly] = useState('');
   const legacySinglePrice = useMemo(() => (
     import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG ||
     import.meta.env.VITE_ADMIN_ORG_PRICE_ID ||
     ''
   ), []);
+  const resolvedMonthly = priceMonthly || runtimeMonthly;
+  const resolvedYearly = priceYearly || runtimeYearly;
   const activePriceId = billingCycle === 'yearly'
-    ? (priceYearly || legacySinglePrice)
-    : (priceMonthly || legacySinglePrice);
+    ? (resolvedYearly || legacySinglePrice)
+    : (resolvedMonthly || legacySinglePrice);
 
   const successUrl = `${window.location.origin}/admin?upgraded=1`;
   const cancelUrl = `${window.location.origin}/admin/upgrade?canceled=1`;
@@ -43,6 +41,20 @@ export default function AdminUpgrade() {
   // Surface environment mode to help ensure publishable key and price IDs
   const stripePublicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY || '';
   const stripeMode = stripePublicKey.startsWith('pk_live_') ? 'live' : (stripePublicKey ? 'test' : 'disabled');
+
+  useEffect(() => {
+    // Runtime fallback: fetch price IDs from server env if build-time values are missing
+    if (!priceMonthly || !priceYearly) {
+      fetch('/api/admin-price-ids')
+        .then(r => r.ok ? r.json() : null)
+        .then((d) => {
+          if (!d) return;
+          if (!priceMonthly && d.monthly) setRuntimeMonthly(d.monthly);
+          if (!priceYearly && d.yearly) setRuntimeYearly(d.yearly);
+        })
+        .catch(() => {});
+    }
+  }, [priceMonthly, priceYearly]);
 
   const handleUpgrade = async () => {
     setError('');
@@ -142,12 +154,12 @@ export default function AdminUpgrade() {
             <div className="mt-2 rounded border bg-gray-50 p-3 text-gray-700">
               <div><span className="font-semibold">Stripe mode:</span> {stripeMode}</div>
               <div className="mt-1"><span className="font-semibold">Publishable key:</span> {stripePublicKey ? `${stripePublicKey.slice(0, 10)}…` : 'not set'}</div>
-              <div className="mt-1"><span className="font-semibold">Price (monthly):</span> {priceMonthly || '(none)'}
+              <div className="mt-1"><span className="font-semibold">Price (monthly):</span> {resolvedMonthly || '(none)'}
                 {priceMonthly && priceMonthly.includes('_test_') && stripeMode === 'live' && (
                   <span className="ml-2 text-red-700">(test price in live mode)</span>
                 )}
               </div>
-              <div className="mt-1"><span className="font-semibold">Price (yearly):</span> {priceYearly || '(none)'}
+              <div className="mt-1"><span className="font-semibold">Price (yearly):</span> {resolvedYearly || '(none)'}
                 {priceYearly && priceYearly.includes('_test_') && stripeMode === 'live' && (
                   <span className="ml-2 text-red-700">(test price in live mode)</span>
                 )}
@@ -155,6 +167,14 @@ export default function AdminUpgrade() {
               <div className="mt-2">
                 URL overrides supported: <code>?price_monthly=price_...&price_yearly=price_...</code>
               </div>
+              <div className="mt-1">
+                <span className="font-semibold">Overrides active:</span> {new URLSearchParams(window.location.search).has('price_monthly') || new URLSearchParams(window.location.search).has('price_yearly') ? 'yes' : 'no'}
+              </div>
+              {(!priceMonthly || !priceYearly) && (runtimeMonthly || runtimeYearly) && (
+                <div className="mt-1">
+                  <span className="font-semibold">Runtime fallback from server env:</span> yes
+                </div>
+              )}
             </div>
           )}
         </div>
