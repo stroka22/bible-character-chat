@@ -12,21 +12,15 @@ export default function AdminUpgrade() {
   // Support either env var name to avoid confusion
   const priceMonthly = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    const override = params.get('price') || params.get('price_monthly');
-    return (
-      override ||
-      import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY ||
-      ''
-    );
+    const override = params.get('price_monthly');
+    const envVal = (import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY || '').trim();
+    return (override?.trim() || envVal);
   }, []);
   const priceYearly = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    const override = params.get('price') || params.get('price_yearly');
-    return (
-      override ||
-      import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY ||
-      ''
-    );
+    const override = params.get('price_yearly');
+    const envVal = (import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY || '').trim();
+    return (override?.trim() || envVal);
   }, []);
   const legacySinglePrice = useMemo(() => (
     import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG ||
@@ -154,6 +148,9 @@ export default function AdminUpgrade() {
               </div>
               <div className="mt-2">
                 URL overrides supported: <code>?price_monthly=price_...&price_yearly=price_...</code>
+              </div>
+              <div className="mt-1">
+                <span className="font-semibold">Overrides active:</span> {new URLSearchParams(window.location.search).has('price_monthly') || new URLSearchParams(window.location.search).has('price_yearly') ? 'yes' : 'no'}
               </div>
             </div>
           )}
