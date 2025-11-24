@@ -16,7 +16,6 @@ export default function AdminUpgrade() {
     return (
       override ||
       import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY ||
-      import.meta.env.VITE_STRIPE_PRICE_MONTHLY ||
       ''
     );
   }, []);
@@ -26,7 +25,6 @@ export default function AdminUpgrade() {
     return (
       override ||
       import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY ||
-      import.meta.env.VITE_STRIPE_PRICE_YEARLY ||
       ''
     );
   }, []);
