@@ -9,12 +9,26 @@ export default function AdminUpgrade() {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
 
   // Support either env var name to avoid confusion
-  const priceMonthly = useMemo(() => (
-    import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY || ''
-  ), []);
-  const priceYearly = useMemo(() => (
-    import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY || ''
-  ), []);
+  const priceMonthly = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const override = params.get('price') || params.get('price_monthly');
+    return (
+      override ||
+      import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY ||
+      import.meta.env.VITE_STRIPE_PRICE_MONTHLY ||
+      ''
+    );
+  }, []);
+  const priceYearly = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const override = params.get('price') || params.get('price_yearly');
+    return (
+      override ||
+      import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY ||
+      import.meta.env.VITE_STRIPE_PRICE_YEARLY ||
+      ''
+    );
+  }, []);
   const legacySinglePrice = useMemo(() => (
     import.meta.env.VITE_STRIPE_PRICE_ADMIN_ORG ||
     import.meta.env.VITE_ADMIN_ORG_PRICE_ID ||
