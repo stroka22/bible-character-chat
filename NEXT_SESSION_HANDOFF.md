@@ -203,3 +203,34 @@ RLS on sensitive tables, HTTPS avatar URL enforcement, secret keys in server env
 # End of Handoff Document
 
 If you need more info (e.g., UX walkthrough or code deep-dive), ask and we’ll append.  
+
+
+---
+
+## Admin Organization Subscription – Production Readiness
+
+Priority: Make Admin Org subscription purchasable at `/admin/upgrade` (login + admin). Pricing: $97/mo, $970/yr.
+
+What changed this session:
+- Confirmed build OK; payments use client-side Stripe Checkout via `@stripe/stripe-js`.
+- `src/pages/AdminUpgrade.jsx`: added a small env/debug panel (toggle with `?debug=1`) to display Stripe mode (live/test), detected publishable key prefix, and the price IDs in use. Supports URL overrides.
+
+Production envs to set in Vercel (same Stripe account and same mode):
+- `VITE_STRIPE_PUBLIC_KEY` = `pk_live_...`
+- `STRIPE_SECRET_KEY` = `sk_live_...`
+- `VITE_STRIPE_PRICE_ADMIN_ORG_MONTHLY` = `price_...`
+- `VITE_STRIPE_PRICE_ADMIN_ORG_YEARLY` = `price_...`
+
+Testing without envs (or to sanity-check):
+- Visit `/admin/upgrade?debug=1&price_monthly=price_XXX&price_yearly=price_YYY`
+  - Panel should show Stripe mode and override prices.
+  - Click Upgrade → redirects to Stripe Checkout.
+
+Post-purchase:
+- Success redirects to `/admin?upgraded=1`.
+- Billing portal endpoint exists: `/api/create-billing-portal-session`.
+
+Sanity checklist:
+1) Keys and price IDs all from the SAME Stripe account.
+2) Live keys with live prices in production. No `_test_` prices with `pk_live_`.
+3) If needed, ping Brian to share masked `pk_/sk_/price_` for alignment check.
