@@ -380,3 +380,126 @@ export const bibleStudiesRepository = {
 };
 
 export default bibleStudiesRepository;
+
+/**
+ * Clone a study (and optionally its lessons) to one or more target organizations.
+ * - If a study with the same title exists in a target org, append a numeric suffix "-2", "-3", ...
+ * - Returns a summary per target org with new study IDs or errors.
+ * @param {string} studyId
+ * @param {string[]} targetOwnerSlugs list of target organizations
+ * @param {{ includeLessons?: boolean }} options
+ */
+export async function cloneStudyToOwners(studyId, targetOwnerSlugs, options = {}) {
+  const includeLessons = options.includeLessons !== false; // default true
+  const results = [];
+  try {
+    if (!studyId) throw new Error('studyId required');
+    if (!Array.isArray(targetOwnerSlugs) || targetOwnerSlugs.length === 0) {
+      throw new Error('targetOwnerSlugs must be a non-empty array');
+    }
+
+    // Load source study and lessons
+    const { data: srcStudy, error: sErr } = await supabase
+      .from('bible_studies')
+      .select('*')
+      .eq('id', studyId)
+      .maybeSingle();
+    if (sErr) throw new Error(sErr.message);
+    if (!srcStudy) throw new Error('Source study not found');
+
+    let srcLessons = [];
+    if (includeLessons) {
+      const { data: ls, error: lErr } = await supabase
+        .from('bible_study_lessons')
+        .select('*')
+        .eq('study_id', studyId)
+        .order('order_index', { ascending: true });
+      if (lErr) throw new Error(lErr.message);
+      srcLessons = Array.isArray(ls) ? ls : [];
+    }
+
+    const titleBase = String(srcStudy.title || '').trim();
+
+    // Helper: find an available title in target org by appending -N if needed
+    const findAvailableTitle = async (owner) => {
+      const MAX_TRIES = 50;
+      for (let i = 0; i < MAX_TRIES; i++) {
+        const candidate = i === 0 ? titleBase : `${titleBase}-${i + 1}`; // -2, -3, ...
+        const { data, error } = await supabase
+          .from('bible_studies')
+          .select('id')
+          .eq('owner_slug', owner)
+          .eq('title', candidate)
+          .limit(1);
+        if (error) throw new Error(error.message);
+        if (!data || data.length === 0) return candidate;
+      }
+      // Fallback if somehow all attempts taken
+      const ts = Date.now();
+      return `${titleBase}-${ts}`;
+    };
+
+    for (const rawOwner of targetOwnerSlugs) {
+      const owner = String(rawOwner || '').trim().toLowerCase();
+      if (!owner) {
+        results.push({ owner, ok: false, error: 'Invalid owner slug' });
+        continue;
+      }
+      try {
+        const newTitle = await findAvailableTitle(owner);
+        const now = new Date().toISOString();
+        const insertStudy = {
+          owner_slug: owner,
+          title: newTitle,
+          description: srcStudy.description || '',
+          subject: srcStudy.subject || '',
+          character_instructions: srcStudy.character_instructions || '',
+          character_id: srcStudy.character_id || null,
+          cover_image_url: srcStudy.cover_image_url || null,
+          study_type: srcStudy.study_type || 'standalone',
+          visibility: srcStudy.visibility || 'public',
+          is_premium: !!srcStudy.is_premium,
+          created_at: now,
+          updated_at: now,
+        };
+
+        const { data: newStudy, error: insErr } = await supabase
+          .from('bible_studies')
+          .insert(insertStudy)
+          .select('*')
+          .maybeSingle();
+        if (insErr) throw new Error(insErr.message);
+        if (!newStudy?.id) throw new Error('Failed to create study');
+
+        // Copy lessons if requested
+        if (includeLessons && srcLessons.length) {
+          for (const lesson of srcLessons) {
+            const payload = {
+              study_id: newStudy.id,
+              order_index: Number(lesson.order_index) || 0,
+              title: lesson.title || '',
+              scripture_refs: Array.isArray(lesson.scripture_refs) ? lesson.scripture_refs : [],
+              summary: lesson.summary || '',
+              prompts: Array.isArray(lesson.prompts) ? lesson.prompts : [],
+              character_id: lesson.character_id || null,
+              created_at: now,
+              updated_at: now,
+            };
+            const { error: lInsErr } = await supabase
+              .from('bible_study_lessons')
+              .insert(payload);
+            if (lInsErr) throw new Error(lInsErr.message);
+          }
+        }
+
+        results.push({ owner, ok: true, newStudyId: newStudy.id, title: newTitle });
+      } catch (e) {
+        results.push({ owner, ok: false, error: e?.message || String(e) });
+      }
+    }
+
+    return { ok: true, results };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err), results };
+  }
+}
