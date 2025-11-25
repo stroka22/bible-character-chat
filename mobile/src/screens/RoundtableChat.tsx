@@ -1,0 +1,131 @@
+import React, { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { generateCharacterResponse } from '../lib/api';
+import { supabase } from '../lib/supabase';
+
+type Message = {
+  id: string;
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+  speakerId?: string | null;
+};
+
+export default function RoundtableChat({ route }: any) {
+  const { participantIds, topic } = route.params as { participantIds: string[]; topic: string };
+  const [messages, setMessages] = useState<Message[]>([{
+    id: `sys-${Date.now()}`,
+    role: 'system',
+    content: `A roundtable discussion on the topic: "${topic}"`
+  }]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [input, setInput] = useState('');
+  const [participants, setParticipants] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('characters')
+        .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
+        .in('id', participantIds);
+      setParticipants((data as any) || []);
+    })();
+  }, [participantIds]);
+
+  const sendUser = async () => {
+    if (!input.trim()) return;
+    const userMsg: Message = { id: `u-${Date.now()}`, role: 'user', content: input.trim() };
+    const base = [...messages, userMsg];
+    setMessages(base);
+    setInput('');
+    await generateRound(base);
+  };
+
+  const generateRound = async (baseMessages: Message[]) => {
+    if (participants.length === 0) return;
+    setIsTyping(true);
+    try {
+      // simple round: up to 3 speakers sequentially
+      const speakers = participants.slice(0, Math.min(3, participants.length));
+      const working = [...baseMessages];
+      for (const speaker of speakers) {
+        const system = {
+          role: 'system' as const,
+          content: `You are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nYou are in a roundtable on: "${topic}". Keep it concise (<=110 words). Respond as ${speaker.name} without name prefixes. Avoid repeating prior points; add a distinct, scripture-grounded perspective.`
+        };
+        const payload = [system, ...working.slice(-10).map(m => ({ role: m.role, content: m.content }))];
+        let text = '';
+        try {
+          text = await generateCharacterResponse(speaker.name, speaker.persona_prompt || speaker.description || '', payload as any);
+        } catch (e) {
+          text = '(unable to respond)';
+        }
+        const msg: Message = { id: `a-${speaker.id}-${Date.now()}`, role: 'assistant', content: text, speakerId: String(speaker.id) };
+        working.push(msg);
+        setMessages(prev => [...prev, msg]);
+      }
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const renderItem = ({ item }: { item: Message }) => {
+    if (item.role === 'user') {
+      return (
+        <View style={{ alignItems: 'flex-end', marginVertical: 6 }}>
+          <View style={{ backgroundColor: '#2563eb', padding: 10, borderRadius: 12 }}>
+            <Text style={{ color: 'white' }}>{item.content}</Text>
+          </View>
+        </View>
+      );
+    }
+    if (item.role === 'assistant') {
+      const sp = participants.find(p => String(p.id) === String(item.speakerId));
+      return (
+        <View style={{ flexDirection: 'row', gap: 8, marginVertical: 6 }}>
+          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#374151', alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: 'white', fontSize: 12 }}>{sp?.name?.[0] || '?'}</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: '#fde68a', fontWeight: '600', marginBottom: 4 }}>{sp?.name || 'Character'}</Text>
+            <Text style={{ color: 'white' }}>{item.content}</Text>
+          </View>
+        </View>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+      <View style={{ padding: 16, paddingBottom: 8 }}>
+        <Text style={{ color: '#fde68a', fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
+        <Text style={{ color: '#e5e7eb' }}>{topic}</Text>
+      </View>
+      <FlatList
+        data={messages.filter(m => m.role !== 'system')}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}
+        renderItem={renderItem}
+      />
+      {isTyping && (
+        <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+          <ActivityIndicator color="#facc15" />
+        </View>
+      )}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16 }}>
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Type your message..."
+            placeholderTextColor="#9ca3af"
+            style={{ flex: 1, backgroundColor: '#111827', color: 'white', padding: 12, borderRadius: 24 }}
+          />
+          <TouchableOpacity onPress={sendUser} disabled={!input.trim() || isTyping} style={{ backgroundColor: (!input.trim() || isTyping) ? '#9ca3af' : '#facc15', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20 }}>
+            <Text style={{ fontWeight: '700' }}>Send</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
