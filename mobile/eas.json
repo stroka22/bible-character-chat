@@ -1,0 +1,18 @@
+{
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "credentialsSource": "remote",
+      "ios": { "simulator": false },
+      "android": {}
+    },
+    "production": {
+      "credentialsSource": "remote",
+      "ios": { "simulator": false },
+      "android": {}
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
