@@ -26,8 +26,19 @@ export const bibleStudiesRepository = {
         console.error('[bibleStudiesRepository] Error listing studies:', error);
         return [];
       }
-      
-      return data || [];
+
+      let out = data || [];
+      // When showing across all owners, avoid listing duplicate titles repeatedly.
+      // Keep the first occurrence per title (case-insensitive).
+      if (wantAll && Array.isArray(out)) {
+        const seen = new Map();
+        for (const s of out) {
+          const key = String(s?.title || '').trim().toLowerCase();
+          if (key && !seen.has(key)) seen.set(key, s);
+        }
+        out = Array.from(seen.values());
+      }
+      return out;
     } catch (err) {
       console.error('[bibleStudiesRepository] Unexpected error listing studies:', err);
       return [];
