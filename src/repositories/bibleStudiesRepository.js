@@ -169,29 +169,97 @@ export const bibleStudiesRepository = {
         throw new Error('Lesson must have a study_id');
       }
 
-      const payload = {
-        ...lesson,
-        updated_at: new Date().toISOString(),
+      // Normalize basic fields
+      const now = new Date().toISOString();
+      const desiredIndex = Number.isFinite(lesson.order_index) ? Number(lesson.order_index) : 0;
+      const isUpdate = !!lesson.id;
+
+      const basePayload = {
+        title: lesson.title || '',
+        scripture_refs: Array.isArray(lesson.scripture_refs) ? lesson.scripture_refs : [],
+        summary: lesson.summary || '',
+        prompts: Array.isArray(lesson.prompts) ? lesson.prompts : [],
+        character_id: lesson.character_id || null,
+        updated_at: now,
       };
 
-      // Allow DB default (generated uuid) when creating a new row
-      if (!payload.id) {
-        delete payload.id;
-      }
+      // Helper to shift a block of lessons one step up or down to make room
+      const shiftRange = async ({ studyId, start, end, direction }) => {
+        // direction: 'up' means order_index+1, process in DESC to avoid collisions
+        // direction: 'down' means order_index-1, process in ASC
+        const ascending = direction === 'down';
+        const rangeFilter = (q) => {
+          q = q.eq('study_id', studyId);
+          if (start !== undefined && start !== null) q = q.gte('order_index', start);
+          if (end !== undefined && end !== null) q = q.lte('order_index', end);
+          return q;
+        };
+        let { data: rows, error: selErr } = await rangeFilter(
+          supabase.from('bible_study_lessons')
+            .select('id, order_index')
+            .order('order_index', { ascending })
+        );
+        if (selErr) throw new Error(selErr.message);
+        for (const row of rows || []) {
+          const nextIndex = direction === 'up' ? row.order_index + 1 : row.order_index - 1;
+          const { error: updErr } = await supabase
+            .from('bible_study_lessons')
+            .update({ order_index: nextIndex, updated_at: now })
+            .eq('id', row.id);
+          if (updErr) throw new Error(updErr.message);
+        }
+      };
 
-      const { data, error } = await supabase
-        .from('bible_study_lessons')
-        // Allow updating by composite key when id is blank
-        .upsert(payload, { onConflict: 'study_id,order_index' })
-        .select('*')
-        .maybeSingle();
-      
-      if (error) {
-        console.error('[bibleStudiesRepository] Error upserting lesson:', error);
-        throw new Error(`Failed to save lesson: ${error.message}`);
+      if (isUpdate) {
+        // Fetch current row to know old index
+        const { data: current, error: curErr } = await supabase
+          .from('bible_study_lessons')
+          .select('id, study_id, order_index')
+          .eq('id', lesson.id)
+          .maybeSingle();
+        if (curErr) throw new Error(curErr.message);
+        if (!current) throw new Error('Lesson not found');
+
+        const oldIndex = Number(current.order_index) || 0;
+        const studyId = current.study_id;
+
+        if (desiredIndex !== oldIndex) {
+          if (desiredIndex < oldIndex) {
+            // Move up: shift [desiredIndex .. oldIndex-1] up by +1
+            await shiftRange({ studyId, start: desiredIndex, end: oldIndex - 1, direction: 'up' });
+          } else {
+            // Move down: shift [oldIndex+1 .. desiredIndex] down by -1
+            await shiftRange({ studyId, start: oldIndex + 1, end: desiredIndex, direction: 'down' });
+          }
+        }
+
+        const updatePayload = { ...basePayload, order_index: desiredIndex };
+        const { data, error } = await supabase
+          .from('bible_study_lessons')
+          .update(updatePayload)
+          .eq('id', lesson.id)
+          .select('*')
+          .maybeSingle();
+        if (error) throw new Error(error.message);
+        return data;
+      } else {
+        // Create new lesson: make room at desiredIndex by shifting >= desiredIndex up by +1
+        await shiftRange({ studyId: lesson.study_id, start: desiredIndex, end: null, direction: 'up' });
+
+        const insertPayload = {
+          study_id: lesson.study_id,
+          order_index: desiredIndex,
+          ...basePayload,
+          created_at: now,
+        };
+        const { data, error } = await supabase
+          .from('bible_study_lessons')
+          .insert(insertPayload)
+          .select('*')
+          .maybeSingle();
+        if (error) throw new Error(error.message);
+        return data;
       }
-      
-      return data;
     } catch (err) {
       console.error('[bibleStudiesRepository] Unexpected error upserting lesson:', err);
       throw new Error(`Failed to save lesson: ${err.message}`);
