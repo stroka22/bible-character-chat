@@ -6,7 +6,11 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:ios:preview": "npx eas build -p ios --profile preview",
+    "build:android:preview": "npx eas build -p android --profile preview",
+    "submit:ios": "npx eas submit -p ios --latest",
+    "submit:android": "npx eas submit -p android --latest"
   },
   "dependencies": {
     "@react-navigation/native": "^7.1.21",
