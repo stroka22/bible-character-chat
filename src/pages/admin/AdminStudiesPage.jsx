@@ -2,10 +2,11 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import React, { useState, useEffect } from 'react';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 import { characterRepository } from '../../repositories/characterRepository';
-import { getOwnerSlug } from '../../services/tierSettingsService';
+import { getOwnerSlug, listOwnerSlugs } from '../../services/tierSettingsService';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { toCsv, parseCsv, download } from '../../utils/csv';
+import { cloneStudyToOwners } from '../../repositories/bibleStudiesRepository';
 
 /**
  * AdminStudiesPage
@@ -30,8 +31,13 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [error, setError] = useState(null);
   const [showStudyForm, setShowStudyForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
+  const [showDistributeModal, setShowDistributeModal] = useState(false);
   const [ownerSlug, setOwnerSlug] = useState(getOwnerSlug());
   const [ownerOptions, setOwnerOptions] = useState(['__ALL__', (getOwnerSlug() || '').toLowerCase(), 'faithtalkai', 'default']);
+  const [orgOptions, setOrgOptions] = useState([]);
+  const [distributeBusy, setDistributeBusy] = useState(false);
+  const [distributeForm, setDistributeForm] = useState({ all: false, includeLessons: true, ownersSelected: [] });
+  const [distributeResult, setDistributeResult] = useState(null);
   // Series UI deprecated – keep studies-only admin
   const [showImportModal, setShowImportModal] = useState(false);
   const [importPreview, setImportPreview] = useState({ studies: [], lessons: [], errors: [] });
@@ -68,6 +74,16 @@ const AdminStudiesPage = ({ embedded = false }) => {
     fetchStudies();
     fetchCharacters();
     fetchOwnerOptions();
+  }, []);
+
+  // Load canonical org list for distribution
+  useEffect(() => {
+    (async () => {
+      try {
+        const owners = await listOwnerSlugs();
+        setOrgOptions(Array.isArray(owners) ? owners : []);
+      } catch {}
+    })();
   }, []);
   
   // Load lessons when a study is selected
@@ -526,6 +542,32 @@ const AdminStudiesPage = ({ embedded = false }) => {
       setError('Failed to delete study: ' + err.message);
     }
   };
+
+  // Distribute study to selected organizations
+  const handleRunDistribute = async () => {
+    try {
+      if (!selectedStudy) return;
+      setDistributeBusy(true);
+      setDistributeResult(null);
+      let targets = [];
+      if (distributeForm.all) {
+        targets = orgOptions.slice();
+      } else {
+        targets = distributeForm.ownersSelected.slice();
+      }
+      targets = Array.from(new Set((targets || []).map(s => String(s || '').trim().toLowerCase()).filter(Boolean)));
+      if (!targets.length) {
+        setDistributeResult({ ok: false, error: 'Select at least one organization' });
+        return;
+      }
+      const res = await cloneStudyToOwners(selectedStudy.id, targets, { includeLessons: distributeForm.includeLessons });
+      setDistributeResult(res);
+    } catch (e) {
+      setDistributeResult({ ok: false, error: e?.message || String(e) });
+    } finally {
+      setDistributeBusy(false);
+    }
+  };
   
   // Delete a lesson
   const handleDeleteLesson = async (lessonId) => {
@@ -836,6 +878,24 @@ const AdminStudiesPage = ({ embedded = false }) => {
                                       children: _jsx("path", {
                                         d: "M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"
                                       })
+                                    })
+                                  }),
+                                  (role === 'admin' || role === 'superadmin') && _jsx("button", {
+                                    onClick: (e) => {
+                                      e.stopPropagation();
+                                      setSelectedStudy(study);
+                                      setDistributeResult(null);
+                                      setDistributeForm({ all: false, includeLessons: true, ownersSelected: [] });
+                                      setShowDistributeModal(true);
+                                    },
+                                    className: `${embedded ? 'text-green-700 hover:text-green-900' : 'text-green-300 hover:text-green-200'} p-1`,
+                                    title: "Distribute to organizations",
+                                    children: _jsx("svg", {
+                                      xmlns: "http://www.w3.org/2000/svg",
+                                      className: "h-4 w-4",
+                                      viewBox: "0 0 20 20",
+                                      fill: "currentColor",
+                                      children: _jsx("path", { d: "M3 10a1 1 0 011-1h3V6a1 1 0 112 0v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H4a1 1 0 01-1-1z" })
                                     })
                                   }),
                                   _jsx("button", {
@@ -1523,6 +1583,56 @@ const AdminStudiesPage = ({ embedded = false }) => {
               ]
             })
           })
+        ) : null,
+        
+        /* Distribute Modal */
+        showDistributeModal ? (
+          _jsx("div", { className: "fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4", children: _jsxs("div", { className: "bg-blue-900 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto", children: [
+            _jsxs("div", { className: "flex justify-between items-center mb-6", children: [
+              _jsx("h2", { className: "text-2xl font-bold text-yellow-400", children: "Distribute Study to Organizations" }),
+              _jsx("button", { onClick: () => setShowDistributeModal(false), className: "text-white hover:text-yellow-300", children: _jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-6 w-6", fill: "none", viewBox: "0 0 24 24", stroke: "currentColor", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M6 18L18 6M6 6l12 12" }) }) })
+            ] }),
+            selectedStudy && _jsx("p", { className: "text-blue-100 mb-4", children: `Study: ${selectedStudy.title}` }),
+            _jsxs("div", { className: "space-y-4", children: [
+              _jsxs("label", { className: "flex items-center gap-2 text-blue-100", children: [
+                _jsx("input", { type: "checkbox", checked: distributeForm.all, onChange: (e) => setDistributeForm(f => ({ ...f, all: e.target.checked })) }),
+                _jsx("span", { children: "All organizations" })
+              ] }),
+              _jsxs("div", { children: [
+                _jsx("div", { className: "text-blue-200 text-sm mb-1", children: "Select organizations" }),
+                _jsx("div", { className: "max-h-48 overflow-auto bg-white/5 border border-white/10 rounded p-2", children: (orgOptions || []).map(slug => (
+                  _jsxs("label", { className: `flex items-center gap-2 text-blue-100 py-1 ${distributeForm.all ? 'opacity-50' : ''}`, children: [
+                    _jsx("input", { type: "checkbox", disabled: distributeForm.all, checked: distributeForm.ownersSelected.includes(slug), onChange: (e) => {
+                      const checked = e.target.checked;
+                      setDistributeForm(f => {
+                        const set = new Set(f.ownersSelected);
+                        if (checked) set.add(slug); else set.delete(slug);
+                        return { ...f, ownersSelected: Array.from(set) };
+                      });
+                    } }),
+                    _jsx("span", { children: slug })
+                  ] }, `org-${slug}`)
+                )) })
+              ] }),
+              _jsxs("label", { className: "flex items-center gap-2 text-blue-100", children: [
+                _jsx("input", { type: "checkbox", checked: distributeForm.includeLessons, onChange: (e) => setDistributeForm(f => ({ ...f, includeLessons: e.target.checked })) }),
+                _jsx("span", { children: "Include lessons" })
+              ] })
+            ] }),
+            distributeResult && _jsxs("div", { className: "mt-4 bg-white/5 border border-white/10 rounded p-3 text-sm", children: [
+              !distributeResult.ok && _jsx("div", { className: "text-red-300 mb-2", children: distributeResult.error || 'Failed' }),
+              Array.isArray(distributeResult.results) && _jsx("div", { className: "space-y-1", children: distributeResult.results.map((r, i) => (
+                _jsxs("div", { className: `flex justify-between ${r.ok ? 'text-green-300' : 'text-red-300'}`, children: [
+                  _jsx("span", { children: r.owner }),
+                  _jsx("span", { children: r.ok ? `Created (${r.title})` : r.error })
+                ] }, `res-${i}`)
+              )) })
+            ] }),
+            _jsxs("div", { className: "mt-6 flex justify-end gap-3", children: [
+              _jsx("button", { onClick: () => setShowDistributeModal(false), className: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg", children: "Close" }),
+              _jsx("button", { onClick: handleRunDistribute, disabled: distributeBusy, className: `px-4 py-2 ${distributeBusy ? 'bg-yellow-500/40' : 'bg-yellow-400 hover:bg-yellow-300'} text-blue-900 rounded-lg font-semibold`, children: distributeBusy ? 'Distributing…' : 'Run' })
+            ] })
+          ] }) })
         ) : null
       ]
     })

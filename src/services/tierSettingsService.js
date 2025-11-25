@@ -39,6 +39,50 @@ export function getOwnerSlug() {
 }
 
 /**
+ * List all known organization owner slugs.
+ * Canonical source: distinct owner_slug from tier_settings.
+ * Fallback: distinct owner_slug from bible_studies.
+ * @returns {Promise<string[]>}
+ */
+export async function listOwnerSlugs() {
+  const result = new Set();
+  try {
+    // Primary source – explicit org settings
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('owner_slug');
+    if (!error && Array.isArray(data)) {
+      for (const r of data) {
+        const v = String(r?.owner_slug || '').trim().toLowerCase();
+        if (v) result.add(v);
+      }
+    }
+  } catch (e) {
+    // non-fatal
+  }
+
+  // Fallback/augment – any orgs that already have studies
+  try {
+    const { data, error } = await supabase
+      .from('bible_studies')
+      .select('owner_slug');
+    if (!error && Array.isArray(data)) {
+      for (const r of data) {
+        const v = String(r?.owner_slug || '').trim().toLowerCase();
+        if (v) result.add(v);
+      }
+    }
+  } catch (e) {
+    // non-fatal
+  }
+
+  // Always include default
+  result.add('default');
+
+  return Array.from(result).sort();
+}
+
+/**
  * Normalize database record to match app expectations
  * @param {Object} record The database record
  * @returns {Object} Normalized settings object
