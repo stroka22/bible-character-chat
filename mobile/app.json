@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "FaithTalkAI",
+    "slug": "faithtalkai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.faithtalkai.app"
+    },
+    "android": {
+      "package": "com.faithtalkai.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "${EAS_PROJECT_ID}"
+      },
+      "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}",
+      "supabaseUrl": "${EXPO_PUBLIC_SUPABASE_URL}",
+      "supabaseAnonKey": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}"
+    }
+  }
+}
