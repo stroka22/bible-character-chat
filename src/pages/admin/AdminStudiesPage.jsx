@@ -105,7 +105,19 @@ const AdminStudiesPage = ({ embedded = false }) => {
         includePrivate: true,
         allOwners: wantAll,
       });
-      setStudies(data);
+      // Extra safety: when viewing all owners, dedupe by normalized title (strip -N suffix)
+      if (wantAll && Array.isArray(data)) {
+        const norm = (t) => String(t || '').trim().toLowerCase().replace(/-\d+$/,'');
+        const seen = new Set();
+        const uniq = [];
+        for (const s of data) {
+          const key = norm(s?.title);
+          if (!seen.has(key)) { seen.add(key); uniq.push(s); }
+        }
+        setStudies(uniq);
+      } else {
+        setStudies(data);
+      }
       setError(null);
     } catch (err) {
       console.error('Error fetching studies:', err);
