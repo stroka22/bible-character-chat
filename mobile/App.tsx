@@ -8,6 +8,7 @@ import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
 import Login from './src/screens/Login';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 const Stack = createNativeStackNavigator();
 
@@ -49,7 +50,9 @@ function AppInner() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppInner />
+      <ErrorBoundary>
+        <AppInner />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

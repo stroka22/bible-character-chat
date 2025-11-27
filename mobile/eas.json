@@ -6,6 +6,13 @@
       "ios": { "simulator": false },
       "android": {}
     },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "credentialsSource": "remote",
+      "ios": { "simulator": false },
+      "android": {}
+    },
     "simulator": {
       "distribution": "internal",
       "credentialsSource": "remote",
