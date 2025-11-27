@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.faithtalkai.app"
+      "bundleIdentifier": "com.faithtalkai.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.faithtalkai.app",
@@ -31,7 +34,11 @@
     "extra": {
       "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}",
       "supabaseUrl": "${EXPO_PUBLIC_SUPABASE_URL}",
-      "supabaseAnonKey": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}"
-    }
+      "supabaseAnonKey": "${EXPO_PUBLIC_SUPABASE_ANON_KEY}",
+      "eas": {
+        "projectId": "6222913f-4fea-408e-b617-d83d820a66f1"
+      }
+    },
+    "owner": "stroka"
   }
 }
