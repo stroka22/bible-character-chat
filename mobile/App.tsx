@@ -15,9 +15,14 @@ function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Text style={{ fontSize: 22, marginBottom: 16 }}>FaithTalkAI</Text>
-      <TouchableOpacity onPress={() => navigation.navigate('RoundtableSetup')} style={{ padding: 12, backgroundColor: '#facc15', borderRadius: 8 }}>
-        <Text style={{ fontWeight: '600' }}>Start a Roundtable</Text>
-      </TouchableOpacity>
+      <View style={{ gap: 12, width: '80%' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('RoundtableSetup')} style={{ padding: 12, backgroundColor: '#facc15', borderRadius: 8, alignItems: 'center' }}>
+          <Text style={{ fontWeight: '600' }}>Start a Roundtable</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ padding: 12, backgroundColor: '#60a5fa', borderRadius: 8, alignItems: 'center' }}>
+          <Text style={{ fontWeight: '600', color: 'white' }}>Browse Bible Studies</Text>
+        </TouchableOpacity>
+      </View>
       <StatusBar style="dark" />
     </SafeAreaView>
   );
