@@ -3,7 +3,6 @@ import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaVi
 import { useRoute } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
 import { generateCharacterResponse } from '../lib/api';
-import { characterRepository } from '../../src/repositories/characterRepository';
 
 export default function ChatDetail() {
   const route = useRoute<any>();
@@ -21,15 +20,7 @@ export default function ChatDetail() {
     })();
   }, [chatId]);
 
-  React.useEffect(() => {
-    (async () => {
-      if (character || !chatId) return;
-      try {
-        // best-effort resolve from first assistant system message or from chats join if needed
-        // fallback: query via characterRepository if character id provided in route
-      } catch {}
-    })();
-  }, [chatId, character]);
+  // character is passed from ChatNew; optional.
 
   async function onSend() {
     if (!input.trim() || sending || !chatId) return;
