@@ -1,0 +1,73 @@
+import { supabase } from './supabase';
+
+export type Chat = {
+  id: string;
+  user_id: string;
+  character_id: string;
+  title: string | null;
+  is_favorite: boolean | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  chat_id: string;
+  content: string;
+  role: 'user' | 'assistant' | 'system';
+  created_at: string;
+};
+
+export const chat = {
+  async getUserChats(userId: string): Promise<Chat[]> {
+    const { data, error } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as Chat[];
+  },
+
+  async createChat(userId: string, characterId: string, title?: string): Promise<Chat> {
+    const { data, error } = await supabase
+      .from('chats')
+      .insert({ user_id: userId, character_id: characterId, title: title || null, is_favorite: false })
+      .select('*')
+      .single();
+    if (error) throw error;
+    return data as Chat;
+  },
+
+  async getChatMessages(chatId: string): Promise<ChatMessage[]> {
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .eq('chat_id', chatId)
+      .order('created_at');
+    if (error) throw error;
+    return (data || []) as ChatMessage[];
+  },
+
+  async addMessage(chatId: string, content: string, role: ChatMessage['role']): Promise<ChatMessage> {
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .insert({ chat_id: chatId, content, role })
+      .select('*')
+      .single();
+    if (error) throw error;
+    // bump parent chat timestamp
+    await supabase.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
+    return data as ChatMessage;
+  },
+
+  async toggleFavorite(chatId: string, isFavorite: boolean): Promise<void> {
+    const { error } = await supabase
+      .from('chats')
+      .update({ is_favorite: isFavorite, updated_at: new Date().toISOString() })
+      .eq('id', chatId);
+    if (error) throw error;
+  },
+};
+
+export default chat;
