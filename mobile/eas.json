@@ -4,27 +4,27 @@
       "developmentClient": true,
       "distribution": "internal",
       "credentialsSource": "remote",
-      "env": { "RCT_NEW_ARCH_ENABLED": "1" },
+      "env": { "RCT_NEW_ARCH_ENABLED": "0" },
       "ios": { "simulator": false },
       "android": {}
     },
     "preview": {
       "distribution": "internal",
       "credentialsSource": "remote",
-      "env": { "RCT_NEW_ARCH_ENABLED": "1" },
+      "env": { "RCT_NEW_ARCH_ENABLED": "0" },
       "ios": { "simulator": false },
       "android": {}
     },
     "simulator": {
       "distribution": "internal",
       "credentialsSource": "remote",
-      "env": { "RCT_NEW_ARCH_ENABLED": "1" },
+      "env": { "RCT_NEW_ARCH_ENABLED": "0" },
       "ios": { "simulator": true },
       "android": {}
     },
     "production": {
       "credentialsSource": "remote",
-      "env": { "RCT_NEW_ARCH_ENABLED": "1" },
+      "env": { "RCT_NEW_ARCH_ENABLED": "0" },
       "ios": { "simulator": false },
       "android": {}
     }
