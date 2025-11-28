@@ -5,8 +5,12 @@ import Constants from 'expo-constants';
 
 const extra = Constants.expoConfig?.extra as any;
 
-const SUPABASE_URL_RAW = (extra?.supabaseUrl as string) || '';
-const SUPABASE_ANON_KEY = (extra?.supabaseAnonKey as string) || '';
+// Prefer runtime env (EXPO_PUBLIC_*) and fall back to app.json extra
+const RUNTIME_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const RUNTIME_ANON = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+
+const SUPABASE_URL_RAW = (RUNTIME_URL || (extra?.supabaseUrl as string) || '') as string;
+const SUPABASE_ANON_KEY = (RUNTIME_ANON || (extra?.supabaseAnonKey as string) || '') as string;
 
 function isValidHttpUrl(u: string) {
   try {
