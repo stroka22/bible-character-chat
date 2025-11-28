@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList, Image, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
@@ -12,29 +12,37 @@ export default function ChatNew() {
   const [search, setSearch] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [characters, setCharacters] = React.useState<any[]>([]);
+  const [activeLetter, setActiveLetter] = React.useState<string>('');
 
   React.useEffect(() => {
     let active = true;
     (async () => {
       try {
-        let query = supabase.from('characters').select('*');
+        let query = supabase.from('characters').select('id,name,description,avatar_url,opening_line,persona_prompt');
         if (search && search.trim()) {
           query = query.or(
             `name.ilike.%${search}%,description.ilike.%${search}%,bible_book.ilike.%${search}%`
           ) as any;
+        }
+        if (activeLetter) {
+          query = query.ilike('name', `${activeLetter}%`) as any;
         }
         const { data } = await query.order('name');
         if (active) setCharacters(data || []);
       } catch {}
     })();
     return () => { active = false; };
-  }, [search]);
+  }, [search, activeLetter]);
 
   async function start(c: any) {
     if (!user) return;
     setLoading(true);
     try {
       const newChat = await chat.createChat(user.id, String(c.id), title.trim() || `Chat with ${c.name}`);
+      // add opening line if available
+      if (c.opening_line) {
+        try { await chat.addMessage(newChat.id, c.opening_line, 'assistant'); } catch {}
+      }
       nav.replace('ChatDetail', { chatId: newChat.id, character: c });
     } finally {
       setLoading(false);
@@ -58,14 +66,24 @@ export default function ChatNew() {
           style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+        {['', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
+          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeLetter === ltr ? '#111827' : '#e5e7eb' }}>
+            <Text style={{ color: activeLetter === ltr ? 'white' : '#111827', fontWeight: '600' }}>{ltr || 'All'}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
       <FlatList
         data={characters}
         keyExtractor={(i) => String(i.id)}
         contentContainerStyle={{ padding: 12 }}
         renderItem={({ item }) => (
-          <TouchableOpacity disabled={loading} onPress={() => start(item)} style={{ padding: 12, borderRadius: 10, backgroundColor: '#f9fafb', marginBottom: 8 }}>
-            <Text style={{ fontWeight: '600' }}>{item.name}</Text>
-            {item.description ? <Text numberOfLines={2} style={{ color: '#6b7280', marginTop: 4 }}>{item.description}</Text> : null}
+          <TouchableOpacity disabled={loading} onPress={() => start(item)} style={{ padding: 12, borderRadius: 10, backgroundColor: '#f9fafb', marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#e5e7eb' }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontWeight: '600' }}>{item.name}</Text>
+              {item.description ? <Text numberOfLines={2} style={{ color: '#6b7280', marginTop: 4 }}>{item.description}</Text> : null}
+            </View>
           </TouchableOpacity>
         )}
       />

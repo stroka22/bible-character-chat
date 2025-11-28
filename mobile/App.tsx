@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image } from 'react-native';
 import { Image } from 'react-native';
 import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
@@ -10,6 +10,9 @@ import ChatDetail from './src/screens/ChatDetail';
 import MyWalk from './src/screens/MyWalk';
 import RoundtableSetup from './src/screens/RoundtableSetup';
 import RoundtableChat from './src/screens/RoundtableChat';
+import * as Linking from 'expo-linking';
+import { useAuth } from './src/contexts/AuthContext';
+import { requirePremiumOrPrompt } from './src/lib/tier';
 import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
 import Login from './src/screens/Login';
@@ -19,6 +22,7 @@ const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
 function HomeScreen({ navigation }: any) {
+  const { user } = useAuth();
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
@@ -29,7 +33,19 @@ function HomeScreen({ navigation }: any) {
         <Text style={{ fontSize: 22, fontWeight: '800' }}>FaithTalkAI</Text>
       </View>
       <View style={{ gap: 12, width: '80%' }}>
-        <TouchableOpacity onPress={() => navigation.navigate('RoundtableSetup')} style={{ padding: 12, backgroundColor: '#facc15', borderRadius: 8, alignItems: 'center' }}>
+        <TouchableOpacity onPress={async () => {
+          await requirePremiumOrPrompt({
+            userId: user?.id,
+            feature: 'roundtable',
+            onAllowed: () => navigation.navigate('RoundtableSetup'),
+            onUpgrade: () => {
+              Alert.alert('Upgrade required', 'Roundtable is a premium feature. Upgrade to continue.', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Upgrade', onPress: () => Linking.openURL('https://faithtalkai.com/pricing') }
+              ]);
+            }
+          });
+        }} style={{ padding: 12, backgroundColor: '#facc15', borderRadius: 8, alignItems: 'center' }}>
           <Text style={{ fontWeight: '600' }}>Start a Roundtable</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ padding: 12, backgroundColor: '#60a5fa', borderRadius: 8, alignItems: 'center' }}>

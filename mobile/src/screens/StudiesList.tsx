@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 
 type Study = {
@@ -10,7 +11,8 @@ type Study = {
   cover_image_url?: string | null;
 };
 
-export default function StudiesList({ navigation }: any) {
+export default function StudiesList() {
+  const navigation = useNavigation<any>();
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
 

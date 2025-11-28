@@ -1,5 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
 import { generateCharacterResponse } from '../lib/api';
@@ -11,6 +13,8 @@ export default function ChatDetail() {
   const [input, setInput] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [character, setCharacter] = React.useState<any>(route.params?.character || null);
+  const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
 
   React.useEffect(() => {
     (async () => {
@@ -48,12 +52,12 @@ export default function ChatDetail() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
       <SafeAreaView style={{ flex: 1 }}>
         <FlatList
           data={messages}
           keyExtractor={(m) => m.id}
-          contentContainerStyle={{ padding: 12 }}
+          contentContainerStyle={{ padding: 12, paddingBottom: 12 + Math.max(insets.bottom, 8) + 56 }}
           renderItem={({ item }) => (
             <View style={{
               alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start',
@@ -67,7 +71,7 @@ export default function ChatDetail() {
             </View>
           )}
         />
-        <View style={{ flexDirection: 'row', padding: 12, gap: 8 }}>
+        <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: 12 + Math.max(insets.bottom, 6) }}>
           <TextInput
             value={input}
             onChangeText={setInput}

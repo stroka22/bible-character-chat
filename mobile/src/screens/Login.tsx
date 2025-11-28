@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
@@ -24,7 +24,13 @@ export default function Login() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a', padding: 16, justifyContent: 'center' }}>
-      <Text style={{ color: '#fde68a', fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 24 }}>FaithTalkAI</Text>
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        <Image
+          source={{ uri: 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }}
+          style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 8 }}
+        />
+        <Text style={{ color: '#fde68a', fontSize: 22, fontWeight: '800' }}>FaithTalkAI</Text>
+      </View>
       {!!error && (
         <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>
           <Text style={{ color: 'white' }}>{error}</Text>
