@@ -1,7 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'react-native';
 import RoundtableSetup from './src/screens/RoundtableSetup';
 import RoundtableChat from './src/screens/RoundtableChat';
 import StudiesList from './src/screens/StudiesList';
@@ -10,11 +12,18 @@ import Login from './src/screens/Login';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 
 const Stack = createNativeStackNavigator();
+const Tabs = createBottomTabNavigator();
 
 function HomeScreen({ navigation }: any) {
   return (
-    <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontSize: 22, marginBottom: 16 }}>FaithTalkAI</Text>
+    <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+      <View style={{ alignItems: 'center', marginBottom: 16 }}>
+        <Image
+          source={{ uri: 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }}
+          style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 8 }}
+        />
+        <Text style={{ fontSize: 22, fontWeight: '800' }}>FaithTalkAI</Text>
+      </View>
       <View style={{ gap: 12, width: '80%' }}>
         <TouchableOpacity onPress={() => navigation.navigate('RoundtableSetup')} style={{ padding: 12, backgroundColor: '#facc15', borderRadius: 8, alignItems: 'center' }}>
           <Text style={{ fontWeight: '600' }}>Start a Roundtable</Text>
@@ -28,26 +37,52 @@ function HomeScreen({ navigation }: any) {
   );
 }
 
+// Placeholder tabs for Chat and My Walk (will implement screens next)
+function ChatPlaceholder() {
+  return (
+    <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text>Chat coming soon…</Text>
+    </SafeAreaView>
+  );
+}
+function MyWalkPlaceholder() {
+  return (
+    <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text>My Walk coming soon…</Text>
+    </SafeAreaView>
+  );
+}
+
 function AppInner() {
   const { user, loading } = useAuth();
   if (loading) return null;
   const authed = !!user;
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!authed ? (
-          <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+          <Stack.Screen name="Login" component={Login} />
         ) : (
           <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Studies" component={StudiesList} />
-            <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ route }: any) => ({ title: route.params?.title || 'Study' })} />
-            <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ title: 'Roundtable Setup' }} />
-            <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ title: 'Roundtable' }} />
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ route }: any) => ({ headerShown: true, title: route.params?.title || 'Study' })} />
+            <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, title: 'Roundtable Setup' }} />
+            <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, title: 'Roundtable' }} />
           </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+function MainTabs() {
+  return (
+    <Tabs.Navigator>
+      <Tabs.Screen name="Home" component={HomeScreen} />
+      <Tabs.Screen name="Chat" component={ChatPlaceholder} />
+      <Tabs.Screen name="Studies" component={StudiesList} />
+      <Tabs.Screen name="My Walk" component={MyWalkPlaceholder} />
+    </Tabs.Navigator>
   );
 }
 
