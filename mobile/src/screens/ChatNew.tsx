@@ -3,7 +3,7 @@ import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList } from 
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
-import { characterRepository } from '../../src/repositories/characterRepository';
+import { supabase } from '../lib/supabase';
 
 export default function ChatNew() {
   const { user } = useAuth();
@@ -17,11 +17,17 @@ export default function ChatNew() {
     let active = true;
     (async () => {
       try {
-        const rows = await characterRepository.search(search || '');
-        if (active) setCharacters(rows);
+        let query = supabase.from('characters').select('*');
+        if (search && search.trim()) {
+          query = query.or(
+            `name.ilike.%${search}%,description.ilike.%${search}%,bible_book.ilike.%${search}%`
+          ) as any;
+        }
+        const { data } = await query.order('name');
+        if (active) setCharacters(data || []);
       } catch {}
     })();
-    return () => { active = false; }
+    return () => { active = false; };
   }, [search]);
 
   async function start(c: any) {
