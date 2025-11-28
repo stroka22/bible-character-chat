@@ -4,6 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import { Image } from 'react-native';
+import ChatList from './src/screens/ChatList';
+import ChatNew from './src/screens/ChatNew';
+import ChatDetail from './src/screens/ChatDetail';
+import MyWalk from './src/screens/MyWalk';
 import RoundtableSetup from './src/screens/RoundtableSetup';
 import RoundtableChat from './src/screens/RoundtableChat';
 import StudiesList from './src/screens/StudiesList';
@@ -38,20 +42,7 @@ function HomeScreen({ navigation }: any) {
 }
 
 // Placeholder tabs for Chat and My Walk (will implement screens next)
-function ChatPlaceholder() {
-  return (
-    <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Chat coming soon…</Text>
-    </SafeAreaView>
-  );
-}
-function MyWalkPlaceholder() {
-  return (
-    <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>My Walk coming soon…</Text>
-    </SafeAreaView>
-  );
-}
+function Empty() { return null; }
 
 function AppInner() {
   const { user, loading } = useAuth();
@@ -68,6 +59,8 @@ function AppInner() {
             <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ route }: any) => ({ headerShown: true, title: route.params?.title || 'Study' })} />
             <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, title: 'Roundtable Setup' }} />
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, title: 'Roundtable' }} />
+            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, title: 'New Chat' }} />
+            <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, title: 'Chat' }} />
           </>
         )}
       </Stack.Navigator>
@@ -79,9 +72,9 @@ function MainTabs() {
   return (
     <Tabs.Navigator>
       <Tabs.Screen name="Home" component={HomeScreen} />
-      <Tabs.Screen name="Chat" component={ChatPlaceholder} />
+      <Tabs.Screen name="Chat" component={ChatList} />
       <Tabs.Screen name="Studies" component={StudiesList} />
-      <Tabs.Screen name="My Walk" component={MyWalkPlaceholder} />
+      <Tabs.Screen name="My Walk" component={MyWalk} />
     </Tabs.Navigator>
   );
 }
