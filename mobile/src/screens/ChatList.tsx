@@ -36,10 +36,17 @@ export default function ChatList() {
         onRefresh={load}
         contentContainerStyle={{ padding: 12 }}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => nav.navigate('ChatDetail', { chatId: item.id })} style={{ padding: 12, borderRadius: 10, backgroundColor: '#f3f4f6', marginBottom: 10 }}>
-            <Text style={{ fontWeight: '600' }}>{item.title || 'Untitled Chat'}</Text>
-            <Text style={{ color: '#6b7280', marginTop: 4 }}>{new Date(item.updated_at).toLocaleString()}</Text>
-          </TouchableOpacity>
+          <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#f3f4f6', marginBottom: 10 }}>
+            <TouchableOpacity onPress={() => nav.navigate('ChatDetail', { chatId: item.id })}>
+              <Text style={{ fontWeight: '600' }}>{item.title || 'Untitled Chat'}</Text>
+              <Text style={{ color: '#6b7280', marginTop: 4 }}>{new Date(item.updated_at).toLocaleString()}</Text>
+            </TouchableOpacity>
+            <View style={{ marginTop: 8 }}>
+              <TouchableOpacity onPress={async () => { await chat.toggleFavorite(item.id, !item.is_favorite); await load(); }} style={{ alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: '#111827' }}>
+                <Text style={{ color: 'white' }}>{item.is_favorite ? 'Unfavorite' : 'Favorite'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
         ListEmptyComponent={!loading ? (
           <View style={{ alignItems: 'center', marginTop: 64 }}>
