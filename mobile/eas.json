@@ -1,5 +1,12 @@
 {
   "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "credentialsSource": "remote",
+      "ios": { "simulator": false },
+      "android": {}
+    },
     "preview": {
       "distribution": "internal",
       "credentialsSource": "remote",
