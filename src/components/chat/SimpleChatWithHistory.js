@@ -112,12 +112,31 @@ const SimpleChatWithHistory = () => {
 
         try {
           const study  = await bibleStudiesRepository.getStudyById(studyId);
-          const lesson = await bibleStudiesRepository.getLessonByIndex(
-            studyId,
-            parseInt(lessonIx, 10)
-          );
+          const idxNum = parseInt(lessonIx, 10);
+          let lesson = await bibleStudiesRepository.getLessonByIndex(studyId, idxNum);
 
-          if (!study || !lesson) {
+          if (!study) {
+            setLessonContext(null);
+            setStudyMeta(null);
+            setLessonMeta(null);
+            return;
+          }
+
+          // Fallback: if lesson not found and index=0, synthesize an Introduction
+          if (!lesson && idxNum === 0 && (study?.description || '').trim().length) {
+            lesson = {
+              id: 'synthetic-intro',
+              study_id: studyId,
+              order_index: 0,
+              title: 'Introduction',
+              scripture_refs: [],
+              summary: study.description,
+              prompts: [],
+              character_id: study.character_id || null,
+            };
+          }
+
+          if (!lesson) {
             setLessonContext(null);
             setStudyMeta(null);
             setLessonMeta(null);
