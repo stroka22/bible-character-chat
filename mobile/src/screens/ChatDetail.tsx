@@ -2,27 +2,53 @@ import React from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
+import { guardMessageSend, incrementDailyMessageCount } from '../lib/tier';
+import * as Linking from 'expo-linking';
 import { generateCharacterResponse } from '../lib/api';
 
 export default function ChatDetail() {
   const route = useRoute<any>();
+  const navigation = useNavigation<any>();
   const { chatId } = route.params || {};
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [character, setCharacter] = React.useState<any>(route.params?.character || null);
+  const [isFav, setIsFav] = React.useState<boolean>(false);
+  const [title, setTitle] = React.useState<string>('Chat');
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
 
   React.useEffect(() => {
     (async () => {
       if (!chatId) return;
+      try {
+        const meta = await chat.getChat(chatId);
+        setIsFav(!!meta?.is_favorite);
+        setTitle(meta?.title || 'Chat');
+      } catch {}
       const rows = await chat.getChatMessages(chatId);
       setMessages(rows);
     })();
   }, [chatId]);
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      title,
+      headerRight: () => (
+        <TouchableOpacity onPress={async () => {
+          try {
+            await chat.toggleFavorite(chatId, !isFav);
+            setIsFav(!isFav);
+          } catch {}
+        }}>
+          <Text style={{ fontSize: 18 }}>{isFav ? '★' : '☆'}</Text>
+        </TouchableOpacity>
+      )
+    });
+  }, [navigation, isFav, title, chatId]);
 
   // character is passed from ChatNew; optional.
 
@@ -32,6 +58,12 @@ export default function ChatDetail() {
     setInput('');
     setSending(true);
     try {
+      // gating: free daily limit
+      await guardMessageSend({
+        userId: undefined, // using local-only for now; if AuthContext has user, wire here
+        onAllowed: async () => {},
+        onUpgrade: () => { throw new Error('UPGRADE_REQUIRED'); }
+      });
       const userMsg = await chat.addMessage(chatId, content, 'user');
       setMessages((m) => [...m, userMsg]);
 
@@ -42,10 +74,17 @@ export default function ChatDetail() {
       const reply = await generateCharacterResponse(name, persona, history);
       const aiMsg = await chat.addMessage(chatId, reply || '...', 'assistant');
       setMessages((m) => [...m, aiMsg]);
+      await incrementDailyMessageCount(undefined);
     } catch (e) {
-      const errText = e instanceof Error ? e.message : 'Failed to send';
-      const aiMsg = await chat.addMessage(chatId, `(Error) ${errText}`, 'assistant');
-      setMessages((m) => [...m, aiMsg]);
+      if ((e as any)?.message === 'UPGRADE_REQUIRED') {
+        // show prompt
+        // Basic inline notice instead of inserting message bubble
+        alert('Free daily message limit reached. Upgrade at faithtalkai.com/pricing to continue.');
+      } else {
+        const errText = e instanceof Error ? e.message : 'Failed to send';
+        const aiMsg = await chat.addMessage(chatId, `(Error) ${errText}`, 'assistant');
+        setMessages((m) => [...m, aiMsg]);
+      }
     } finally {
       setSending(false);
     }

@@ -111,3 +111,56 @@ export async function requirePremiumOrPrompt(opts: {
   }
   return onAllowed();
 }
+
+// Local daily message counter (resets when date changes). This is a client-side guard; server should enforce too.
+const MSG_KEY = (userId?: string) => `msg_count:${userId || 'anon'}`;
+
+export async function getDailyMessageCount(userId?: string): Promise<{ date: string; count: number }> {
+  try {
+    const raw = await AsyncStorage.getItem(MSG_KEY(userId));
+    const today = new Date().toISOString().slice(0, 10);
+    if (!raw) return { date: today, count: 0 };
+    const parsed = JSON.parse(raw);
+    if (parsed.date !== today) return { date: today, count: 0 };
+    return { date: today, count: Number(parsed.count || 0) };
+  } catch {
+    return { date: new Date().toISOString().slice(0, 10), count: 0 };
+  }
+}
+
+export async function incrementDailyMessageCount(userId?: string): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  const curr = await getDailyMessageCount(userId);
+  const next = { date: today, count: (curr.count || 0) + 1 };
+  try { await AsyncStorage.setItem(MSG_KEY(userId), JSON.stringify(next)); } catch {}
+}
+
+export async function guardMessageSend(opts: {
+  userId?: string;
+  onUpgrade: () => void;
+  onAllowed: () => void;
+}) {
+  const { userId, onUpgrade, onAllowed } = opts;
+  const premium = await isPremiumUser(userId);
+  if (premium) return onAllowed();
+  const slug = await getOwnerSlug(userId);
+  const s = await getTierSettings(slug);
+  const { count } = await getDailyMessageCount(userId);
+  const limit = Number(s.freeMessageLimit || 0);
+  if (limit > 0 && count >= limit) return onUpgrade();
+  return onAllowed();
+}
+
+export function isCharacterFree(s: TierSettings, c: { id?: string; name?: string }): boolean {
+  const ids: string[] = s.freeCharacters || [];
+  const names: string[] = s.freeCharacterNames || [];
+  if (ids.length > 0 && c.id) {
+    if (ids.map(String).includes(String(c.id))) return true;
+  }
+  if (names.length > 0 && c.name) {
+    if (names.map((n) => n.toLowerCase()).includes(String(c.name).toLowerCase())) return true;
+  }
+  // if no explicit lists provided, treat as free by default
+  if (ids.length === 0 && names.length === 0) return true;
+  return false;
+}

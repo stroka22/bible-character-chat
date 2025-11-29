@@ -19,6 +19,12 @@ export type ChatMessage = {
 };
 
 export const chat = {
+  async getChat(chatId: string): Promise<Chat | null> {
+    const { data, error } = await supabase.from('chats').select('*').eq('id', chatId).maybeSingle();
+    if (error) throw error;
+    return (data as any) || null;
+  },
+
   async getUserChats(userId: string): Promise<Chat[]> {
     const { data, error } = await supabase
       .from('chats')
@@ -65,6 +71,14 @@ export const chat = {
     const { error } = await supabase
       .from('chats')
       .update({ is_favorite: isFavorite, updated_at: new Date().toISOString() })
+      .eq('id', chatId);
+    if (error) throw error;
+  },
+
+  async updateTitle(chatId: string, title: string): Promise<void> {
+    const { error } = await supabase
+      .from('chats')
+      .update({ title: title || null, updated_at: new Date().toISOString() })
       .eq('id', chatId);
     if (error) throw error;
   },
