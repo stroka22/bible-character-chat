@@ -45,16 +45,44 @@ const StudyLesson = () => {
           return;
         }
         
-        // Fetch the specific lesson
-        const lessonData = await bibleStudiesRepository.getLessonByIndex(id, parseInt(lessonIndex, 10));
+        // Fetch the specific lesson by index
+        const idx = parseInt(lessonIndex, 10);
+        let lessonData = await bibleStudiesRepository.getLessonByIndex(id, idx);
+        
+        // Fallback: if not found, redirect to the first available lesson
+        if (!lessonData) {
+          const all = await bibleStudiesRepository.listLessons(id);
+          const list = all || [];
+          if (list.length > 0) {
+            const first = list.reduce((min, cur) => (cur.order_index < min ? cur.order_index : min), list[0].order_index);
+            if (first !== idx) {
+              navigate(`/studies/${id}/lesson/${first}`, { replace: true });
+              return;
+            }
+          }
+          // If no lessons at all and user asked for introduction (index 0), synthesize an intro from study description
+          if (idx === 0 && (studyData?.description || '').trim().length) {
+            lessonData = {
+              id: 'synthetic-intro',
+              study_id: id,
+              order_index: 0,
+              title: 'Introduction',
+              scripture_refs: [],
+              summary: studyData.description,
+              prompts: [],
+              character_id: studyData.character_id || null,
+            };
+          }
+        }
+
         if (!lessonData) {
           setError('Lesson not found');
           setIsLoading(false);
           return;
         }
-        
+
         setLesson(lessonData);
-        
+
         // Fetch all lessons to know total and compute next/prev
         const allLessons = await bibleStudiesRepository.listLessons(id);
         setLessons(allLessons || []);
