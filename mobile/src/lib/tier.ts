@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as storage from './storage';
 import { supabase } from './supabase';
 
 type TierSettings = {
@@ -43,7 +43,7 @@ function defaults(): TierSettings {
 export async function getTierSettings(slug: string): Promise<TierSettings> {
   // try cache first
   try {
-    const cached = await AsyncStorage.getItem(CACHE_KEY(slug));
+    const cached = await storage.getItem(CACHE_KEY(slug));
     if (cached) return JSON.parse(cached);
   } catch {}
   // load from supabase
@@ -63,11 +63,11 @@ export async function getTierSettings(slug: string): Promise<TierSettings> {
       premiumStudyIds: data?.premium_study_ids ?? [],
       lastUpdated: data?.updated_at ?? new Date().toISOString(),
     };
-    try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(s)); } catch {}
+    try { await storage.setItem(CACHE_KEY(slug), JSON.stringify(s)); } catch {}
     return s;
   } catch {
     const d = defaults();
-    try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(d)); } catch {}
+    try { await storage.setItem(CACHE_KEY(slug), JSON.stringify(d)); } catch {}
     return d;
   }
 }
@@ -117,7 +117,7 @@ const MSG_KEY = (userId?: string) => `msg_count:${userId || 'anon'}`;
 
 export async function getDailyMessageCount(userId?: string): Promise<{ date: string; count: number }> {
   try {
-    const raw = await AsyncStorage.getItem(MSG_KEY(userId));
+    const raw = await storage.getItem(MSG_KEY(userId));
     const today = new Date().toISOString().slice(0, 10);
     if (!raw) return { date: today, count: 0 };
     const parsed = JSON.parse(raw);
@@ -132,7 +132,7 @@ export async function incrementDailyMessageCount(userId?: string): Promise<void>
   const today = new Date().toISOString().slice(0, 10);
   const curr = await getDailyMessageCount(userId);
   const next = { date: today, count: (curr.count || 0) + 1 };
-  try { await AsyncStorage.setItem(MSG_KEY(userId), JSON.stringify(next)); } catch {}
+  try { await storage.setItem(MSG_KEY(userId), JSON.stringify(next)); } catch {}
 }
 
 export async function guardMessageSend(opts: {
