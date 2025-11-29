@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 
 type Study = {
@@ -10,7 +11,8 @@ type Study = {
   cover_image_url?: string | null;
 };
 
-export default function StudiesList({ navigation }: any) {
+export default function StudiesList() {
+  const navigation = useNavigation<any>();
   const [studies, setStudies] = useState<Study[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +40,22 @@ export default function StudiesList({ navigation }: any) {
             data={studies}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => navigation.navigate('StudyDetail', { studyId: item.id, title: item.title })} style={{ paddingVertical: 12 }}>
+              <TouchableOpacity onPress={async () => {
+                // TODO: pull actual premium study IDs from tier settings; use gate helper
+                try {
+                  const { requirePremiumOrPrompt } = await import('../lib/tier');
+                  await requirePremiumOrPrompt({
+                    feature: 'premiumStudy',
+                    studyId: item.id,
+                    onAllowed: () => navigation.navigate('StudyDetail', { studyId: item.id, title: item.title }),
+                    onUpgrade: () => {
+                      alert('Upgrade required to access this study. Visit faithtalkai.com/pricing to upgrade.');
+                    }
+                  });
+                } catch {
+                  navigation.navigate('StudyDetail', { studyId: item.id, title: item.title });
+                }
+              }} style={{ paddingVertical: 12 }}>
                 <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>{item.title}</Text>
                 {!!item.owner_slug && <Text style={{ color: '#9ca3af', fontSize: 12 }}>Org: {item.owner_slug}</Text>}
               </TouchableOpacity>

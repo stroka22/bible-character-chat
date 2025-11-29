@@ -1,5 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { generateCharacterResponse } from '../lib/api';
 import { supabase } from '../lib/supabase';
 
@@ -20,6 +22,8 @@ export default function RoundtableChat({ route }: any) {
   const [isTyping, setIsTyping] = useState(false);
   const [input, setInput] = useState('');
   const [participants, setParticipants] = useState<any[]>([]);
+  const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
 
   React.useEffect(() => {
     (async () => {
@@ -104,7 +108,7 @@ export default function RoundtableChat({ route }: any) {
       <FlatList
         data={messages.filter(m => m.role !== 'system')}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 + Math.max(insets.bottom, 8) + 56 }}
         renderItem={renderItem}
       />
       {isTyping && (
@@ -112,8 +116,8 @@ export default function RoundtableChat({ route }: any) {
           <ActivityIndicator color="#facc15" />
         </View>
       )}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, paddingBottom: 16 + Math.max(insets.bottom, 6) }}>
           <TextInput
             value={input}
             onChangeText={setInput}
