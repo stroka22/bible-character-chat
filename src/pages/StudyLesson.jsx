@@ -49,19 +49,12 @@ const StudyLesson = () => {
         const idx = parseInt(lessonIndex, 10);
         let lessonData = await bibleStudiesRepository.getLessonByIndex(id, idx);
         
-        // Fallback: if not found, redirect to the first available lesson
+        // Fallback handling for missing lesson
         if (!lessonData) {
-          const all = await bibleStudiesRepository.listLessons(id);
-          const list = all || [];
-          if (list.length > 0) {
-            const first = list.reduce((min, cur) => (cur.order_index < min ? cur.order_index : min), list[0].order_index);
-            if (first !== idx) {
-              navigate(`/studies/${id}/lesson/${first}`, { replace: true });
-              return;
-            }
-          }
-          // If no lessons at all and user asked for introduction (index 0), synthesize an intro from study description
-          if (idx === 0 && (studyData?.description || '').trim().length) {
+          const wantsIntro = idx === 0;
+          if (wantsIntro && (studyData?.description || '').trim().length) {
+            // Always synthesize an Introduction when index=0 is requested,
+            // even if other lessons (e.g., starting at 1) exist.
             lessonData = {
               id: 'synthetic-intro',
               study_id: id,
@@ -72,6 +65,17 @@ const StudyLesson = () => {
               prompts: [],
               character_id: studyData.character_id || null,
             };
+          } else {
+            // Otherwise, redirect to the first available lesson if any
+            const all = await bibleStudiesRepository.listLessons(id);
+            const list = all || [];
+            if (list.length > 0) {
+              const first = list.reduce((min, cur) => (cur.order_index < min ? cur.order_index : min), list[0].order_index);
+              if (first !== idx) {
+                navigate(`/studies/${id}/lesson/${first}`, { replace: true });
+                return;
+              }
+            }
           }
         }
 
