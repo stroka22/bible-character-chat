@@ -29,10 +29,10 @@ export default function MyWalk() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
       <View style={{ padding: 16 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700' }}>My Walk</Text>
-        <Text style={{ color: '#6b7280' }}>Favorites</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: '#e5e7eb' }}>My Walk</Text>
+        <Text style={{ color: '#9ca3af' }}>Favorites</Text>
       </View>
       <FlatList
         data={items}
@@ -41,10 +41,10 @@ export default function MyWalk() {
         refreshing={loading}
         contentContainerStyle={{ padding: 12 }}
         renderItem={({ item }) => (
-          <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#f9fafb', marginBottom: 8 }}>
+          <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#0b1220', marginBottom: 8, borderWidth: 1, borderColor: '#1f2937' }}>
             <TouchableOpacity onPress={() => nav.navigate('ChatDetail', { chatId: item.id })}>
-              <Text style={{ fontWeight: '600' }}>{item.title || 'Untitled Chat'}</Text>
-              <Text style={{ color: '#6b7280', marginTop: 4 }}>{new Date(item.updated_at).toLocaleString()}</Text>
+              <Text style={{ fontWeight: '600', color: '#e5e7eb' }}>{item.title || 'Untitled Chat'}</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 4 }}>{new Date(item.updated_at).toLocaleString()}</Text>
             </TouchableOpacity>
             <View style={{ marginTop: 8 }}>
               <TouchableOpacity onPress={() => toggleFavorite(item)} style={{ alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: '#111827' }}>
@@ -55,7 +55,7 @@ export default function MyWalk() {
         )}
         ListEmptyComponent={!loading ? (
           <View style={{ alignItems: 'center', marginTop: 64 }}>
-            <Text>No favorites yet</Text>
+            <Text style={{ color: '#9ca3af' }}>No favorites yet</Text>
           </View>
         ) : null}
       />

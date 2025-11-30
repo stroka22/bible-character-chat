@@ -94,6 +94,11 @@ export async function requirePremiumOrPrompt(opts: {
   onAllowed: () => void;
 }) {
   const { userId, feature, studyId, onUpgrade, onAllowed } = opts;
+  // Dev/ops override via env: allow roundtable free for all when set
+  const RT_FREE = String(process.env.EXPO_PUBLIC_ROUNDTABLE_FREE || '').toLowerCase();
+  if (feature === 'roundtable' && (RT_FREE === 'true' || RT_FREE === '1' || RT_FREE === 'yes')) {
+    return onAllowed();
+  }
   const premium = await isPremiumUser(userId);
   if (premium) return onAllowed();
   const slug = await getOwnerSlug(userId);

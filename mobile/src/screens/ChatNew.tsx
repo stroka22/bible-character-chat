@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList, Image, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
@@ -10,11 +10,20 @@ import { supabase } from '../lib/supabase';
 export default function ChatNew() {
   const { user } = useAuth();
   const nav = useNavigation<any>();
+  const route = useRoute<any>();
   const [title, setTitle] = React.useState('');
   const [search, setSearch] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [characters, setCharacters] = React.useState<any[]>([]);
   const [activeLetter, setActiveLetter] = React.useState<string>('');
+
+  React.useEffect(() => {
+    // Prefill title if passed (e.g., from StudyDetail)
+    try {
+      const t = route?.params?.title as string | undefined;
+      if (t && !title) setTitle(t);
+    } catch {}
+  }, [route, title]);
 
   React.useEffect(() => {
     let active = true;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, SafeAreaView, Text, View, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 
 type Lesson = {
@@ -11,6 +12,7 @@ type Lesson = {
 
 export default function StudyDetail({ route }: any) {
   const { studyId, title } = route.params as { studyId: string; title: string };
+  const navigation = useNavigation<any>();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,12 +40,18 @@ export default function StudyDetail({ route }: any) {
             data={lessons}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <View style={{ paddingVertical: 10 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  const prefillTitle = `${title} – Lesson ${item.order_index + 1}: ${item.title}`;
+                  navigation.navigate('ChatNew', { title: prefillTitle });
+                }}
+                style={{ paddingVertical: 10 }}
+              >
                 <Text style={{ color: 'white', fontWeight: '700' }}>Lesson {item.order_index + 1}: {item.title}</Text>
                 {!!item.summary && (
                   <Text style={{ color: '#e5e7eb' }}>{item.summary}</Text>
                 )}
-              </View>
+              </TouchableOpacity>
             )}
             ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: '#1f2937' }} />}
           />
