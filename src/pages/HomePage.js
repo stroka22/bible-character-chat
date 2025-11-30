@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import userSettingsRepository from '../repositories/userSettingsRepository';
 import siteSettingsRepository from '../repositories/siteSettingsRepository';
 const HomePage = () => {
-    const { character, messages, chatId } = useChat();
+    const { character, messages, chatId, resetChat } = useChat();
     const [resumed, setResumed] = React.useState(false);
     /* Featured character shown in banner below chat/selection */
     const [featured, setFeatured] = React.useState(null);
@@ -24,6 +24,22 @@ const HomePage = () => {
             setResumed(false);
         }
     }, [character, messages]);
+
+    // Force character selection view when "view=characters" is present
+    React.useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const wantCharacters = (params.get('view') || '').toLowerCase() === 'characters';
+            if (wantCharacters) {
+                // Clear any selected chat/character so Home renders the selection grid
+                if (typeof resetChat === 'function') resetChat();
+                // Clean the URL (remove the param) without reload
+                params.delete('view');
+                const newUrl = `${window.location.pathname}?${params.toString()}`.replace(/\?$/, '');
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        } catch {}
+    }, [resetChat]);
 
     /* ------------------------------------------------------------------
      * Load featured character on mount (server-first for signed-in users)

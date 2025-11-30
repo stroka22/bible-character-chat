@@ -232,7 +232,7 @@ const StudyLesson = () => {
               _jsx("div", {
                 className: "mb-2",
                 children: _jsxs(Link, {
-                  to: "/",
+                  to: "/?view=characters",
                   className: "inline-flex items-center text-blue-100 hover:text-yellow-300 text-sm",
                   children: [
                     _jsx("svg", {

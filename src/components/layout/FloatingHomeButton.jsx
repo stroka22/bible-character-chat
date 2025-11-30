@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const FloatingHomeButton = ({ className = '' }) => {
   return (
     <Link
-      to="/"
+      to="/?view=characters"
       aria-label="Go to Home"
       className={
         `fixed bottom-4 left-4 md:bottom-6 md:left-6 z-[60] ` +
