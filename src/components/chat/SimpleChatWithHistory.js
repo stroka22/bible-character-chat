@@ -15,6 +15,7 @@ import { usePremium } from '../../hooks/usePremium';
 import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
 import { loadAccountTierSettings } from '../../utils/accountTier';
 import { getSettings as getTierSettings } from '../../services/tierSettingsService';
+import FloatingHomeButton from '../layout/FloatingHomeButton';
 
 // Feature flag: enable/disable local chat cache usage for resume fallback
 const ENABLE_LOCAL_CHAT_CACHE = false;
@@ -681,6 +682,9 @@ const SimpleChatWithHistory = () => {
 
     const loadingConversation = convLoading && !character;
 
+    const paramsForHomeBtn = new URLSearchParams(location.search);
+    const showFloatingHome = !!paramsForHomeBtn.get('study');
+
     return (
         _jsxs("div", {
             className: "relative min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700",
@@ -1147,6 +1151,9 @@ const SimpleChatWithHistory = () => {
                         )
                     })
                 })
+                ,
+                // Floating Home button (only when launched from a study)
+                showFloatingHome && _jsx(FloatingHomeButton, {})
             ]
         })
     );

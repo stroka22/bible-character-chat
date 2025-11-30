@@ -7,6 +7,7 @@ import { usePremium } from '../hooks/usePremium';
 import { useAuth } from '../contexts/AuthContext';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
+import FloatingHomeButton from '../components/layout/FloatingHomeButton';
 
 const StudyDetails = () => {
   const { id } = useParams();
@@ -421,6 +422,9 @@ const StudyDetails = () => {
 
         /* Footer */
         _jsx(Footer, {}),
+
+        /* Floating Home Button */
+        _jsx(FloatingHomeButton, {}),
 
         /* Upgrade Modal */
         _jsx(UpgradeModal, {
