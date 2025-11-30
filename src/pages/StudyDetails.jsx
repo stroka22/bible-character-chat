@@ -221,20 +221,32 @@ const StudyDetails = () => {
                           })
                         ),
 
-                        /* Title + progress + resume */
-                        _jsxs("div", { children: [
+                    /* Title + progress + resume */
+                    _jsxs("div", { children: [
                           _jsx("h1", {
                             className: "text-3xl md:text-4xl font-extrabold text-yellow-400 tracking-tight",
                             style: { fontFamily: 'Cinzel, serif' },
                             children: study.title
                           }),
-                          _jsxs("div", { className: "mt-3 flex flex-wrap items-center gap-2", children: [
+                      _jsxs("div", { className: "mt-3 flex flex-wrap items-center gap-2", children: [
                             (user && lessons.length > 0) && (
                               _jsx("span", { className: "text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/30", children: `${Array.isArray(progress?.completed_lessons) ? progress.completed_lessons.length : 0} of ${lessons.length} complete` })
                             ),
                             (user && lessons.length > 0) && (
                               _jsx(Link, { to: `/studies/${id}/lesson/${nextLessonIndex}`, className: "text-xs px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white", children: "Resume study" })
-                            )
+                        ),
+                        // Primary CTA: Start always opens Introduction (lesson 0)
+                        _jsx(Link, {
+                          to: `/studies/${id}/lesson/0`,
+                          onClick: (e) => {
+                            if (study.is_premium && !isPremium) {
+                              e.preventDefault();
+                              setShowUpgrade(true);
+                            }
+                          },
+                          className: "text-xs px-3 py-1.5 rounded-md bg-yellow-400 text-blue-900 font-semibold hover:bg-yellow-300",
+                          children: "Start"
+                        })
                           ]})
                         ]}),
 
