@@ -5,7 +5,6 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
 import { guardMessageSend, incrementDailyMessageCount } from '../lib/tier';
-import * as Linking from 'expo-linking';
 import { generateCharacterResponse } from '../lib/api';
 
 export default function ChatDetail() {
@@ -91,8 +90,8 @@ export default function ChatDetail() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
-      <SafeAreaView style={{ flex: 1 }}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: '#0f172a' }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
         <FlatList
           data={messages}
           keyExtractor={(m) => m.id}

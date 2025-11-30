@@ -22,11 +22,11 @@ export default function ChatList() {
   useFocusEffect(React.useCallback(() => { load(); }, [load]));
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
       <View style={{ padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={{ fontSize: 20, fontWeight: '700' }}>Chats</Text>
-        <TouchableOpacity onPress={() => nav.navigate('ChatNew')} style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#111827', borderRadius: 8 }}>
-          <Text style={{ color: 'white', fontWeight: '600' }}>New</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: '#e5e7eb' }}>Chats</Text>
+        <TouchableOpacity onPress={() => nav.navigate('ChatNew')} style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#facc15', borderRadius: 8 }}>
+          <Text style={{ color: '#111827', fontWeight: '600' }}>New</Text>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -36,10 +36,10 @@ export default function ChatList() {
         onRefresh={load}
         contentContainerStyle={{ padding: 12 }}
         renderItem={({ item }) => (
-          <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#f3f4f6', marginBottom: 10 }}>
+          <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#0b1220', marginBottom: 10, borderWidth: 1, borderColor: '#1f2937' }}>
             <TouchableOpacity onPress={() => nav.navigate('ChatDetail', { chatId: item.id })}>
-              <Text style={{ fontWeight: '600' }}>{item.title || 'Untitled Chat'}</Text>
-              <Text style={{ color: '#6b7280', marginTop: 4 }}>{new Date(item.updated_at).toLocaleString()}</Text>
+              <Text style={{ fontWeight: '600', color: '#e5e7eb' }}>{item.title || 'Untitled Chat'}</Text>
+              <Text style={{ color: '#9ca3af', marginTop: 4 }}>{new Date(item.updated_at).toLocaleString()}</Text>
             </TouchableOpacity>
             <View style={{ marginTop: 8 }}>
               <TouchableOpacity onPress={async () => { await chat.toggleFavorite(item.id, !item.is_favorite); await load(); }} style={{ alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: '#111827' }}>
@@ -50,7 +50,7 @@ export default function ChatList() {
         )}
         ListEmptyComponent={!loading ? (
           <View style={{ alignItems: 'center', marginTop: 64 }}>
-            <Text>No chats yet</Text>
+            <Text style={{ color: '#9ca3af' }}>No chats yet</Text>
           </View>
         ) : null}
       />
