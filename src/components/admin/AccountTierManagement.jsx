@@ -34,6 +34,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
   const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
   /* Premium gates */
   const [premiumGates, setPremiumGates] = useState({
+    premiumOnly: true,
     allowAllSpeak: false,
     strictRotation: false,
     followUpsMin: null,
@@ -83,6 +84,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         setFreeCharacterLimit(supabaseSettings.freeCharacterLimit || 10);
         setFreeCharacters(supabaseSettings.freeCharacters || []);
         setPremiumGates({
+          premiumOnly: supabaseSettings?.premiumRoundtableGates?.premiumOnly ?? true,
           allowAllSpeak: !!supabaseSettings?.premiumRoundtableGates?.allowAllSpeak,
           strictRotation: !!supabaseSettings?.premiumRoundtableGates?.strictRotation,
           followUpsMin: supabaseSettings?.premiumRoundtableGates?.followUpsMin ?? null,
@@ -105,7 +107,13 @@ const AccountTierManagement = ({ mode = 'full' }) => {
       setFreeMessageLimit(local.freeMessageLimit || 5);
       setFreeCharacterLimit(local.freeCharacterLimit || 10);
       setFreeCharacters(local.freeCharacters || []);
-      setPremiumGates(local.premiumRoundtableGates || premiumGates);
+      setPremiumGates({
+        premiumOnly: (local.premiumRoundtableGates || {}).premiumOnly ?? true,
+        allowAllSpeak: !!(local.premiumRoundtableGates || {}).allowAllSpeak,
+        strictRotation: !!(local.premiumRoundtableGates || {}).strictRotation,
+        followUpsMin: (local.premiumRoundtableGates || {}).followUpsMin ?? null,
+        repliesPerRoundMin: (local.premiumRoundtableGates || {}).repliesPerRoundMin ?? null,
+      });
       setPremiumStudyIds(local.premiumStudyIds || []);
     } catch (err) {
       console.error('Failed to fetch tier settings:', err);
@@ -620,6 +628,15 @@ const AccountTierManagement = ({ mode = 'full' }) => {
                   {/* Roundtable Feature Gates */}
                   <div className="space-y-3 p-4 border rounded-md">
                     <h4 className="font-medium text-blue-800 mb-1">Roundtable Options</h4>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        checked={!!premiumGates.premiumOnly}
+                        onChange={(e) => setPremiumGates({ ...premiumGates, premiumOnly: e.target.checked })}
+                      />
+                      <span className="text-sm text-gray-700">Roundtable requires Premium</span>
+                    </label>
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
