@@ -164,7 +164,8 @@ const SimpleChatWithHistory = () => {
             `Study: ${study.title}. ` +
             `Lesson ${lesson.order_index + 1}: ${lesson.title}. ` +
             `Scripture: ${Array.isArray(lesson.scripture_refs) && lesson.scripture_refs.length > 0 ? lesson.scripture_refs.join(', ') : 'N/A'}. ` +
-            `Summary: ${lesson.summary ?? ''}`.trim();
+            `Summary: ${lesson.summary ?? ''} ` +
+            `${study.character_instructions ? `Study Prompt: ${study.character_instructions}` : ''}`.trim();
 
           setLessonContext(ctx);
         } catch (err) {
@@ -385,6 +386,11 @@ const SimpleChatWithHistory = () => {
       // Add guidance about Q&A format
       introText += `Feel free to ask questions as we go through this study. I'm here to help you understand the scripture and apply its teachings to your life.\n\n`;
       
+      // Include guiding prompt if present
+      if (studyMeta?.character_instructions) {
+        introText += `[Guiding Prompt]\n${studyMeta.character_instructions}\n\n`;
+      }
+
       // Add warm opening question
       introText += `What aspect of this lesson are you most interested in exploring today?`;
       
