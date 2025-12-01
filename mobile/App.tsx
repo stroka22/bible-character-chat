@@ -3,7 +3,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image } from 'react-native';
-import { Image } from 'react-native';
 import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
 import ChatDetail from './src/screens/ChatDetail';
@@ -11,7 +10,7 @@ import MyWalk from './src/screens/MyWalk';
 import RoundtableSetup from './src/screens/RoundtableSetup';
 import RoundtableChat from './src/screens/RoundtableChat';
 import * as Linking from 'expo-linking';
-import { useAuth } from './src/contexts/AuthContext';
+// useAuth imported below with AuthProvider
 import { requirePremiumOrPrompt } from './src/lib/tier';
 import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
