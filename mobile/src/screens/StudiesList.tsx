@@ -24,7 +24,9 @@ export default function StudiesList() {
         .select('id,title,owner_slug,visibility,cover_image_url')
         .eq('visibility', 'public')
         .order('created_at', { ascending: false }) as any;
-      setStudies(data || []);
+      // Deduplicate by id in case of duplicate rows
+      const unique = Array.from(new Map((data || []).map((s: Study) => [s.id, s])).values());
+      setStudies(unique);
       setLoading(false);
     })();
   }, []);
