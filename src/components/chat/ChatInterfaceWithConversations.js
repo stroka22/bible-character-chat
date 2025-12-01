@@ -599,7 +599,12 @@ const ChatInterfaceWithConversations = () => {
                             _jsxs(_Fragment, { 
                                 children: [
                                     messages
-                                        .filter((m) => m.content && m.content.trim() !== '')
+                                        .filter((m) => {
+                                            const content = (m?.content ?? '').toString();
+                                            if (m?.role === 'system') return false;
+                                            if (content.includes('[Guiding Prompt]')) return false;
+                                            return content.trim() !== '';
+                                        })
                                         .map((message, index) => (
                                             _jsx(ChatBubble, { 
                                                 message: message, 

@@ -270,7 +270,12 @@ const ChatInterface: React.FC = () => {
           <>
             {/* Message bubbles */}
             {messages
-              .filter((m) => m.content && m.content.trim() !== '')
+              .filter((m) => {
+                const content = String(m?.content ?? '');
+                if (m?.role === 'system') return false;
+                if (content.includes('[Guiding Prompt]')) return false;
+                return content.trim() !== '';
+              })
               .map((message) => (
               <ChatBubble
                 key={message.id}
