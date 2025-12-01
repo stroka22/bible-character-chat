@@ -1,11 +1,10 @@
 import React from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList, Image, ScrollView } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList, Image, ScrollView, Alert, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
-import * as Linking from 'expo-linking';
-import { Alert } from 'react-native';
+ 
 import { supabase } from '../lib/supabase';
 
 export default function ChatNew() {

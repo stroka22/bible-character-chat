@@ -5,7 +5,6 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
 import { guardMessageSend, incrementDailyMessageCount } from '../lib/tier';
-import * as Linking from 'expo-linking';
 import { generateCharacterResponse } from '../lib/api';
 
 export default function ChatDetail() {

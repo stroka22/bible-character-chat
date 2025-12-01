@@ -9,7 +9,7 @@ import ChatDetail from './src/screens/ChatDetail';
 import MyWalk from './src/screens/MyWalk';
 import RoundtableSetup from './src/screens/RoundtableSetup';
 import RoundtableChat from './src/screens/RoundtableChat';
-import * as Linking from 'expo-linking';
+import { Linking } from 'react-native';
 import { requirePremiumOrPrompt } from './src/lib/tier';
 import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
