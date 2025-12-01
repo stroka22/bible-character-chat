@@ -221,9 +221,7 @@ const SimpleChatWithHistory = () => {
             intro += `\n\nThis is a standalone study. I’ll guide the discussion and answer your questions as we go.`;
           }
 
-          if (study.character_instructions) {
-            intro += `\n\n[Guiding Prompt]\n${study.character_instructions}`;
-          }
+          // Do not display guiding prompt to the user; it's injected via systemContext
 
           intro += `\n\nWhat would you like to focus on first?`;
 
@@ -386,10 +384,7 @@ const SimpleChatWithHistory = () => {
       // Add guidance about Q&A format
       introText += `Feel free to ask questions as we go through this study. I'm here to help you understand the scripture and apply its teachings to your life.\n\n`;
       
-      // Include guiding prompt if present
-      if (studyMeta?.character_instructions) {
-        introText += `[Guiding Prompt]\n${studyMeta.character_instructions}\n\n`;
-      }
+      // Do not display guiding prompt to the user; it's injected via systemContext
 
       // Add warm opening question
       introText += `What aspect of this lesson are you most interested in exploring today?`;
