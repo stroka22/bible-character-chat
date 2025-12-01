@@ -17,6 +17,7 @@ import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
 import Login from './src/screens/Login';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -98,7 +99,9 @@ function MainTabs() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppInner />
+      <ErrorBoundary>
+        <AppInner />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }
