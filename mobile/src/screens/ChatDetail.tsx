@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
+import { useAuth } from '../contexts/AuthContext';
 import { guardMessageSend, incrementDailyMessageCount } from '../lib/tier';
 import { generateCharacterResponse } from '../lib/api';
 
@@ -11,6 +12,7 @@ export default function ChatDetail() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { chatId } = route.params || {};
+  const { user } = useAuth();
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState('');
   const [sending, setSending] = React.useState(false);
@@ -59,7 +61,7 @@ export default function ChatDetail() {
     try {
       // gating: free daily limit
       await guardMessageSend({
-        userId: undefined, // using local-only for now; if AuthContext has user, wire here
+        userId: user?.id,
         onAllowed: async () => {},
         onUpgrade: () => { throw new Error('UPGRADE_REQUIRED'); }
       });
@@ -73,7 +75,7 @@ export default function ChatDetail() {
       const reply = await generateCharacterResponse(name, persona, history);
       const aiMsg = await chat.addMessage(chatId, reply || '...', 'assistant');
       setMessages((m) => [...m, aiMsg]);
-      await incrementDailyMessageCount(undefined);
+      await incrementDailyMessageCount(user?.id);
     } catch (e) {
       if ((e as any)?.message === 'UPGRADE_REQUIRED') {
         // show prompt

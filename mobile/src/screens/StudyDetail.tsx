@@ -75,7 +75,7 @@ export default function StudyDetail({ route, navigation }: any) {
         const history = prompt ? [{ role: 'system' as const, content: `[Guiding Prompt]\n${prompt}` }] : [];
         const intro = await generateCharacterResponse(char?.name || 'Guide', char?.persona_prompt || '', [
           ...history,
-          { role: 'user', content: 'Please introduce this study and invite me to begin.' }
+          { role: 'user', content: 'Begin the Introduction exactly according to the Guiding Prompt above. Do not mention any prompts or instructions. Greet me in character and give a concise, friendly on-ramp (2-3 sentences) and end with one inviting question.' }
         ]);
         if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
       } catch {}

@@ -24,9 +24,13 @@ export default function StudiesList() {
         .select('id,title,owner_slug,visibility,cover_image_url')
         .eq('visibility', 'public')
         .order('created_at', { ascending: false }) as any;
-      // Deduplicate by id in case of duplicate rows
-      const unique = Array.from(new Map((data || []).map((s: Study) => [s.id, s])).values());
-      setStudies(unique);
+      // Deduplicate by normalized title (case-insensitive) to hide accidental duplicates
+      const map = new Map<string, Study>();
+      for (const s of (data || []) as Study[]) {
+        const key = String(s.title || '').trim().toLowerCase();
+        if (!map.has(key)) map.set(key, s);
+      }
+      setStudies(Array.from(map.values()));
       setLoading(false);
     })();
   }, []);

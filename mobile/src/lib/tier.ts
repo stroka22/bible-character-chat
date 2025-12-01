@@ -41,12 +41,7 @@ function defaults(): TierSettings {
 }
 
 export async function getTierSettings(slug: string): Promise<TierSettings> {
-  // try cache first
-  try {
-    const cached = await AsyncStorage.getItem(CACHE_KEY(slug));
-    if (cached) return JSON.parse(cached);
-  } catch {}
-  // load from supabase
+  // Always fetch fresh to reflect recent admin changes, then cache
   try {
     const { data, error } = await supabase
       .from('tier_settings')
@@ -66,6 +61,11 @@ export async function getTierSettings(slug: string): Promise<TierSettings> {
     try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(s)); } catch {}
     return s;
   } catch {
+    // fallback to cache or defaults
+    try {
+      const cached = await AsyncStorage.getItem(CACHE_KEY(slug));
+      if (cached) return JSON.parse(cached);
+    } catch {}
     const d = defaults();
     try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(d)); } catch {}
     return d;
