@@ -1,15 +1,17 @@
 import React from 'react';
-import { FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat, type Chat } from '../lib/chat';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
+import { listFavoriteCharacters } from '../lib/favorites';
 
 export default function MyWalk() {
   const { user } = useAuth();
   const nav = useNavigation<any>();
   const [items, setItems] = React.useState<Chat[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [favChars, setFavChars] = React.useState<any[]>([]);
 
   const load = React.useCallback(async () => {
     if (!user) return;
@@ -17,6 +19,10 @@ export default function MyWalk() {
     try {
       const rows = await chat.getUserChats(user.id);
       setItems(rows.filter((c) => !!c.is_favorite));
+      try {
+        const chars = await listFavoriteCharacters(user.id);
+        setFavChars(chars);
+      } catch {}
     } finally {
       setLoading(false);
     }
@@ -33,7 +39,31 @@ export default function MyWalk() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent }}>My Walk</Text>
-        <Text style={{ color: theme.colors.muted }}>Favorites</Text>
+        <Text style={{ color: theme.colors.muted, marginTop: 4 }}>Favorite Characters</Text>
+      </View>
+      <FlatList
+        data={favChars}
+        keyExtractor={(i) => String(i.id)}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 8 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 200, padding: 12, borderRadius: 12, backgroundColor: theme.colors.card, marginHorizontal: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.surface }} />
+              <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{item.name}</Text>
+            </View>
+            {item.description ? <Text numberOfLines={2} style={{ color: theme.colors.muted, marginTop: 6 }}>{item.description}</Text> : null}
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={!loading ? (
+          <View style={{ paddingHorizontal: 16 }}>
+            <Text style={{ color: theme.colors.muted }}>No favorite characters yet</Text>
+          </View>
+        ) : null}
+      />
+      <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+        <Text style={{ color: theme.colors.muted }}>Favorite Chats</Text>
       </View>
       <FlatList
         data={items}
