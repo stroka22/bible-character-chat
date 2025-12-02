@@ -94,8 +94,8 @@ export default function ChatNew() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}>
         {['', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 14, marginRight: 8, borderRadius: 22, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
-            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '800', fontSize: 16 }}>{ltr || 'All'}</Text>
+          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>{ltr || 'All'}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
