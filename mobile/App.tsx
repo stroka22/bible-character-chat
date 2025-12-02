@@ -33,7 +33,7 @@ function BrandHeader() {
   const imgH = Math.min(headerH * 0.8, imgW / aspect);
   return (
     <View style={{ height: headerH, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.card }}>
-      <Image source={AppLogo} style={{ width: imgW, height: imgH }} resizeMode="contain" />
+      <Image source={AppLogo} style={{ width: imgW, height: imgH, tintColor: theme.colors.muted }} resizeMode="contain" />
     </View>
   );
 }
@@ -46,7 +46,7 @@ function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95 }} resizeMode="contain" />
+        <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95, tintColor: theme.colors.muted }} resizeMode="contain" />
         <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Study the Bible with guided conversations</Text>
       </View>
       <View style={{ gap: 10, width: '86%' }}>

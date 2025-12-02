@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Linking, useWindowDimensions } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Linking, useWindowDimensions, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AppLogo = require('../../assets/wordmark.png');
 import { useAuth } from '../contexts/AuthContext';
+import { theme } from '../theme';
 
 export default function Login() {
   const { signInWithPassword } = useAuth();
@@ -28,10 +29,12 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a', padding: 16, justifyContent: 'center' }}>
-      <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95 }} resizeMode="contain" />
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16 }} keyboardShouldPersistTaps="handled">
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95, tintColor: theme.colors.muted }} resizeMode="contain" />
+          </View>
       {!!error && (
         <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>
           <Text style={{ color: 'white' }}>{error}</Text>
@@ -43,7 +46,7 @@ export default function Login() {
         value={email}
         onChangeText={setEmail}
         placeholder="Email"
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor={theme.colors.muted}
         style={{ backgroundColor: '#111827', color: 'white', padding: 12, borderRadius: 8, marginBottom: 12 }}
       />
       <TextInput
@@ -51,7 +54,7 @@ export default function Login() {
         value={password}
         onChangeText={setPassword}
         placeholder="Password"
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor={theme.colors.muted}
         style={{ backgroundColor: '#111827', color: 'white', padding: 12, borderRadius: 8, marginBottom: 12 }}
       />
       <TouchableOpacity onPress={onSubmit} disabled={loading || !email.trim() || !password} style={{ backgroundColor: (!email.trim() || !password) ? '#9ca3af' : '#facc15', padding: 16, borderRadius: 12, alignItems: 'center' }}>
@@ -65,6 +68,8 @@ export default function Login() {
           <Text style={{ color: '#9ca3af', textDecorationLine: 'underline' }}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
