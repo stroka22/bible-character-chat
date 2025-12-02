@@ -2,10 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image, useWindowDimensions } from 'react-native';
-// Static require ensures bundling in Dev Client
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const AppLogo = require('./assets/wordmark.png');
+import { SafeAreaView, Text, TouchableOpacity, View, Alert, useWindowDimensions } from 'react-native';
+import Wordmark from './src/components/Wordmark';
+import { useFonts, Inter_700Bold } from '@expo-google-fonts/inter';
 import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
 import ChatDetail from './src/screens/ChatDetail';
@@ -27,23 +26,18 @@ const Tabs = createBottomTabNavigator();
 
 function BrandHeaderTitle() {
   const { width, height } = useWindowDimensions();
-  const aspect = 300 / 84;
-  const maxH = Math.min(Math.max(48, height * 0.10), 72); // make title large but within native header
-  const maxW = Math.min(width * 0.8, 600);
-  return (
-    <Image source={AppLogo} style={{ height: maxH, width: undefined, maxWidth: maxW, aspectRatio: aspect }} resizeMode="contain" />
-  );
+  const maxW = Math.min(width * 0.7, 520);
+  return <Wordmark width={maxW} />;
 }
 
 function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const { width, height } = useWindowDimensions();
-  const logoHeight = Math.min(height * 0.4, 480); // 40% of viewport, cap for tablets
-  const logoAspect = 300 / 84; // maintain wordmark ratio
+  const logoWidth = Math.min(width * 0.95, 1200); // scale with screen
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95 }} resizeMode="contain" />
+        <Wordmark width={logoWidth} />
         <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Study the Bible with guided conversations</Text>
       </View>
       <View style={{ gap: 10, width: '86%' }}>
@@ -134,6 +128,8 @@ function MainTabs() {
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({ Inter_700Bold });
+  if (!fontsLoaded) return null;
   return (
     <AuthProvider>
       <AppInner />

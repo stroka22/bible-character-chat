@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Linking, useWindowDimensions, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const AppLogo = require('../../assets/wordmark.png');
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Linking, useWindowDimensions, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import Wordmark from '../components/Wordmark';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
 
 export default function Login() {
   const { signInWithPassword } = useAuth();
   const { width, height } = useWindowDimensions();
-  const logoHeight = Math.min(height * 0.4, 480);
-  const logoAspect = 300 / 84;
+  const logoWidth = Math.min(width * 0.95, 1200);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +31,7 @@ export default function Login() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16 }} keyboardShouldPersistTaps="handled">
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95 }} resizeMode="contain" />
+            <Wordmark width={logoWidth} />
           </View>
       {!!error && (
         <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>
