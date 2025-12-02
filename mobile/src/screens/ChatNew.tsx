@@ -8,6 +8,8 @@ import { Alert, Linking } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
 
+const CURATED_BOOKS = ['Genesis','Exodus','Psalms','Proverbs','Gospels','Acts','Romans','Hebrews'];
+
 export default function ChatNew() {
   const { user } = useAuth();
   const nav = useNavigation<any>();
@@ -16,7 +18,7 @@ export default function ChatNew() {
   const [loading, setLoading] = React.useState(false);
   const [characters, setCharacters] = React.useState<any[]>([]);
   const [activeLetter, setActiveLetter] = React.useState<string>('');
-  const [categories, setCategories] = React.useState<string[]>([]);
+  const [categories, setCategories] = React.useState<string[]>(CURATED_BOOKS);
   const [activeCategory, setActiveCategory] = React.useState<string>('');
 
   React.useEffect(() => {
@@ -42,20 +44,7 @@ export default function ChatNew() {
     return () => { active = false; };
   }, [search, activeLetter, activeCategory]);
 
-  // Load categories (Bible books) once
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('characters')
-          .select('bible_book')
-          .not('bible_book', 'is', null)
-          .order('bible_book', { ascending: true });
-        const uniq = Array.from(new Set((data || []).map((r: any) => String(r.bible_book || '').trim()))).filter(Boolean);
-        setCategories(uniq);
-      } catch {}
-    })();
-  }, []);
+  // Categories kept small and curated for speed and legibility
 
   async function start(c: any) {
     if (!user) return;

@@ -50,8 +50,8 @@ export default function ChatDetail() {
       title,
       headerTitle: () => (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {character?.avatar_url ? (
-            <Image source={{ uri: character.avatar_url }} style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }} />
+          {character?.avatar_url || character?.avatar ? (
+            <Image source={{ uri: (character.avatar_url || character.avatar) as string }} style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }} />
           ) : (
             <View style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8, backgroundColor: theme.colors.surface }} />
           )}
