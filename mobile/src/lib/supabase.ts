@@ -1,6 +1,7 @@
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 const extra = Constants.expoConfig?.extra as any;
@@ -32,6 +33,13 @@ if (!hasValidUrl || !SUPABASE_ANON_KEY) {
 
 let client: SupabaseClient | null = null;
 if (hasValidUrl && SUPABASE_ANON_KEY) {
-  client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      storage: AsyncStorage as any,
+    },
+  });
 }
 export const supabase = client as unknown as SupabaseClient;

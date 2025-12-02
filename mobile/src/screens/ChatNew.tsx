@@ -23,14 +23,23 @@ export default function ChatNew() {
   const [favIds, setFavIds] = React.useState<Set<string>>(new Set());
   // Categories row removed for clarity and speed
 
+  // Load favorites set once and whenever user changes
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!user) { setFavIds(new Set()); return; }
+      try {
+        const favs = await getFavoriteCharacterIds(user.id);
+        if (mounted) setFavIds(favs);
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, [user]);
+
   React.useEffect(() => {
     let active = true;
     (async () => {
       try {
-        if (filterMode === 'favorites' && user) {
-          const favs = await getFavoriteCharacterIds(user.id);
-          setFavIds(favs);
-        }
         let query = supabase.from('characters').select('id,name,description,avatar_url,opening_line,persona_prompt');
         if (search && search.trim()) {
           query = query.or(
@@ -104,16 +113,16 @@ export default function ChatNew() {
           style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 14 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}>
         <TouchableOpacity onPress={() => setFilterMode('favorites')} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: filterMode === 'favorites' ? theme.colors.primary : theme.colors.card }}>
           <Text style={{ color: filterMode === 'favorites' ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>Favorites</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => { setFilterMode('all'); setActiveLetter(''); }} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: filterMode === 'all' && !activeLetter ? theme.colors.primary : theme.colors.card }}>
           <Text style={{ color: (filterMode === 'all' && !activeLetter) ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>All</Text>
         </TouchableOpacity>
-        {['', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-          <TouchableOpacity key={ltr || 'all-letter'} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); }} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: activeLetter === ltr && filterMode === 'all' ? theme.colors.primary : theme.colors.card }}>
-            <Text style={{ color: (activeLetter === ltr && filterMode === 'all') ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>{ltr || 'All'}</Text>
+        {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
+          <TouchableOpacity key={ltr} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); }} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: activeLetter === ltr && filterMode === 'all' ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: (activeLetter === ltr && filterMode === 'all') ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>{ltr}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -121,7 +130,7 @@ export default function ChatNew() {
       <FlatList
         data={characters}
         keyExtractor={(i) => String(i.id)}
-        contentContainerStyle={{ padding: 12 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
         initialNumToRender={12}
         windowSize={10}
         maxToRenderPerBatch={12}
