@@ -4,7 +4,7 @@ export const theme = {
     surface: '#111827',
     card: '#1f2937',
     text: '#e5e7eb',
-    muted: '#9ca3af',
+    muted: '#cbd5e1',
     border: '#374151',
     primary: '#facc15',
     primaryText: '#0f172a',

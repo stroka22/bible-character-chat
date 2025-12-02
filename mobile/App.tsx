@@ -25,6 +25,14 @@ import { theme } from './src/theme';
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
+function BrandHeader({ wide = 360, tall = 86 }: { wide?: number; tall?: number }) {
+  return (
+    <View style={{ height: 100, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.card }}>
+      <Image source={AppLogo} style={{ width: wide, height: tall }} resizeMode="contain" />
+    </View>
+  );
+}
+
 function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const { width } = useWindowDimensions();
@@ -93,21 +101,11 @@ function AppInner() {
         ) : (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="StudyDetail" component={StudyDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
-              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
-            ) }} />
-            <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
-              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
-            ) }} />
-            <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
-              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
-            ) }} />
-            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
-              <Image source={AppLogo} style={{ width: 200, height: 48 }} resizeMode="contain" />
-            ) }} />
-            <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
-              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
-            ) }} />
+            <Stack.Screen name="StudyDetail" component={StudyDetail} options={{ headerShown: true, header: () => <BrandHeader /> }} />
+            <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, header: () => <BrandHeader /> }} />
+            <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, header: () => <BrandHeader /> }} />
+            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, header: () => <BrandHeader /> }} />
+            <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, header: () => <BrandHeader /> }} />
           </>
         )}
       </Stack.Navigator>
@@ -118,17 +116,10 @@ function AppInner() {
 function MainTabs() {
   return (
     <Tabs.Navigator screenOptions={{
-      headerStyle: { backgroundColor: theme.colors.card },
-      headerTintColor: theme.colors.text,
-      headerTitleAlign: 'center',
+      header: () => <BrandHeader />,
       tabBarStyle: { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border },
       tabBarActiveTintColor: theme.colors.primary,
       tabBarInactiveTintColor: theme.colors.muted,
-      headerTitle: () => (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Image source={AppLogo} style={{ width: 200, height: 48 }} resizeMode="contain" />
-        </View>
-      )
     }}>
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Chat" component={ChatNew} />
