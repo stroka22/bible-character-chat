@@ -51,7 +51,7 @@ export default function ChatNew() {
           .select('bible_book')
           .not('bible_book', 'is', null)
           .order('bible_book', { ascending: true });
-        const uniq = Array.from(new Set((data || []).map((r: any) => String(r.bible_book))));
+        const uniq = Array.from(new Set((data || []).map((r: any) => String(r.bible_book || '').trim()))).filter(Boolean);
         setCategories(uniq);
       } catch {}
     })();
@@ -115,9 +115,15 @@ export default function ChatNew() {
       </ScrollView>
       {categories.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}>
-          {[ '', ...categories ].map((cat) => (
-              <TouchableOpacity key={cat || 'all-cats'} onPress={() => setActiveCategory(cat)} style={{ minHeight: 36, paddingVertical: 8, paddingHorizontal: 12, marginRight: 8, borderRadius: 18, backgroundColor: activeCategory === cat ? theme.colors.primary : theme.colors.card }}>
-              <Text style={{ color: activeCategory === cat ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>{cat || 'All categories'}</Text>
+          {['__ALL__', ...categories.slice(0, 14)].map((cat, idx) => (
+            <TouchableOpacity
+              key={cat === '__ALL__' ? 'cat-all' : `cat-${cat}`}
+              onPress={() => setActiveCategory(cat === '__ALL__' ? '' : cat)}
+              style={{ minHeight: 36, paddingVertical: 8, paddingHorizontal: 12, marginRight: 8, borderRadius: 18, backgroundColor: (activeCategory || '__ALL__') === cat ? theme.colors.primary : theme.colors.card }}
+            >
+              <Text numberOfLines={1} style={{ color: (activeCategory || '__ALL__') === cat ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>
+                {cat === '__ALL__' ? 'All categories' : cat}
+              </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

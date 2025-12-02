@@ -28,12 +28,15 @@ function HomeScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
         <Image
-          source={{ uri: 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }}
+          source={require('./assets/icon.png')}
           style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 8 }}
         />
         <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.accent }}>FaithTalkAI</Text>
       </View>
       <View style={{ gap: 12, width: '86%' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('ChatNew')} style={{ minHeight: 48, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '800', fontSize: 16, color: theme.colors.primaryText }}>Start a Chat</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={async () => {
           await requirePremiumOrPrompt({
             userId: user?.id,
@@ -49,8 +52,11 @@ function HomeScreen({ navigation }: any) {
         }} style={{ minHeight: 48, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontWeight: '800', fontSize: 16, color: theme.colors.primaryText }}>Start a Roundtable</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 48, paddingVertical: 12, backgroundColor: theme.colors.surface, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-          <Text style={{ fontWeight: '700', fontSize: 16, color: theme.colors.text }}>Browse Bible Studies</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 48, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '800', fontSize: 16, color: theme.colors.primaryText }}>Browse Bible Studies</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 48, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '800', fontSize: 16, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
       </View>
       <StatusBar style="light" />
@@ -106,7 +112,7 @@ function MainTabs() {
       tabBarInactiveTintColor: theme.colors.muted,
       headerTitle: () => (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Image source={{ uri: 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+          <Image source={require('./assets/icon.png')} style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
           <Text style={{ color: theme.colors.text, fontWeight: '700' }}>FaithTalkAI</Text>
         </View>
       )

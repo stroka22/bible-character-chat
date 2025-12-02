@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Linking } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
@@ -53,9 +53,17 @@ export default function Login() {
         placeholderTextColor="#9ca3af"
         style={{ backgroundColor: '#111827', color: 'white', padding: 12, borderRadius: 8, marginBottom: 12 }}
       />
-      <TouchableOpacity onPress={onSubmit} disabled={loading || !email.trim() || !password} style={{ backgroundColor: (!email.trim() || !password) ? '#9ca3af' : '#facc15', padding: 14, borderRadius: 10, alignItems: 'center' }}>
-        <Text style={{ fontWeight: '700' }}>{loading ? 'Signing in...' : 'Sign In'}</Text>
+      <TouchableOpacity onPress={onSubmit} disabled={loading || !email.trim() || !password} style={{ backgroundColor: (!email.trim() || !password) ? '#9ca3af' : '#facc15', padding: 16, borderRadius: 12, alignItems: 'center' }}>
+        <Text style={{ fontWeight: '800', fontSize: 16, color: '#0f172a' }}>{loading ? 'Signing in...' : 'Sign In'}</Text>
       </TouchableOpacity>
+      <View style={{ marginTop: 12, alignItems: 'center', gap: 8 }}>
+        <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/signup')}>
+          <Text style={{ color: '#fde68a', textDecorationLine: 'underline', fontWeight: '700' }}>Create account</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/reset-password')}>
+          <Text style={{ color: '#9ca3af', textDecorationLine: 'underline' }}>Forgot password?</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
