@@ -4,9 +4,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
-import * as Linking from 'expo-linking';
-import { Alert } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { theme } from '../theme';
 
 export default function ChatNew() {
   const { user } = useAuth();
@@ -16,6 +16,8 @@ export default function ChatNew() {
   const [loading, setLoading] = React.useState(false);
   const [characters, setCharacters] = React.useState<any[]>([]);
   const [activeLetter, setActiveLetter] = React.useState<string>('');
+  const [categories, setCategories] = React.useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = React.useState<string>('');
 
   React.useEffect(() => {
     let active = true;
@@ -30,12 +32,30 @@ export default function ChatNew() {
         if (activeLetter) {
           query = query.ilike('name', `${activeLetter}%`) as any;
         }
+        if (activeCategory) {
+          query = query.eq('bible_book', activeCategory) as any;
+        }
         const { data } = await query.order('name');
         if (active) setCharacters(data || []);
       } catch {}
     })();
     return () => { active = false; };
-  }, [search, activeLetter]);
+  }, [search, activeLetter, activeCategory]);
+
+  // Load categories (Bible books) once
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('characters')
+          .select('bible_book')
+          .not('bible_book', 'is', null)
+          .order('bible_book', { ascending: true });
+        const uniq = Array.from(new Set((data || []).map((r: any) => String(r.bible_book))));
+        setCategories(uniq);
+      } catch {}
+    })();
+  }, []);
 
   async function start(c: any) {
     if (!user) return;
@@ -68,39 +88,54 @@ export default function ChatNew() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 12 }}>New Chat</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 12, color: theme.colors.accent }}>New Chat</Text>
         <TextInput
           value={title}
           onChangeText={setTitle}
           placeholder="Title (optional)"
-          style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, height: 44, marginBottom: 12 }}
+          placeholderTextColor={theme.colors.muted}
+          style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44, marginBottom: 12 }}
         />
         <TextInput
           value={search}
           onChangeText={setSearch}
           placeholder="Search characters…"
-          style={{ borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, height: 44 }}
+          placeholderTextColor={theme.colors.muted}
+          style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
         {['', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeLetter === ltr ? '#111827' : '#e5e7eb' }}>
-            <Text style={{ color: activeLetter === ltr ? 'white' : '#111827', fontWeight: '600' }}>{ltr || 'All'}</Text>
+          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '600' }}>{ltr || 'All'}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
+      {categories.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}>
+          {[ '', ...categories ].map((cat) => (
+            <TouchableOpacity key={cat || 'all-cats'} onPress={() => setActiveCategory(cat)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeCategory === cat ? theme.colors.primary : theme.colors.card }}>
+              <Text style={{ color: activeCategory === cat ? theme.colors.primaryText : theme.colors.text, fontWeight: '600' }}>{cat || 'All categories'}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
       <FlatList
         data={characters}
         keyExtractor={(i) => String(i.id)}
         contentContainerStyle={{ padding: 12 }}
+        initialNumToRender={12}
+        windowSize={10}
+        maxToRenderPerBatch={12}
+        removeClippedSubviews
         renderItem={({ item }) => (
-          <TouchableOpacity disabled={loading} onPress={() => start(item)} style={{ padding: 12, borderRadius: 10, backgroundColor: '#f9fafb', marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#e5e7eb' }} />
+          <TouchableOpacity disabled={loading} onPress={() => start(item)} style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.colors.surface }} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontWeight: '600' }}>{item.name}</Text>
-              {item.description ? <Text numberOfLines={2} style={{ color: '#6b7280', marginTop: 4 }}>{item.description}</Text> : null}
+              <Text style={{ fontWeight: '600', color: theme.colors.text }}>{item.name}</Text>
+              {item.description ? <Text numberOfLines={2} style={{ color: theme.colors.muted, marginTop: 4 }}>{item.description}</Text> : null}
             </View>
           </TouchableOpacity>
         )}

@@ -3,6 +3,7 @@ import { FlatList, ListRenderItem, SafeAreaView, Text, TouchableOpacity, View } 
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { chat, type Chat } from '../lib/chat';
 import { useAuth } from '../contexts/AuthContext';
+import { theme } from '../theme';
 
 export default function ChatList() {
   const { user } = useAuth();
@@ -37,22 +38,22 @@ export default function ChatList() {
   const ChatRow = React.useMemo(() => React.memo(({ item }: { item: Chat }) => {
     const updated = React.useMemo(() => new Date(item.updated_at).toLocaleString(), [item.updated_at]);
     return (
-      <View style={{ padding: 12, borderRadius: 10, backgroundColor: '#f3f4f6', marginBottom: 10 }}>
+      <View style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 10 }}>
         <TouchableOpacity onPress={() => openChat(item.id)}>
-          <Text style={{ fontWeight: '600' }}>{item.title || 'Untitled Chat'}</Text>
-          <Text style={{ color: '#6b7280', marginTop: 4 }}>{updated}</Text>
+          <Text style={{ fontWeight: '600', color: theme.colors.text }}>{item.title || 'Untitled Chat'}</Text>
+          <Text style={{ color: theme.colors.muted, marginTop: 4 }}>{updated}</Text>
         </TouchableOpacity>
         <View style={{ marginTop: 8 }}>
           <TouchableOpacity
             onPress={async () => { await toggleFavorite(item.id, !item.is_favorite); }}
-            style={{ alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: '#111827' }}
+            style={{ alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: theme.colors.surface }}
           >
-            <Text style={{ color: 'white' }}>{item.is_favorite ? 'Unfavorite' : 'Favorite'}</Text>
+            <Text style={{ color: theme.colors.text }}>{item.is_favorite ? 'Unfavorite' : 'Favorite'}</Text>
           </TouchableOpacity>
         </View>
       </View>
     );
-  })), [openChat, toggleFavorite]);
+  }), [openChat, toggleFavorite]);
 
   const renderItem: ListRenderItem<Chat> = React.useCallback(({ item }) => (
     // @ts-ignore - memoized component typed above
@@ -60,11 +61,11 @@ export default function ChatList() {
   ), [ChatRow]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={{ fontSize: 20, fontWeight: '700' }}>Chats</Text>
-        <TouchableOpacity onPress={() => nav.navigate('ChatNew')} style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#111827', borderRadius: 8 }}>
-          <Text style={{ color: 'white', fontWeight: '600' }}>New</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent }}>Chats</Text>
+        <TouchableOpacity onPress={() => nav.navigate('ChatNew')} style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: theme.colors.primary, borderRadius: 8 }}>
+          <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>New</Text>
         </TouchableOpacity>
       </View>
       <FlatList
@@ -80,7 +81,7 @@ export default function ChatList() {
         removeClippedSubviews
         ListEmptyComponent={!loading ? (
           <View style={{ alignItems: 'center', marginTop: 64 }}>
-            <Text>No chats yet</Text>
+            <Text style={{ color: theme.colors.text }}>No chats yet</Text>
           </View>
         ) : null}
       />

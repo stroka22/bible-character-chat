@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { generateCharacterResponse } from '../lib/api';
 import { supabase } from '../lib/supabase';
+import { theme } from '../theme';
 
 type Message = {
   id: string;
@@ -100,10 +101,10 @@ export default function RoundtableChat({ route }: any) {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
-        <Text style={{ color: '#fde68a', fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
-        <Text style={{ color: '#e5e7eb' }}>{topic}</Text>
+        <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
+        <Text style={{ color: theme.colors.text }}>{topic}</Text>
       </View>
       <FlatList
         data={messages.filter(m => m.role !== 'system')}
@@ -113,7 +114,7 @@ export default function RoundtableChat({ route }: any) {
       />
       {isTyping && (
         <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
-          <ActivityIndicator color="#facc15" />
+          <ActivityIndicator color={theme.colors.primary} />
         </View>
       )}
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
@@ -122,11 +123,11 @@ export default function RoundtableChat({ route }: any) {
             value={input}
             onChangeText={setInput}
             placeholder="Type your message..."
-            placeholderTextColor="#9ca3af"
-            style={{ flex: 1, backgroundColor: '#111827', color: 'white', padding: 12, borderRadius: 24 }}
+            placeholderTextColor={theme.colors.muted}
+            style={{ flex: 1, backgroundColor: theme.colors.surface, color: theme.colors.text, padding: 12, borderRadius: 24, borderWidth: 1, borderColor: theme.colors.border }}
           />
-          <TouchableOpacity onPress={sendUser} disabled={!input.trim() || isTyping} style={{ backgroundColor: (!input.trim() || isTyping) ? '#9ca3af' : '#facc15', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20 }}>
-            <Text style={{ fontWeight: '700' }}>Send</Text>
+          <TouchableOpacity onPress={sendUser} disabled={!input.trim() || isTyping} style={{ backgroundColor: (!input.trim() || isTyping) ? theme.colors.muted : theme.colors.primary, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20 }}>
+            <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>Send</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

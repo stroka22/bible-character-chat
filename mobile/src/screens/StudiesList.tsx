@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
+import { theme } from '../theme';
 
 type Study = {
   id: string;
@@ -30,18 +31,18 @@ export default function StudiesList() {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
-        <Text style={{ color: '#fde68a', fontSize: 22, fontWeight: '800', marginBottom: 8 }}>Bible Studies</Text>
+        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8 }}>Bible Studies</Text>
         {loading ? (
-          <ActivityIndicator color="#facc15" />
+          <ActivityIndicator color={theme.colors.primary} />
         ) : (
           <FlatList
             data={studies}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 8 }}
             renderItem={({ item }) => (
               <TouchableOpacity onPress={async () => {
-                // TODO: pull actual premium study IDs from tier settings; use gate helper
                 try {
                   const { requirePremiumOrPrompt } = await import('../lib/tier');
                   await requirePremiumOrPrompt({
@@ -55,12 +56,11 @@ export default function StudiesList() {
                 } catch {
                   navigation.navigate('StudyDetail', { studyId: item.id, title: item.title });
                 }
-              }} style={{ paddingVertical: 12 }}>
-                <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>{item.title}</Text>
-                {!!item.owner_slug && <Text style={{ color: '#9ca3af', fontSize: 12 }}>Org: {item.owner_slug}</Text>}
+              }} style={{ paddingVertical: 12, paddingHorizontal: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8 }}>
+                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}>{item.title}</Text>
+                {!!item.owner_slug && <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 4 }}>Org: {item.owner_slug}</Text>}
               </TouchableOpacity>
             )}
-            ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: '#1f2937' }} />}
           />
         )}
       </View>
