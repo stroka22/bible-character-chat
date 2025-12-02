@@ -65,7 +65,9 @@ export default function ChatDetail() {
             setIsFav(!isFav);
           } catch {}
         }}>
-          <Text style={{ fontSize: 18 }}>{isFav ? '★' : '☆'}</Text>
+          <Text style={{ fontSize: 20, color: isFav ? '#facc15' : '#94a3b8', textShadowColor: '#0f172a', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } }}>
+            {isFav ? '★' : '☆'}
+          </Text>
         </TouchableOpacity>
       )
     });
