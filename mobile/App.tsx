@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image } from 'react-native';
+import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image, useWindowDimensions } from 'react-native';
 // Static require ensures bundling in Dev Client
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const AppLogo = require('./assets/wordmark.png');
@@ -27,11 +27,13 @@ const Tabs = createBottomTabNavigator();
 
 function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
+  const { width } = useWindowDimensions();
+  const logoWidth = Math.min(width * 0.92, 720);
+  const logoAspect = 300 / 84; // maintain wordmark ratio
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image source={AppLogo} style={{ width: 300, height: 84 }} resizeMode="contain" />
-        <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.accent }}>FaithTalkAI</Text>
+        <Image source={AppLogo} style={{ width: logoWidth, height: undefined, aspectRatio: logoAspect }} resizeMode="contain" />
         <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 4 }}>Study the Bible with guided conversations</Text>
       </View>
       <View style={{ gap: 12, width: '86%' }}>
@@ -91,16 +93,21 @@ function AppInner() {
         ) : (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ route }: any) => ({ headerShown: true, title: route.params?.title || 'Study' })} />
-            <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, title: 'Roundtable Setup' }} />
-            <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, title: 'Roundtable' }} />
-            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, headerTitle: () => (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image source={AppLogo} style={{ width: 120, height: 28, marginRight: 8 }} resizeMode="contain" />
-                <Text style={{ color: theme.colors.text, fontWeight: '700' }}>New Chat</Text>
-              </View>
+            <Stack.Screen name="StudyDetail" component={StudyDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
+              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
             ) }} />
-            <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, title: 'Chat' }} />
+            <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
+              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
+            ) }} />
+            <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
+              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
+            ) }} />
+            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
+              <Image source={AppLogo} style={{ width: 200, height: 48 }} resizeMode="contain" />
+            ) }} />
+            <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => (
+              <Image source={AppLogo} style={{ width: 180, height: 44 }} resizeMode="contain" />
+            ) }} />
           </>
         )}
       </Stack.Navigator>
@@ -113,12 +120,13 @@ function MainTabs() {
     <Tabs.Navigator screenOptions={{
       headerStyle: { backgroundColor: theme.colors.card },
       headerTintColor: theme.colors.text,
+      headerTitleAlign: 'center',
       tabBarStyle: { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border },
       tabBarActiveTintColor: theme.colors.primary,
       tabBarInactiveTintColor: theme.colors.muted,
       headerTitle: () => (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Image source={AppLogo} style={{ width: 130, height: 32, marginRight: 8 }} resizeMode="contain" />
+          <Image source={AppLogo} style={{ width: 200, height: 48 }} resizeMode="contain" />
         </View>
       )
     }}>
