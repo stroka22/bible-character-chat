@@ -6,8 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const { signInWithPassword } = useAuth();
-  const { width } = useWindowDimensions();
-  const logoWidth = Math.min(width * 0.92, 720);
+  const { width, height } = useWindowDimensions();
+  const logoHeight = Math.min(height * 0.4, 480);
   const logoAspect = 300 / 84;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +30,7 @@ export default function Login() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a', padding: 16, justifyContent: 'center' }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image source={AppLogo} style={{ width: logoWidth, height: undefined, aspectRatio: logoAspect }} resizeMode="contain" />
+        <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95 }} resizeMode="contain" />
       </View>
       {!!error && (
         <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>

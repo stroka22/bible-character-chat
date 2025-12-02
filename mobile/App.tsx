@@ -25,28 +25,33 @@ import { theme } from './src/theme';
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 
-function BrandHeader({ wide = 360, tall = 86 }: { wide?: number; tall?: number }) {
+function BrandHeader() {
+  const { width, height } = useWindowDimensions();
+  const aspect = 300 / 84;
+  const headerH = Math.min(Math.max(120, height * 0.16), 180); // 16% of screen, min 120, max 180
+  const imgW = Math.min(width * 0.9, 1200);
+  const imgH = Math.min(headerH * 0.8, imgW / aspect);
   return (
-    <View style={{ height: 100, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.card }}>
-      <Image source={AppLogo} style={{ width: wide, height: tall }} resizeMode="contain" />
+    <View style={{ height: headerH, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.card }}>
+      <Image source={AppLogo} style={{ width: imgW, height: imgH }} resizeMode="contain" />
     </View>
   );
 }
 
 function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
-  const { width } = useWindowDimensions();
-  const logoWidth = Math.min(width * 0.92, 720);
+  const { width, height } = useWindowDimensions();
+  const logoHeight = Math.min(height * 0.4, 480); // 40% of viewport, cap for tablets
   const logoAspect = 300 / 84; // maintain wordmark ratio
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image source={AppLogo} style={{ width: logoWidth, height: undefined, aspectRatio: logoAspect }} resizeMode="contain" />
-        <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 4 }}>Study the Bible with guided conversations</Text>
+        <Image source={AppLogo} style={{ height: logoHeight, width: undefined, aspectRatio: logoAspect, maxWidth: width * 0.95 }} resizeMode="contain" />
+        <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Study the Bible with guided conversations</Text>
       </View>
-      <View style={{ gap: 12, width: '86%' }}>
-        <TouchableOpacity onPress={() => navigation.navigate('ChatNew')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Start a Chat</Text>
+      <View style={{ gap: 10, width: '86%' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('ChatNew')} style={{ minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Start a Chat</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={async () => {
           await requirePremiumOrPrompt({
@@ -60,14 +65,14 @@ function HomeScreen({ navigation }: any) {
               ]);
             }
           });
-        }} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Start a Roundtable</Text>
+        }} style={{ minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Start a Roundtable</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Browse Bible Studies</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Browse Bible Studies</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>My Walk</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
       </View>
       <StatusBar style="light" />
