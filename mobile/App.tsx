@@ -3,6 +3,9 @@ import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image } from 'react-native';
+// Static require ensures bundling in Dev Client
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AppIcon = require('./assets/icon.png');
 import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
 import ChatDetail from './src/screens/ChatDetail';
@@ -27,13 +30,14 @@ function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image
-          source={{ uri: 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }}
-          style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 8 }}
-        />
+        <Image source={AppIcon} style={{ width: 80, height: 80, borderRadius: 16, marginBottom: 8 }} />
         <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.accent }}>FaithTalkAI</Text>
+        <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 4 }}>Study the Bible with guided conversations</Text>
       </View>
-      <View style={{ gap: 12, width: '80%' }}>
+      <View style={{ gap: 12, width: '86%' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('ChatNew')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Start a Chat</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={async () => {
           await requirePremiumOrPrompt({
             userId: user?.id,
@@ -46,11 +50,14 @@ function HomeScreen({ navigation }: any) {
               ]);
             }
           });
-        }} style={{ padding: 12, backgroundColor: theme.colors.primary, borderRadius: 8, alignItems: 'center' }}>
-          <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>Start a Roundtable</Text>
+        }} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Start a Roundtable</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ padding: 12, backgroundColor: theme.colors.surface, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-          <Text style={{ fontWeight: '600', color: theme.colors.text }}>Browse Bible Studies</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Browse Bible Studies</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
       </View>
       <StatusBar style="light" />
@@ -87,7 +94,12 @@ function AppInner() {
             <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ route }: any) => ({ headerShown: true, title: route.params?.title || 'Study' })} />
             <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, title: 'Roundtable Setup' }} />
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, title: 'Roundtable' }} />
-            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, title: 'New Chat' }} />
+            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, headerTitle: () => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Image source={AppIcon} style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+                <Text style={{ color: theme.colors.text, fontWeight: '700' }}>New Chat</Text>
+              </View>
+            ) }} />
             <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, title: 'Chat' }} />
           </>
         )}
@@ -104,6 +116,12 @@ function MainTabs() {
       tabBarStyle: { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border },
       tabBarActiveTintColor: theme.colors.primary,
       tabBarInactiveTintColor: theme.colors.muted,
+      headerTitle: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Image source={AppIcon} style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+          <Text style={{ color: theme.colors.text, fontWeight: '700' }}>FaithTalkAI</Text>
+        </View>
+      )
     }}>
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Chat" component={ChatList} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -29,6 +29,16 @@ export default function ChatDetail() {
         const meta = await chat.getChat(chatId);
         setIsFav(!!meta?.is_favorite);
         setTitle(meta?.title || 'Chat');
+        if (!character && meta?.character_id) {
+          try {
+            const { data: c } = await (await import('../lib/supabase')).supabase
+              .from('characters')
+              .select('id,name,avatar_url,persona_prompt')
+              .eq('id', meta.character_id)
+              .maybeSingle();
+            if (c) setCharacter(c);
+          } catch {}
+        }
       } catch {}
       const rows = await chat.getChatMessages(chatId);
       setMessages(rows);
@@ -38,6 +48,16 @@ export default function ChatDetail() {
   React.useLayoutEffect(() => {
     navigation.setOptions({
       title,
+      headerTitle: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {character?.avatar_url || character?.avatar ? (
+            <Image source={{ uri: (character.avatar_url || character.avatar) as string }} style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }} />
+          ) : (
+            <View style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8, backgroundColor: theme.colors.surface }} />
+          )}
+          <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{character?.name || title}</Text>
+        </View>
+      ),
       headerRight: () => (
         <TouchableOpacity onPress={async () => {
           try {
@@ -49,7 +69,7 @@ export default function ChatDetail() {
         </TouchableOpacity>
       )
     });
-  }, [navigation, isFav, title, chatId]);
+  }, [navigation, isFav, title, chatId, character]);
 
   // character is passed from ChatNew; optional.
 

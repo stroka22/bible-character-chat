@@ -8,6 +8,8 @@ import { Alert, Linking } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
 
+const CURATED_BOOKS = ['Genesis','Exodus','Psalms','Proverbs','Gospels','Acts','Romans','Hebrews'];
+
 export default function ChatNew() {
   const { user } = useAuth();
   const nav = useNavigation<any>();
@@ -16,8 +18,7 @@ export default function ChatNew() {
   const [loading, setLoading] = React.useState(false);
   const [characters, setCharacters] = React.useState<any[]>([]);
   const [activeLetter, setActiveLetter] = React.useState<string>('');
-  const [categories, setCategories] = React.useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = React.useState<string>('');
+  // Categories row removed for clarity and speed
 
   React.useEffect(() => {
     let active = true;
@@ -32,30 +33,15 @@ export default function ChatNew() {
         if (activeLetter) {
           query = query.ilike('name', `${activeLetter}%`) as any;
         }
-        if (activeCategory) {
-          query = query.eq('bible_book', activeCategory) as any;
-        }
+        // no category filter
         const { data } = await query.order('name');
         if (active) setCharacters(data || []);
       } catch {}
     })();
     return () => { active = false; };
-  }, [search, activeLetter, activeCategory]);
+  }, [search, activeLetter]);
 
-  // Load categories (Bible books) once
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('characters')
-          .select('bible_book')
-          .not('bible_book', 'is', null)
-          .order('bible_book', { ascending: true });
-        const uniq = Array.from(new Set((data || []).map((r: any) => String(r.bible_book))));
-        setCategories(uniq);
-      } catch {}
-    })();
-  }, []);
+  // Categories kept small and curated for speed and legibility
 
   async function start(c: any) {
     if (!user) return;
@@ -106,22 +92,14 @@ export default function ChatNew() {
           style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}>
         {['', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
-            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '600' }}>{ltr || 'All'}</Text>
+          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 14, marginRight: 8, borderRadius: 22, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '800', fontSize: 16 }}>{ltr || 'All'}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
-      {categories.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}>
-          {[ '', ...categories ].map((cat) => (
-            <TouchableOpacity key={cat || 'all-cats'} onPress={() => setActiveCategory(cat)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeCategory === cat ? theme.colors.primary : theme.colors.card }}>
-              <Text style={{ color: activeCategory === cat ? theme.colors.primaryText : theme.colors.text, fontWeight: '600' }}>{cat || 'All categories'}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
+      {/* categories pills removed */}
       <FlatList
         data={characters}
         keyExtractor={(i) => String(i.id)}
