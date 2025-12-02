@@ -4,7 +4,8 @@
     "slug": "faithtalkai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/favicon.png",
+    "icon": "./assets/icon.png",
+    "scheme": "faithtalkai",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {

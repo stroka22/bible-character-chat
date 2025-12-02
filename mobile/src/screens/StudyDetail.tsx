@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Image } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
@@ -20,6 +20,7 @@ export default function StudyDetail({ route, navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [studyMeta, setStudyMeta] = useState<{ character_id?: string | null; character_instructions?: string | null } | null>(null);
+  const [guide, setGuide] = useState<{ id: string; name: string; avatar_url?: string | null; persona_prompt?: string | null } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -32,6 +33,14 @@ export default function StudyDetail({ route, navigation }: any) {
           .eq('id', studyId)
           .maybeSingle() as any;
         setStudyMeta(s || {});
+        if (s?.character_id) {
+          const { data: c } = await supabase
+            .from('characters')
+            .select('id,name,avatar_url,persona_prompt')
+            .eq('id', s.character_id)
+            .maybeSingle();
+          if (c) setGuide(c as any);
+        }
       } catch {}
       const { data } = await supabase
         ?.from('bible_study_lessons')
@@ -65,9 +74,10 @@ export default function StudyDetail({ route, navigation }: any) {
       // Generate a short intro
       try {
         const history = prompt ? [{ role: 'system' as const, content: `[Guiding Prompt]\n${prompt}` }] : [];
-        const intro = await generateCharacterResponse(char?.name || 'Guide', char?.persona_prompt || '', [
+        const displayName = char?.name || guide?.name || 'Guide';
+        const intro = await generateCharacterResponse(displayName, char?.persona_prompt || guide?.persona_prompt || '', [
           ...history,
-          { role: 'user', content: 'Please introduce this study and invite me to begin.' }
+          { role: 'user', content: `Greet me as ${displayName}, briefly introduce this study in 2 short sentences, and end with a friendly question to begin.` }
         ]);
         if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
       } catch {}
@@ -81,6 +91,16 @@ export default function StudyDetail({ route, navigation }: any) {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8 }}>{title}</Text>
+        {!!guide && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            {guide.avatar_url ? (
+              <Image source={{ uri: guide.avatar_url }} style={{ width: 28, height: 28, borderRadius: 14 }} />
+            ) : (
+              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.surface }} />
+            )}
+            <Text style={{ color: theme.colors.muted }}>Guide: <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{guide.name}</Text></Text>
+          </View>
+        )}
         <TouchableOpacity disabled={starting} onPress={startGuidedChat} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
           <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>{starting ? 'Starting…' : 'Start Guided Chat'}</Text>
         </TouchableOpacity>

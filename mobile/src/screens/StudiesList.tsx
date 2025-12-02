@@ -25,7 +25,19 @@ export default function StudiesList() {
         .select('id,title,owner_slug,visibility,cover_image_url')
         .eq('visibility', 'public')
         .order('created_at', { ascending: false }) as any;
-      setStudies(data || []);
+      const rows: Study[] = data || [];
+      // Deduplicate by normalized title (case/whitespace insensitive)
+      const seen = new Set<string>();
+      const unique: Study[] = [];
+      for (const s of rows) {
+        const key = (s.title || '').trim().toLowerCase();
+        if (!key) continue;
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(s);
+        }
+      }
+      setStudies(unique);
       setLoading(false);
     })();
   }, []);
