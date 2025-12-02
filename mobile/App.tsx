@@ -7,6 +7,7 @@ import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
 import ChatDetail from './src/screens/ChatDetail';
 import MyWalk from './src/screens/MyWalk';
+import Profile from './src/screens/Profile';
 import RoundtableSetup from './src/screens/RoundtableSetup';
 import RoundtableChat from './src/screens/RoundtableChat';
 import { Linking } from 'react-native';
@@ -108,6 +109,7 @@ function MainTabs() {
       <Tabs.Screen name="Chat" component={ChatList} />
       <Tabs.Screen name="Studies" component={StudiesList} />
       <Tabs.Screen name="My Walk" component={MyWalk} />
+      <Tabs.Screen name="Profile" component={Profile} />
     </Tabs.Navigator>
   );
 }
