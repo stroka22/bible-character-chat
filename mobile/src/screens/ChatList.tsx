@@ -64,8 +64,8 @@ export default function ChatList() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent }}>Chats</Text>
-        <TouchableOpacity onPress={() => nav.navigate('ChatNew')} style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: theme.colors.primary, borderRadius: 8 }}>
-          <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>New</Text>
+        <TouchableOpacity onPress={() => nav.navigate('ChatNew')} style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: theme.colors.primary, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: theme.colors.primaryText, fontWeight: '800', fontSize: 16 }}>New</Text>
         </TouchableOpacity>
       </View>
       <FlatList

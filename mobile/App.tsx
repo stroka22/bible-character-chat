@@ -33,7 +33,7 @@ function HomeScreen({ navigation }: any) {
         />
         <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.accent }}>FaithTalkAI</Text>
       </View>
-      <View style={{ gap: 12, width: '80%' }}>
+      <View style={{ gap: 12, width: '86%' }}>
         <TouchableOpacity onPress={async () => {
           await requirePremiumOrPrompt({
             userId: user?.id,
@@ -46,11 +46,11 @@ function HomeScreen({ navigation }: any) {
               ]);
             }
           });
-        }} style={{ padding: 12, backgroundColor: theme.colors.primary, borderRadius: 8, alignItems: 'center' }}>
-          <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>Start a Roundtable</Text>
+        }} style={{ minHeight: 48, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '800', fontSize: 16, color: theme.colors.primaryText }}>Start a Roundtable</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ padding: 12, backgroundColor: theme.colors.surface, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-          <Text style={{ fontWeight: '600', color: theme.colors.text }}>Browse Bible Studies</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 48, paddingVertical: 12, backgroundColor: theme.colors.surface, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
+          <Text style={{ fontWeight: '700', fontSize: 16, color: theme.colors.text }}>Browse Bible Studies</Text>
         </TouchableOpacity>
       </View>
       <StatusBar style="light" />
@@ -104,6 +104,12 @@ function MainTabs() {
       tabBarStyle: { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border },
       tabBarActiveTintColor: theme.colors.primary,
       tabBarInactiveTintColor: theme.colors.muted,
+      headerTitle: () => (
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Image source={{ uri: 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+          <Text style={{ color: theme.colors.text, fontWeight: '700' }}>FaithTalkAI</Text>
+        </View>
+      )
     }}>
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Chat" component={ChatList} />

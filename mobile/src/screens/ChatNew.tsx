@@ -108,16 +108,16 @@ export default function ChatNew() {
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
         {['', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
-            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '600' }}>{ltr || 'All'}</Text>
+          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ minHeight: 36, paddingVertical: 8, paddingHorizontal: 12, marginRight: 8, borderRadius: 18, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>{ltr || 'All'}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
       {categories.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}>
           {[ '', ...categories ].map((cat) => (
-            <TouchableOpacity key={cat || 'all-cats'} onPress={() => setActiveCategory(cat)} style={{ paddingVertical: 6, paddingHorizontal: 10, marginRight: 8, borderRadius: 16, backgroundColor: activeCategory === cat ? theme.colors.primary : theme.colors.card }}>
-              <Text style={{ color: activeCategory === cat ? theme.colors.primaryText : theme.colors.text, fontWeight: '600' }}>{cat || 'All categories'}</Text>
+              <TouchableOpacity key={cat || 'all-cats'} onPress={() => setActiveCategory(cat)} style={{ minHeight: 36, paddingVertical: 8, paddingHorizontal: 12, marginRight: 8, borderRadius: 18, backgroundColor: activeCategory === cat ? theme.colors.primary : theme.colors.card }}>
+              <Text style={{ color: activeCategory === cat ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>{cat || 'All categories'}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
