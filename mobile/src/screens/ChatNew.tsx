@@ -18,8 +18,7 @@ export default function ChatNew() {
   const [loading, setLoading] = React.useState(false);
   const [characters, setCharacters] = React.useState<any[]>([]);
   const [activeLetter, setActiveLetter] = React.useState<string>('');
-  const [categories, setCategories] = React.useState<string[]>(CURATED_BOOKS);
-  const [activeCategory, setActiveCategory] = React.useState<string>('');
+  // Categories row removed for clarity and speed
 
   React.useEffect(() => {
     let active = true;
@@ -34,15 +33,13 @@ export default function ChatNew() {
         if (activeLetter) {
           query = query.ilike('name', `${activeLetter}%`) as any;
         }
-        if (activeCategory) {
-          query = query.eq('bible_book', activeCategory) as any;
-        }
+        // no category filter
         const { data } = await query.order('name');
         if (active) setCharacters(data || []);
       } catch {}
     })();
     return () => { active = false; };
-  }, [search, activeLetter, activeCategory]);
+  }, [search, activeLetter]);
 
   // Categories kept small and curated for speed and legibility
 
@@ -95,28 +92,14 @@ export default function ChatNew() {
           style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}>
         {['', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ minHeight: 36, paddingVertical: 8, paddingHorizontal: 12, marginRight: 8, borderRadius: 18, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
-            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>{ltr || 'All'}</Text>
+          <TouchableOpacity key={ltr || 'all'} onPress={() => setActiveLetter(ltr)} style={{ minHeight: 44, paddingVertical: 10, paddingHorizontal: 14, marginRight: 8, borderRadius: 22, backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '800', fontSize: 16 }}>{ltr || 'All'}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
-      {categories.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}>
-          {['__ALL__', ...categories.slice(0, 14)].map((cat, idx) => (
-            <TouchableOpacity
-              key={cat === '__ALL__' ? 'cat-all' : `cat-${cat}`}
-              onPress={() => setActiveCategory(cat === '__ALL__' ? '' : cat)}
-              style={{ minHeight: 36, paddingVertical: 8, paddingHorizontal: 12, marginRight: 8, borderRadius: 18, backgroundColor: (activeCategory || '__ALL__') === cat ? theme.colors.primary : theme.colors.card }}
-            >
-              <Text numberOfLines={1} style={{ color: (activeCategory || '__ALL__') === cat ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>
-                {cat === '__ALL__' ? 'All categories' : cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
+      {/* categories pills removed */}
       <FlatList
         data={characters}
         keyExtractor={(i) => String(i.id)}

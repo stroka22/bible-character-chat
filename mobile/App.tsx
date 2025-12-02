@@ -94,7 +94,12 @@ function AppInner() {
             <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ route }: any) => ({ headerShown: true, title: route.params?.title || 'Study' })} />
             <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, title: 'Roundtable Setup' }} />
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, title: 'Roundtable' }} />
-            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, title: 'New Chat' }} />
+            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, headerTitle: () => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Image source={AppIcon} style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+                <Text style={{ color: theme.colors.text, fontWeight: '700' }}>New Chat</Text>
+              </View>
+            ) }} />
             <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, title: 'Chat' }} />
           </>
         )}
