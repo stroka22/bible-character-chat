@@ -3,9 +3,9 @@ import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image } from 'react-native';
-// Static image import ensures bundling in Dev Client
-// @ts-ignore
-import AppIcon from './assets/icon.png';
+// Static require ensures bundling in Dev Client
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const AppIcon = require('./assets/icon.png');
 import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
 import ChatDetail from './src/screens/ChatDetail';
@@ -35,8 +35,8 @@ function HomeScreen({ navigation }: any) {
         <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 4 }}>Study the Bible with guided conversations</Text>
       </View>
       <View style={{ gap: 12, width: '86%' }}>
-        <TouchableOpacity onPress={() => navigation.navigate('ChatNew')} style={{ minHeight: 56, paddingVertical: 14, backgroundColor: theme.colors.primary, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 18, color: theme.colors.primaryText }}>Start a Chat</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('ChatNew')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Start a Chat</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={async () => {
           await requirePremiumOrPrompt({
@@ -50,14 +50,14 @@ function HomeScreen({ navigation }: any) {
               ]);
             }
           });
-        }} style={{ minHeight: 56, paddingVertical: 14, backgroundColor: theme.colors.primary, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 18, color: theme.colors.primaryText }}>Start a Roundtable</Text>
+        }} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Start a Roundtable</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 56, paddingVertical: 14, backgroundColor: theme.colors.primary, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 18, color: theme.colors.primaryText }}>Browse Bible Studies</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>Browse Bible Studies</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 56, paddingVertical: 14, backgroundColor: theme.colors.primary, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontWeight: '900', fontSize: 18, color: theme.colors.primaryText }}>My Walk</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 64, paddingVertical: 16, backgroundColor: theme.colors.primary, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 20, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
       </View>
       <StatusBar style="light" />
