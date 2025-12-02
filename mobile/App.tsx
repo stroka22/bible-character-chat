@@ -30,9 +30,7 @@ function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <View style={{ backgroundColor: '#facc15', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 24 }}>
-          <Image source={AppLogo} style={{ width: 260, height: 72 }} resizeMode="contain" />
-        </View>
+        <Image source={AppLogo} style={{ width: 300, height: 84 }} resizeMode="contain" />
         <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.accent }}>FaithTalkAI</Text>
         <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 4 }}>Study the Bible with guided conversations</Text>
       </View>
@@ -125,7 +123,7 @@ function MainTabs() {
       )
     }}>
       <Tabs.Screen name="Home" component={HomeScreen} />
-      <Tabs.Screen name="Chat" component={ChatList} />
+      <Tabs.Screen name="Chat" component={ChatNew} />
       <Tabs.Screen name="Studies" component={StudiesList} />
       <Tabs.Screen name="My Walk" component={MyWalk} />
       <Tabs.Screen name="Profile" component={Profile} />

@@ -28,7 +28,12 @@ export default function MyWalk() {
     }
   }, [user]);
 
-  React.useEffect(() => { load(); }, [load]);
+  // Refresh when screen comes into focus to reflect latest favorites immediately
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { useFocusEffect } = require('@react-navigation/native');
+  useFocusEffect(React.useCallback(() => {
+    load();
+  }, [load]));
 
   async function toggleFavorite(c: Chat) {
     await chat.toggleFavorite(c.id, !c.is_favorite);
@@ -46,14 +51,14 @@ export default function MyWalk() {
         keyExtractor={(i) => String(i.id)}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 8 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 4 }}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 200, padding: 12, borderRadius: 12, backgroundColor: theme.colors.card, marginHorizontal: 4 }}>
+          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 220, padding: 10, borderRadius: 12, backgroundColor: theme.colors.card, marginHorizontal: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.surface }} />
-              <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{item.name}</Text>
+              <Text style={{ color: theme.colors.text, fontWeight: '700' }} numberOfLines={1}>{item.name}</Text>
             </View>
-            {item.description ? <Text numberOfLines={2} style={{ color: theme.colors.muted, marginTop: 6 }}>{item.description}</Text> : null}
+            {item.description ? <Text numberOfLines={1} style={{ color: theme.colors.muted, marginTop: 6 }}>{item.description}</Text> : null}
           </TouchableOpacity>
         )}
         ListEmptyComponent={!loading ? (
