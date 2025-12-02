@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View, Alert, Image } from 'react-native';
 // Static require ensures bundling in Dev Client
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const AppIcon = require('./assets/adaptive-icon.png');
+const AppLogo = require('./assets/wordmark.png');
 import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
 import ChatDetail from './src/screens/ChatDetail';
@@ -31,7 +31,7 @@ function HomeScreen({ navigation }: any) {
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
         <View style={{ backgroundColor: theme.colors.card, padding: 10, borderRadius: 20 }}>
-          <Image source={AppIcon} style={{ width: 96, height: 96, borderRadius: 16 }} resizeMode="contain" />
+          <Image source={AppLogo} style={{ width: 200, height: 56 }} resizeMode="contain" />
         </View>
         <Text style={{ fontSize: 22, fontWeight: '800', color: theme.colors.accent }}>FaithTalkAI</Text>
         <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 4 }}>Study the Bible with guided conversations</Text>
@@ -98,7 +98,7 @@ function AppInner() {
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, title: 'Roundtable' }} />
             <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, headerTitle: () => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image source={AppIcon} style={{ width: 24, height: 24, borderRadius: 6, marginRight: 8 }} />
+                <Image source={AppLogo} style={{ width: 100, height: 24, marginRight: 8 }} resizeMode="contain" />
                 <Text style={{ color: theme.colors.text, fontWeight: '700' }}>New Chat</Text>
               </View>
             ) }} />
@@ -120,10 +120,7 @@ function MainTabs() {
       tabBarInactiveTintColor: theme.colors.muted,
       headerTitle: () => (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ backgroundColor: theme.colors.card, padding: 3, borderRadius: 6, marginRight: 8 }}>
-            <Image source={AppIcon} style={{ width: 24, height: 24 }} resizeMode="contain" />
-          </View>
-          <Text style={{ color: theme.colors.text, fontWeight: '700' }}>FaithTalkAI</Text>
+          <Image source={AppLogo} style={{ width: 110, height: 28, marginRight: 8 }} resizeMode="contain" />
         </View>
       )
     }}>
