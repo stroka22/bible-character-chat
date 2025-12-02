@@ -95,7 +95,7 @@ export default function ChatDetail() {
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <FlatList
-          data={messages}
+          data={messages.filter((m) => m.role !== 'system')}
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 12, paddingBottom: 12 + Math.max(insets.bottom, 8) + 56 }}
           renderItem={({ item }) => (

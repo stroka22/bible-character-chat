@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { generateCharacterResponse } from '../lib/api';
+import { theme } from '../theme';
 
 type Lesson = {
   id: string;
@@ -77,27 +78,27 @@ export default function StudyDetail({ route, navigation }: any) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
-        <Text style={{ color: '#fde68a', fontSize: 22, fontWeight: '800', marginBottom: 8 }}>{title}</Text>
-        <TouchableOpacity disabled={starting} onPress={startGuidedChat} style={{ alignSelf: 'flex-start', backgroundColor: '#facc15', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
-          <Text style={{ fontWeight: '700', color: '#0f172a' }}>{starting ? 'Starting…' : 'Start Guided Chat'}</Text>
+        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8 }}>{title}</Text>
+        <TouchableOpacity disabled={starting} onPress={startGuidedChat} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
+          <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>{starting ? 'Starting…' : 'Start Guided Chat'}</Text>
         </TouchableOpacity>
         {loading ? (
-          <ActivityIndicator color="#facc15" />
+          <ActivityIndicator color={theme.colors.primary} />
         ) : (
           <FlatList
             data={lessons}
             keyExtractor={(item) => item.id}
+            contentContainerStyle={{ paddingBottom: 8 }}
             renderItem={({ item }) => (
-              <View style={{ paddingVertical: 10 }}>
-                <Text style={{ color: 'white', fontWeight: '700' }}>Lesson {item.order_index + 1}: {item.title}</Text>
+              <View style={{ padding: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8 }}>
+                <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Lesson {item.order_index + 1}: {item.title}</Text>
                 {!!item.summary && (
-                  <Text style={{ color: '#e5e7eb' }}>{item.summary}</Text>
+                  <Text style={{ color: theme.colors.muted, marginTop: 6 }}>{item.summary}</Text>
                 )}
               </View>
             )}
-            ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: '#1f2937' }} />}
           />
         )}
       </View>
