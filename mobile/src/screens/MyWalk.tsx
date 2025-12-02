@@ -53,10 +53,15 @@ export default function MyWalk() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 0, paddingTop: 4 }}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 180, paddingVertical: 6, paddingHorizontal: 8, borderRadius: 10, backgroundColor: theme.colors.card, marginHorizontal: 4 }}>
+          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 220, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 10, backgroundColor: theme.colors.card, marginHorizontal: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.surface }} />
-              <Text style={{ color: theme.colors.text, fontWeight: '700' }} numberOfLines={1}>{item.name}</Text>
+              <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.colors.surface }} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.colors.text, fontWeight: '700' }} numberOfLines={1}>{item.name}</Text>
+                {item.description ? (
+                  <Text numberOfLines={1} style={{ color: theme.colors.muted, marginTop: 2 }}>{item.description}</Text>
+                ) : null}
+              </View>
             </View>
           </TouchableOpacity>
         )}
