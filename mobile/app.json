@@ -4,7 +4,7 @@
     "slug": "faithtalkai",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/adaptive-icon.png",
     "scheme": "faithtalkai",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
@@ -24,7 +24,7 @@
       "package": "com.faithtalkai.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#facc15"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
