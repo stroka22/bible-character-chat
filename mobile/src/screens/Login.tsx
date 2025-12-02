@@ -27,8 +27,8 @@ export default function Login() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a', padding: 16, justifyContent: 'center' }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <View style={{ backgroundColor: '#1f2937', padding: 10, borderRadius: 20 }}>
-          <Image source={AppLogo} style={{ width: 200, height: 56 }} resizeMode="contain" />
+        <View style={{ backgroundColor: '#facc15', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 24 }}>
+          <Image source={AppLogo} style={{ width: 260, height: 72 }} resizeMode="contain" />
         </View>
       </View>
       {!!error && (
