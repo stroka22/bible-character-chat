@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Linking, useWindowDimensions, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Linking, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import Wordmark from '../components/Wordmark';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
@@ -28,10 +28,10 @@ export default function Login() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 16 }} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <Wordmark width={logoWidth} />
+            <Wordmark width={logoWidth} variant="stacked" />
           </View>
       {!!error && (
         <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>
@@ -66,7 +66,7 @@ export default function Login() {
           <Text style={{ color: '#9ca3af', textDecorationLine: 'underline' }}>Forgot password?</Text>
         </TouchableOpacity>
       </View>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

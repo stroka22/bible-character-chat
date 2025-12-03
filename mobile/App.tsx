@@ -26,8 +26,8 @@ const Tabs = createBottomTabNavigator();
 
 function BrandHeaderTitle() {
   const { width, height } = useWindowDimensions();
-  const maxW = Math.min(width * 0.18, 200);
-  return <Wordmark width={maxW} />;
+  const maxW = Math.min(width * 0.12, 48); // compact icon-only in header
+  return <Wordmark width={maxW} variant="iconOnly" />;
 }
 
 function HomeScreen({ navigation }: any) {
@@ -37,7 +37,7 @@ function HomeScreen({ navigation }: any) {
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Wordmark width={logoWidth} />
+        <Wordmark width={logoWidth} variant="stacked" />
         <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Study the Bible with guided conversations</Text>
       </View>
       <View style={{ gap: 10, width: '86%' }}>
