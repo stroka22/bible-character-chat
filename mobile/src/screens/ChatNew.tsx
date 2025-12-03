@@ -27,20 +27,30 @@ export default function ChatNew() {
     let active = true;
     (async () => {
       try {
-        if (filterMode === 'favorites' && user) {
-          const favs = await getFavoriteCharacterIds(user.id);
-          setFavIds(favs);
+        // Refresh favorites set for current user (used by Favorites filter)
+        if (user) {
+          try {
+            const favs = await getFavoriteCharacterIds(user.id);
+            if (!active) return;
+            setFavIds(favs);
+          } catch {}
         }
-        let query = supabase.from('characters').select('id,name,description,avatar_url,opening_line,persona_prompt');
+
+        // Base characters query with visibility filtering
+        let query: any = supabase
+          .from('characters')
+          .select('id,name,description,avatar_url,opening_line,persona_prompt,is_visible')
+          .or('is_visible.is.null,is_visible.eq.true');
+
         if (search && search.trim()) {
           query = query.or(
             `name.ilike.%${search}%,description.ilike.%${search}%,bible_book.ilike.%${search}%`
-          ) as any;
+          );
         }
         if (activeLetter) {
-          query = query.ilike('name', `${activeLetter}%`) as any;
+          query = query.ilike('name', `${activeLetter}%`);
         }
-        // no category filter
+
         const { data } = await query.order('name');
         let out = data || [];
         if (filterMode === 'favorites' && user) {
@@ -57,6 +67,10 @@ export default function ChatNew() {
 
   async function start(c: any) {
     if (!user) return;
+    if (c && c.is_visible === false) {
+      Alert.alert('Unavailable', 'This character is not available.');
+      return;
+    }
     // Gate by character if not premium and not in free list
     try {
       const premium = await isPremiumUser(user.id);
