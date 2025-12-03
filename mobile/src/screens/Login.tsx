@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Linking, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Wordmark from '../components/Wordmark';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
@@ -12,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const onSubmit = async () => {
     setError(null);
@@ -28,10 +30,10 @@ export default function Login() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'position' : undefined} style={{ flex: 1 }}>
-        <View style={{ flex: 1, justifyContent: 'flex-start', padding: 16, paddingTop: Math.min(height * 0.12, 80) }}>
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
-            <Wordmark width={logoWidth} variant="stacked" />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top} style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: 'flex-start', paddingHorizontal: 16, paddingTop: insets.top + 16 }}>
+          <View style={{ alignItems: 'center', marginBottom: 16, minHeight: Math.min(height * 0.26, 220), justifyContent: 'center' }}>
+            <Wordmark width={Math.min(width * 0.8, 900)} variant="stacked" />
           </View>
       {!!error && (
         <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>
