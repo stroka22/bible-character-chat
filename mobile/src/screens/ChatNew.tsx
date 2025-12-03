@@ -88,7 +88,7 @@ export default function ChatNew() {
       if (c.opening_line) {
         try { await chat.addMessage(newChat.id, c.opening_line, 'assistant'); } catch {}
       }
-      nav.replace('ChatDetail', { chatId: newChat.id, character: c });
+      nav.navigate('ChatDetail', { chatId: newChat.id, character: c });
     } finally {
       setLoading(false);
     }

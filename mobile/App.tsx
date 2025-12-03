@@ -26,7 +26,7 @@ const Tabs = createBottomTabNavigator();
 
 function BrandHeaderTitle() {
   const { width, height } = useWindowDimensions();
-  const maxW = Math.min(width * 0.7, 520);
+  const maxW = Math.min(width * 0.18, 200);
   return <Wordmark width={maxW} />;
 }
 

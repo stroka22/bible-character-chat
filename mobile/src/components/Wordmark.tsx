@@ -33,7 +33,7 @@ export default function Wordmark({ width }: Props) {
           {/* Tail */}
           <View style={{ width: 0, height: 0, borderTopWidth: tailSize, borderTopColor: gray, borderLeftWidth: tailSize, borderLeftColor: 'transparent', borderRightWidth: 0, borderRightColor: 'transparent', alignSelf: 'flex-start', marginLeft: bubbleSize * 0.18, marginTop: -stroke }} />
           {/* Cross (absolute in bubble) */}
-          <View style={{ position: 'absolute', top: (bubbleSize - crossLen) / 2, left: (bubbleSize - crossLen) / 2 }}>
+          <View style={{ position: 'absolute', top: (bubbleSize - crossLen) / 2 + Math.round(bubbleSize * 0.06), left: (bubbleSize - crossLen) / 2 }}>
             <View style={{ width: crossLen, height: crossThickness, backgroundColor: gold }} />
             <View style={{ position: 'absolute', left: (crossLen - crossThickness) / 2, top: -(crossLen - crossThickness) / 2, width: crossThickness, height: crossLen, backgroundColor: gold }} />
           </View>
