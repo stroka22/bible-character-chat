@@ -9,11 +9,14 @@ export type FavoriteCharacter = {
 export async function listFavoriteCharacters(userId: string) {
   const { data, error } = await supabase
     .from('user_favorite_characters')
-    .select('character_id, created_at, characters:character_id ( id, name, description, avatar_url, opening_line, persona_prompt ))')
+    .select('character_id, created_at, characters:character_id ( id, name, description, avatar_url, opening_line, persona_prompt, is_visible ))')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) return [] as any[];
-  return (data || []).map((row: any) => ({ ...row.characters }));
+  // Filter out explicitly hidden; allow null/true
+  return (data || [])
+    .map((row: any) => ({ ...row.characters }))
+    .filter((c: any) => c && (c.is_visible === null || c.is_visible === undefined || c.is_visible === true));
 }
 
 export async function getFavoriteCharacterIds(userId: string): Promise<Set<string>> {

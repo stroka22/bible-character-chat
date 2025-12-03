@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, ScrollView } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { getOwnerSlug, isPremiumUser } from '../lib/tier';
+import { getRoundtableSettings } from '../lib/settings';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { theme } from '../theme';
 
@@ -18,6 +20,7 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeLetter, setActiveLetter] = useState('');
+  const [maxParticipants, setMaxParticipants] = useState<number>(8);
 
   useEffect(() => {
     (async () => {
@@ -32,8 +35,34 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
     })();
   }, []);
 
+  // Load org roundtable limits to cap selection size
+  useEffect(() => {
+    (async () => {
+      try {
+        // Attempt to detect current user via profiles table session
+        // If auth context exists in mobile, consider injecting; here we infer via supabase.auth.getUser()
+        const { data: u } = await (supabase.auth?.getUser?.() as any || {});
+        const userId: string | undefined = u?.user?.id;
+        const slug = await getOwnerSlug(userId);
+        const premium = await isPremiumUser(userId);
+        const rt = await getRoundtableSettings(slug);
+        const max = (premium ? rt.limits.premium.maxParticipants : rt.limits.free.maxParticipants) || rt.defaults.maxParticipants || 8;
+        setMaxParticipants(max);
+      } catch {
+        setMaxParticipants(8);
+      }
+    })();
+  }, []);
+
   const toggle = (id: string) => {
-    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    setSelected(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id);
+      if (prev.length >= maxParticipants) {
+        alert(`You can select up to ${maxParticipants} participants for your plan.`);
+        return prev;
+      }
+      return [...prev, id];
+    });
   };
 
   const filtered = characters.filter(c => {
@@ -72,7 +101,7 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
             </TouchableOpacity>
           ))}
         </ScrollView>
-        <Text style={{ color: theme.colors.text, marginBottom: 8 }}>Selected: {selected.length}</Text>
+        <Text style={{ color: theme.colors.text, marginBottom: 8 }}>Selected: {selected.length} / {maxParticipants}</Text>
         {loading ? (
           <View style={{ paddingVertical: 24 }}>
             <ActivityIndicator color={theme.colors.primary} />
