@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,6 +22,7 @@ import StudyDetail from './src/screens/StudyDetail';
 import Login from './src/screens/Login';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { theme } from './src/theme';
+import { startSettingsRealtimeForUser } from './src/lib/settings';
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -70,6 +72,13 @@ function Empty() { return null; }
 
 function AppInner() {
   const { user, loading } = useAuth();
+  useEffect(() => {
+    let cleanup: undefined | (() => void);
+    (async () => {
+      cleanup = await startSettingsRealtimeForUser(user?.id);
+    })();
+    return () => { try { cleanup && cleanup(); } catch {} };
+  }, [user?.id]);
   if (loading) return null;
   const authed = !!user;
   return (

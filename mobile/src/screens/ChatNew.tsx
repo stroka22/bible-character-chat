@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
+import { getSiteSettingsForUser } from '../lib/settings';
 import { Alert, Linking } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
@@ -21,6 +22,7 @@ export default function ChatNew() {
   const [activeLetter, setActiveLetter] = React.useState<string>('');
   const [filterMode, setFilterMode] = React.useState<'all' | 'favorites'>('all');
   const [favIds, setFavIds] = React.useState<Set<string>>(new Set());
+  const [siteSettings, setSiteSettings] = React.useState<{ defaultFeaturedCharacterId: string | null; enforceAdminDefault: boolean }>({ defaultFeaturedCharacterId: null, enforceAdminDefault: false });
   // Categories row removed for clarity and speed
 
   // Load favorites set once and whenever user changes
@@ -36,11 +38,26 @@ export default function ChatNew() {
     return () => { mounted = false; };
   }, [user]);
 
+  // Load site settings (featured character + enforcement)
   React.useEffect(() => {
     let active = true;
     (async () => {
       try {
-        let query = supabase.from('characters').select('id,name,description,avatar_url,opening_line,persona_prompt');
+        const s = await getSiteSettingsForUser(user?.id);
+        if (active) setSiteSettings({ defaultFeaturedCharacterId: s.defaultFeaturedCharacterId, enforceAdminDefault: !!s.enforceAdminDefault });
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, [user?.id]);
+
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        let query = supabase
+          .from('characters')
+          .select('id,name,description,avatar_url,opening_line,persona_prompt,is_visible')
+          .or('is_visible.is.null,is_visible.eq.true');
         if (search && search.trim()) {
           query = query.or(
             `name.ilike.%${search}%,description.ilike.%${search}%,bible_book.ilike.%${search}%`
@@ -52,6 +69,14 @@ export default function ChatNew() {
         // no category filter
         const { data } = await query.order('name');
         let out = data || [];
+        // enforce featured pin if configured
+        if (siteSettings.enforceAdminDefault && siteSettings.defaultFeaturedCharacterId) {
+          const fid = String(siteSettings.defaultFeaturedCharacterId);
+          const idx = out.findIndex((c: any) => String(c.id) === fid);
+          if (idx > 0) {
+            out = [out[idx], ...out.slice(0, idx), ...out.slice(idx + 1)];
+          }
+        }
         if (filterMode === 'favorites' && user) {
           const ids = favIds;
           out = out.filter((c: any) => ids.has(String(c.id)));
@@ -60,12 +85,16 @@ export default function ChatNew() {
       } catch {}
     })();
     return () => { active = false; };
-  }, [search, activeLetter, filterMode, user, favIds]);
+  }, [search, activeLetter, filterMode, user, favIds, siteSettings.defaultFeaturedCharacterId, siteSettings.enforceAdminDefault]);
 
   // Categories kept small and curated for speed and legibility
 
   async function start(c: any) {
     if (!user) return;
+    if (c && c.is_visible === false) {
+      Alert.alert('Unavailable', 'This character is not available.');
+      return;
+    }
     // Gate by character if not premium and not in free list
     try {
       const premium = await isPremiumUser(user.id);
