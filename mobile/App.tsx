@@ -33,7 +33,7 @@ function BrandHeaderTitle() {
 function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const { width, height } = useWindowDimensions();
-  const logoWidth = Math.min(width * 0.95, 1200); // scale with screen
+  const logoWidth = Math.min(width * 0.7, 900); // 70% of width, capped
   return (
     <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: theme.colors.background }}>
       <View style={{ alignItems: 'center', marginBottom: 16 }}>
