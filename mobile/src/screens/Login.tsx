@@ -28,8 +28,8 @@ export default function Login() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <View style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'position' : undefined} style={{ flex: 1 }}>
+        <View style={{ flex: 1, justifyContent: 'flex-start', padding: 16, paddingTop: Math.min(height * 0.12, 80) }}>
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
             <Wordmark width={logoWidth} variant="stacked" />
           </View>
