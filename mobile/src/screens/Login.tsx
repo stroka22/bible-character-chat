@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Linking } from 'react-native';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const AppLogo = require('../../assets/wordmark.png');
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Linking, ScrollView, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Wordmark from '../components/Wordmark';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const { signInWithPassword } = useAuth();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const logoWidth = Math.min(width * 0.7, 900);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,10 +28,11 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a', padding: 16, justifyContent: 'center' }}>
-      <View style={{ alignItems: 'center', marginBottom: 16 }}>
-        <Image source={AppLogo} style={{ width: 300, height: 84 }} resizeMode="contain" />
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">
+        <View style={{ alignItems: 'center', marginBottom: 16, justifyContent: 'center', minHeight: 160 }}>
+          <Wordmark width={logoWidth} variant="stacked" />
+        </View>
       {!!error && (
         <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>
           <Text style={{ color: 'white' }}>{error}</Text>
@@ -54,14 +58,15 @@ export default function Login() {
       <TouchableOpacity onPress={onSubmit} disabled={loading || !email.trim() || !password} style={{ backgroundColor: (!email.trim() || !password) ? '#9ca3af' : '#facc15', padding: 16, borderRadius: 12, alignItems: 'center' }}>
         <Text style={{ fontWeight: '800', fontSize: 16, color: '#0f172a' }}>{loading ? 'Signing in...' : 'Sign In'}</Text>
       </TouchableOpacity>
-      <View style={{ marginTop: 12, alignItems: 'center', gap: 8 }}>
-        <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/signup')}>
-          <Text style={{ color: '#fde68a', textDecorationLine: 'underline', fontWeight: '700' }}>Create account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/reset-password')}>
-          <Text style={{ color: '#9ca3af', textDecorationLine: 'underline' }}>Forgot password?</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={{ marginTop: 12, alignItems: 'center', gap: 8 }}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/signup')}>
+            <Text style={{ color: '#fde68a', textDecorationLine: 'underline', fontWeight: '700' }}>Create account</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/reset-password')}>
+            <Text style={{ color: '#9ca3af', textDecorationLine: 'underline' }}>Forgot password?</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
