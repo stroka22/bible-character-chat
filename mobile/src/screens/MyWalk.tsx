@@ -51,11 +51,11 @@ export default function MyWalk() {
         keyExtractor={(i) => String(i.id)}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 4 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 12 }}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 220, padding: 10, borderRadius: 12, backgroundColor: theme.colors.card, marginHorizontal: 4 }}>
+          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 180, padding: 10, borderRadius: 12, backgroundColor: theme.colors.card, marginHorizontal: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.surface }} />
+              <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.colors.surface }} />
               <Text style={{ color: theme.colors.text, fontWeight: '700' }} numberOfLines={1}>{item.name}</Text>
             </View>
             {item.description ? <Text numberOfLines={1} style={{ color: theme.colors.muted, marginTop: 6 }}>{item.description}</Text> : null}
@@ -75,7 +75,7 @@ export default function MyWalk() {
         keyExtractor={(i) => i.id}
         onRefresh={load}
         refreshing={loading}
-        contentContainerStyle={{ padding: 12 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 80 }}
         renderItem={({ item }) => (
           <View style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 8 }}>
             <TouchableOpacity onPress={() => nav.navigate('ChatDetail', { chatId: item.id })}>
