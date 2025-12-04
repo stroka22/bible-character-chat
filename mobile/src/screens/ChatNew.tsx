@@ -142,15 +142,15 @@ export default function ChatNew() {
           style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}>
-        <TouchableOpacity onPress={() => setFilterMode('favorites')} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: filterMode === 'favorites' ? theme.colors.primary : theme.colors.card }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+        <TouchableOpacity onPress={() => setFilterMode('favorites')} style={{ minHeight: 48, paddingVertical: 12, paddingHorizontal: 18, marginRight: 8, borderRadius: 24, backgroundColor: filterMode === 'favorites' ? theme.colors.primary : theme.colors.card }}>
           <Text style={{ color: filterMode === 'favorites' ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>Favorites</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { setFilterMode('all'); setActiveLetter(''); }} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: filterMode === 'all' && !activeLetter ? theme.colors.primary : theme.colors.card }}>
+        <TouchableOpacity onPress={() => { setFilterMode('all'); setActiveLetter(''); }} style={{ minHeight: 48, paddingVertical: 12, paddingHorizontal: 18, marginRight: 8, borderRadius: 24, backgroundColor: filterMode === 'all' && !activeLetter ? theme.colors.primary : theme.colors.card }}>
           <Text style={{ color: (filterMode === 'all' && !activeLetter) ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>All</Text>
         </TouchableOpacity>
         {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-          <TouchableOpacity key={ltr} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); }} style={{ minHeight: 56, paddingVertical: 14, paddingHorizontal: 18, marginRight: 8, borderRadius: 28, backgroundColor: activeLetter === ltr && filterMode === 'all' ? theme.colors.primary : theme.colors.card }}>
+          <TouchableOpacity key={ltr} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); }} style={{ minHeight: 48, paddingVertical: 12, paddingHorizontal: 18, marginRight: 8, borderRadius: 24, backgroundColor: activeLetter === ltr && filterMode === 'all' ? theme.colors.primary : theme.colors.card }}>
             <Text style={{ color: (activeLetter === ltr && filterMode === 'all') ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 18 }}>{ltr}</Text>
           </TouchableOpacity>
         ))}
@@ -159,7 +159,7 @@ export default function ChatNew() {
       <FlatList
         data={characters}
         keyExtractor={(i) => String(i.id)}
-        contentContainerStyle={{ padding: 12, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 80 }}
         initialNumToRender={12}
         windowSize={10}
         maxToRenderPerBatch={12}
