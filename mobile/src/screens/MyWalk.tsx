@@ -77,7 +77,7 @@ export default function MyWalk() {
         contentContainerStyle={{ padding: 12 }}
         renderItem={({ item }) => (
           <View style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 8 }}>
-            <TouchableOpacity onPress={() => nav.navigate('ChatDetail', { chatId: item.id })}>
+            <TouchableOpacity onPress={() => nav.navigate('Chat', { screen: 'ChatDetail', params: { chatId: item.id } })}>
               <Text style={{ fontWeight: '600', color: theme.colors.text }}>{item.title || 'Untitled Chat'}</Text>
               <Text style={{ color: theme.colors.muted, marginTop: 4 }}>{new Date(item.updated_at).toLocaleString()}</Text>
             </TouchableOpacity>
