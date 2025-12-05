@@ -53,7 +53,7 @@ export default function MyWalk() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 0, paddingTop: 4 }}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => nav.navigate('ChatNew', { preselectedCharacterId: item.id })} style={{ width: 180, height: 52, paddingHorizontal: 10, borderRadius: 10, backgroundColor: theme.colors.card, marginHorizontal: 4, justifyContent: 'center' }}>
+          <TouchableOpacity onPress={() => nav.navigate('Chat', { preselectedCharacterId: item.id })} style={{ width: 180, height: 52, paddingHorizontal: 10, borderRadius: 10, backgroundColor: theme.colors.card, marginHorizontal: 4, justifyContent: 'center' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.colors.surface }} />
               <Text style={{ color: theme.colors.text, fontWeight: '700' }} numberOfLines={1}>{item.name}</Text>
