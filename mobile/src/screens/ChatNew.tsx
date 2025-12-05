@@ -128,6 +128,11 @@ export default function ChatNew() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
+        <View style={{ position: 'absolute', right: 16, top: 16 }}>
+          <TouchableOpacity onPress={() => nav.navigate('MainTabs', { screen: 'Home' })} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 16, backgroundColor: theme.colors.card }}>
+            <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Back</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 12, color: theme.colors.accent }}>New Chat</Text>
         <TextInput
           value={title}
