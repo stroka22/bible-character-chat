@@ -45,7 +45,7 @@ function HomeScreen({ navigation }: any) {
           <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Study the Bible with guided conversations</Text>
         </View>
         <View style={{ gap: 10, width: '86%' }}>
-          <TouchableOpacity onPress={() => navigation.navigate('ChatNew')} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.navigate('Chat')} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Start a Chat</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={async () => {
@@ -113,7 +113,19 @@ function AppInner() {
             <Stack.Screen name="StudyDetail" component={StudyDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
             <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
-            <Stack.Screen name="ChatNew" component={ChatNew} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
+            <Stack.Screen name="ChatNew" component={ChatNew} options={({ navigation }) => ({
+              headerShown: true,
+              headerTitleAlign: 'center',
+              headerTitle: () => <BrandHeaderTitle />,
+              headerLeft: ({ canGoBack }) => (
+                <TouchableOpacity onPress={() => {
+                  if (canGoBack) navigation.goBack();
+                  else navigation.navigate('MainTabs', { screen: 'Chat' });
+                }} style={{ paddingHorizontal: 8 }}>
+                  <Text style={{ color: theme.colors.primary, fontWeight: '700' }}>Back</Text>
+                </TouchableOpacity>
+              )
+            })} />
             <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
           </>
         )}
