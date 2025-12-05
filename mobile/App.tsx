@@ -25,11 +25,29 @@ import { startSettingsRealtimeForUser } from './src/lib/settings';
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
+const ChatStack = createNativeStackNavigator();
 
 function BrandHeaderTitle() {
   const { width } = useWindowDimensions();
   const w = Math.min(width * 0.12, 56);
   return <Wordmark width={w} variant="iconOnly" />;
+}
+
+function ChatStackScreen() {
+  return (
+    <ChatStack.Navigator>
+      <ChatStack.Screen name="ChatNew" component={ChatNew} options={{
+        headerShown: true,
+        headerTitleAlign: 'center',
+        headerTitle: () => <BrandHeaderTitle />,
+      }} />
+      <ChatStack.Screen name="ChatDetail" component={ChatDetail} options={{
+        headerShown: true,
+        headerTitleAlign: 'center',
+        headerTitle: () => <BrandHeaderTitle />,
+      }} />
+    </ChatStack.Navigator>
+  );
 }
 
 function HomeScreen({ navigation }: any) {
@@ -113,20 +131,6 @@ function AppInner() {
             <Stack.Screen name="StudyDetail" component={StudyDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
             <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
-            <Stack.Screen name="ChatNew" component={ChatNew} options={({ navigation }) => ({
-              headerShown: true,
-              headerTitleAlign: 'center',
-              headerTitle: () => <BrandHeaderTitle />,
-              headerLeft: ({ canGoBack }) => (
-                <TouchableOpacity onPress={() => {
-                  if (canGoBack) navigation.goBack();
-                  else navigation.navigate('MainTabs', { screen: 'Chat' });
-                }} style={{ paddingHorizontal: 8 }}>
-                  <Text style={{ color: theme.colors.primary, fontWeight: '700' }}>Back</Text>
-                </TouchableOpacity>
-              )
-            })} />
-            <Stack.Screen name="ChatDetail" component={ChatDetail} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
           </>
         )}
       </Stack.Navigator>
@@ -146,7 +150,7 @@ function MainTabs() {
       headerTitle: () => <BrandHeaderTitle />
     }}>
       <Tabs.Screen name="Home" component={HomeScreen} />
-      <Tabs.Screen name="Chat" component={ChatNew} />
+      <Tabs.Screen name="Chat" component={ChatStackScreen} options={{ headerShown: false }} />
       <Tabs.Screen name="Studies" component={StudiesList} />
       <Tabs.Screen name="My Walk" component={MyWalk} />
       <Tabs.Screen name="Profile" component={Profile} />
