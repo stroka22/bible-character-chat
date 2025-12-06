@@ -40,6 +40,7 @@ import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import AdminPremiumCustomers from './pages/admin/AdminPremiumCustomers.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
+import PresentationGuide from './pages/PresentationGuide.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
 import StudyLesson from './pages/StudyLesson.jsx';
@@ -347,6 +348,8 @@ function App(): JSX.Element {
         <Route path="/admin/premium" element={<AdminPremiumCustomers />} />
         <Route path="/admin/users" element={<SuperadminUsersPage />} />
         <Route path="/admin/studies" element={<AdminStudiesPage />} />
+        {/* Private presenter guide (not in nav) */}
+        <Route path="/present/features" element={<PresentationGuide />} />
       </Route>
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/settings" element={<SettingsPage />} />
