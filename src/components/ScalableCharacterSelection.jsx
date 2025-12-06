@@ -521,7 +521,7 @@ const ScalableCharacterSelection = () => {
         }
         // Group filter uses actual group→character mappings (from Supabase)
         if (groupFilter !== 'all') {
-            result = result.filter((c) => !!(groupCharacterIds && groupCharacterIds.has(c.id)));
+            result = result.filter((c) => !!(groupCharacterIds && groupCharacterIds.has(String(c.id))));
         }
         if (currentLetter !== 'all') {
             result = result.filter(c => c.name.toUpperCase().startsWith(currentLetter));
@@ -1179,7 +1179,15 @@ const ScalableCharacterSelection = () => {
                                                 } else {
                                                     try {
                                                         const mappings = await groupRepository.getCharactersInGroup(val);
-                                                        const ids = new Set((mappings || []).map(m => m.character_id));
+                                                        // Build a string-ID set from either mapping.character_id or mapping.character.id
+                                                        const ids = new Set(
+                                                          (mappings || [])
+                                                            .map(m => {
+                                                              const raw = (m && (m.character_id ?? (m.character && m.character.id)));
+                                                              return raw != null ? String(raw) : null;
+                                                            })
+                                                            .filter(Boolean)
+                                                        );
                                                         setGroupCharacterIds(ids);
                                                     } catch (err) {
                                                         console.error('Failed to load group mappings:', err);
