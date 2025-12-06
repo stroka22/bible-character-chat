@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "FaithTalkAI",
+    "name": "Faith Talk AI",
     "slug": "faithtalkai",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.faithtalkai.app",
+      "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
