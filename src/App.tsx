@@ -65,7 +65,10 @@ function MobileLeadBannerGate(): JSX.Element | null {
   try {
     const params = new URLSearchParams(location.search);
     isShared = params.get('shared') === '1' || location.pathname.startsWith('/shared/');
-  } catch {}
+  } catch {
+    // ensure non-empty catch for linting; treat as not shared
+    isShared = false;
+  }
   // Hide on Roundtable to prevent any overlap and keep focus on discussion
   if (isAdminPath || isShared || isRoundtable) return null;
   return (
@@ -93,6 +96,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   static getDerivedStateFromError(error: Error): { hasError: boolean } {
     // Update state so the next render shows the fallback UI.
+    if (import.meta.env.DEV) console.debug('[ErrorBoundary] getDerivedStateFromError', error);
     return { hasError: true };
   }
 
@@ -189,7 +193,8 @@ const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Elem
             await refreshSession();
           }
         } catch (e) {
-          // swallow – UI offers manual retry
+          // swallow – UI offers manual retry; log in dev for visibility
+          if (import.meta.env.DEV) console.debug('[AdminRoute] refresh failed', e);
         }
       })();
     }
