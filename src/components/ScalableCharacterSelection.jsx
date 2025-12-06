@@ -47,6 +47,8 @@ const ScalableCharacterSelection = () => {
     const [testament, setTestament] = useState('all');
     const [bookFilter, setBookFilter] = useState('all');
     const [groupFilter, setGroupFilter] = useState('all');
+    // Cache of character IDs for the currently selected group (from Supabase mappings)
+    const [groupCharacterIds, setGroupCharacterIds] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [currentLetter, setCurrentLetter] = useState('all');
     const [groups, setGroups] = useState([]);
@@ -443,7 +445,7 @@ const ScalableCharacterSelection = () => {
         if (groupFilter !== 'all') {
             newFilters.push({
                 type: 'group',
-                value: groupFilter
+                value: (groups.find(g => `${g.id}` === `${groupFilter}`)?.name) || 'Group'
             });
         }
         if (searchQuery) {
@@ -465,7 +467,7 @@ const ScalableCharacterSelection = () => {
             });
         }
         setActiveFilters(newFilters);
-    }, [testament, bookFilter, groupFilter, searchQuery, currentLetter, showOnlyFavorites]);
+    }, [testament, bookFilter, groupFilter, searchQuery, currentLetter, showOnlyFavorites, groups]);
     
     const removeFilter = (type) => {
         switch (type) {
@@ -517,11 +519,9 @@ const ScalableCharacterSelection = () => {
                 return textToSearch.includes(bookFilter.toLowerCase());
             });
         }
+        // Group filter uses actual group→character mappings (from Supabase)
         if (groupFilter !== 'all') {
-            result = result.filter((c) => {
-                const textToSearch = `${c.description || ''}`.toLowerCase();
-                return textToSearch.includes(groupFilter.toLowerCase());
-            });
+            result = result.filter((c) => !!(groupCharacterIds && groupCharacterIds.has(c.id)));
         }
         if (currentLetter !== 'all') {
             result = result.filter(c => c.name.toUpperCase().startsWith(currentLetter));
@@ -533,15 +533,18 @@ const ScalableCharacterSelection = () => {
          * they were filtered out by the criteria above. This guarantees the
          * CSV-imported records remain visible to the user.
          * ------------------------------------------------------------------ */
-        const mustShowNames = ['jesus', 'paul', 'moses'];
-        const mustShow = characters.filter(
-            c => mustShowNames.includes(c.name.toLowerCase())
-        );
-        mustShow.forEach(c => {
-            if (!result.some(r => r.id === c.id)) {
-                result.push(c);
-            }
-        });
+        // Only force-include demo characters when no group filter is active
+        if (groupFilter === 'all') {
+            const mustShowNames = ['jesus', 'paul', 'moses'];
+            const mustShow = characters.filter(
+                c => mustShowNames.includes(c.name.toLowerCase())
+            );
+            mustShow.forEach(c => {
+                if (!result.some(r => r.id === c.id)) {
+                    result.push(c);
+                }
+            });
+        }
 
         // Resort after forced inclusion so alphabetical order is preserved
         result.sort((a, b) => a.name.localeCompare(b.name));
@@ -1167,19 +1170,28 @@ const ScalableCharacterSelection = () => {
                                         className: "w-full md:w-auto",
                                         children: _jsxs("select", {
                                             value: groupFilter,
-                                            onChange: (e) => {
-                                                setGroupFilter(e.target.value);
+                                            onChange: async (e) => {
+                                                const val = e.target.value;
+                                                setGroupFilter(val);
                                                 setCurrentPage(1);
+                                                if (val === 'all') {
+                                                    setGroupCharacterIds(null);
+                                                } else {
+                                                    try {
+                                                        const mappings = await groupRepository.getCharactersInGroup(val);
+                                                        const ids = new Set((mappings || []).map(m => m.character_id));
+                                                        setGroupCharacterIds(ids);
+                                                    } catch (err) {
+                                                        console.error('Failed to load group mappings:', err);
+                                                        setGroupCharacterIds(new Set());
+                                                    }
+                                                }
                                             },
                                             className: "w-full md:w-auto bg-white text-gray-900 border border-gray-300 rounded-full py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-400/50",
                                             children: [
                                                 _jsx("option", { value: "all", children: "All Groups" }),
-                                                _jsx("option", { value: "Prophets", children: "Prophets" }),
-                                                _jsx("option", { value: "Apostles", children: "Apostles" }),
-                                                _jsx("option", { value: "Kings", children: "Kings" }),
-                                                _jsx("option", { value: "Women", children: "Women of the Bible" }),
                                                 groups.map(group => 
-                                                    _jsx("option", { value: group.name, children: group.name }, group.id)
+                                                    _jsx("option", { value: `${group.id}`, children: group.name }, group.id)
                                                 )
                                             ]
                                         })
