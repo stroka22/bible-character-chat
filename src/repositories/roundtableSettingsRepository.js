@@ -125,24 +125,29 @@ export const roundtableSettingsRepository = {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('roundtable_settings')
-        .upsert({ 
-          owner_slug: ownerSlug, 
-          ...payload, 
-          updated_at: new Date().toISOString() 
-        })
-        .select('*')
-        .maybeSingle();
-      
-      if (error) {
-        console.error('[roundtableSettingsRepository] Error upserting settings:', error);
-        throw new Error(`Failed to save roundtable settings: ${error.message}`);
+      // Use serverless API with service-role enforcement to bypass RLS safely
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const token = sessionRes?.session?.access_token || null;
+      const resp = await fetch('/api/roundtable/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ owner_slug: ownerSlug, ...payload }),
+      });
+      if (!resp.ok) {
+        let msg = 'Unknown error';
+        try {
+          const j = await resp.json();
+          msg = j?.error || msg;
+        } catch {}
+        throw new Error(`Failed to save roundtable settings: ${msg}`);
       }
-      
-      return data;
+      const json = await resp.json();
+      return json?.data || null;
     } catch (err) {
-      console.error('[roundtableSettingsRepository] Unexpected error upserting settings:', err);
+      console.error('[roundtableSettingsRepository] Unexpected error upserting settings (via API):', err);
       throw new Error(`Failed to save roundtable settings: ${err.message}`);
     }
   }
