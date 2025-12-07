@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "FaithTalkAI",
+    "name": "Faith Talk AI",
     "slug": "faithtalkai",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,12 +16,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.faithtalkai.app",
+      "icon": "./assets/icon.png",
+      "buildNumber": "3",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.faithtalkai.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#facc15"
