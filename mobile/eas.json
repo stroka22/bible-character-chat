@@ -30,6 +30,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "internal": {
+      "android": {
+        "serviceAccountKeyPath": "/Users/brian/google-play-service-account.json",
+        "track": "internal"
+      }
+    }
   }
 }
