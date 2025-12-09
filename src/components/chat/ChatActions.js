@@ -58,14 +58,11 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
               const s = await getTierSettings();
               const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
               if (requiresPremium && !isPremium) {
-                setError('Saving conversations is a Premium feature.');
-                try {
-                  const evt = new CustomEvent('upgrade:show', { detail: { limitType: 'save' } });
-                  window.dispatchEvent(evt);
-                } catch {}
+                window.location.assign('/pricing');
                 setIsLoading(false);
                 return;
               }
+              
             } catch {}
             const text = formatConversationAsText();
             await navigator.clipboard.writeText(text);
@@ -139,14 +136,11 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
               const s = await getTierSettings();
               const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
               if (requiresPremium && !isPremium) {
-                setError('Saving conversations is a Premium feature.');
-                try {
-                  const evt = new CustomEvent('upgrade:show', { detail: { limitType: 'save' } });
-                  window.dispatchEvent(evt);
-                } catch {}
+                window.location.assign('/pricing');
                 setIsLoading(false);
                 return;
               }
+              
             } catch {}
             
             // Don't pass any title - let the repository generate the default
@@ -174,14 +168,11 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
               const s = await getTierSettings();
               const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
               if (requiresPremium && !isPremium) {
-                setError('Saving conversations is a Premium feature.');
-                try {
-                  const evt = new CustomEvent('upgrade:show', { detail: { limitType: 'save' } });
-                  window.dispatchEvent(evt);
-                } catch {}
+                window.location.assign('/pricing');
                 setIsLoading(false);
                 return;
               }
+              
             } catch {}
             await saveChatTitle(newTitle.trim());
             setIsRenaming(false);
@@ -219,14 +210,11 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
               const s = await getTierSettings();
               const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
               if (requiresPremium && !isPremium) {
-                setError('Saving conversations is a Premium feature.');
-                try {
-                  const evt = new CustomEvent('upgrade:show', { detail: { limitType: 'save' } });
-                  window.dispatchEvent(evt);
-                } catch {}
+                window.location.assign('/pricing');
                 setIsLoading(false);
                 return;
               }
+              
             } catch {}
 
             // Handle non-saved chats (bypass mode)
@@ -267,14 +255,11 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
               const s = await getTierSettings();
               const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
               if (requiresPremium && !isPremium) {
-                setError('Saving conversations is a Premium feature.');
-                try {
-                  const evt = new CustomEvent('upgrade:show', { detail: { limitType: 'save' } });
-                  window.dispatchEvent(evt);
-                } catch {}
+                window.location.assign('/pricing');
                 setIsLoading(false);
                 return;
               }
+              
             } catch {}
             await deleteCurrentChat();
         }

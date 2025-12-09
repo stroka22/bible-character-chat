@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { generateCharacterResponse } from '../lib/api';
@@ -67,7 +67,7 @@ export default function RoundtableChat({ route }: any) {
       for (const speaker of speakers) {
         const system = {
           role: 'system' as const,
-          content: `You are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nYou are in a roundtable on: "${topic}". Keep it concise (<=110 words). Respond as ${speaker.name} without name prefixes. Avoid repeating prior points; add a distinct, scripture-grounded perspective.`
+          content: `You are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nContext: A roundtable on: "${topic}".\nCRITICAL: Respond strictly as ${speaker.name} only. Do NOT take on any other role. Use first-person from ${speaker.name}'s perspective. Keep it concise (<=110 words). Avoid repeating prior points; add a distinct, scripture-grounded perspective.`
         };
         const payload = [system, ...working.slice(-10).map(m => ({ role: m.role, content: m.content }))];
         let text = '';
@@ -116,7 +116,7 @@ export default function RoundtableChat({ route }: any) {
     await requirePremiumOrPrompt({
       userId: user?.id,
       feature: 'save',
-      onUpgrade: () => Alert.alert('Upgrade required', 'Saving Roundtable is a premium feature. Upgrade to continue.'),
+      onUpgrade: () => Linking.openURL('https://faithtalkai.com/pricing'),
       onAllowed: async () => {
         try {
           const title = `Roundtable: ${topic}`;

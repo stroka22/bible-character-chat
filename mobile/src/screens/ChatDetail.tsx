@@ -65,9 +65,7 @@ export default function ChatDetail() {
           await requirePremiumOrPrompt({
             userId: (user as any)?.id,
             feature: 'save',
-            onUpgrade: () => {
-              alert('Saving chats is a premium feature. Upgrade at faithtalkai.com/pricing.');
-            },
+            onUpgrade: () => { Linking.openURL('https://faithtalkai.com/pricing'); },
             onAllowed: async () => {
               try {
                 await chat.toggleFavorite(chatId, !isFav);
