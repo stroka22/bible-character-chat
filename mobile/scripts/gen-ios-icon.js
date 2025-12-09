@@ -4,8 +4,9 @@ const sharp = require('sharp');
 
 (async () => {
   const size = 1024;
-  const ringWidth = Math.round(size * 0.12); // ~12%
-  const innerMargin = Math.round(size * 0.06); // ~6% padding inside ring
+  const borderPct = 0.05; // 5% border
+  const borderWidth = Math.round(size * borderPct);
+  const fgPct = 0.86; // 86% foreground scale
 
   const assetsDir = path.join(__dirname, '..', 'assets');
   const adaptiveIconPath = path.join(assetsDir, 'adaptive-icon.png');
@@ -16,7 +17,6 @@ const sharp = require('sharp');
     process.exit(1);
   }
 
-  // Base white background
   const base = sharp({
     create: {
       width: size,
@@ -26,29 +26,26 @@ const sharp = require('sharp');
     },
   }).png();
 
-  // Gold ring via SVG stroke
-  const r = size / 2 - ringWidth / 2; // radius to center the stroke
-  const svg = `<?xml version="1.0"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="#facc15" stroke-width="${ringWidth}" />
-</svg>`;
+  // Navy border that reaches the edge (stroke centered on an inset rect)
+  const borderColor = process.env.BORDER_COLOR || '#1e3a8a'; // navy
+  const inset = Math.round(borderWidth / 2);
+  const svg = `<?xml version="1.0"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"${size}\" height=\"${size}\" viewBox=\"0 0 ${size} ${size}\">\n  <rect x=\"${inset}\" y=\"${inset}\" width=\"${size - borderWidth}\" height=\"${size - borderWidth}\" fill=\"none\" stroke=\"${borderColor}\" stroke-width=\"${borderWidth}\" rx=\"${Math.round(size*0.22)}\" ry=\"${Math.round(size*0.22)}\"/>\n</svg>`;
+  const border = Buffer.from(svg);
 
-  const ring = Buffer.from(svg);
-
-  // Size adaptive foreground to fit within inner circle minus margin
-  const innerDiameter = size - 2 * ringWidth - 2 * innerMargin;
+  // Foreground
+  const inner = Math.round(size * fgPct);
   const fg = await sharp(adaptiveIconPath)
-    .resize({ width: innerDiameter, height: innerDiameter, fit: 'contain' })
+    .resize({ width: inner, height: inner, fit: 'contain' })
     .png()
     .toBuffer();
 
   await base
     .composite([
-      { input: ring, left: 0, top: 0 },
-      { input: fg, left: Math.round((size - innerDiameter) / 2), top: Math.round((size - innerDiameter) / 2) },
+      { input: border, left: 0, top: 0 },
+      { input: fg, left: Math.round((size - inner) / 2), top: Math.round((size - inner) / 2) },
     ])
-    .flatten({ background: '#ffffff' }) // blend any alpha against white
-    .removeAlpha() // drop alpha channel entirely
+    .flatten({ background: '#ffffff' })
+    .removeAlpha()
     .png()
     .toFile(outPath);
 
