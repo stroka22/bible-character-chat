@@ -110,8 +110,9 @@ export async function requirePremiumOrPrompt(opts: {
     if (isPremiumOnly) return onUpgrade();
   }
   if (feature === 'save') {
-    // Saving chats/roundtables is premium by default
-    return onUpgrade();
+    // Saving chats/roundtables premium gate (configurable via tier settings)
+    const requires = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
+    if (requires) return onUpgrade();
   }
   return onAllowed();
 }
