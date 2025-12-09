@@ -101,7 +101,7 @@ function normalizeRecord(record) {
         const v = record.premium_roundtable_gates;
         if (v && typeof v === 'object') return v;
       } catch {}
-      return { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null };
+      return { savingRequiresPremium: true, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null };
     })(),
     premiumStudyIds: (() => {
       try {
@@ -125,7 +125,13 @@ function denormalizeSettings(settings) {
     free_character_limit: settings.freeCharacterLimit || 10,
     free_characters: settings.freeCharacters || [],
     free_character_names: settings.freeCharacterNames || [],
-    premium_roundtable_gates: settings.premiumRoundtableGates || { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null },
+    premium_roundtable_gates: {
+      savingRequiresPremium: settings?.premiumRoundtableGates?.savingRequiresPremium !== false,
+      allowAllSpeak: !!settings?.premiumRoundtableGates?.allowAllSpeak,
+      strictRotation: !!settings?.premiumRoundtableGates?.strictRotation,
+      followUpsMin: settings?.premiumRoundtableGates?.followUpsMin ?? null,
+      repliesPerRoundMin: settings?.premiumRoundtableGates?.repliesPerRoundMin ?? null,
+    },
     premium_study_ids: settings.premiumStudyIds || [],
     updated_at: new Date().toISOString()
   };

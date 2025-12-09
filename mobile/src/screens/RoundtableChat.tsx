@@ -1,10 +1,13 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { generateCharacterResponse } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
+import { chat } from '../lib/chat';
+import { requirePremiumOrPrompt } from '../lib/tier';
+import { useAuth } from '../contexts/AuthContext';
 
 type Message = {
   id: string;
@@ -25,6 +28,8 @@ export default function RoundtableChat({ route }: any) {
   const [participants, setParticipants] = useState<any[]>([]);
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const { user } = useAuth();
+  const didAutoStart = React.useRef(false);
 
   React.useEffect(() => {
     (async () => {
@@ -32,7 +37,13 @@ export default function RoundtableChat({ route }: any) {
         .from('characters')
         .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
         .in('id', participantIds);
-      setParticipants((data as any) || []);
+      const loaded = (data as any) || [];
+      setParticipants(loaded);
+      // Auto-start the first round once characters are loaded
+      if (!didAutoStart.current) {
+        didAutoStart.current = true;
+        try { await generateRound(messages, loaded); } catch {}
+      }
     })();
   }, [participantIds]);
 
@@ -45,17 +56,18 @@ export default function RoundtableChat({ route }: any) {
     await generateRound(base);
   };
 
-  const generateRound = async (baseMessages: Message[]) => {
-    if (participants.length === 0) return;
+  const generateRound = async (baseMessages: Message[], overrideParticipants?: any[]) => {
+    const used = (overrideParticipants && overrideParticipants.length ? overrideParticipants : participants);
+    if (used.length === 0) return;
     setIsTyping(true);
     try {
       // simple round: up to 3 speakers sequentially
-      const speakers = participants.slice(0, Math.min(3, participants.length));
+      const speakers = used.slice(0, Math.min(3, used.length));
       const working = [...baseMessages];
       for (const speaker of speakers) {
         const system = {
           role: 'system' as const,
-          content: `You are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nYou are in a roundtable on: "${topic}". Keep it concise (<=110 words). Respond as ${speaker.name} without name prefixes. Avoid repeating prior points; add a distinct, scripture-grounded perspective.`
+          content: `You are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nContext: A roundtable on: "${topic}".\nCRITICAL: Respond strictly as ${speaker.name} only. Do NOT take on any other role. Use first-person from ${speaker.name}'s perspective. Keep it concise (<=110 words). Avoid repeating prior points; add a distinct, scripture-grounded perspective.`
         };
         const payload = [system, ...working.slice(-10).map(m => ({ role: m.role, content: m.content }))];
         let text = '';
@@ -100,11 +112,38 @@ export default function RoundtableChat({ route }: any) {
     return null;
   };
 
+  const saveToMyWalk = async () => {
+    await requirePremiumOrPrompt({
+      userId: user?.id,
+      feature: 'save',
+      onUpgrade: () => Linking.openURL('https://faithtalkai.com/pricing'),
+      onAllowed: async () => {
+        try {
+          const title = `Roundtable: ${topic}`;
+          const c = await chat.createChat(String(user?.id), String(participantIds[0] || ''), title);
+          const seq = messages.filter(m => m.role !== 'system');
+          for (const m of seq) {
+            await chat.addMessage(c.id, m.content, m.role as any);
+          }
+          Alert.alert('Saved', 'Roundtable saved to My Walk.');
+        } catch (e) {
+          Alert.alert('Error', 'Unable to save this roundtable.');
+        }
+      }
+    });
+  };
+
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
         <Text style={{ color: theme.colors.text }}>{topic}</Text>
+        <View style={{ marginTop: 8 }}>
+          <TouchableOpacity onPress={saveToMyWalk} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Save to My Walk</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <FlatList
         data={messages.filter(m => m.role !== 'system')}

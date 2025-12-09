@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
 import { useConversation } from '../../contexts/ConversationContext.jsx';
 import { useAuth } from '../../contexts/AuthContext';
+import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 // Added `basicOnly` prop: when true in compact mode, only show
 // copy, favorite & save – omit rename/delete even for saved chats.
 const ChatActions = ({ className = '', compact = false, basicOnly = false }) => {
@@ -52,6 +53,17 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
         try {
             setIsLoading(true);
             setError(null);
+            // Premium gating for saving
+            try {
+              const s = await getTierSettings();
+              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
+              if (requiresPremium && !isPremium) {
+                window.location.assign('/pricing');
+                setIsLoading(false);
+                return;
+              }
+              
+            } catch {}
             const text = formatConversationAsText();
             await navigator.clipboard.writeText(text);
             setShowCopySuccess(true);
@@ -119,6 +131,17 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
         try {
             setIsLoading(true);
             setError(null);
+            // Premium gating for saving
+            try {
+              const s = await getTierSettings();
+              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
+              if (requiresPremium && !isPremium) {
+                window.location.assign('/pricing');
+                setIsLoading(false);
+                return;
+              }
+              
+            } catch {}
             
             // Don't pass any title - let the repository generate the default
             const success = await saveChat();
@@ -140,6 +163,17 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
         try {
             setIsLoading(true);
             setError(null);
+            // Premium gating for saving
+            try {
+              const s = await getTierSettings();
+              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
+              if (requiresPremium && !isPremium) {
+                window.location.assign('/pricing');
+                setIsLoading(false);
+                return;
+              }
+              
+            } catch {}
             await saveChatTitle(newTitle.trim());
             setIsRenaming(false);
             setNewTitle('');
@@ -171,6 +205,17 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
         try {
             setIsLoading(true);
             setError(null);
+            // Premium gating for saving
+            try {
+              const s = await getTierSettings();
+              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
+              if (requiresPremium && !isPremium) {
+                window.location.assign('/pricing');
+                setIsLoading(false);
+                return;
+              }
+              
+            } catch {}
 
             // Handle non-saved chats (bypass mode)
             if (bypassMode && !chatId) {
@@ -205,6 +250,17 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false }) => 
         try {
             setIsLoading(true);
             setError(null);
+            // Premium gating for saving
+            try {
+              const s = await getTierSettings();
+              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
+              if (requiresPremium && !isPremium) {
+                window.location.assign('/pricing');
+                setIsLoading(false);
+                return;
+              }
+              
+            } catch {}
             await deleteCurrentChat();
         }
         catch (error) {

@@ -67,7 +67,7 @@ export default function MyWalk() {
         ) : null}
       />
       <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
-        <Text style={{ color: theme.colors.muted }}>Favorite Chats</Text>
+        <Text style={{ color: theme.colors.muted }}>Saved Chats</Text>
       </View>
       <FlatList
         data={items}
@@ -83,7 +83,7 @@ export default function MyWalk() {
             </TouchableOpacity>
             <View style={{ marginTop: 8 }}>
               <TouchableOpacity onPress={() => toggleFavorite(item)} style={{ alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: theme.colors.surface }}>
-                <Text style={{ color: theme.colors.text }}>{item.is_favorite ? 'Unfavorite' : 'Favorite'}</Text>
+                <Text style={{ color: theme.colors.text }}>{item.is_favorite ? 'Unsave' : 'Save'}</Text>
               </TouchableOpacity>
             </View>
           </View>

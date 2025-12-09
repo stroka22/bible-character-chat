@@ -34,6 +34,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
   const [saveMessage, setSaveMessage] = useState({ type: '', text: '' });
   /* Premium gates */
   const [premiumGates, setPremiumGates] = useState({
+    savingRequiresPremium: true,
     premiumOnly: true,
     allowAllSpeak: false,
     strictRotation: false,
@@ -84,6 +85,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         setFreeCharacterLimit(supabaseSettings.freeCharacterLimit || 10);
         setFreeCharacters(supabaseSettings.freeCharacters || []);
         setPremiumGates({
+          savingRequiresPremium: supabaseSettings?.premiumRoundtableGates?.savingRequiresPremium !== false,
           premiumOnly: supabaseSettings?.premiumRoundtableGates?.premiumOnly ?? true,
           allowAllSpeak: !!supabaseSettings?.premiumRoundtableGates?.allowAllSpeak,
           strictRotation: !!supabaseSettings?.premiumRoundtableGates?.strictRotation,
@@ -108,6 +110,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
       setFreeCharacterLimit(local.freeCharacterLimit || 10);
       setFreeCharacters(local.freeCharacters || []);
       setPremiumGates({
+        savingRequiresPremium: (local.premiumRoundtableGates || {}).savingRequiresPremium !== false,
         premiumOnly: (local.premiumRoundtableGates || {}).premiumOnly ?? true,
         allowAllSpeak: !!(local.premiumRoundtableGates || {}).allowAllSpeak,
         strictRotation: !!(local.premiumRoundtableGates || {}).strictRotation,
@@ -627,7 +630,16 @@ const AccountTierManagement = ({ mode = 'full' }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Roundtable Feature Gates */}
                   <div className="space-y-3 p-4 border rounded-md">
-                    <h4 className="font-medium text-blue-800 mb-1">Roundtable Options</h4>
+                    <h4 className="font-medium text-blue-800 mb-1">Roundtable & Saving</h4>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        checked={!!premiumGates.savingRequiresPremium}
+                        onChange={(e) => setPremiumGates({ ...premiumGates, savingRequiresPremium: e.target.checked })}
+                      />
+                      <span className="text-sm text-gray-700">Saving conversations requires Premium</span>
+                    </label>
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"

@@ -7,6 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "gen:ios:icon": "node scripts/gen-ios-icon.js",
     "build:ios:preview": "npx eas build -p ios --profile preview",
     "build:android:preview": "npx eas build -p android --profile preview",
     "submit:ios": "npx eas submit -p ios --latest",
@@ -37,7 +38,8 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^54.0.7",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "sharp": "^0.33.4"
   },
   "private": true
 }
