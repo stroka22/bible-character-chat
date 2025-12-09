@@ -81,7 +81,10 @@ export default function StudyDetail({ route, navigation }: any) {
         ]);
         if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
       } catch {}
-      navigation.replace('ChatDetail', { chatId: newChat.id, character: { name: char?.name, persona_prompt: char?.persona_prompt } });
+      navigation.navigate('Chat', {
+        screen: 'ChatDetail',
+        params: { chatId: newChat.id, character: { name: char?.name, persona_prompt: char?.persona_prompt } },
+      });
     } finally {
       setStarting(false);
     }

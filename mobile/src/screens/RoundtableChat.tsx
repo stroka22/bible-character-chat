@@ -1,10 +1,13 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { generateCharacterResponse } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
+import { chat } from '../lib/chat';
+import { requirePremiumOrPrompt } from '../lib/tier';
+import { useAuth } from '../contexts/AuthContext';
 
 type Message = {
   id: string;
@@ -25,6 +28,8 @@ export default function RoundtableChat({ route }: any) {
   const [participants, setParticipants] = useState<any[]>([]);
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const { user } = useAuth();
+  const didAutoStart = React.useRef(false);
 
   React.useEffect(() => {
     (async () => {
@@ -33,6 +38,11 @@ export default function RoundtableChat({ route }: any) {
         .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
         .in('id', participantIds);
       setParticipants((data as any) || []);
+      // Auto-start the first round once characters are loaded
+      if (!didAutoStart.current) {
+        didAutoStart.current = true;
+        try { await generateRound(messages); } catch {}
+      }
     })();
   }, [participantIds]);
 
@@ -100,11 +110,38 @@ export default function RoundtableChat({ route }: any) {
     return null;
   };
 
+  const saveToMyWalk = async () => {
+    await requirePremiumOrPrompt({
+      userId: user?.id,
+      feature: 'roundtable',
+      onUpgrade: () => Alert.alert('Upgrade required', 'Saving Roundtable is a premium feature. Upgrade to continue.'),
+      onAllowed: async () => {
+        try {
+          const title = `Roundtable: ${topic}`;
+          const c = await chat.createChat(String(user?.id), String(participantIds[0] || ''), title);
+          const seq = messages.filter(m => m.role !== 'system');
+          for (const m of seq) {
+            await chat.addMessage(c.id, m.content, m.role as any);
+          }
+          Alert.alert('Saved', 'Roundtable saved to My Walk.');
+        } catch (e) {
+          Alert.alert('Error', 'Unable to save this roundtable.');
+        }
+      }
+    });
+  };
+
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
         <Text style={{ color: theme.colors.text }}>{topic}</Text>
+        <View style={{ marginTop: 8 }}>
+          <TouchableOpacity onPress={saveToMyWalk} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Save to My Walk</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <FlatList
         data={messages.filter(m => m.role !== 'system')}
