@@ -37,11 +37,12 @@ export default function RoundtableChat({ route }: any) {
         .from('characters')
         .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
         .in('id', participantIds);
-      setParticipants((data as any) || []);
+      const loaded = (data as any) || [];
+      setParticipants(loaded);
       // Auto-start the first round once characters are loaded
       if (!didAutoStart.current) {
         didAutoStart.current = true;
-        try { await generateRound(messages); } catch {}
+        try { await generateRound(messages, loaded); } catch {}
       }
     })();
   }, [participantIds]);
@@ -55,12 +56,13 @@ export default function RoundtableChat({ route }: any) {
     await generateRound(base);
   };
 
-  const generateRound = async (baseMessages: Message[]) => {
-    if (participants.length === 0) return;
+  const generateRound = async (baseMessages: Message[], overrideParticipants?: any[]) => {
+    const used = (overrideParticipants && overrideParticipants.length ? overrideParticipants : participants);
+    if (used.length === 0) return;
     setIsTyping(true);
     try {
       // simple round: up to 3 speakers sequentially
-      const speakers = participants.slice(0, Math.min(3, participants.length));
+      const speakers = used.slice(0, Math.min(3, used.length));
       const working = [...baseMessages];
       for (const speaker of speakers) {
         const system = {
@@ -113,7 +115,7 @@ export default function RoundtableChat({ route }: any) {
   const saveToMyWalk = async () => {
     await requirePremiumOrPrompt({
       userId: user?.id,
-      feature: 'roundtable',
+      feature: 'save',
       onUpgrade: () => Alert.alert('Upgrade required', 'Saving Roundtable is a premium feature. Upgrade to continue.'),
       onAllowed: async () => {
         try {

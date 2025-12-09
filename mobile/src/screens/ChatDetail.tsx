@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
-import { guardMessageSend, incrementDailyMessageCount } from '../lib/tier';
+import { guardMessageSend, incrementDailyMessageCount, requirePremiumOrPrompt } from '../lib/tier';
 import { useAuth } from '../contexts/AuthContext';
 import { Linking } from 'react-native';
 import { generateCharacterResponse } from '../lib/api';
@@ -62,14 +62,21 @@ export default function ChatDetail() {
       ),
       headerRight: () => (
         <TouchableOpacity onPress={async () => {
-          try {
-            await chat.toggleFavorite(chatId, !isFav);
-            setIsFav(!isFav);
-          } catch {}
-        }}>
-          <Text style={{ fontSize: 20, color: isFav ? '#facc15' : '#94a3b8', textShadowColor: '#0f172a', textShadowRadius: 3, textShadowOffset: { width: 0, height: 1 } }}>
-            {isFav ? '★' : '☆'}
-          </Text>
+          await requirePremiumOrPrompt({
+            userId: (user as any)?.id,
+            feature: 'save',
+            onUpgrade: () => {
+              alert('Saving chats is a premium feature. Upgrade at faithtalkai.com/pricing.');
+            },
+            onAllowed: async () => {
+              try {
+                await chat.toggleFavorite(chatId, !isFav);
+                setIsFav(!isFav);
+              } catch {}
+            }
+          });
+        }} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: theme.colors.surface, borderRadius: 6 }}>
+          <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{isFav ? 'Unsave' : 'Save'}</Text>
         </TouchableOpacity>
       )
     });

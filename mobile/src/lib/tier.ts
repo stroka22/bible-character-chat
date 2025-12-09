@@ -88,7 +88,7 @@ export async function isPremiumUser(userId?: string): Promise<boolean> {
 
 export async function requirePremiumOrPrompt(opts: {
   userId?: string;
-  feature: 'roundtable' | 'premiumStudy' | 'other';
+  feature: 'roundtable' | 'premiumStudy' | 'save' | 'other';
   studyId?: string;
   onUpgrade: () => void;
   onAllowed: () => void;
@@ -108,6 +108,10 @@ export async function requirePremiumOrPrompt(opts: {
     const gates = s.premiumRoundtableGates || {};
     const isPremiumOnly = gates?.premiumOnly ?? true;
     if (isPremiumOnly) return onUpgrade();
+  }
+  if (feature === 'save') {
+    // Saving chats/roundtables is premium by default
+    return onUpgrade();
   }
   return onAllowed();
 }
