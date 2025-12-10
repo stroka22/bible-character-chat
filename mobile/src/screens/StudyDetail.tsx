@@ -82,7 +82,7 @@ export default function StudyDetail({ route, navigation }: any) {
         if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
       } catch {}
       // Navigate immediately even if intro generation fails
-      navigation.navigate('ChatDetail', { chatId: newChat.id, character: { name: char?.name, persona_prompt: char?.persona_prompt } });
+      navigation.navigate('Chat', { screen: 'ChatDetail', params: { chatId: newChat.id, character: { name: char?.name, persona_prompt: char?.persona_prompt } } });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Unable to start this study right now.';
       alert(msg);
