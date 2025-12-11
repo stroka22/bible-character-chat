@@ -7,7 +7,7 @@ const FABCluster = () => {
   const { isPremium } = usePremium();
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-3">
+    <div className="hidden md:flex fixed bottom-4 right-4 z-50 flex-col gap-3">
       <button
         onClick={() => navigate('/roundtable/setup')}
         className="flex items-center gap-2 px-5 py-3 bg-yellow-400 text-blue-900 rounded-full shadow-lg hover:bg-yellow-300 transition-colors border border-yellow-500"

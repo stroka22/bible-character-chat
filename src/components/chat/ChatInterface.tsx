@@ -9,6 +9,7 @@ import { usePremium } from '../../hooks/usePremium';
 import { useAuth } from '../../contexts/AuthContext';
 import { loadAccountTierSettings } from '../../utils/accountTier';
 import { getSettings as getTierSettings } from '../../services/tierSettingsService';
+import { scrollToBottom } from '../../utils/safeScroll';
 
 /**
  * --------------------------------------------------------------------------
@@ -65,7 +66,7 @@ const ChatInterface: React.FC = () => {
   // Upgrade modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeLimitType, setUpgradeLimitType] = useState<'message' | 'character' | 'study' | 'roundtable'>('character');
-  const [messageLimit, setMessageLimit] = useState<number>(5);
+  const [messageLimit, setMessageLimit] = useState<number>(100);
 
   // Reference for auto-scrolling to the bottom of the chat
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -135,7 +136,7 @@ const ChatInterface: React.FC = () => {
   // Auto-scroll to bottom when messages change or when typing
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      scrollToBottom(messagesEndRef.current);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length, isTyping]); // key on length so first load scrolls too

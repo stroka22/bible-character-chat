@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { scrollToBottom } from '../../utils/safeScroll';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useChat } from '../../contexts/ChatContext.jsx';
 import { useCharacters } from '../../contexts/CharacterContext.jsx';
@@ -40,7 +41,7 @@ const Chat = () => {
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      scrollToBottom(messagesEndRef.current);
     }
   }, [messages]);
   

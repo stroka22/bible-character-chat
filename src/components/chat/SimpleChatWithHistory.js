@@ -79,7 +79,7 @@ const SimpleChatWithHistory = () => {
     const [conversationTitle, setConversationTitle] = useState('');
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeLimitType, setUpgradeLimitType] = useState('character');
-    const [messageLimit, setMessageLimit] = useState(5);
+    const [messageLimit, setMessageLimit] = useState(100);
     const [premiumStudyIds, setPremiumStudyIds] = useState([]);
     const [studyMeta, setStudyMeta] = useState(null);
     const [lessonMeta, setLessonMeta] = useState(null);
@@ -588,7 +588,12 @@ const SimpleChatWithHistory = () => {
     // Scroll to bottom when messages change
     useEffect(() => {
         if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            try {
+                const { scrollToBottom } = require('../../utils/safeScroll');
+                scrollToBottom(messagesEndRef.current);
+            } catch {
+                try { messagesEndRef.current.scrollIntoView({ behavior: 'auto' }); } catch {}
+            }
         }
     }, [messages.length, isTyping]);
 

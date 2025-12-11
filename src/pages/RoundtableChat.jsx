@@ -1,5 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect, useRef } from 'react';
+import { scrollToBottom } from '../utils/safeScroll';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoundtable } from '../contexts/RoundtableContext';
@@ -45,7 +46,7 @@ const RoundtableChat = () => {
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      scrollToBottom(messagesEndRef.current);
     }
   }, [messages]);
   
