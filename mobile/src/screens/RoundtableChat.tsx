@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, Linking } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { generateCharacterResponse } from '../lib/api';
@@ -30,6 +31,7 @@ export default function RoundtableChat({ route }: any) {
   const headerHeight = useHeaderHeight();
   const { user } = useAuth();
   const didAutoStart = React.useRef(false);
+  const navigation = useNavigation<any>();
 
   React.useEffect(() => {
     (async () => {
@@ -67,7 +69,7 @@ export default function RoundtableChat({ route }: any) {
       for (const speaker of speakers) {
         const system = {
           role: 'system' as const,
-          content: `You are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nContext: A roundtable on: "${topic}".\nCRITICAL: Respond strictly as ${speaker.name} only. Do NOT take on any other role. Use first-person from ${speaker.name}'s perspective. Keep it concise (<=110 words). Avoid repeating prior points; add a distinct, scripture-grounded perspective.`
+          content: `SPEAKER_ID:${speaker.id}\nYou are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nContext: A roundtable on: "${topic}".\nCRITICAL: Respond strictly as ${speaker.name} only. Do NOT take on any other role. Use first-person from ${speaker.name}'s perspective. Do not copy any previous assistant messages verbatim; add a distinct, scripture-grounded perspective. If your draft is too similar to a prior assistant message, rewrite it to be clearly different.`
         };
         const payload = [system, ...working.slice(-10).map(m => ({ role: m.role, content: m.content }))];
         let text = '';
@@ -84,6 +86,24 @@ export default function RoundtableChat({ route }: any) {
       setIsTyping(false);
     }
   };
+
+  // Header Save button for visibility
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={async () => {
+          await requirePremiumOrPrompt({
+            userId: user?.id,
+            feature: 'save',
+            onUpgrade: () => Linking.openURL('https://faithtalkai.com/pricing'),
+            onAllowed: () => saveToMyWalk(),
+          });
+        }} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: theme.colors.surface, borderRadius: 6 }}>
+          <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Save</Text>
+        </TouchableOpacity>
+      )
+    });
+  }, [navigation, user?.id, messages, topic, participantIds]);
 
   const renderItem = ({ item }: { item: Message }) => {
     if (item.role === 'user') {
@@ -139,9 +159,12 @@ export default function RoundtableChat({ route }: any) {
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
         <Text style={{ color: theme.colors.text }}>{topic}</Text>
-        <View style={{ marginTop: 8 }}>
-          <TouchableOpacity onPress={saveToMyWalk} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
-            <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Save to My Walk</Text>
+        <View style={{ marginTop: 10, flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity onPress={() => generateRound(messages)} disabled={isTyping} style={{ backgroundColor: isTyping ? theme.colors.muted : theme.colors.primary, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 }}>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Next Round</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={saveToMyWalk} style={{ backgroundColor: theme.colors.surface, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Save to My Walk</Text>
           </TouchableOpacity>
         </View>
       </View>
