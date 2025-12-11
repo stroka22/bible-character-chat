@@ -11,6 +11,7 @@ import CharacterInsightsPanel from './CharacterInsightsPanel';
 import UpgradeModal from '../modals/UpgradeModal';
 import { usePremium } from '../../hooks/usePremium';
 import { loadAccountTierSettings } from '../../utils/accountTier';
+import { scrollToBottom } from '../../utils/safeScroll';
 import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 
 const generateFallbackAvatar = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
@@ -57,7 +58,7 @@ const ChatInterface = () => {
     // Upgrade modal state
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeLimitType, setUpgradeLimitType] = useState('character');
-    const [messageLimit, setMessageLimit] = useState(5);
+    const [messageLimit, setMessageLimit] = useState(100);
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
@@ -137,7 +138,7 @@ const ChatInterface = () => {
 
     useEffect(() => {
         if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            scrollToBottom(messagesEndRef.current);
         }
     }, [messages.length, isTyping]);
 
