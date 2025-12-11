@@ -24,6 +24,14 @@ import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepositor
  * - Featured character for the organization
  */
 const AccountTierManagement = ({ mode = 'full' }) => {
+  // Default tokenized roundtable prompt template (used when none saved)
+  const DEFAULT_PROMPT_TEMPLATE = `You are {NAME}. Persona: {PERSONA}. {TRAITS}
+You are participating in a roundtable discussion on the topic: "{TOPIC}".
+The other participants are: {OTHERS}.
+Respond in first person as {NAME}. Do not include any name prefixes.
+Keep it concise (<= {MAX_WORDS} words). Do not repeat prior points; add a distinct, scripture-grounded perspective; optionally reference others by name.
+{LATEST_USER_INPUT}
+Stay in character and draw from biblical knowledge.`;
   // Configuration state
   const [freeMessageLimit, setFreeMessageLimit] = useState(5);
   const [freeCharacterLimit, setFreeCharacterLimit] = useState(10);
@@ -92,9 +100,10 @@ const AccountTierManagement = ({ mode = 'full' }) => {
           strictRotation: !!supabaseSettings?.premiumRoundtableGates?.strictRotation,
           followUpsMin: supabaseSettings?.premiumRoundtableGates?.followUpsMin ?? null,
           repliesPerRoundMin: supabaseSettings?.premiumRoundtableGates?.repliesPerRoundMin ?? null,
-          promptTemplate: typeof supabaseSettings?.premiumRoundtableGates?.promptTemplate === 'string' 
-            ? supabaseSettings.premiumRoundtableGates.promptTemplate 
-            : '',
+          promptTemplate: (() => {
+            const tpl = supabaseSettings?.premiumRoundtableGates?.promptTemplate;
+            return (typeof tpl === 'string' && tpl.trim().length > 0) ? tpl : DEFAULT_PROMPT_TEMPLATE;
+          })(),
         });
         setPremiumStudyIds(Array.isArray(supabaseSettings?.premiumStudyIds) ? supabaseSettings.premiumStudyIds : []);
 
@@ -120,7 +129,10 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         strictRotation: !!(local.premiumRoundtableGates || {}).strictRotation,
         followUpsMin: (local.premiumRoundtableGates || {}).followUpsMin ?? null,
         repliesPerRoundMin: (local.premiumRoundtableGates || {}).repliesPerRoundMin ?? null,
-        promptTemplate: (local.premiumRoundtableGates || {}).promptTemplate || '',
+        promptTemplate: (() => {
+          const tpl = (local.premiumRoundtableGates || {}).promptTemplate;
+          return (typeof tpl === 'string' && tpl.trim().length > 0) ? tpl : DEFAULT_PROMPT_TEMPLATE;
+        })(),
       });
       setPremiumStudyIds(local.premiumStudyIds || []);
     } catch (err) {
