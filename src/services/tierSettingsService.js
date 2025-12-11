@@ -101,7 +101,7 @@ function normalizeRecord(record) {
         const v = record.premium_roundtable_gates;
         if (v && typeof v === 'object') return v;
       } catch {}
-      return { savingRequiresPremium: true, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null };
+      return { savingRequiresPremium: true, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' };
     })(),
     premiumStudyIds: (() => {
       try {
@@ -131,6 +131,7 @@ function denormalizeSettings(settings) {
       strictRotation: !!settings?.premiumRoundtableGates?.strictRotation,
       followUpsMin: settings?.premiumRoundtableGates?.followUpsMin ?? null,
       repliesPerRoundMin: settings?.premiumRoundtableGates?.repliesPerRoundMin ?? null,
+      promptTemplate: typeof settings?.premiumRoundtableGates?.promptTemplate === 'string' ? settings.premiumRoundtableGates.promptTemplate : '',
     },
     premium_study_ids: settings.premiumStudyIds || [],
     updated_at: new Date().toISOString()
@@ -235,7 +236,7 @@ function getDefaultSettings() {
     freeCharacterLimit: 10,
     freeCharacters: [],
     freeCharacterNames: [],
-    premiumRoundtableGates: { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null },
+    premiumRoundtableGates: { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' },
     premiumStudyIds: [],
     lastUpdated: new Date().toISOString()
   };

@@ -24,6 +24,14 @@ import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepositor
  * - Featured character for the organization
  */
 const AccountTierManagement = ({ mode = 'full' }) => {
+  // Default tokenized roundtable prompt template (used when none saved)
+  const DEFAULT_PROMPT_TEMPLATE = `You are {NAME}. Persona: {PERSONA}. {TRAITS}
+You are participating in a roundtable discussion on the topic: "{TOPIC}".
+The other participants are: {OTHERS}.
+Respond in first person as {NAME}. Do not include any name prefixes.
+Keep it concise (<= {MAX_WORDS} words). Do not repeat prior points; add a distinct, scripture-grounded perspective; optionally reference others by name.
+{LATEST_USER_INPUT}
+Stay in character and draw from biblical knowledge.`;
   // Configuration state
   const [freeMessageLimit, setFreeMessageLimit] = useState(5);
   const [freeCharacterLimit, setFreeCharacterLimit] = useState(10);
@@ -40,6 +48,7 @@ const AccountTierManagement = ({ mode = 'full' }) => {
     strictRotation: false,
     followUpsMin: null,
     repliesPerRoundMin: null,
+    promptTemplate: '',
   });
   const [premiumStudyIds, setPremiumStudyIds] = useState([]);
   const [studies, setStudies] = useState([]);
@@ -91,6 +100,10 @@ const AccountTierManagement = ({ mode = 'full' }) => {
           strictRotation: !!supabaseSettings?.premiumRoundtableGates?.strictRotation,
           followUpsMin: supabaseSettings?.premiumRoundtableGates?.followUpsMin ?? null,
           repliesPerRoundMin: supabaseSettings?.premiumRoundtableGates?.repliesPerRoundMin ?? null,
+          promptTemplate: (() => {
+            const tpl = supabaseSettings?.premiumRoundtableGates?.promptTemplate;
+            return (typeof tpl === 'string' && tpl.trim().length > 0) ? tpl : DEFAULT_PROMPT_TEMPLATE;
+          })(),
         });
         setPremiumStudyIds(Array.isArray(supabaseSettings?.premiumStudyIds) ? supabaseSettings.premiumStudyIds : []);
 
@@ -116,6 +129,10 @@ const AccountTierManagement = ({ mode = 'full' }) => {
         strictRotation: !!(local.premiumRoundtableGates || {}).strictRotation,
         followUpsMin: (local.premiumRoundtableGates || {}).followUpsMin ?? null,
         repliesPerRoundMin: (local.premiumRoundtableGates || {}).repliesPerRoundMin ?? null,
+        promptTemplate: (() => {
+          const tpl = (local.premiumRoundtableGates || {}).promptTemplate;
+          return (typeof tpl === 'string' && tpl.trim().length > 0) ? tpl : DEFAULT_PROMPT_TEMPLATE;
+        })(),
       });
       setPremiumStudyIds(local.premiumStudyIds || []);
     } catch (err) {
@@ -700,6 +717,21 @@ const AccountTierManagement = ({ mode = 'full' }) => {
                         />
                         <p className="text-[11px] text-gray-500 mt-1">Replies above this number require Premium. Leave blank to disable.</p>
                       </div>
+                    </div>
+
+                    {/* Custom Prompt Template */}
+                    <div className="mt-3">
+                      <label className="block text-xs text-gray-600 mb-1">Custom Base Prompt (optional)</label>
+                      <textarea
+                        rows={5}
+                        value={premiumGates.promptTemplate}
+                        onChange={(e) => setPremiumGates({ ...premiumGates, promptTemplate: e.target.value })}
+                        placeholder={`You are {NAME}. Respond in first person...\nOther participants: {OTHERS}\nTopic: {TOPIC}`}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs"
+                      />
+                      <p className="text-[11px] text-gray-500 mt-1">
+                        Supports tokens: {`{NAME}`}, {`{PERSONA}`}, {`{TRAITS}`}, {`{TOPIC}`}, {`{OTHERS}`}, {`{MAX_WORDS}`}, {`{LATEST_USER_INPUT}`}. Leave blank to use the default built-in prompt.
+                      </p>
                     </div>
                   </div>
 

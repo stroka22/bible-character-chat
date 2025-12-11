@@ -6,7 +6,7 @@ import { generateCharacterResponse } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
 import { chat } from '../lib/chat';
-import { requirePremiumOrPrompt } from '../lib/tier';
+import { requirePremiumOrPrompt, getOwnerSlug as getTierOwnerSlug, getTierSettings } from '../lib/tier';
 import { useAuth } from '../contexts/AuthContext';
 
 type Message = {
@@ -26,6 +26,8 @@ export default function RoundtableChat({ route }: any) {
   const [isTyping, setIsTyping] = useState(false);
   const [input, setInput] = useState('');
   const [participants, setParticipants] = useState<any[]>([]);
+  const [promptTemplate, setPromptTemplate] = useState<string>('');
+  const [replyOnlySpeakerId, setReplyOnlySpeakerId] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { user } = useAuth();
@@ -33,6 +35,14 @@ export default function RoundtableChat({ route }: any) {
 
   React.useEffect(() => {
     (async () => {
+      // Load optional admin-configured prompt template from tier settings
+      try {
+        const slug = await getTierOwnerSlug(user?.id);
+        const s = await getTierSettings(slug);
+        const tpl = s?.premiumRoundtableGates?.promptTemplate;
+        if (typeof tpl === 'string') setPromptTemplate(tpl);
+      } catch {}
+
       const { data } = await supabase
         .from('characters')
         .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
@@ -49,26 +59,73 @@ export default function RoundtableChat({ route }: any) {
 
   const sendUser = async () => {
     if (!input.trim()) return;
-    const userMsg: Message = { id: `u-${Date.now()}`, role: 'user', content: input.trim() };
+    // Detect direct reply to a specific character using @Name prefix
+    let targetId: string | null = null;
+    let content = input.trim();
+    const atMatch = content.match(/^@\s*([A-Za-z][A-Za-z\s\-'\.]{0,40})(?:\:)?\s+(.*)$/);
+    if (atMatch) {
+      const name = atMatch[1].trim().toLowerCase();
+      content = atMatch[2].trim();
+      const found = participants.find(p => String(p.name || '').toLowerCase() === name);
+      if (found) targetId = String(found.id);
+    }
+    setReplyOnlySpeakerId(targetId);
+
+    const userMsg: Message = { id: `u-${Date.now()}`, role: 'user', content };
     const base = [...messages, userMsg];
     setMessages(base);
     setInput('');
-    await generateRound(base);
+    await generateRound(base, undefined, { onlySpeakerId: targetId || undefined });
   };
 
-  const generateRound = async (baseMessages: Message[], overrideParticipants?: any[]) => {
+  const generateRound = async (
+    baseMessages: Message[], 
+    overrideParticipants?: any[],
+    opts?: { onlySpeakerId?: string }
+  ) => {
     const used = (overrideParticipants && overrideParticipants.length ? overrideParticipants : participants);
     if (used.length === 0) return;
     setIsTyping(true);
     try {
-      // simple round: up to 3 speakers sequentially
-      const speakers = used.slice(0, Math.min(3, used.length));
+      // Speaker selection
+      let speakers: any[] = [];
+      if (opts?.onlySpeakerId) {
+        const s = used.find(u => String(u.id) === String(opts.onlySpeakerId));
+        if (s) speakers = [s];
+      }
+      if (speakers.length === 0) {
+        // default: up to 3 speakers sequentially
+        speakers = used.slice(0, Math.min(3, used.length));
+      }
       const working = [...baseMessages];
       for (const speaker of speakers) {
-        const system = {
-          role: 'system' as const,
-          content: `You are ${speaker.name}. Persona: ${speaker.persona_prompt || speaker.description || ''}\nContext: A roundtable on: "${topic}".\nCRITICAL: Respond strictly as ${speaker.name} only. Do NOT take on any other role. Use first-person from ${speaker.name}'s perspective. Keep it concise (<=110 words). Avoid repeating prior points; add a distinct, scripture-grounded perspective.`
-        };
+        // Build system prompt (admin template or default)
+        const others = used.filter(p => String(p.id) !== String(speaker.id)).map(p => p.name).join(', ');
+        const latestUser = [...working].reverse().find(m => m.role === 'user')?.content || '';
+        const persona = speaker.persona_prompt || speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`;
+        const traits = Array.isArray(speaker.character_traits) ? speaker.character_traits.join(', ') : (speaker.character_traits || '');
+        const defaultPrompt = (
+          `You are ${speaker.name}. Persona: ${persona}. ${traits ? `Known traits: ${traits}.` : ''}\n` +
+          `You are participating in a roundtable discussion on the topic: "${topic}".\n` +
+          `The other participants are: ${others || 'none'}.\n` +
+          `Respond in first person as ${speaker.name}. Do not include any name prefixes.\n` +
+          `Keep it concise (<=110 words). Do not repeat prior points; add a distinct, scripture-grounded perspective; optionally reference others by name.\n` +
+          (latestUser ? `Latest user input to consider: "${latestUser}"\n` : '') +
+          `Stay in character and draw from biblical knowledge.`
+        ).trim();
+
+        const sysContent = (promptTemplate && typeof promptTemplate === 'string' && promptTemplate.trim().length > 0)
+          ? promptTemplate
+              .replace(/\{NAME\}/g, String(speaker.name))
+              .replace(/\{PERSONA\}/g, String(persona))
+              .replace(/\{TRAITS\}/g, String(traits))
+              .replace(/\{TOPIC\}/g, String(topic))
+              .replace(/\{OTHERS\}/g, String(others))
+              .replace(/\{MAX_WORDS\}/g, '110')
+              .replace(/\{LATEST_USER_INPUT\}/g, String(latestUser))
+          : defaultPrompt;
+
+        const system = { role: 'system' as const, content: sysContent };
         const payload = [system, ...working.slice(-10).map(m => ({ role: m.role, content: m.content }))];
         let text = '';
         try {
@@ -82,6 +139,8 @@ export default function RoundtableChat({ route }: any) {
       }
     } finally {
       setIsTyping(false);
+      // Clear one-shot reply-only target after a directed reply
+      setReplyOnlySpeakerId(null);
     }
   };
 
@@ -98,7 +157,12 @@ export default function RoundtableChat({ route }: any) {
     if (item.role === 'assistant') {
       const sp = participants.find(p => String(p.id) === String(item.speakerId));
       return (
-        <View style={{ flexDirection: 'row', gap: 8, marginVertical: 6 }}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            if (sp?.name) setInput(prev => prev?.startsWith('@') ? prev : `@${sp.name} `);
+          }}
+          style={{ flexDirection: 'row', gap: 8, marginVertical: 6 }}>
           <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#374151', alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ color: 'white', fontSize: 12 }}>{sp?.name?.[0] || '?'}</Text>
           </View>
@@ -106,7 +170,7 @@ export default function RoundtableChat({ route }: any) {
             <Text style={{ color: '#fde68a', fontWeight: '600', marginBottom: 4 }}>{sp?.name || 'Character'}</Text>
             <Text style={{ color: 'white' }}>{item.content}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       );
     }
     return null;
