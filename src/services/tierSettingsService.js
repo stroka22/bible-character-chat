@@ -99,9 +99,20 @@ function normalizeRecord(record) {
     premiumRoundtableGates: (() => {
       try {
         const v = record.premium_roundtable_gates;
-        if (v && typeof v === 'object') return v;
+        if (v && typeof v === 'object') {
+          // Ensure all expected keys exist with sane defaults
+          return {
+            savingRequiresPremium: v.savingRequiresPremium !== false,
+            premiumOnly: v.premiumOnly ?? true,
+            allowAllSpeak: !!v.allowAllSpeak,
+            strictRotation: !!v.strictRotation,
+            followUpsMin: v.followUpsMin ?? null,
+            repliesPerRoundMin: v.repliesPerRoundMin ?? null,
+            promptTemplate: typeof v.promptTemplate === 'string' ? v.promptTemplate : ''
+          };
+        }
       } catch {}
-      return { savingRequiresPremium: true, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' };
+      return { savingRequiresPremium: true, premiumOnly: true, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' };
     })(),
     premiumStudyIds: (() => {
       try {
@@ -127,6 +138,7 @@ function denormalizeSettings(settings) {
     free_character_names: settings.freeCharacterNames || [],
     premium_roundtable_gates: {
       savingRequiresPremium: settings?.premiumRoundtableGates?.savingRequiresPremium !== false,
+      premiumOnly: settings?.premiumRoundtableGates?.premiumOnly ?? true,
       allowAllSpeak: !!settings?.premiumRoundtableGates?.allowAllSpeak,
       strictRotation: !!settings?.premiumRoundtableGates?.strictRotation,
       followUpsMin: settings?.premiumRoundtableGates?.followUpsMin ?? null,
@@ -236,7 +248,7 @@ function getDefaultSettings() {
     freeCharacterLimit: 10,
     freeCharacters: [],
     freeCharacterNames: [],
-    premiumRoundtableGates: { allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' },
+    premiumRoundtableGates: { savingRequiresPremium: true, premiumOnly: true, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' },
     premiumStudyIds: [],
     lastUpdated: new Date().toISOString()
   };

@@ -61,6 +61,9 @@ const AdminPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  // Pagination state
+  const [pageSize, setPageSize] = useState<number>(10); // 10, 25, 50
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   /* ------------------------------------------------------------
    * Top-level Admin Tabs
@@ -337,6 +340,12 @@ const AdminPage: React.FC = () => {
     (char.short_biography && char.short_biography.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (char.bible_book && char.bible_book.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, pageSize, characters.length]);
+  const totalPages = Math.max(1, Math.ceil(filteredCharacters.length / pageSize));
+  const startIdx = (currentPage - 1) * pageSize;
+  const paginatedCharacters = filteredCharacters.slice(startIdx, startIdx + pageSize);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -648,17 +657,51 @@ const AdminPage: React.FC = () => {
       <section className="p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Existing Characters</h2>
         
-        {/* Search input */}
-        <div className="mb-6">
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">Search Characters</label>
-          <input
-            type="text"
-            id="search"
-            placeholder="Search by name, description, or bible book..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-          />
+        {/* Toolbar: search + pagination controls */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex-1 min-w-[240px]">
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">Search Characters</label>
+            <input
+              type="text"
+              id="search"
+              placeholder="Search by name, description, or bible book..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            />
+          </div>
+          <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-2">
+              <label htmlFor="pageSize" className="text-sm text-gray-700">Rows</label>
+              <select
+                id="pageSize"
+                value={pageSize}
+                onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                className="border rounded-md px-2 py-1 text-sm"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className={`px-2 py-1 text-sm rounded ${currentPage <= 1 ? 'bg-gray-200 text-gray-500' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+              >
+                Prev
+              </button>
+              <span className="text-sm text-gray-700 min-w-[60px] text-center">{currentPage} / {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className={`px-2 py-1 text-sm rounded ${currentPage >= totalPages ? 'bg-gray-200 text-gray-500' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
         
         {/* Character list */}
@@ -670,14 +713,12 @@ const AdminPage: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bible Book</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visibility</th> {/* New column */}
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCharacters.map((character) => (
+                {paginatedCharacters.map((character) => (
                   <tr key={character.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -693,12 +734,6 @@ const AdminPage: React.FC = () => {
                         )}
                         <div className="text-sm font-medium text-gray-900">{character.name}</div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500 truncate max-w-xs">{character.description}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{character.bible_book || '-'}</div>
                     </td>
                     {/* New: Visibility column with toggle */}
                     <td className="px-6 py-4 whitespace-nowrap">
