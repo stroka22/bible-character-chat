@@ -10,6 +10,7 @@ import {
   isCharacterFree,
   hasReachedMessageLimit,
 } from '../utils/accountTier';
+import { getSettings as getTierSettings } from '../services/tierSettingsService';
 
 // Create the chat context
 const ChatContext = createContext();
@@ -48,23 +49,44 @@ export const ChatProvider = ({ children }) => {
    * ----------------------------------------------------------- */
   const [tierSettings, setTierSettings] = useState(loadAccountTierSettings());
 
-  /* Refresh on initial mount (covers env-default fallback) */
+  /* Refresh on initial mount (covers env-default fallback) + remote fetch */
   useEffect(() => {
+    // 1) Immediate local load for instant UX
     setTierSettings(loadAccountTierSettings());
+    // 2) Fetch canonical remote settings and apply when available
+    (async () => {
+      try {
+        const remote = await getTierSettings();
+        if (remote && typeof remote === 'object') {
+          setTierSettings(remote);
+        }
+      } catch (e) {
+        // non-fatal – stay on local settings
+        console.warn('[ChatContext] Failed to fetch remote tier settings', e);
+      }
+    })();
   }, []);
 
   /* Listen for cross-tab updates made by AccountTierManagement */
   useEffect(() => {
-    const handleStorage = (e) => {
+    const handleStorage = async (e) => {
       // Support per-organisation cache keys (e.g. `accountTierSettings:org1`)
       if (e.key && e.key.startsWith('accountTierSettings')) {
+        try {
+          const remote = await getTierSettings();
+          if (remote) return setTierSettings(remote);
+        } catch (_) {}
         setTierSettings(loadAccountTierSettings());
       }
     };
     /* Same-tab updates (AccountTierManagement dispatches a custom
        event because the native 'storage' event does **not** fire in
        the tab that called localStorage.setItem). */
-    const handleCustomEvent = () => {
+    const handleCustomEvent = async () => {
+      try {
+        const remote = await getTierSettings();
+        if (remote) return setTierSettings(remote);
+      } catch (_) {}
       setTierSettings(loadAccountTierSettings());
     };
 

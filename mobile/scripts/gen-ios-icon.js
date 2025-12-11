@@ -4,7 +4,7 @@ const sharp = require('sharp');
 
 (async () => {
   const size = 1024;
-  const borderPct = 0.05; // 5% border
+  const borderPct = 0.03; // 3% border
   const borderWidth = Math.round(size * borderPct);
   const fgPct = 1.0; // 100% foreground scale
 
