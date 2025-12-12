@@ -16,7 +16,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import PricingPage from './pages/PricingPage';
 import AccountBilling from './pages/AccountBilling.jsx';
-import AdminPage from './pages/AdminPage';
+import AdminPage from './pages/AdminPage.tsx';
 import ConversationsPage from './pages/ConversationsPage.jsx';
 import FavoritesPage from './pages/FavoritesPage.jsx';
 import MyWalkPage from './pages/MyWalkPage.jsx';
