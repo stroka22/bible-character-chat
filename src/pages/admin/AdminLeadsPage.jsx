@@ -29,6 +29,8 @@ export default function AdminLeadsPage() {
   const [tmplPastor, setTmplPastor] = React.useState({ subject: '', html: '' });
   const [tmplUser, setTmplUser] = React.useState({ subject: '', html: '' });
   const [sendConf, setSendConf] = React.useState({ subject: '', html: '' });
+  const [showAddModal, setShowAddModal] = React.useState(false);
+  const [showImportModal, setShowImportModal] = React.useState(false);
 
   const pageSize = 25;
 
@@ -64,7 +66,11 @@ export default function AdminLeadsPage() {
   }, []);
 
   if (!isSuperadmin()) {
-    return <div className="p-6 text-red-200">Access denied. Superadmin only.</div>;
+    return (
+      <div className="container mx-auto px-4 pt-24 pb-8">
+        <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded">Access denied. Superadmin only.</div>
+      </div>
+    );
   }
 
   const toggle = (id) => {
@@ -123,99 +129,147 @@ export default function AdminLeadsPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 text-slate-100">
-      <h1 className="text-2xl font-bold mb-4">Leads</h1>
-
-      {/* Search and bulk actions */}
-      <div className="flex items-center gap-2 mb-4">
-        <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="Search name/email/phone" className="px-3 py-2 rounded bg-slate-800 border border-slate-700 w-full" />
-        <button onClick={load} className="px-3 py-2 rounded bg-amber-400 text-blue-900 font-semibold">Search</button>
-        <button onClick={onDeleteSelected} className="px-3 py-2 rounded bg-red-500 text-white disabled:opacity-60" disabled={!selected.size}>Delete Selected</button>
-      </div>
-
-      {/* List */}
-      <div className="overflow-auto border border-slate-700 rounded">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-800">
-            <tr>
-              <th className="p-2"><input type="checkbox" checked={!!allChecked} onChange={toggleAll} /></th>
-              <th className="p-2 text-left">Name</th>
-              <th className="p-2 text-left">Email</th>
-              <th className="p-2 text-left">Phone</th>
-              <th className="p-2 text-left">Role</th>
-              <th className="p-2 text-left">Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={6} className="p-4 text-center">Loading…</td></tr>
-            ) : items.length ? items.map((l) => (
-              <tr key={l.id} className="odd:bg-slate-900">
-                <td className="p-2"><input type="checkbox" checked={selected.has(l.id)} onChange={() => toggle(l.id)} /></td>
-                <td className="p-2">{l.name || '—'}</td>
-                <td className="p-2">{l.email}</td>
-                <td className="p-2">{l.phone || '—'}</td>
-                <td className="p-2">{l.role || '—'}</td>
-                <td className="p-2">{new Date(l.created_at).toLocaleString()}</td>
-              </tr>
-            )) : (
-              <tr><td colSpan={6} className="p-4 text-center">No leads</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Add lead + CSV import */}
-      <div className="grid md:grid-cols-2 gap-4 mt-6">
-        <div className="border border-slate-700 rounded p-3">
-          <h2 className="font-semibold mb-2">Add Lead</h2>
-          <div className="grid grid-cols-2 gap-2">
-            <input value={newLead.name} onChange={e=>setNewLead({...newLead,name:e.target.value})} placeholder="Name" className="px-2 py-2 rounded bg-slate-800 border border-slate-700" />
-            <input value={newLead.email} onChange={e=>setNewLead({...newLead,email:e.target.value})} placeholder="Email" className="px-2 py-2 rounded bg-slate-800 border border-slate-700" />
-            <input value={newLead.phone} onChange={e=>setNewLead({...newLead,phone:e.target.value})} placeholder="Phone" className="px-2 py-2 rounded bg-slate-800 border border-slate-700" />
-            <input value={newLead.role} onChange={e=>setNewLead({...newLead,role:e.target.value})} placeholder="Role (pastor/user)" className="px-2 py-2 rounded bg-slate-800 border border-slate-700" />
-          </div>
-          <div className="mt-2"><button onClick={onAdd} className="px-3 py-2 rounded bg-emerald-500 text-white">Add</button></div>
+    <div className="container mx-auto px-4 pt-24 pb-12">
+      {/* Header */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Lead Management</h1>
+          <p className="text-sm text-gray-600">Search, import, add, email, and delete leads.</p>
         </div>
-        <div className="border border-slate-700 rounded p-3">
-          <h2 className="font-semibold mb-2">CSV Import</h2>
-          <p className="text-xs text-slate-300 mb-2">Columns: name,email,phone,role,consent_email,consent_sms,source_path,utm_source,utm_medium,utm_campaign</p>
-          <textarea value={csvText} onChange={(e)=>setCsvText(e.target.value)} rows={6} className="w-full px-2 py-2 rounded bg-slate-800 border border-slate-700"></textarea>
-          <div className="mt-2"><button onClick={onImportCsv} className="px-3 py-2 rounded bg-amber-400 text-blue-900 font-semibold">Import</button></div>
+        <div className="flex items-center gap-2">
+          <button onClick={()=>setShowImportModal(true)} className="inline-flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-800 hover:bg-gray-50">Import CSV</button>
+          <button onClick={()=>setShowAddModal(true)} className="inline-flex items-center px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Add Lead</button>
+          <button onClick={onDeleteSelected} disabled={!selected.size} className={`inline-flex items-center px-3 py-2 rounded-md ${selected.size? 'bg-red-600 text-white hover:bg-red-700':'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>Delete Selected</button>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative max-w-xl">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd"/></svg>
+          </div>
+          <input value={q} onChange={(e)=>{ setQ(e.target.value); setPage(1); }} onKeyDown={(e)=>{ if(e.key==='Enter') load(); }} placeholder="Search name, email, or phone" className="block w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2"><input type="checkbox" checked={!!allChecked} onChange={toggleAll} /></th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">Name</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">Email</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">Phone</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">Role</th>
+                <th className="px-4 py-2 text-left font-semibold text-gray-700">Created</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr><td colSpan={6} className="px-4 py-6 text-center text-gray-600">Loading…</td></tr>
+              ) : items.length ? items.map((l) => (
+                <tr key={l.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2"><input type="checkbox" checked={selected.has(l.id)} onChange={() => toggle(l.id)} /></td>
+                  <td className="px-4 py-2 text-gray-900">{l.name || '—'}</td>
+                  <td className="px-4 py-2 text-gray-900">{l.email}</td>
+                  <td className="px-4 py-2 text-gray-900">{l.phone || '—'}</td>
+                  <td className="px-4 py-2"><span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs font-medium">{l.role || 'user'}</span></td>
+                  <td className="px-4 py-2 text-gray-700">{new Date(l.created_at).toLocaleString()}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan={6} className="px-4 py-10 text-center">
+                  <div className="text-gray-700 font-medium mb-1">No leads found</div>
+                  <div className="text-gray-500 text-sm">Try adjusting your search or add/import leads.</div>
+                </td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        {/* Footer: pagination & counts */}
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-700">
+          <div>Page {page} • {total} total</div>
+          <div className="space-x-2">
+            <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page<=1} className={`px-3 py-1.5 rounded border ${page<=1?'bg-gray-100 text-gray-400 border-gray-200':'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>Prev</button>
+            <button onClick={()=>setPage(p=>p+1)} disabled={items.length===0 || items.length<25} className={`px-3 py-1.5 rounded border ${(items.length===0||items.length<25)?'bg-gray-100 text-gray-400 border-gray-200':'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>Next</button>
+          </div>
         </div>
       </div>
 
       {/* Templates */}
-      <div className="mt-8 border border-slate-700 rounded p-3">
-        <h2 className="text-xl font-bold mb-3">Email Templates</h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-semibold">Visitor: Pastor</h3>
-            <input value={tmplPastor.subject} onChange={(e)=>setTmplPastor({...tmplPastor,subject:e.target.value})} placeholder="Subject" className="w-full px-2 py-2 rounded bg-slate-800 border border-slate-700 mb-2" />
-            <textarea value={tmplPastor.html} onChange={(e)=>setTmplPastor({...tmplPastor,html:e.target.value})} rows={10} className="w-full px-2 py-2 rounded bg-slate-800 border border-slate-700"></textarea>
-            <div className="mt-2"><button onClick={()=>saveTemplate('lead_visitor_pastor', tmplPastor)} className="px-3 py-2 rounded bg-emerald-500 text-white">Save</button></div>
-          </div>
-          <div>
-            <h3 className="font-semibold">Visitor: General</h3>
-            <input value={tmplUser.subject} onChange={(e)=>setTmplUser({...tmplUser,subject:e.target.value})} placeholder="Subject" className="w-full px-2 py-2 rounded bg-slate-800 border border-slate-700 mb-2" />
-            <textarea value={tmplUser.html} onChange={(e)=>setTmplUser({...tmplUser,html:e.target.value})} rows={10} className="w-full px-2 py-2 rounded bg-slate-800 border border-slate-700"></textarea>
-            <div className="mt-2"><button onClick={()=>saveTemplate('lead_visitor_user', tmplUser)} className="px-3 py-2 rounded bg-emerald-500 text-white">Save</button></div>
-          </div>
+      <div className="mt-8 grid md:grid-cols-2 gap-6">
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Email Template: Visitor (Pastor)</h2>
+          <input value={tmplPastor.subject} onChange={(e)=>setTmplPastor({...tmplPastor,subject:e.target.value})} placeholder="Subject" className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <textarea value={tmplPastor.html} onChange={(e)=>setTmplPastor({...tmplPastor,html:e.target.value})} rows={10} className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          <div className="mt-2"><button onClick={()=>saveTemplate('lead_visitor_pastor', tmplPastor)} className="inline-flex items-center px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">Save</button></div>
         </div>
-        <div className="text-xs text-slate-300 mt-2">Placeholders: {'{{name}} {{email}} {{phone}} {{role}} {{organization}} {{chat_url}} {{roundtable_url}} {{studies_url}}'}</div>
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Email Template: Visitor (General)</h2>
+          <input value={tmplUser.subject} onChange={(e)=>setTmplUser({...tmplUser,subject:e.target.value})} placeholder="Subject" className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <textarea value={tmplUser.html} onChange={(e)=>setTmplUser({...tmplUser,html:e.target.value})} rows={10} className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+          <div className="mt-2"><button onClick={()=>saveTemplate('lead_visitor_user', tmplUser)} className="inline-flex items-center px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700">Save</button></div>
+        </div>
       </div>
+      <div className="text-xs text-gray-500 mt-2">Placeholders: {'{{name}} {{email}} {{phone}} {{role}} {{organization}} {{chat_url}} {{roundtable_url}} {{studies_url}}'}</div>
 
       {/* Send composer */}
-      <div className="mt-8 border border-slate-700 rounded p-3">
-        <h2 className="text-xl font-bold mb-3">Send Email to Leads</h2>
-        <p className="text-sm text-slate-300 mb-2">Targets: selected leads (if any), otherwise current search results.</p>
-        <input value={sendConf.subject} onChange={(e)=>setSendConf({...sendConf,subject:e.target.value})} placeholder="Subject" className="w-full px-2 py-2 rounded bg-slate-800 border border-slate-700 mb-2" />
-        <textarea value={sendConf.html} onChange={(e)=>setSendConf({...sendConf,html:e.target.value})} rows={8} className="w-full px-2 py-2 rounded bg-slate-800 border border-slate-700"></textarea>
+      <div className="mt-8 bg-white border border-gray-200 rounded-lg p-4">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Send Email to Leads</h2>
+        <p className="text-sm text-gray-600 mb-2">Targets: selected leads (if any), otherwise current search results.</p>
+        <input value={sendConf.subject} onChange={(e)=>setSendConf({...sendConf,subject:e.target.value})} placeholder="Subject" className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <textarea value={sendConf.html} onChange={(e)=>setSendConf({...sendConf,html:e.target.value})} rows={8} className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
         <div className="flex gap-2 mt-2">
-          <button onClick={()=>sendBulk(true)} className="px-3 py-2 rounded bg-slate-600 text-white">Send Preview to me</button>
-          <button onClick={()=>sendBulk(false)} className="px-3 py-2 rounded bg-amber-400 text-blue-900 font-semibold">Send</button>
+          <button onClick={()=>sendBulk(true)} className="inline-flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-800 hover:bg-gray-50">Send Preview to me</button>
+          <button onClick={()=>sendBulk(false)} className="inline-flex items-center px-3 py-2 rounded-md bg-amber-500 text-blue-900 font-semibold hover:bg-amber-600">Send</button>
         </div>
       </div>
+
+      {/* Add Lead Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Add Lead</h3>
+              <button onClick={()=>setShowAddModal(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div className="p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input value={newLead.name} onChange={e=>setNewLead({...newLead,name:e.target.value})} placeholder="Name" className="px-3 py-2 rounded-md border border-gray-300 text-gray-900" />
+                <input value={newLead.email} onChange={e=>setNewLead({...newLead,email:e.target.value})} placeholder="Email" className="px-3 py-2 rounded-md border border-gray-300 text-gray-900" />
+                <input value={newLead.phone} onChange={e=>setNewLead({...newLead,phone:e.target.value})} placeholder="Phone" className="px-3 py-2 rounded-md border border-gray-300 text-gray-900" />
+                <input value={newLead.role} onChange={e=>setNewLead({...newLead,role:e.target.value})} placeholder="Role (pastor/user)" className="px-3 py-2 rounded-md border border-gray-300 text-gray-900" />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <button onClick={()=>setShowAddModal(false)} className="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-800 hover:bg-gray-50">Cancel</button>
+                <button onClick={async ()=>{ await onAdd(); setShowAddModal(false); }} className="px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Add Lead</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import CSV Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-2xl bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Import CSV</h3>
+              <button onClick={()=>setShowImportModal(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div className="p-4">
+              <p className="text-sm text-gray-600 mb-2">Columns: name, email, phone, role, consent_email, consent_sms, source_path, utm_source, utm_medium, utm_campaign</p>
+              <textarea value={csvText} onChange={(e)=>setCsvText(e.target.value)} rows={10} className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900"></textarea>
+              <div className="mt-3 flex justify-end gap-2">
+                <button onClick={()=>setShowImportModal(false)} className="px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-800 hover:bg-gray-50">Cancel</button>
+                <button onClick={async ()=>{ await onImportCsv(); setShowImportModal(false); }} className="px-3 py-2 rounded-md bg-amber-500 text-blue-900 font-semibold hover:bg-amber-600">Import</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
