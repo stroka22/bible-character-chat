@@ -4,7 +4,7 @@ export function getEnv(name) {
   return process.env[name] || process.env[name.toUpperCase()] || '';
 }
 
-export function json(res, status, body) {
+export function jsonNode(res, status, body) {
   res.status(status);
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(body));
@@ -18,7 +18,7 @@ export function getAdminClient() {
   return createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 }
 
-export async function requireSuperadmin(req, res) {
+export async function requireSuperadminNode(req) {
   const supa = getAdminClient();
   if (!supa) return { ok: false, status: 500, error: 'Server missing Supabase service role configuration' };
   const authHeader = req.headers['authorization'] || req.headers['Authorization'];
@@ -42,20 +42,7 @@ export async function requireSuperadmin(req, res) {
   return { ok: true, supa, user: userRes.user, profile };
 }
 
-export async function optionalSuperadmin(req) {
-  const supa = getAdminClient();
-  if (!supa) return { ok: false };
-  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
-  if (!authHeader || !authHeader.toString().startsWith('Bearer ')) return { ok: false };
-  const token = authHeader.toString().slice('Bearer '.length).trim();
-  const { data: userRes } = await supa.auth.getUser(token);
-  const uid = userRes?.user?.id;
-  if (!uid) return { ok: false };
-  const { data: profile } = await supa.from('profiles').select('id, role, owner_slug, email').eq('id', uid).maybeSingle();
-  return { ok: true, supa, user: userRes?.user || null, profile: profile || null };
-}
-
-export function parseBody(req) {
+export function parseBodyNode(req) {
   try {
     if (typeof req.body === 'object' && req.body !== null) return req.body;
     return JSON.parse(req.body || '{}');
