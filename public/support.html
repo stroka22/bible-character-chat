@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support – Faith Talk AI</title>
+  <meta name="description" content="Get help with Faith Talk AI" />
+  <link rel="icon" href="/vite.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta property="og:title" content="Support – Faith Talk AI" />
+  <meta property="og:description" content="FAQs and ways to contact support for Faith Talk AI." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/images/complete-bible.jpg" />
+</head>
+<body class="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white">
+  <div class="container mx-auto px-4 py-8 max-w-3xl">
+    <header class="mb-6">
+      <h1 class="text-3xl font-bold">Support</h1>
+      <p class="text-blue-100 mt-1">We’re here to help.</p>
+    </header>
+    <main class="space-y-6 bg-blue-800/60 rounded-xl p-6 border border-blue-600">
+      <section>
+        <h2 class="text-xl font-semibold mb-2">Contact</h2>
+        <p>Email: <a class="text-yellow-300 underline" href="mailto:support@faithtalkai.com">support@faithtalkai.com</a></p>
+      </section>
+      <section>
+        <h2 class="text-xl font-semibold mb-2">Common Questions</h2>
+        <details class="mb-3">
+          <summary class="cursor-pointer font-semibold">How do I start a Bible Study?</summary>
+          <p class="mt-2">Open Studies → choose a study → tap “Start Guided Chat.”</p>
+        </details>
+        <details class="mb-3">
+          <summary class="cursor-pointer font-semibold">How do Roundtables work?</summary>
+          <p class="mt-2">Select 2–4 characters, set a topic, and start. You can direct replies with <code class="bg-blue-900 px-1 rounded">@Name</code>.</p>
+        </details>
+        <details>
+          <summary class="cursor-pointer font-semibold">How do I save chats?</summary>
+          <p class="mt-2">Use the Save button in the chat header; review saved items in “My Walk.”</p>
+        </details>
+      </section>
+    </main>
+    <footer class="text-sm text-blue-200 mt-8">© <span id="year"></span> Faith Talk AI</footer>
+  </div>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
