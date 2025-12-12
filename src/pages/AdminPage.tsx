@@ -1,10 +1,16 @@
 import type { FormEvent } from "react";
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { characterRepository } from '../repositories/characterRepository';
 import { type Character } from '../services/supabase';
 import GroupManagement from '../components/admin/GroupManagement';
+import AdminFAQEditor from '../components/admin/AdminFAQEditor';
+import AdminFeaturedCharacter from '../components/admin/AdminFeaturedCharacter';
+import AdminFavorites from '../components/admin/AdminFavorites';
+import AccountTierManagement from '../components/admin/AccountTierManagement';
+import AdminStudiesPage from './admin/AdminStudiesPage.jsx';
 
 // Helper function for basic CSV parsing
 const parseCSV = (csvText: string): Array<Record<string, string>> => {
@@ -68,8 +74,17 @@ const AdminPage: React.FC = () => {
   /* ------------------------------------------------------------
    * Top-level Admin Tabs
    * ---------------------------------------------------------- */
-  type AdminMainTab = 'characters' | 'groups';
-  const [activeTab, setActiveTab] = useState<AdminMainTab>('characters');
+  type AdminMainTab =
+    | 'overview'
+    | 'characters'
+    | 'groups'
+    | 'featured'
+    | 'favorites'
+    | 'faq'
+    | 'accountTiers'
+    | 'roundtable'
+    | 'studies';
+  const [activeTab, setActiveTab] = useState<AdminMainTab>('overview');
 
   // Form state for manual creation/editing
   const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
@@ -378,6 +393,16 @@ const AdminPage: React.FC = () => {
       <div className="mb-8 border-b border-gray-200">
         <nav className="-mb-px flex space-x-8" aria-label="Admin Tabs">
           <button
+            onClick={() => setActiveTab('overview')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'overview'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Overview
+          </button>
+          <button
             onClick={() => setActiveTab('characters')}
             className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'characters'
@@ -397,8 +422,101 @@ const AdminPage: React.FC = () => {
           >
             Groups
           </button>
+          <button
+            onClick={() => setActiveTab('featured')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'featured'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Featured
+          </button>
+          <button
+            onClick={() => setActiveTab('studies')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'studies'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Bible Studies
+          </button>
+          <button
+            onClick={() => setActiveTab('faq')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'faq'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            FAQ
+          </button>
+          <button
+            onClick={() => setActiveTab('accountTiers')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'accountTiers'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Account Tiers
+          </button>
+          <button
+            onClick={() => setActiveTab('roundtable')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'roundtable'
+                ? 'border-primary-500 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Roundtable
+          </button>
         </nav>
       </div>
+
+      {activeTab === 'overview' && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div className="p-4 bg-white rounded-md shadow border">
+              <div className="text-gray-900 font-semibold">Premium Members</div>
+              <div className="text-sm text-gray-600 mb-3">View members with active subscriptions under your organization.</div>
+              <Link to="/admin/premium" className="inline-block px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Open</Link>
+            </div>
+            <div className="p-4 bg-white rounded-md shadow border">
+              <div className="text-gray-900 font-semibold">Groups</div>
+              <div className="text-sm text-gray-600 mb-3">Create and manage member groups.</div>
+              <button onClick={() => setActiveTab('groups')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Manage</button>
+            </div>
+            <div className="p-4 bg-white rounded-md shadow border">
+              <div className="text-gray-900 font-semibold">Featured Character</div>
+              <div className="text-sm text-gray-600 mb-3">Set the character featured on your org's home.</div>
+              <button onClick={() => setActiveTab('featured')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Set Featured</button>
+            </div>
+            <div className="p-4 bg-white rounded-md shadow border">
+              <div className="text-gray-900 font-semibold">Bible Studies</div>
+              <div className="text-sm text-gray-600 mb-3">Manage studies and lessons.</div>
+              <button onClick={() => setActiveTab('studies')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Open</button>
+            </div>
+            <div className="p-4 bg-white rounded-md shadow border">
+              <div className="text-gray-900 font-semibold">Characters</div>
+              <div className="text-sm text-gray-600 mb-3">Add characters, customize prompts to your beliefs, and toggle active/dormant.</div>
+              <button onClick={() => setActiveTab('characters')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Manage</button>
+            </div>
+            <div className="p-4 bg-white rounded-md shadow border">
+              <div className="text-gray-900 font-semibold">FAQ</div>
+              <div className="text-sm text-gray-600 mb-3">Edit frequently asked questions.</div>
+              <button onClick={() => setActiveTab('faq')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Edit</button>
+            </div>
+          </div>
+
+          <div className="mb-6 flex flex-wrap gap-3">
+            <Link to="/admin/invites" className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Manage Invites</Link>
+            <Link to="/admin/premium" className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700">Premium Customers</Link>
+            <Link to="/admin/users" className="inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600">Users & Organizations</Link>
+          </div>
+        </>
+      )}
 
       {isLoading && (
         <div className="mb-4 p-3 bg-blue-100 text-blue-700 rounded">
@@ -774,6 +892,30 @@ const AdminPage: React.FC = () => {
 
       {activeTab === 'groups' && (
         <GroupManagement />
+      )}
+
+      {activeTab === 'featured' && (
+        <AdminFeaturedCharacter />
+      )}
+
+      {activeTab === 'favorites' && (
+        <AdminFavorites />
+      )}
+
+      {activeTab === 'faq' && (
+        <AdminFAQEditor />
+      )}
+
+      {activeTab === 'accountTiers' && (
+        <AccountTierManagement />
+      )}
+
+      {activeTab === 'roundtable' && (
+        <AccountTierManagement mode="roundtable-only" />
+      )}
+
+      {activeTab === 'studies' && (
+        <AdminStudiesPage embedded={true} />
       )}
 
       {/* ----------------------------------------------------------------
