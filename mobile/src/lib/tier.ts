@@ -41,12 +41,7 @@ function defaults(): TierSettings {
 }
 
 export async function getTierSettings(slug: string): Promise<TierSettings> {
-  // try cache first
-  try {
-    const cached = await AsyncStorage.getItem(CACHE_KEY(slug));
-    if (cached) return JSON.parse(cached);
-  } catch {}
-  // load from supabase
+  // Network-first: always try to pull latest from Supabase, then fall back to cache, then defaults.
   try {
     const { data, error } = await supabase
       .from('tier_settings')
@@ -54,22 +49,31 @@ export async function getTierSettings(slug: string): Promise<TierSettings> {
       .eq('owner_slug', slug)
       .maybeSingle();
     if (error) throw error;
-    const s: TierSettings = {
-      freeMessageLimit: data?.free_message_limit ?? 5,
-      freeCharacterLimit: data?.free_character_limit ?? 10,
-      freeCharacters: data?.free_characters ?? [],
-      freeCharacterNames: data?.free_character_names ?? [],
-      premiumRoundtableGates: data?.premium_roundtable_gates ?? {},
-      premiumStudyIds: data?.premium_study_ids ?? [],
-      lastUpdated: data?.updated_at ?? new Date().toISOString(),
-    };
-    try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(s)); } catch {}
-    return s;
-  } catch {
-    const d = defaults();
-    try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(d)); } catch {}
-    return d;
+    if (data) {
+      const s: TierSettings = {
+        freeMessageLimit: data.free_message_limit ?? 5,
+        freeCharacterLimit: data.free_character_limit ?? 10,
+        freeCharacters: data.free_characters ?? [],
+        freeCharacterNames: data.free_character_names ?? [],
+        premiumRoundtableGates: data.premium_roundtable_gates ?? {},
+        premiumStudyIds: data.premium_study_ids ?? [],
+        lastUpdated: data.updated_at ?? new Date().toISOString(),
+      };
+      try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(s)); } catch {}
+      return s;
+    }
+  } catch (e) {
+    // swallow and fall back to cache/defaults
   }
+  // Fallback: cache
+  try {
+    const cached = await AsyncStorage.getItem(CACHE_KEY(slug));
+    if (cached) return JSON.parse(cached);
+  } catch {}
+  // Final fallback: defaults (also seed cache for next time)
+  const d = defaults();
+  try { await AsyncStorage.setItem(CACHE_KEY(slug), JSON.stringify(d)); } catch {}
+  return d;
 }
 
 export async function isPremiumUser(userId?: string): Promise<boolean> {
