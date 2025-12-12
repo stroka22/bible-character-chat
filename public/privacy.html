@@ -1,66 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Privacy Policy – Faith Talk AI</title>
-  <meta name="description" content="Faith Talk AI privacy policy" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - AskJesusAI</title>
+  <meta name="description" content="Privacy Policy for AskJesusAI / Faith Talk AI" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/vite.svg" />
-  <script src="https://cdn.tailwindcss.com"></script>
   <meta property="og:title" content="Privacy Policy – Faith Talk AI" />
   <meta property="og:description" content="How we collect, use, and protect your data." />
   <meta property="og:type" content="article" />
   <meta property="og:image" content="/images/complete-bible.jpg" />
+  <style>
+    :root {
+      --yellow: #fbbf24;
+      --bg1: #1e3a8a; --bg2: #1e40af; --bg3: #3b82f6;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; color:white; background:linear-gradient(to bottom,var(--bg1),var(--bg2),var(--bg3)); min-height:100vh; overflow-x:hidden; }
+    .light-ray{position:fixed; inset:0; background:radial-gradient(ellipse at top,rgba(255,255,255,.25),transparent 70%); z-index:-1}
+    .cloud{position:fixed; background:rgba(255,255,255,.18); border-radius:50%; filter:blur(40px); z-index:-1}
+    .c1{top:15%; left:20%; width:320px; height:110px; animation:float 22s ease-in-out infinite}
+    .c2{top:45%; right:18%; width:420px; height:150px; opacity:.15; animation:float 28s ease-in-out infinite reverse}
+    .c3{bottom:25%; left:30%; width:360px; height:120px; opacity:.12; animation:float 32s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+    .container{max-width:1000px; margin:0 auto; padding:2rem}
+    header{text-align:center; margin-bottom:2rem}
+    .logo{font-family:'Cinzel',serif; font-size:2.5rem; font-weight:700; text-shadow:0 2px 10px rgba(0,0,0,.2)}
+    .logo span{color:var(--yellow)}
+    .meta{opacity:.8; margin-top:.5rem}
+    .card{background:rgba(255,255,255,.1); backdrop-filter:blur(10px); border-radius:1rem; padding:2rem; box-shadow:0 10px 20px rgba(0,0,0,.12)}
+    h2{font-family:'Cinzel',serif; color:var(--yellow); margin:1.5rem 0 .75rem}
+    p, li{color:rgba(255,255,255,.92)}
+    ul{padding-left:1.25rem}
+    a{color:var(--yellow)}
+    footer{text-align:center; padding:2rem 0; color:rgba(255,255,255,.75)}
+    .back-link{display:inline-flex; align-items:center; color:white; text-decoration:none; font-weight:500; margin-bottom:1rem}
+    .back-link:hover{color:var(--yellow)}
+  </style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white">
-  <div class="container mx-auto px-4 py-8 max-w-3xl">
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold">Privacy Policy</h1>
-      <p class="text-blue-100 mt-1">Effective: <span id="today"></span></p>
+<body>
+  <div class="light-ray"></div>
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+
+  <div class="container">
+    <a href="/" class="back-link">← Back to Home</a>
+    <header>
+      <h1 class="logo">Ask<span>Jesus</span>AI</h1>
+      <p class="meta">Privacy Policy • Effective <span id="effective"></span></p>
     </header>
-    <main class="space-y-6 bg-blue-800/60 rounded-xl p-6 border border-blue-600">
+
+    <main class="card">
       <section>
-        <h2 class="text-xl font-semibold mb-2">Overview</h2>
-        <p>
-          Faith Talk AI values your privacy. This policy explains what we collect, why we collect it, and how you can control your data.
-        </p>
+        <h2>Overview</h2>
+        <p>We value your privacy. This policy explains what we collect, how we use it, and the choices you have.</p>
       </section>
+
       <section>
-        <h2 class="text-xl font-semibold mb-2">Data We Collect</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Account details (email, display name)</li>
-          <li>App usage (messages and saved chats you create)</li>
-          <li>Device and diagnostics (for reliability and support)</li>
+        <h2>Information We Collect</h2>
+        <ul>
+          <li>Account info: email, display name.</li>
+          <li>Usage: messages you send, saved chats you create.</li>
+          <li>Technical: device/browser data, diagnostics, and crash reports.</li>
         </ul>
       </section>
+
       <section>
-        <h2 class="text-xl font-semibold mb-2">How We Use Data</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Provide and improve the service</li>
-          <li>Secure accounts and prevent abuse</li>
-          <li>Support and troubleshooting</li>
+        <h2>How We Use Information</h2>
+        <ul>
+          <li>Provide core features (chat, studies, roundtables).</li>
+          <li>Improve reliability, quality, and safety of the service.</li>
+          <li>Support and account security; prevent abuse.</li>
         </ul>
       </section>
+
       <section>
-        <h2 class="text-xl font-semibold mb-2">Your Choices</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Access or delete your data by contacting support</li>
-          <li>Export your saved chats</li>
-          <li>Opt out of non-essential analytics where offered</li>
+        <h2>Data Retention</h2>
+        <p>Saved chats and account data are retained while your account remains active, or as required by law. You may request deletion.</p>
+      </section>
+
+      <section>
+        <h2>Third‑Party Services</h2>
+        <p>We use trusted providers (e.g., hosting, analytics, payments) to operate the service. They process data on our behalf under agreements that protect your privacy.</p>
+      </section>
+
+      <section>
+        <h2>Your Choices and Rights</h2>
+        <ul>
+          <li>Access, export, or request deletion of your data via support.</li>
+          <li>Manage settings in the app (e.g., saved chats).</li>
+          <li>Opt out of optional analytics where offered.</li>
         </ul>
       </section>
+
       <section>
-        <h2 class="text-xl font-semibold mb-2">Contact</h2>
-        <p>
-          Questions? Visit <a class="text-yellow-300 underline" href="/support.html">Support</a> or email support@faithtalkai.com.
-        </p>
+        <h2>Children’s Privacy</h2>
+        <p>The service is not directed to children under 13. If you believe a child provided information, contact us for removal.</p>
+      </section>
+
+      <section>
+        <h2>Changes</h2>
+        <p>We may update this policy. Material changes will be noted here with a new effective date.</p>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <p>Email: <a href="mailto:support@faithtalkai.com">support@faithtalkai.com</a>. See also our <a href="/support.html">Support</a> page.</p>
       </section>
     </main>
-    <footer class="text-sm text-blue-200 mt-8">© <span id="year"></span> Faith Talk AI</footer>
+
+    <footer>© <span id="year"></span> AskJesusAI / Faith Talk AI</footer>
   </div>
+
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
-    document.getElementById('today').textContent = new Date().toLocaleDateString();
+    document.getElementById('effective').textContent = new Date().toLocaleDateString();
   </script>
 </body>
 </html>
