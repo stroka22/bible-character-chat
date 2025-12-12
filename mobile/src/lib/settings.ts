@@ -52,22 +52,27 @@ const DEFAULT_ROUNDTABLE: RoundtableSettings = {
 };
 
 export async function getSiteSettings(slug: string): Promise<SiteSettings> {
-  // cache first
+  // Network-first
+  try {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('default_featured_character_id,enforce_admin_default,updated_at')
+      .eq('owner_slug', slug)
+      .maybeSingle();
+    const out: SiteSettings = {
+      defaultFeaturedCharacterId: data?.default_featured_character_id ?? null,
+      enforceAdminDefault: !!data?.enforce_admin_default,
+      updatedAt: data?.updated_at ?? null,
+    };
+    try { await AsyncStorage.setItem(SITE_KEY(slug), JSON.stringify(out)); } catch {}
+    return out;
+  } catch {}
+  // Fallback to cache then defaults
   try {
     const cached = await AsyncStorage.getItem(SITE_KEY(slug));
     if (cached) return JSON.parse(cached);
   } catch {}
-  // fetch
-  const { data } = await supabase
-    .from('site_settings')
-    .select('default_featured_character_id,enforce_admin_default,updated_at')
-    .eq('owner_slug', slug)
-    .maybeSingle();
-  const out: SiteSettings = {
-    defaultFeaturedCharacterId: data?.default_featured_character_id ?? null,
-    enforceAdminDefault: !!data?.enforce_admin_default,
-    updatedAt: data?.updated_at ?? null,
-  };
+  const out: SiteSettings = { defaultFeaturedCharacterId: null, enforceAdminDefault: false, updatedAt: null };
   try { await AsyncStorage.setItem(SITE_KEY(slug), JSON.stringify(out)); } catch {}
   return out;
 }
@@ -78,40 +83,54 @@ export async function getSiteSettingsForUser(userId?: string | null): Promise<Si
 }
 
 export async function getRoundtableSettings(slug: string): Promise<RoundtableSettings> {
+  // Network-first
+  try {
+    const { data } = await supabase
+      .from('roundtable_settings')
+      .select('*')
+      .eq('owner_slug', slug)
+      .maybeSingle();
+    if (!data) {
+      try { await AsyncStorage.setItem(RT_KEY(slug), JSON.stringify(DEFAULT_ROUNDTABLE)); } catch {}
+      return DEFAULT_ROUNDTABLE;
+    }
+    const incomingLimits = data.limits || {};
+    const merged: RoundtableSettings = {
+      defaults: { ...DEFAULT_ROUNDTABLE.defaults, ...(data.defaults || {}) },
+      limits: ((): RoundtableSettings['limits'] => {
+        if (incomingLimits.free || incomingLimits.premium) {
+          return {
+            free: { ...DEFAULT_ROUNDTABLE.limits.free, ...(incomingLimits.free || {}) },
+            premium: { ...DEFAULT_ROUNDTABLE.limits.premium, ...(incomingLimits.premium || {}) },
+          };
+        }
+        return {
+          free: { ...DEFAULT_ROUNDTABLE.limits.free, ...incomingLimits },
+          premium: { ...DEFAULT_ROUNDTABLE.limits.premium, ...incomingLimits },
+        };
+      })(),
+      locks: { ...DEFAULT_ROUNDTABLE.locks, ...(data.locks || {}) },
+      updatedAt: data.updated_at || null,
+    };
+    try { await AsyncStorage.setItem(RT_KEY(slug), JSON.stringify(merged)); } catch {}
+    return merged;
+  } catch {}
+  // Fallback to cache then defaults
   try {
     const cached = await AsyncStorage.getItem(RT_KEY(slug));
     if (cached) return JSON.parse(cached);
   } catch {}
-  const { data } = await supabase
-    .from('roundtable_settings')
-    .select('*')
-    .eq('owner_slug', slug)
-    .maybeSingle();
-  if (!data) {
-    try { await AsyncStorage.setItem(RT_KEY(slug), JSON.stringify(DEFAULT_ROUNDTABLE)); } catch {}
-    return DEFAULT_ROUNDTABLE;
-  }
-  // Merge with defaults similar to web repo logic
-  const incomingLimits = data.limits || {};
-  const merged: RoundtableSettings = {
-    defaults: { ...DEFAULT_ROUNDTABLE.defaults, ...(data.defaults || {}) },
-    limits: ((): RoundtableSettings['limits'] => {
-      if (incomingLimits.free || incomingLimits.premium) {
-        return {
-          free: { ...DEFAULT_ROUNDTABLE.limits.free, ...(incomingLimits.free || {}) },
-          premium: { ...DEFAULT_ROUNDTABLE.limits.premium, ...(incomingLimits.premium || {}) },
-        };
-      }
-      return {
-        free: { ...DEFAULT_ROUNDTABLE.limits.free, ...incomingLimits },
-        premium: { ...DEFAULT_ROUNDTABLE.limits.premium, ...incomingLimits },
-      };
-    })(),
-    locks: { ...DEFAULT_ROUNDTABLE.locks, ...(data.locks || {}) },
-    updatedAt: data.updated_at || null,
-  };
-  try { await AsyncStorage.setItem(RT_KEY(slug), JSON.stringify(merged)); } catch {}
-  return merged;
+  try { await AsyncStorage.setItem(RT_KEY(slug), JSON.stringify(DEFAULT_ROUNDTABLE)); } catch {}
+  return DEFAULT_ROUNDTABLE;
+}
+
+export async function refreshAllSettingsForUser(userId?: string | null): Promise<void> {
+  const slug = await getOwnerSlug(userId || undefined);
+  try { await AsyncStorage.removeItem(SITE_KEY(slug)); } catch {}
+  try { await AsyncStorage.removeItem(RT_KEY(slug)); } catch {}
+  try { await AsyncStorage.removeItem(TIER_KEY(slug)); } catch {}
+  // Prewarm tier settings to ensure latest limits immediately after foreground
+  try { await (await import('./tier')).getTierSettings(slug); } catch {}
 }
 
 export async function startSettingsRealtime(slug: string): Promise<() => void> {
