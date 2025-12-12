@@ -1,5 +1,6 @@
 import React from 'react';
 import { SafeAreaView, Text, View, TouchableOpacity, Linking } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { getDailyMessageCount, getOwnerSlug, getTierSettings, isPremiumUser } from '../lib/tier';
 import { theme } from '../theme';
@@ -12,19 +13,28 @@ export default function Profile() {
   const [limit, setLimit] = React.useState<number>(0);
   const [count, setCount] = React.useState<number>(0);
 
-  React.useEffect(() => {
-    (async () => {
-      if (!user) return;
-      setEmail(user.email || '');
-      const slug = await getOwnerSlug(user.id);
-      setOwnerSlug(slug);
-      setPremium(await isPremiumUser(user.id));
-      const s = await getTierSettings(slug);
-      setLimit(Number(s.freeMessageLimit || 0));
-      const dc = await getDailyMessageCount(user.id);
-      setCount(dc.count || 0);
-    })();
+  const load = React.useCallback(async () => {
+    if (!user) return;
+    setEmail(user.email || '');
+    const slug = await getOwnerSlug(user.id);
+    setOwnerSlug(slug);
+    setPremium(await isPremiumUser(user.id));
+    const s = await getTierSettings(slug); // network-first now
+    setLimit(Number(s.freeMessageLimit || 0));
+    const dc = await getDailyMessageCount(user.id);
+    setCount(dc.count || 0);
   }, [user]);
+
+  React.useEffect(() => {
+    load();
+  }, [load]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      load();
+      return () => {};
+    }, [load])
+  );
 
   const progressPct = limit > 0 ? Math.min(100, Math.round((count / limit) * 100)) : 0;
 
