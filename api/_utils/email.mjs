@@ -5,9 +5,10 @@ function getEnv(name) {
 }
 
 const RESEND_API_KEY = getEnv('RESEND_API_KEY');
-const DEFAULT_FROM = getEnv('EMAIL_FROM') || 'FaithTalk AI Support <support@faithtalkai.com>';
+const DEFAULT_FROM = getEnv('EMAIL_FROM') || 'FaithTalkAI Support <support@faithtalkai.com>';
 const DEFAULT_REPLY_TO = getEnv('EMAIL_REPLY_TO') || 'support@faithtalkai.com';
 const SUPPORT_TO = getEnv('EMAIL_TO_SUPPORT') || 'support@faithtalkai.com';
+const VISITOR_FROM = getEnv('EMAIL_FROM_VISITOR') || DEFAULT_FROM;
 
 let resend = null;
 if (RESEND_API_KEY) {
@@ -67,6 +68,96 @@ export async function sendSupportLeadNotification(lead) {
     </ul>
   `;
   await sendEmail({ to: SUPPORT_TO, subject, html });
+}
+
+export async function sendLeadConfirmationVisitor(lead) {
+  if (!lead || !lead.email) return;
+  const subject = 'Thanks for reaching out to FaithTalkAI';
+  const baseUrl = getEnv('PUBLIC_BASE_URL') || getEnv('SITE_URL') || 'https://faithtalkai.com';
+  const html = renderLeadConfirmationHtml(lead, baseUrl);
+  await sendEmail({ to: lead.email, subject, html, from: VISITOR_FROM, replyTo: DEFAULT_REPLY_TO });
+}
+
+function renderLeadConfirmationHtml(lead, baseUrl) {
+  const safe = (v) => (v ? escapeHtml(String(v)) : '—');
+  const name = safe(lead.name);
+  const role = safe(lead.role || '—');
+  const org = safe(lead.organization || lead.org || '—');
+  const phone = safe(lead.phone || '—');
+  return `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FaithTalkAI</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f6f7fb;font-family:Arial,Helvetica,sans-serif;color:#0b2254;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7fb;">
+      <tr><td align="center" style="padding:24px 12px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e6e8f0;">
+          <tr>
+            <td style="background:#0b2254;padding:18px 24px;color:#fff;">
+              <div style="font-size:22px;font-weight:800;letter-spacing:0.2px;">Faith<span style="font-weight:900;">Talk</span><span style="color:#facc15;">AI</span></div>
+              <div style="font-size:12px;opacity:.9">Bible Character Chat</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 24px 8px;">
+              <h1 style="margin:0 0 8px;font-size:20px;color:#0b2254;">Thank you for reaching out${lead.name ? `, ${escapeHtml(lead.name)}` : ''}!</h1>
+              <p style="margin:0;color:#1f2a44;font-size:14px;line-height:1.6;">We received your inquiry and will get back to you shortly. Here’s a quick summary of what you sent us:</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 24px 16px;">
+              <table width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;border:1px solid #e6e8f0;border-radius:8px;">
+                <tr><td style="padding:12px 16px;font-size:13px;color:#0b2254;">
+                  <div><b>Name:</b> ${name}</div>
+                  <div><b>Email:</b> ${escapeHtml(lead.email)}</div>
+                  <div><b>Role:</b> ${role}</div>
+                  <div><b>Organization:</b> ${org}</div>
+                  ${lead.message ? `<div><b>Message:</b> ${escapeHtml(lead.message)}</div>` : ''}
+                  ${lead.phone ? `<div><b>Phone:</b> ${phone}</div>` : ''}
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 24px 8px;">
+              <h3 style="margin:0 0 8px;font-size:16px;">What happens next</h3>
+              <ol style="margin:0 0 12px 18px;padding:0;color:#1f2a44;font-size:14px;line-height:1.6;">
+                <li>We’ll review your details and respond within 1 business day.</li>
+                <li>We’ll share a quick demo or answer any questions you have.</li>
+                <li>If you’re ready, we’ll outline the best setup for your organization.</li>
+              </ol>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 24px 20px;">
+              <div style="font-size:14px;color:#1f2a44;margin-bottom:10px;">Explore key features while you wait:</div>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="width:100%">
+                <tr>
+                  <td style="padding:6px 0;"><a href="${baseUrl}/chat" style="color:#0b2254;font-weight:bold;text-decoration:none;">• Chat with Bible Characters</a></td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;"><a href="${baseUrl}/roundtable" style="color:#0b2254;font-weight:bold;text-decoration:none;">• Roundtable discussions</a></td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;"><a href="${baseUrl}/studies" style="color:#0b2254;font-weight:bold;text-decoration:none;">• Biblically guided studies</a></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#0b2254;color:#fff;padding:16px 24px;text-align:center;font-size:12px;">
+              <a href="${baseUrl}" style="color:#facc15;text-decoration:none;font-weight:700;">FaithTalkAI.com</a>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+  </html>`;
 }
 
 function escapeHtml(s) {

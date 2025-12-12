@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { notifyLead } from './_utils/notify-lead.mjs';
-import { sendSupportLeadNotification } from './_utils/email.mjs';
+import { sendSupportLeadNotification, sendLeadConfirmationVisitor } from './_utils/email.mjs';
 
 function json(res, status, body) {
   res.status(status);
@@ -90,6 +90,7 @@ export default async function handler(req, res) {
     /* ------------------------------------------------------------------ */
     try { await notifyLead(data || row); } catch {}
     try { await sendSupportLeadNotification(data || row); } catch {}
+    try { await sendLeadConfirmationVisitor(data || row); } catch {}
 
     return json(res, 200, { lead: data });
   } catch (err) {
