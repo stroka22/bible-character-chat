@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://faithtalkai.com/sitemap.xml
