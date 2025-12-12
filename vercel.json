@@ -43,6 +43,14 @@
       "destination": "/$1.ico"
     },
     {
+      "source": "/(privacy|support|terms).html",
+      "destination": "/$1.html"
+    },
+    {
+      "source": "/(robots.txt|sitemap.xml)",
+      "destination": "/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
