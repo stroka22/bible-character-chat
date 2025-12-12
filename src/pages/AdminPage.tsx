@@ -39,7 +39,7 @@ function tryParseJson(str: string) {
 }
 
 const AdminPage: React.FC = () => {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, isSuperadmin } = useAuth();
 
   /* ------------------------------------------------------------
    * ADMIN / BYPASS ACCESS CHECK
@@ -363,34 +363,38 @@ const AdminPage: React.FC = () => {
   const paginatedCharacters = filteredCharacters.slice(startIdx, startIdx + pageSize);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin Panel - Character Management</h1>
-      <p className="text-gray-700 mb-4">
-        Welcome, Admin! Here you can manage Bible characters.
-      </p>
+    <div className="container mx-auto px-4 pt-24 pb-8 md:pl-72">
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Panel - Character Management</h1>
+      <p className="text-gray-700 mb-4">Welcome, Admin! Here you can manage Bible characters.</p>
 
-      {/* Weekly CSV Email self-toggle (checkbox + static label) */}
-      <div className="mb-6 p-4 bg-white rounded-md shadow border">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-gray-900 font-medium">Weekly CSV Email</div>
-            <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
-          </div>
-          <label className="flex items-center space-x-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              className="h-5 w-5 rounded border-gray-300"
-              checked={weeklyCsvEnabled}
-              onChange={() => onWeeklyToggle()}
-              disabled={savingWeeklyCsv}
-            />
-            <span className="text-sm text-gray-900">On/Off</span>
-          </label>
-        </div>
+      {/* Desktop left sidebar navigation (matches legacy layout) */}
+      <div className="hidden md:block">
+        <aside className="fixed top-24 left-6 w-64 bg-white rounded-md shadow border">
+          <div className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Navigation</div>
+          <nav className="px-2 pb-3 space-y-1">
+            <button onClick={() => setActiveTab('overview')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'overview' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Overview</button>
+            <button onClick={() => setActiveTab('characters')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'characters' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Characters</button>
+            <button onClick={() => setActiveTab('groups')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'groups' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Groups</button>
+            <button onClick={() => setActiveTab('featured')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'featured' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Featured Character</button>
+            <button onClick={() => setActiveTab('studies')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'studies' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Bible Studies</button>
+            <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
+            <button onClick={() => setActiveTab('faq')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'faq' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>FAQ</button>
+          </nav>
+          {isSuperadmin && (
+            <>
+              <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Advanced</div>
+              <nav className="px-2 pb-3 space-y-1">
+                <button onClick={() => setActiveTab('roundtable')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'roundtable' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Roundtable</button>
+                <button onClick={() => setActiveTab('accountTiers')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'accountTiers' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Account Tiers</button>
+                <Link to="/admin/users" className="block px-3 py-2 rounded hover:bg-gray-100">Users & Organizations</Link>
+              </nav>
+            </>
+          )}
+        </aside>
       </div>
 
-      {/* Top-level tab navigation */}
-      <div className="mb-8 border-b border-gray-200">
+      {/* Mobile-only top tab navigation */}
+      <div className="mb-8 border-b border-gray-200 md:hidden">
         <nav className="-mb-px flex space-x-8" aria-label="Admin Tabs">
           <button
             onClick={() => setActiveTab('overview')}
@@ -477,6 +481,32 @@ const AdminPage: React.FC = () => {
 
       {activeTab === 'overview' && (
         <>
+          {/* Quick actions row at the top (legacy) */}
+          <div className="mb-6 flex flex-wrap gap-3">
+            <Link to="/admin/invites" className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Manage Invites</Link>
+            <Link to="/admin/premium" className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700">Premium Customers</Link>
+            <Link to="/admin/users" className="inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600">Users & Organizations</Link>
+          </div>
+
+          {/* Weekly CSV Email self-toggle (moved into Overview) */}
+          <div className="mb-6 p-4 bg-white rounded-md shadow border">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-gray-900 font-medium">Weekly CSV Email</div>
+                <div className="text-sm text-gray-600">Org summary + member details every Monday 9:00 AM EST</div>
+              </div>
+              <label className="flex items-center space-x-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 rounded border-gray-300"
+                  checked={weeklyCsvEnabled}
+                  onChange={() => onWeeklyToggle()}
+                  disabled={savingWeeklyCsv}
+                />
+                <span className="text-sm text-gray-900">On/Off</span>
+              </label>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             <div className="p-4 bg-white rounded-md shadow border">
               <div className="text-gray-900 font-semibold">Premium Members</div>
@@ -510,11 +540,7 @@ const AdminPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-6 flex flex-wrap gap-3">
-            <Link to="/admin/invites" className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Manage Invites</Link>
-            <Link to="/admin/premium" className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700">Premium Customers</Link>
-            <Link to="/admin/users" className="inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600">Users & Organizations</Link>
-          </div>
+          {/* Quick actions were moved to top */}
         </>
       )}
 
