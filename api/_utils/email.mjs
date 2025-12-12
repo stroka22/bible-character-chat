@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { createClient } from '@supabase/supabase-js';
 
 function getEnv(name) {
   return process.env[name] || process.env[name.toUpperCase()] || '';
@@ -9,6 +10,8 @@ const DEFAULT_FROM = getEnv('EMAIL_FROM') || 'FaithTalkAI Support <support@faith
 const DEFAULT_REPLY_TO = getEnv('EMAIL_REPLY_TO') || 'support@faithtalkai.com';
 const SUPPORT_TO = getEnv('EMAIL_TO_SUPPORT') || 'support@faithtalkai.com';
 const VISITOR_FROM = getEnv('EMAIL_FROM_VISITOR') || DEFAULT_FROM;
+const SUPABASE_URL = getEnv('VITE_SUPABASE_URL') || getEnv('SUPABASE_URL') || getEnv('NEXT_PUBLIC_SUPABASE_URL');
+const SERVICE_ROLE_KEY = getEnv('SUPABASE_SERVICE_ROLE_KEY') || getEnv('SUPABASE_SERVICE_ROLE') || getEnv('SUPABASE_SERVICE_KEY') || getEnv('SUPABASE_SERVICE') || getEnv('SUPABASE_SECRET');
 
 let resend = null;
 if (RESEND_API_KEY) {
@@ -72,18 +75,41 @@ export async function sendSupportLeadNotification(lead) {
 
 export async function sendLeadConfirmationVisitor(lead) {
   if (!lead || !lead.email) return;
-  const subject = 'Thanks for reaching out to FaithTalkAI';
+  const roleRaw = (lead.role || '').toString().toLowerCase();
+  const isPastor = roleRaw.includes('pastor');
+  const templateKey = isPastor ? 'lead_visitor_pastor' : 'lead_visitor_user';
+  const subject = (await getTemplateSubject(templateKey)) || 'Thanks for reaching out to FaithTalkAI';
   const baseUrl = getEnv('PUBLIC_BASE_URL') || getEnv('SITE_URL') || 'https://faithtalkai.com';
-  const html = renderLeadConfirmationHtml(lead, baseUrl);
+  const overrideHtml = await renderFromTemplate(templateKey, lead, baseUrl);
+  const html = overrideHtml || renderLeadConfirmationHtml(lead, baseUrl);
   await sendEmail({ to: lead.email, subject, html, from: VISITOR_FROM, replyTo: DEFAULT_REPLY_TO });
 }
 
 function renderLeadConfirmationHtml(lead, baseUrl) {
   const safe = (v) => (v ? escapeHtml(String(v)) : '—');
+  const roleRaw = (lead.role || '').toString().toLowerCase();
+  const isPastor = roleRaw.includes('pastor');
+  const showRoleLine = roleRaw && roleRaw !== 'user';
   const name = safe(lead.name);
   const role = safe(lead.role || '—');
   const org = safe(lead.organization || lead.org || '—');
   const phone = safe(lead.phone || '—');
+  const intro = isPastor
+    ? `We received your inquiry. We often help pastors and church leaders launch FaithTalkAI for their congregation or small groups. Here’s a quick summary of what you sent us:`
+    : `We received your inquiry and will get back to you shortly. Here’s a quick summary of what you sent us:`;
+  const nextSteps = isPastor
+    ? `
+      <ol style="margin:0 0 12px 18px;padding:0;color:#1f2a44;font-size:14px;line-height:1.6;">
+        <li>We’ll reach out to schedule a quick demo tailored for church use.</li>
+        <li>We’ll recommend the best setup (leaders, groups, studies) for your ministry.</li>
+        <li>We’ll help you get started with onboarding resources for your team.</li>
+      </ol>`
+    : `
+      <ol style="margin:0 0 12px 18px;padding:0;color:#1f2a44;font-size:14px;line-height:1.6;">
+        <li>We’ll reply within 1 business day with answers and a brief walkthrough option.</li>
+        <li>Explore FaithTalkAI features and start a conversation with a Bible character.</li>
+        <li>If you’re interested, we’ll outline simple next steps to get set up.</li>
+      </ol>`;
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -105,7 +131,7 @@ function renderLeadConfirmationHtml(lead, baseUrl) {
           <tr>
             <td style="padding:24px 24px 8px;">
               <h1 style="margin:0 0 8px;font-size:20px;color:#0b2254;">Thank you for reaching out${lead.name ? `, ${escapeHtml(lead.name)}` : ''}!</h1>
-              <p style="margin:0;color:#1f2a44;font-size:14px;line-height:1.6;">We received your inquiry and will get back to you shortly. Here’s a quick summary of what you sent us:</p>
+              <p style="margin:0;color:#1f2a44;font-size:14px;line-height:1.6;">${intro}</p>
             </td>
           </tr>
           <tr>
@@ -114,7 +140,7 @@ function renderLeadConfirmationHtml(lead, baseUrl) {
                 <tr><td style="padding:12px 16px;font-size:13px;color:#0b2254;">
                   <div><b>Name:</b> ${name}</div>
                   <div><b>Email:</b> ${escapeHtml(lead.email)}</div>
-                  <div><b>Role:</b> ${role}</div>
+                  ${showRoleLine ? `<div><b>Role:</b> ${role}</div>` : ''}
                   <div><b>Organization:</b> ${org}</div>
                   ${lead.message ? `<div><b>Message:</b> ${escapeHtml(lead.message)}</div>` : ''}
                   ${lead.phone ? `<div><b>Phone:</b> ${phone}</div>` : ''}
@@ -125,11 +151,7 @@ function renderLeadConfirmationHtml(lead, baseUrl) {
           <tr>
             <td style="padding:0 24px 8px;">
               <h3 style="margin:0 0 8px;font-size:16px;">What happens next</h3>
-              <ol style="margin:0 0 12px 18px;padding:0;color:#1f2a44;font-size:14px;line-height:1.6;">
-                <li>We’ll review your details and respond within 1 business day.</li>
-                <li>We’ll share a quick demo or answer any questions you have.</li>
-                <li>If you’re ready, we’ll outline the best setup for your organization.</li>
-              </ol>
+              ${nextSteps}
             </td>
           </tr>
           <tr>
@@ -170,3 +192,49 @@ function escapeHtml(s) {
 }
 
 export default { sendEmail, sendSupportLeadNotification };
+
+// ----------------------- Template helpers --------------------------
+async function getAdminClient() {
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return null;
+  try { return createClient(SUPABASE_URL, SERVICE_ROLE_KEY); } catch { return null; }
+}
+
+async function getTemplate(key) {
+  const supa = await getAdminClient();
+  if (!supa) return null;
+  try {
+    const { data } = await supa.from('email_templates').select('key, subject, html').eq('key', key).maybeSingle();
+    return data || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getTemplateSubject(key) {
+  const t = await getTemplate(key);
+  return t?.subject || '';
+}
+
+function replaceVars(html, vars) {
+  return html.replace(/\{\{\s*([a-zA-Z0-9_\.]+)\s*\}\}/g, (_, k) => {
+    const v = vars[k];
+    return v == null ? '' : String(v);
+  });
+}
+
+async function renderFromTemplate(key, lead, baseUrl) {
+  const t = await getTemplate(key);
+  if (!t?.html) return '';
+  const vars = {
+    name: lead?.name || '',
+    email: lead?.email || '',
+    phone: lead?.phone || '',
+    role: lead?.role || '',
+    organization: lead?.organization || lead?.org || '',
+    base_url: baseUrl,
+    chat_url: `${baseUrl}/chat`,
+    roundtable_url: `${baseUrl}/roundtable`,
+    studies_url: `${baseUrl}/studies`,
+  };
+  return replaceVars(t.html, vars);
+}

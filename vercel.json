@@ -6,6 +6,20 @@
     "silent": true
   },
   "rewrites": [
+    { "source": "/api/create-checkout-session", "destination": "/api/stripe?path=create-checkout-session" },
+    { "source": "/api/create-billing-portal-session", "destination": "/api/stripe?path=create-billing-portal-session" },
+    { "source": "/api/admin-price-ids", "destination": "/api/stripe?path=price-ids" },
+    { "source": "/api/stripe-get-subscriptions", "destination": "/api/stripe?path=subscriptions" },
+    { "source": "/api/stripe-get-subscriptions-by-email", "destination": "/api/stripe?path=subscriptions-by-email" },
+    { "source": "/api/premium-confirmation", "destination": "/api/stripe?path=premium-confirmation" },
+    {
+      "source": "/api/admin/(.*)",
+      "destination": "/api/admin?path=$1"
+    },
+    {
+      "source": "/api/stripe/(.*)",
+      "destination": "/api/stripe?path=$1"
+    },
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
