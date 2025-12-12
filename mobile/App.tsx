@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -21,7 +22,7 @@ import StudyDetail from './src/screens/StudyDetail';
 import Login from './src/screens/Login';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { theme } from './src/theme';
-import { startSettingsRealtimeForUser } from './src/lib/settings';
+import { startSettingsRealtimeForUser, refreshAllSettingsForUser } from './src/lib/settings';
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
@@ -106,6 +107,18 @@ function AppInner() {
       cleanup = await startSettingsRealtimeForUser(user?.id);
     })();
     return () => { try { cleanup && cleanup(); } catch {} };
+  }, [user?.id]);
+  // Global: refresh settings on app foreground and light periodic poll
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', async (state) => {
+      if (state === 'active') {
+        try { await refreshAllSettingsForUser(user?.id); } catch {}
+      }
+    });
+    const id = setInterval(async () => {
+      try { await refreshAllSettingsForUser(user?.id); } catch {}
+    }, 5 * 60 * 1000); // 5 minutes
+    return () => { try { sub.remove(); } catch {}; clearInterval(id); };
   }, [user?.id]);
   if (loading) return null;
   const authed = !!user;
