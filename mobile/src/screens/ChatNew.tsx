@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
 import { getSiteSettingsForUser } from '../lib/settings';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
 import { getFavoriteCharacterIds, setFavoriteCharacter } from '../lib/favorites';
@@ -99,7 +99,7 @@ export default function ChatNew() {
     }
     // Gate by character if not premium and not in free list
     try {
-      const premium = await isPremiumUser(user.id);
+      const premium = (Platform.OS === 'ios') || await isPremiumUser(user.id);
       if (!premium) {
         const slug = await getOwnerSlug(user.id);
         const s = await getTierSettings(slug);

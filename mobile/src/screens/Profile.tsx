@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, Text, View, TouchableOpacity, Linking } from 'react-native';
+import { SafeAreaView, Text, View, TouchableOpacity, Linking, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { getDailyMessageCount, getOwnerSlug, getTierSettings, isPremiumUser } from '../lib/tier';
@@ -36,6 +36,7 @@ export default function Profile() {
     }, [load])
   );
 
+  const isIOSPremium = premium || Platform.OS === 'ios';
   const progressPct = limit > 0 ? Math.min(100, Math.round((count / limit) * 100)) : 0;
 
   return (
@@ -52,9 +53,9 @@ export default function Profile() {
         </View>
         <View style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 12, marginBottom: 12 }}>
           <Text style={{ color: theme.colors.muted, marginBottom: 6 }}>Status</Text>
-          <Text style={{ color: premium ? theme.colors.accent : theme.colors.text, fontWeight: '700' }}>{premium ? 'Premium' : 'Free'}</Text>
+          <Text style={{ color: isIOSPremium ? theme.colors.accent : theme.colors.text, fontWeight: '700' }}>{isIOSPremium ? 'Premium' : 'Free'}</Text>
         </View>
-        {!premium && (
+        {!isIOSPremium && (
           <View style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 12, marginBottom: 12 }}>
             <Text style={{ color: theme.colors.muted, marginBottom: 6 }}>Daily messages</Text>
             <View style={{ height: 10, backgroundColor: theme.colors.surface, borderRadius: 6, overflow: 'hidden' }}>
@@ -63,7 +64,7 @@ export default function Profile() {
             <Text style={{ color: theme.colors.text, marginTop: 6 }}>{count}/{limit} used today</Text>
           </View>
         )}
-        {!premium && (
+        {!isIOSPremium && (
           <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/pricing')} style={{ backgroundColor: theme.colors.primary, padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}>
             <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>Upgrade</Text>
           </TouchableOpacity>

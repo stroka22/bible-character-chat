@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { supabase } from './supabase';
 
 type TierSettings = {
@@ -98,6 +99,8 @@ export async function requirePremiumOrPrompt(opts: {
   onAllowed: () => void;
 }) {
   const { userId, feature, studyId, onUpgrade, onAllowed } = opts;
+  // Path A (iOS): ungate premium features and never show external purchase/upgrade links
+  if (Platform.OS === 'ios') return onAllowed();
   const premium = await isPremiumUser(userId);
   if (premium) return onAllowed();
   const slug = await getOwnerSlug(userId);
@@ -150,6 +153,8 @@ export async function guardMessageSend(opts: {
   onAllowed: () => void;
 }) {
   const { userId, onUpgrade, onAllowed } = opts;
+  // Path A (iOS): remove free daily message limit enforcement
+  if (Platform.OS === 'ios') return onAllowed();
   const premium = await isPremiumUser(userId);
   if (premium) return onAllowed();
   const slug = await getOwnerSlug(userId);

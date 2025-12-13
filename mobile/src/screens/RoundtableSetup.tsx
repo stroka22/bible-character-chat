@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, ScrollView } from 'react-native';
+import { ActivityIndicator, FlatList, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, ScrollView, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { getOwnerSlug, isPremiumUser } from '../lib/tier';
 import { getRoundtableSettings } from '../lib/settings';
@@ -44,7 +44,7 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
         const { data: u } = await (supabase.auth?.getUser?.() as any || {});
         const userId: string | undefined = u?.user?.id;
         const slug = await getOwnerSlug(userId);
-        const premium = await isPremiumUser(userId);
+        const premium = (Platform.OS === 'ios') || await isPremiumUser(userId);
         const rt = await getRoundtableSettings(slug);
         const max = (premium ? rt.limits.premium.maxParticipants : rt.limits.free.maxParticipants) || rt.defaults.maxParticipants || 8;
         setMaxParticipants(max);
