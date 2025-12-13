@@ -205,6 +205,8 @@ export default function RoundtableChat({ route }: any) {
           for (const m of seq) {
             await chat.addMessage(c.id, m.content, m.role as any);
           }
+          // Mark saved chats as favorites so they appear under My Walk
+          try { await chat.toggleFavorite(c.id, true); } catch {}
           Alert.alert('Saved', 'Roundtable saved to My Walk.');
         } catch (e) {
           Alert.alert('Error', `Unable to save this roundtable.${e && (e as any).message ? `\n${(e as any).message}` : ''}`);
