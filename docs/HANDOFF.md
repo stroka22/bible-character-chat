@@ -1,165 +1,235 @@
-# Bible Character Chat — Engineering Handoff
+# Faith Talk AI — Comprehensive Handoff
 
-This document is the authoritative guide for continuing development and operations of Bible Character Chat. It covers the architecture, environments, secrets locations, current features, open issues, validation runbooks, and future roadmap. It avoids including any raw secrets; instead it points to where they are stored.
+Read this end-to-end before making changes. It contains system context, environment setup, platform interactions, deployment, features by role, current issues, test plans, and next steps.
 
-If any section appears stale, prefer the repository code as the single source of truth and update this handoff accordingly.
-
----
-
-## 1) Repositories and Code Map
-
-- GitHub: https://github.com/stroka22/bible-character-chat
-- Local path (on B MS’s machine): `/Users/brian/bible-character-chat`
-- Key directories/files:
-  - Frontend & API routes (Vercel):
-    - `src/**` React app and services
-    - `api/create-billing-portal-session.js` (proxy to Supabase Edge Function)
-    - `api/leads.mjs` (lead capture + support email)
-    - `api/_utils/email.mjs` (Resend integration)
-    - `api/email-test.mjs` (debuggable email test endpoint; supports `?debug=1`)
-  - Supabase Edge Functions:
-    - `supabase/functions/create-billing-portal-session/index.ts`
-    - `supabase/functions/handle-stripe-webhook/index.ts`
-    - `supabase/functions/handle-stripe-webhook/supabase.toml` (`verify_jwt=false`)
-  - Stripe client utilities:
-    - `src/services/stripe.ts`
-  - Project configuration:
-    - `package.json`, `vite.config.*`, `tailwind*`, etc.
+Start with INTRO.md in the repo root for a quick orientation.
 
 ---
 
-## 2) Platforms and How They Interact
+## 1) Overview
 
-- Vercel: Hosts React build and Serverless API routes in `/api/*`.
-- Supabase: Postgres + Auth + Edge Functions. Edge Functions handle Stripe portal session creation and webhooks.
-- Stripe: Checkout/Portal/Webhooks for subscriptions; customer mapping to `profiles.stripe_customer_id`.
-- Resend: Transactional email (support notifications and test sends). Google Workspace hosts the human mailbox.
+Faith Talk AI is a multi‑platform Bible character conversational experience:
+- Web: SPA hosted on Vercel with static legal/support pages.
+- Mobile: iOS and Android apps built with Expo (EAS) + React Native.
+- Backend: Supabase (Postgres, Auth, RLS, Edge Functions). Stripe used via Supabase functions (non‑iOS payments).
 
-Data flow highlights:
-- App → Vercel API `/api/create-billing-portal-session` → Supabase Edge Function → Stripe Billing Portal session URL → frontend redirect.
-- Stripe Webhooks → Supabase Edge Function `handle-stripe-webhook` → updates `profiles` and `subscriptions`.
-- Lead submit → Vercel API `/api/leads` → insert into `leads` → trigger `sendSupportLeadNotification` via Resend.
+Monetization (iOS Path A): iOS app unlocks premium features and hides all upgrade/purchase CTAs. No IAP, no external links in‑app.
 
----
+Current Priority: Fix Roundtable behavior and UX; complete iOS submission and prepare Android release.
 
-## 3) Environments and Secrets (Locations)
-
-Do not paste secrets into chat or code.
-
-- Vercel (Project → Settings → Environment Variables):
-  - `VITE_SUPABASE_URL` (public)
-  - `VITE_SUPABASE_ANON_KEY` (public)
-  - `RESEND_API_KEY`
-  - `EMAIL_FROM` (temporary: `onboarding@resend.dev`; final: `FaithTalk AI Support <support@faithtalkai.com>` after domain verification)
-  - `EMAIL_REPLY_TO` (e.g., `support@faithtalkai.com`)
-  - `EMAIL_TO_SUPPORT` (e.g., `support@faithtalkai.com`)
-  - Optionally: `VITE_STRIPE_PUBLIC_KEY`, `VITE_STRIPE_PRICE_MONTHLY`, `VITE_STRIPE_PRICE_YEARLY`
-
-- Supabase (Project Settings → Configuration → Secrets):
-  - `SUPABASE_URL`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-  - `STRIPE_SECRET_KEY`
-  - `STRIPE_WEBHOOK_SECRET`
-  - `STRIPE_PORTAL_CONFIGURATION_ID` (optional, to pin Customer Portal config)
-
-- Stripe Dashboard: API keys, Customer Portal configuration, webhook destination and secret.
-- Resend Dashboard: API key and `faithtalkai.com` domain verification (DKIM). Use `onboarding@resend.dev` until verified.
-
-Local development env file (example): create `.env.local` in repo root for Vite with:
-```
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-```
+Repository: https://github.com/stroka22/bible-character-chat
 
 ---
 
-## 4) Implemented Features
+## 2) Codebase Structure
 
-Billing/Stripe
-- Supabase Edge Function `create-billing-portal-session` with:
-  - Safer customer mapping: search Stripe by email before creating
-  - Never overwrite non-null `profiles.stripe_customer_id`
-  - Optional pin to a specific Portal configuration via `STRIPE_PORTAL_CONFIGURATION_ID`
-- Vercel API proxy `/api/create-billing-portal-session` with improved error bubbling and GET/POST support.
+Top‑level highlights:
 
-Webhooks
-- `handle-stripe-webhook` with async signature verification (`constructEventAsync` + `createSubtleCryptoProvider`), handles:
-  - `checkout.session.completed`: set `profiles.stripe_customer_id`, upsert subscription
-  - `customer.subscription.*`: upsert `subscriptions`
-  - `invoice.*`: placeholders for future logic
-- JWT disabled for webhook (`verify_jwt=false`).
+- mobile/
+  - Expo React Native app.
+  - app.json: platform config (bundle identifiers, build numbers). iOS buildNumber currently 13.
+  - eas.json: EAS build/submit profiles (development, preview, production, simulator).
+  - package.json: scripts for EAS build/submit.
+  - src/
+    - lib/
+      - tier.ts: Tier settings and premium gating. iOS short‑circuit (Path A) implemented.
+      - settings.ts: Network‑first site/roundtable settings + foreground refresh/polling.
+      - supabase.ts: Supabase client initialization.
+      - favorites.ts, chat.ts, etc.: supporting modules.
+    - screens/
+      - Profile.tsx: Shows Premium on iOS; hides Upgrade & daily meter.
+      - ChatNew.tsx: iOS treated as premium for character gating.
+      - RoundtableSetup.tsx: iOS uses premium participant limits.
+      - StudyDetail.tsx: Fixed nested navigation to ChatDetail for Bible Studies.
+    - App.tsx: AppState foreground refresh + periodic polling.
 
-Email/Resend
-- `api/_utils/email.mjs` provides `sendEmail` and `sendSupportLeadNotification`.
-- `api/leads.mjs` inserts `leads` row and triggers support email.
-- `api/email-test.mjs` supports `?debug=1` to expose `{ ok, id, error, code }` and env visibility for troubleshooting.
+- public/
+  - privacy.html, terms.html, support.html: Static pages with verbatim content provided by owner.
+  - robots.txt, sitemap.xml: SEO.
 
-Admin/User UI (code present)
-- Admin-related components exist under `src/components/admin/**`; full wiring to backend needs review.
-- Core chat UI and selection features are present per README; Vite build succeeds.
+- index.html: Open Graph + Twitter meta for sharing.
 
----
+- vercel.json: Rewrites to serve static pages before SPA catch‑all.
 
-## 5) Current Issues / Work in Progress
+- scripts/: SQL and utilities (seeds, policies, logo pack, etc.).
 
-- Transactional emails not arriving in production:
-  - Likely From/domain verification issue. Use `EMAIL_FROM=onboarding@resend.dev` until `faithtalkai.com` is verified in Resend.
-  - Ensure latest `/api/email-test` with `?debug=1` is deployed (branch merge required).
-- Stripe Customer Portal needs configuration polish (pause, invoice history, return text).
-
----
-
-## 6) Validation Runbook
-
-1) Build locally
-```
-npm ci
-npm run build
-```
-
-2) Merge and deploy the email diagnostics (branch: `feat/email-resend-transactional`)
-- Open PR → merge → Vercel redeploy Production.
-
-3) Email test (Production)
-```
-curl -sS 'https://<your-domain>/api/email-test?debug=1'
-curl -sS -X POST 'https://<your-domain>/api/email-test?debug=1' \
-  -H 'Content-Type: application/json' \
-  --data '{"to":"support@faithtalkai.com","subject":"Resend wired","html":"<p>It works.</p>"}'
-```
-Check Resend → Emails for status.
-
-4) Lead notification
-```
-curl -sS -X POST https://<your-domain>/api/leads \
-  -H 'Content-Type: application/json' \
-  --data '{"email":"you+leadtest@faithtalkai.com","name":"Resend Test","source_path":"/test","consent_email":true}'
-```
-
-5) Billing portal
-```
-curl -sS -X POST https://<your-domain>/api/create-billing-portal-session \
-  -H 'Content-Type: application/json' \
-  --data '{"userId":"<uuid>","returnUrl":"https://<your-domain>/account"}'
-```
-
-6) Webhook
-- Stripe Dashboard → replay events to: `https://<SUPABASE_PROJECT_REF>.functions.supabase.co/handle-stripe-webhook`
-- Expect `{"received": true}` and DB updates in `profiles` / `subscriptions`.
+- supabase/
+  - functions/: Stripe checkout/portal, get subscription, delete user (role‑checked), etc.
+  - migrations/: DB schema migrations.
 
 ---
 
-## 7) Future Enhancements
+## 3) Environments & Secrets
 
-- Video/audio “Zoom-like” character discussions (evaluate WebRTC/SDKs, auth, moderation).
-- Deep research tools: scripture provenance, commentaries, semantic search over curated corpora.
-- Multilingual expansion (start with Spanish/Portuguese; i18n routing and content).
-- Pastor/Admin payment flows: tiered plans, teams/seats, consolidated billing, admin dashboards.
+Do not commit secrets. Manage them in providers:
+
+- Expo/EAS (mobile):
+  - EXPO_PUBLIC_SUPABASE_URL
+  - EXPO_PUBLIC_SUPABASE_ANON_KEY
+  - EXPO_PUBLIC_API_BASE_URL (if applicable)
+  - Stored per build profile (preview/production).
+
+- Vercel (web):
+  - Environment variables managed in Vercel dashboard.
+  - Static pages require no secrets.
+
+- Supabase:
+  - URL and anon key for clients.
+  - Service role key is server‑only (Edge Functions). Never ship to clients.
+
+Reviewer credentials are NOT stored in this repo. Coordinate with the owner or retrieve from secure secret stores (Expo/EAS, password manager, or direct handoff).
 
 ---
 
-## 8) Contact and Operational Notes
+## 4) How Things Interact
 
-- Human support mailbox: `support@faithtalkai.com` (Google Workspace).
-- Keep secrets in platform stores (Vercel/Supabase/Stripe/Resend). Never commit secrets.
-- Treat this document as living; update after each change to billing, email, or infrastructure.
+- Mobile apps use Supabase for Auth and data and call Edge Functions for Stripe/admin needs.
+- Web app is a SPA pointed to the same Supabase backend and hosts static legal/support pages for compliance.
+- Stripe: Used via Supabase Functions for non‑iOS subscription flows.
+
+---
+
+## 5) Build, Deploy, Submit
+
+Mobile — iOS
+- EAS project: @stroka/faithtalkai
+- Bundle Identifier: com.faithtalkai.app
+- App Store Connect App ID: 6756217967
+- Version: 1.0.1 (build 13)
+- Path A implemented in code (iOS treated as premium, Upgrade hidden)
+
+Mobile — Android
+- Package: com.faithtalkai.app
+- Build via EAS with preview/production profiles.
+
+Web — Vercel
+- Static pages (/privacy, /terms, /support) and SPA routing (vercel.json rewrites in place).
+
+SEO
+- robots.txt & sitemap.xml present.
+- OG/Twitter meta tags in index.html.
+
+---
+
+## 6) Implemented Features
+
+Superadmin
+- Cross‑org access; delete-user Edge Function with role checks.
+- Manage tier/roundtable settings and characters globally.
+- Network‑first settings with app foreground refresh.
+
+Admin
+- Owner‑scoped via profiles.owner_slug.
+- Manage characters visibility and org settings.
+- Tier settings: free limits, free characters, roundtable gates.
+
+User
+- Email/password login.
+- Profile shows org and status; iOS shows Premium with no Upgrade/daily meter.
+- New Chat with characters; favorites management.
+- Bible Studies start correctly (nested navigation fix applied).
+- Roundtable creation, participant selection, topic entry (issues listed below).
+
+App‑wide
+- iOS Path A: premium gates bypassed; no purchase links in app.
+- Static legal/support pages match owner‑provided content.
+- SEO assets and social meta configured.
+
+---
+
+## 7) Known Issues (Top Priority)
+
+Roundtable (observed on TestFlight build 13):
+- Follow‑up answers are often identical across participants.
+- No explicit "advance to next round" control visible.
+- Save operation appeared to succeed but the conversation did not persist.
+
+Action Plan:
+1) Response Diversity
+   - Ensure each participant’s turn includes persona context, role/turn memory, and round index.
+   - Verify we’re not reusing the same output across participants (race/queue/state bug).
+   - Consider small sampling adjustments (temperature/top_p) per participant to reduce duplication while keeping coherence.
+
+2) Round Controls
+   - Add a clear "Next round" button gated to the host.
+   - Persist round counters and disable further turns until advanced.
+
+3) Persistence
+   - Ensure save writes a full transcript (participants, rounds, turns) and appears in history.
+   - Re‑check RLS/policies and any relevant tables for writes.
+   - Add visible confirmation on success and surface errors.
+
+4) Parity
+   - Validate identical behavior on Android, and align desktop expectations where applicable.
+
+---
+
+## 8) Test Plan (Smoke Checklist)
+
+Auth
+- Sign up, sign in, sign out. Reset password link opens in web.
+
+Profile
+- iOS: shows Premium; no Upgrade button; no daily meter.
+- Android/Web: Upgrade surfaces as configured.
+
+Characters & Chats
+- Browse/search; add/remove favorites.
+- Premium gating: iOS ungated; Android/Web respect tier settings.
+
+Bible Studies
+- Start from list → opens ChatDetail; messages send/receive; saving works.
+
+Roundtable
+- Create with participant cap per plan (iOS uses premium max).
+- Distinct follow‑ups per participant per round.
+- Next round control visible and functional.
+- Save persists and reloads from history.
+
+Settings Refresh
+- Admin changes propagate on app foreground and via periodic polling (network‑first).
+
+Static Pages & Links
+- /privacy, /terms, /support load correctly and match the verbatim content.
+- External links and share previews (OG/Twitter) work.
+
+App Store (iOS)
+- Correct version/build. Review notes include Path A (no IAP). Reviewer creds provided out‑of‑band.
+
+---
+
+## 9) Conventions & Notes
+
+- Never commit secrets. Use EAS/Vercel/Supabase dashboards for envs.
+- Use feature branches + PRs; don’t commit to main directly.
+- For mobile, run installs frozen:
+  - In repo root: `npm ci`
+  - In mobile/: `npm ci`
+- Keep Path A logic iOS‑only; Android/Web maintain configured monetization.
+- Respect RLS and roles (user/admin/superadmin) when changing DB writes.
+
+---
+
+## 10) Roadmap / Future Improvements
+
+- Bible integration: full text with references, highlights, and cross‑links.
+- Video/Audio “Zoom‑like” roundtables with TTS/STT and orchestrated turn‑taking.
+- Deep research tools: sources, commentary summaries, provenance on responses.
+- Multi‑language: localized prompts/personas and UI translation.
+
+---
+
+## 11) Useful Links
+
+- Repo: https://github.com/stroka22/bible-character-chat
+- Legal/support pages: https://faithtalkai.com/privacy • https://faithtalkai.com/terms • https://faithtalkai.com/support
+- App Store Connect (builds): https://appstoreconnect.apple.com/apps/6756217967/testflight/ios
+- EAS submission example: https://expo.dev/accounts/stroka/projects/faithtalkai
+
+---
+
+## 12) Current Status Snapshot
+
+- iOS build 13 (1.0.1) processed; ready for submission with Path A notes.
+- Roundtable requires fixes for diversity, next‑round control, and persistence.
+- Static legal pages and SEO are live and verified.
