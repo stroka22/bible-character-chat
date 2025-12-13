@@ -26,6 +26,7 @@ export default function RoundtableChat({ route }: any) {
   const [isTyping, setIsTyping] = useState(false);
   const [input, setInput] = useState('');
   const [participants, setParticipants] = useState<any[]>([]);
+  const [roundIndex, setRoundIndex] = useState<number>(1);
   const [promptTemplate, setPromptTemplate] = useState<string>('');
   const [replyOnlySpeakerId, setReplyOnlySpeakerId] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
@@ -94,22 +95,33 @@ export default function RoundtableChat({ route }: any) {
         if (s) speakers = [s];
       }
       if (speakers.length === 0) {
-        // default: up to 3 speakers sequentially
-        speakers = used.slice(0, Math.min(3, used.length));
+        // default: up to 3 speakers, rotated by roundIndex so different voices lead each round
+        const max = Math.min(3, used.length);
+        const offset = Math.max(0, (roundIndex - 1) % used.length);
+        const rotated = [...used.slice(offset), ...used.slice(0, offset)];
+        speakers = rotated.slice(0, max);
       }
       const working = [...baseMessages];
       for (const speaker of speakers) {
         // Build system prompt (admin template or default)
         const others = used.filter(p => String(p.id) !== String(speaker.id)).map(p => p.name).join(', ');
         const latestUser = [...working].reverse().find(m => m.role === 'user')?.content || '';
+        const recentAssistantMsgs = [...working].filter(m => m.role === 'assistant').slice(-3);
+        const recentRemarks = recentAssistantMsgs.map((m) => {
+          const sp = participants.find(p => String(p.id) === String(m.speakerId));
+          const name = sp?.name || 'Participant';
+          const snippet = String(m.content || '').slice(0, 120).replace(/\s+/g, ' ');
+          return `- ${name}: ${snippet}${m.content && m.content.length > 120 ? '…' : ''}`;
+        }).join('\n');
         const persona = speaker.persona_prompt || speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`;
         const traits = Array.isArray(speaker.character_traits) ? speaker.character_traits.join(', ') : (speaker.character_traits || '');
         const defaultPrompt = (
           `You are ${speaker.name}. Persona: ${persona}. ${traits ? `Known traits: ${traits}.` : ''}\n` +
-          `You are participating in a roundtable discussion on the topic: "${topic}".\n` +
+          `You are participating in a roundtable discussion (Round ${roundIndex}) on the topic: "${topic}".\n` +
           `The other participants are: ${others || 'none'}.\n` +
+          (recentRemarks ? `Recent remarks:\n${recentRemarks}\n` : '') +
           `Respond in first person as ${speaker.name}. Do not include any name prefixes.\n` +
-          `Keep it concise (<=110 words). Do not repeat prior points; add a distinct, scripture-grounded perspective; optionally reference others by name.\n` +
+          `Keep it concise (<=110 words). Do not repeat prior points; add a distinct, scripture-grounded perspective; if someone already made your point, add a complementary or contrasting insight. Optionally reference others by name.\n` +
           (latestUser ? `Latest user input to consider: "${latestUser}"\n` : '') +
           `Stay in character and draw from biblical knowledge.`
         ).trim();
@@ -177,6 +189,10 @@ export default function RoundtableChat({ route }: any) {
   };
 
   const saveToMyWalk = async () => {
+    if (!user?.id) {
+      Alert.alert('Sign in required', 'Please sign in to save this roundtable.');
+      return;
+    }
     await requirePremiumOrPrompt({
       userId: user?.id,
       feature: 'save',
@@ -191,10 +207,16 @@ export default function RoundtableChat({ route }: any) {
           }
           Alert.alert('Saved', 'Roundtable saved to My Walk.');
         } catch (e) {
-          Alert.alert('Error', 'Unable to save this roundtable.');
+          Alert.alert('Error', `Unable to save this roundtable.${e && (e as any).message ? `\n${(e as any).message}` : ''}`);
         }
       }
     });
+  };
+
+  const nextRound = async () => {
+    if (isTyping) return;
+    setRoundIndex((r) => r + 1);
+    await generateRound(messages);
   };
 
 
@@ -203,9 +225,12 @@ export default function RoundtableChat({ route }: any) {
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
         <Text style={{ color: theme.colors.text }}>{topic}</Text>
-        <View style={{ marginTop: 8 }}>
+        <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
           <TouchableOpacity onPress={saveToMyWalk} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
             <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Save to My Walk</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={nextRound} disabled={isTyping} style={{ alignSelf: 'flex-start', backgroundColor: isTyping ? theme.colors.muted : theme.colors.card, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Next Round</Text>
           </TouchableOpacity>
         </View>
       </View>
