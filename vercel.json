@@ -61,6 +61,10 @@
       "destination": "/$1.html"
     },
     {
+      "source": "/(privacy|support|terms)",
+      "destination": "/$1.html"
+    },
+    {
       "source": "/(robots.txt|sitemap.xml)",
       "destination": "/$1"
     },
