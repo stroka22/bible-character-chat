@@ -60,20 +60,24 @@ serve(async (req: Request) => {
     if (!target) return new Response(JSON.stringify({ error: 'User not found' }), { status: 404, headers: { 'Access-Control-Allow-Origin': '*' } });
 
     // Authorization rules:
+    // - Self-delete: any authenticated user may delete their own account
     // - superadmin can delete anyone except another superadmin
     // - admin can delete users in same owner_slug, but not admins/superadmins
+    const isSelf = requesterId === userId;
     const isSuperadmin = meProfile.role === 'superadmin';
     const isAdmin = meProfile.role === 'admin';
-    if (isSuperadmin) {
-      if (target.role === 'superadmin') {
-        return new Response(JSON.stringify({ error: 'Cannot delete superadmin' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
-      }
-    } else if (isAdmin) {
-      if (target.owner_slug !== meProfile.owner_slug || target.role !== 'user') {
+    if (!isSelf) {
+      if (isSuperadmin) {
+        if (target.role === 'superadmin') {
+          return new Response(JSON.stringify({ error: 'Cannot delete superadmin' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
+        }
+      } else if (isAdmin) {
+        if (target.owner_slug !== meProfile.owner_slug || target.role !== 'user') {
+          return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
+        }
+      } else {
         return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
       }
-    } else {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
 
     // Delete dependent data if needed (conversations, etc.) – optional
