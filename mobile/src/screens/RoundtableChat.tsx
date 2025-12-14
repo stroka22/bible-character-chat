@@ -27,6 +27,7 @@ export default function RoundtableChat({ route }: any) {
   const [input, setInput] = useState('');
   const [participants, setParticipants] = useState<any[]>([]);
   const [roundIndex, setRoundIndex] = useState<number>(1);
+  const roundRef = React.useRef<number>(1);
   const [promptTemplate, setPromptTemplate] = useState<string>('');
   const [replyOnlySpeakerId, setReplyOnlySpeakerId] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
@@ -53,7 +54,7 @@ export default function RoundtableChat({ route }: any) {
       // Auto-start the first round once characters are loaded
       if (!didAutoStart.current) {
         didAutoStart.current = true;
-        try { await generateRound(messages, loaded); } catch {}
+        try { await generateRound(messages, loaded, undefined, roundRef.current); } catch {}
       }
     })();
   }, [participantIds]);
@@ -76,18 +77,20 @@ export default function RoundtableChat({ route }: any) {
     const base = [...messages, userMsg];
     setMessages(base);
     setInput('');
-    await generateRound(base, undefined, { onlySpeakerId: targetId || undefined });
+    await generateRound(base, undefined, { onlySpeakerId: targetId || undefined }, roundRef.current);
   };
 
   const generateRound = async (
     baseMessages: Message[], 
     overrideParticipants?: any[],
-    opts?: { onlySpeakerId?: string }
+    opts?: { onlySpeakerId?: string },
+    roundNum?: number
   ) => {
     const used = (overrideParticipants && overrideParticipants.length ? overrideParticipants : participants);
     if (used.length === 0) return;
     setIsTyping(true);
     try {
+      const currentRound = typeof roundNum === "number" ? roundNum : (roundRef.current || roundIndex || 1);
       // Speaker selection
       let speakers: any[] = [];
       if (opts?.onlySpeakerId) {
@@ -97,7 +100,7 @@ export default function RoundtableChat({ route }: any) {
       if (speakers.length === 0) {
         // default: up to 3 speakers, rotated by roundIndex so different voices lead each round
         const max = Math.min(3, used.length);
-        const offset = Math.max(0, (roundIndex - 1) % used.length);
+        const offset = Math.max(0, (currentRound - 1) % used.length);
         const rotated = [...used.slice(offset), ...used.slice(0, offset)];
         speakers = rotated.slice(0, max);
       }
@@ -117,7 +120,7 @@ export default function RoundtableChat({ route }: any) {
         const traits = Array.isArray(speaker.character_traits) ? speaker.character_traits.join(', ') : (speaker.character_traits || '');
         const defaultPrompt = (
           `You are ${speaker.name}. Persona: ${persona}. ${traits ? `Known traits: ${traits}.` : ''}\n` +
-          `You are participating in a roundtable discussion (Round ${roundIndex}) on the topic: "${topic}".\n` +
+          `You are participating in a roundtable discussion (Round ${currentRound}) on the topic: "${topic}".\n` +
           `The other participants are: ${others || 'none'}.\n` +
           (recentRemarks ? `Recent remarks:\n${recentRemarks}\n` : '') +
           `Respond in first person as ${speaker.name}. Do not include any name prefixes.\n` +
@@ -217,8 +220,10 @@ export default function RoundtableChat({ route }: any) {
 
   const nextRound = async () => {
     if (isTyping) return;
-    setRoundIndex((r) => r + 1);
-    await generateRound(messages);
+    const next = (roundRef.current || roundIndex || 1) + 1
+    roundRef.current = next;
+    setRoundIndex(next);
+    await generateRound(messages, undefined, undefined, next);
   };
 
 
