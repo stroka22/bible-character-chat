@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, Text, View, TouchableOpacity, Linking, Platform } from 'react-native';
+import { SafeAreaView, Text, View, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { getDailyMessageCount, getOwnerSlug, getTierSettings, isPremiumUser } from '../lib/tier';
@@ -12,6 +12,7 @@ export default function Profile() {
   const [premium, setPremium] = React.useState<boolean>(false);
   const [limit, setLimit] = React.useState<number>(0);
   const [count, setCount] = React.useState<number>(0);
+  const [deleting, setDeleting] = React.useState<boolean>(false);
 
   const load = React.useCallback(async () => {
     if (!user) return;
@@ -71,6 +72,42 @@ export default function Profile() {
         )}
         <TouchableOpacity onPress={signOut} style={{ backgroundColor: theme.colors.surface, padding: 14, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
           <Text style={{ fontWeight: '700', color: theme.colors.text }}>Sign Out</Text>
+        </TouchableOpacity>
+
+        <View style={{ height: 12 }} />
+        <TouchableOpacity
+          disabled={deleting}
+          onPress={async () => {
+            if (!user?.id || deleting) return;
+            Alert.alert(
+              'Delete Account',
+              'This will permanently delete your account and data. This action cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      setDeleting(true);
+                      const { supabase } = await import('../lib/supabase');
+                      const { error } = await supabase.functions.invoke('delete-user', { body: { userId: user.id } });
+                      if (error) throw error;
+                      Alert.alert('Account deleted', 'Your account has been deleted.');
+                      await signOut();
+                    } catch (e) {
+                      Alert.alert('Error', e instanceof Error ? e.message : 'Unable to delete account');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }
+                }
+              ]
+            );
+          }}
+          style={{ backgroundColor: '#991b1b', padding: 14, borderRadius: 10, alignItems: 'center', opacity: deleting ? 0.6 : 1 }}
+        >
+          <Text style={{ fontWeight: '700', color: 'white' }}>{deleting ? 'Deleting…' : 'Delete Account'}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
