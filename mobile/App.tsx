@@ -64,7 +64,8 @@ function HomeScreen({ navigation }: any) {
           <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Study the Bible with guided conversations</Text>
         </View>
         <View style={{ gap: 10, width: '86%' }}>
-          <TouchableOpacity onPress={() => navigation.navigate('Chat')} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          {/* Ensure Chat tab opens on the ChatNew composer instead of a previously open ChatDetail */}
+          <TouchableOpacity onPress={() => navigation.navigate('Chat', { screen: 'ChatNew' })} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Start a Chat</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={async () => {
