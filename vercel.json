@@ -1,17 +1,35 @@
 {
   "buildCommand": "vite build",
-  "framework": "vite", 
+  "framework": "vite",
   "outputDirectory": "dist",
   "github": {
     "silent": true
   },
   "rewrites": [
-    { "source": "/api/create-checkout-session", "destination": "/api/stripe?path=create-checkout-session" },
-    { "source": "/api/create-billing-portal-session", "destination": "/api/stripe?path=create-billing-portal-session" },
-    { "source": "/api/admin-price-ids", "destination": "/api/stripe?path=price-ids" },
-    { "source": "/api/stripe-get-subscriptions", "destination": "/api/stripe?path=subscriptions" },
-    { "source": "/api/stripe-get-subscriptions-by-email", "destination": "/api/stripe?path=subscriptions-by-email" },
-    { "source": "/api/premium-confirmation", "destination": "/api/stripe?path=premium-confirmation" },
+    {
+      "source": "/api/create-checkout-session",
+      "destination": "/api/stripe?path=create-checkout-session"
+    },
+    {
+      "source": "/api/create-billing-portal-session",
+      "destination": "/api/stripe?path=create-billing-portal-session"
+    },
+    {
+      "source": "/api/admin-price-ids",
+      "destination": "/api/stripe?path=price-ids"
+    },
+    {
+      "source": "/api/stripe-get-subscriptions",
+      "destination": "/api/stripe?path=subscriptions"
+    },
+    {
+      "source": "/api/stripe-get-subscriptions-by-email",
+      "destination": "/api/stripe?path=subscriptions-by-email"
+    },
+    {
+      "source": "/api/premium-confirmation",
+      "destination": "/api/stripe?path=premium-confirmation"
+    },
     {
       "source": "/api/admin/(.*)",
       "destination": "/api/admin?path=$1"
@@ -69,6 +87,14 @@
       "destination": "/$1"
     },
     {
+      "source": "/public/(privacy|support|terms).html",
+      "destination": "/$1.html"
+    },
+    {
+      "source": "/public/(privacy|support|terms)",
+      "destination": "/$1.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -90,7 +116,7 @@
   "crons": [
     {
       "path": "/api/weekly-admin-csv",
-      "schedule": "0 14 * * 1" 
+      "schedule": "0 14 * * 1"
     }
   ]
 }
