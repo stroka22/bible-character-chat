@@ -214,7 +214,7 @@ export const chatRepository = {
                 // Gracefully degrade: for common RLS/Auth or parsing errors, return an empty list
                 const code = error.code || '';
                 const status = error.status || error.code;
-                if (code === 'PGRST116' || status === 401 || status === 403 || code === '22P02') {
+                if (code === 'PGRST116' || status === 401 || status === 403 || code === '22P02' || code === '54001' || status === 500) {
                     // eslint-disable-next-line no-console
                     console.warn('[chatRepository] getUserChats: suppressing error and returning []', error);
                     return [];
