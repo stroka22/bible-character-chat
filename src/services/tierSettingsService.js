@@ -121,6 +121,29 @@ function normalizeRecord(record) {
       } catch {}
       return [];
     })(),
+    inviteSettings: (() => {
+      try {
+        const v = record.invite_settings;
+        if (v && typeof v === 'object') {
+          return {
+            max_chat_participants_free: typeof v.max_chat_participants_free === 'number' ? v.max_chat_participants_free : 3,
+            max_chat_participants_premium: typeof v.max_chat_participants_premium === 'number' ? v.max_chat_participants_premium : 11,
+            invite_expiration_days_free: typeof v.invite_expiration_days_free === 'number' ? v.invite_expiration_days_free : 7,
+            invite_expiration_days_premium: typeof v.invite_expiration_days_premium === 'number' ? v.invite_expiration_days_premium : 30,
+            invite_multiuse_free: typeof v.invite_multiuse_free === 'boolean' ? v.invite_multiuse_free : false,
+            invite_multiuse_premium: typeof v.invite_multiuse_premium === 'boolean' ? v.invite_multiuse_premium : true,
+          };
+        }
+      } catch {}
+      return {
+        max_chat_participants_free: 3,
+        max_chat_participants_premium: 11,
+        invite_expiration_days_free: 7,
+        invite_expiration_days_premium: 30,
+        invite_multiuse_free: false,
+        invite_multiuse_premium: true,
+      };
+    })(),
     lastUpdated: record.updated_at || new Date().toISOString()
   };
 }
@@ -146,6 +169,14 @@ function denormalizeSettings(settings) {
       promptTemplate: typeof settings?.premiumRoundtableGates?.promptTemplate === 'string' ? settings.premiumRoundtableGates.promptTemplate : '',
     },
     premium_study_ids: settings.premiumStudyIds || [],
+    invite_settings: {
+      max_chat_participants_free: settings?.inviteSettings?.max_chat_participants_free ?? 3,
+      max_chat_participants_premium: settings?.inviteSettings?.max_chat_participants_premium ?? 11,
+      invite_expiration_days_free: settings?.inviteSettings?.invite_expiration_days_free ?? 7,
+      invite_expiration_days_premium: settings?.inviteSettings?.invite_expiration_days_premium ?? 30,
+      invite_multiuse_free: settings?.inviteSettings?.invite_multiuse_free ?? false,
+      invite_multiuse_premium: settings?.inviteSettings?.invite_multiuse_premium ?? true,
+    },
     updated_at: new Date().toISOString()
   };
 }
@@ -250,6 +281,14 @@ function getDefaultSettings() {
     freeCharacterNames: [],
     premiumRoundtableGates: { savingRequiresPremium: true, premiumOnly: true, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' },
     premiumStudyIds: [],
+    inviteSettings: {
+      max_chat_participants_free: 3,
+      max_chat_participants_premium: 11,
+      invite_expiration_days_free: 7,
+      invite_expiration_days_premium: 30,
+      invite_multiuse_free: false,
+      invite_multiuse_premium: true,
+    },
     lastUpdated: new Date().toISOString()
   };
 }

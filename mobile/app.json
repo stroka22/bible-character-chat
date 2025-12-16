@@ -20,7 +20,10 @@
       "buildNumber": "16",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "associatedDomains": [
+        "applinks:faithtalkai.com"
+      ]
     },
     "android": {
       "package": "com.faithtalkai.app",

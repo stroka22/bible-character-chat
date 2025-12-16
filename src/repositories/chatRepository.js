@@ -208,7 +208,7 @@ export const chatRepository = {
             const { data, error } = await supabase
                 .from('chats')
                 .select('*')
-                .eq('user_id', userId)
+                .or(`user_id.eq.${userId},participants.cs.${encodeURIComponent(JSON.stringify([{ id: String(userId) }]))}`)
                 .order('updated_at', { ascending: false });
             if (error) {
                 throw error;

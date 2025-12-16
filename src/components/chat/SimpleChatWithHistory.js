@@ -899,7 +899,46 @@ const SimpleChatWithHistory = () => {
                                                         ]
                                                     }),
                                                     
-                                                    // Share button – public view via share_code only (no non-public fallbacks)
+                                                                                                        // Invite button – private participant invite with write access
+                                                    _jsxs("button", { 
+                                                        id: "inviteBtn", 
+                                                        className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
+                                                        onClick: async () => {
+                                                            try {
+                                                                let id = chatId;
+                                                                if (!id) {
+                                                                    if (isAuthenticated && messages.length > 0) {
+                                                                        const title = conversationTitle && conversationTitle.trim()
+                                                                          ? conversationTitle.trim()
+                                                                          : `Conversation with ${character.name}`;
+                                                                        await saveChat(title);
+                                                                        await new Promise(r => setTimeout(r, 600));
+                                                                        id = chatId;
+                                                                    } else {
+                                                                        return;
+                                                                    }
+                                                                }
+                                                                if (!id) return;
+                                                                const svc = await import('../../services/chatInvitesService');
+                                                                const { data, error } = await svc.createChatInvite(id);
+                                                                if (error || !data?.code) return;
+                                                                const url = `${window.location.origin}/join/${data.code}`;
+                                                                const title = 'Join my chat';
+                                                                const text = `Join my chat with ${character?.name}`;
+                                                                if (navigator.share) {
+                                                                    try { await navigator.share({ title, text, url }); return; } catch {}
+                                                                }
+                                                                await navigator.clipboard.writeText(url);
+                                                            } catch (e) {
+                                                                console.error('[Invite] Failed to create invite:', e);
+                                                            }
+                                                        },
+                                                        children: [
+                                                            _jsx("svg", { xmlns: "http://www.w3.org/2000/svg", className: "h-5 w-5", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", children: _jsx("path", { d: "M12 5v14m7-7H5" }) }),
+                                                            "Invite"
+                                                        ]
+                                                    }),
+// Share button – public view via share_code only (no non-public fallbacks)
                                                     _jsxs("button", { 
                                                         id: "shareBtn", 
                                                         className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",

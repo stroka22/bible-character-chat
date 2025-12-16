@@ -37,6 +37,7 @@ import SalesPage from './pages/SalesPage.jsx';
 import AdminUpgrade from './pages/AdminUpgrade.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import InviteAccept from './pages/InviteAccept.jsx';
+import JoinChat from './pages/JoinChat.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import AdminPremiumCustomers from './pages/admin/AdminPremiumCustomers.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
@@ -317,8 +318,9 @@ function App(): JSX.Element {
     <Route path="/pricing" element={<PricingPage />} />
     <Route path="/leaders" element={<PastorsPage />} />
     <Route path="/account" element={<AccountBilling />} />
-    {/* Invite links: allow first-time users to click and join */}
+    {/* Invite links (org + chat): allow first-time users to click and join */}
     <Route path="/invite/:code" element={<InviteAccept />} />
+    <Route path="/join/:code" element={<JoinChat />} />
     <Route path="/how-it-works" element={<HowItWorksPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/contact" element={<ContactPage />} />

@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
+import * as LinkingExpo from 'expo-linking';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View, Alert, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
@@ -20,6 +21,7 @@ import { requirePremiumOrPrompt } from './src/lib/tier';
 import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
 import Login from './src/screens/Login';
+import JoinChat from './src/screens/JoinChat';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { theme } from './src/theme';
 import { startSettingsRealtimeForUser, refreshAllSettingsForUser } from './src/lib/settings';
@@ -123,8 +125,17 @@ function AppInner() {
   }, [user?.id]);
   if (loading) return null;
   const authed = !!user;
+  const linking = {
+    prefixes: [LinkingExpo.createURL('/'), 'https://faithtalkai.com', 'faithtalkai://'],
+    config: {
+      screens: {
+        JoinChat: 'join/:code',
+      },
+    },
+  } as const;
+
   return (
-    <NavigationContainer theme={{
+    <NavigationContainer linking={linking} theme={{
       ...DarkTheme,
       colors: {
         ...DarkTheme.colors,
@@ -137,6 +148,8 @@ function AppInner() {
       }
     }}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {/* Always available to support deep links before/after auth */}
+        <Stack.Screen name="JoinChat" component={JoinChat} />
         {!authed ? (
           <Stack.Screen name="Login" component={Login} />
         ) : (
