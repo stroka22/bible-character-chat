@@ -220,7 +220,7 @@ export const chatRepository = {
             console.error(`Failed to fetch chats for user ${userId}:`, error);
             throw new Error('Failed to fetch user chats. Please try again later.');
         }
-    },,
+    },
     async updateChat(chatId, updates) {
         if (useMock) {
             return mockChatRepository.updateChat(chatId, updates);
