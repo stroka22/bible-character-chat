@@ -1,7 +1,9 @@
-import kjv from '../../../data/kjv.json';
+// Lazy-load the KJV JSON to avoid bloating the main bundle
 
 function normalize(data) {
-  // Data format: [ { name: 'Genesis', chapters: [ [verse1, verse2, ...], ... ] }, ... ]
+  // Supports two formats:
+  // 1) Array: [ { name: 'Genesis', chapters: [[...],[...], ...] }, ... ]
+  // 2) Object: { book: [ { name: 'Genesis', chapters: [...] }, ... ] }
   const out = {};
   if (Array.isArray(data)) {
     for (const b of data) {
@@ -20,21 +22,30 @@ function normalize(data) {
   return out;
 }
 
-const STORE = normalize(kjv);
+let STORE = null;
+async function loadStore() {
+  if (STORE) return STORE;
+  const mod = await import('../../../data/kjv.json');
+  const kjv = mod.default ?? mod;
+  STORE = normalize(kjv);
+  return STORE;
+}
 
 export class KjvLocalProvider {
   constructor(opts = {}) { this.opts = opts; }
-  async getBooks() { return Object.keys(STORE); }
-  async getChapters(book) { return (STORE[book] || []).map((_, i) => i + 1); }
+  async getBooks() { const S = await loadStore(); return Object.keys(S); }
+  async getChapters(book) { const S = await loadStore(); return (S[book] || []).map((_, i) => i + 1); }
   async getChapterText(book, chapter) {
+    const S = await loadStore();
     const idx = Number(chapter) - 1;
-    const verses = (STORE[book]?.[idx] || []).slice();
+    const verses = (S[book]?.[idx] || []).slice();
     return { translation: 'KJV', book, chapter: Number(chapter), verses };
   }
   async search(q) {
+    const S = await loadStore();
     const results = [];
     const ql = (q || '').toLowerCase();
-    for (const [book, chapters] of Object.entries(STORE)) {
+    for (const [book, chapters] of Object.entries(S)) {
       chapters.forEach((verses, chIdx) => {
         verses.forEach((text, vIdx) => {
           if ((text || '').toLowerCase().includes(ql)) {

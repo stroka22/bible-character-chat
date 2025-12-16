@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Use the unified ChatContext implementation so *all* components
@@ -46,7 +46,7 @@ import PresentationGuide from './pages/PresentationGuide.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
 import StudyLesson from './pages/StudyLesson.jsx';
-import BibleReader from './pages/BibleReader.jsx';
+const BibleReader = lazy(() => import('./pages/BibleReader.jsx'));
 import RoundtableSetup from './pages/RoundtableSetup.jsx';
 import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
@@ -338,8 +338,8 @@ function App(): JSX.Element {
     <Route path="/studies/:id" element={<StudyDetails />} />
     <Route path="/studies/:id/lesson/:lessonIndex" element={<StudyLesson />} />
     {/* -------- Bible Reader (public) -------------------------- */}
-    <Route path="/bible" element={<BibleReader />} />
-    <Route path="/bible/:translation/:book/:chapter" element={<BibleReader />} />
+    <Route path="/bible" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
+    <Route path="/bible/:translation/:book/:chapter" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
     <Route path="/debug" element={<div className="min-h-screen bg-slate-800 text-white p-4"><h1 className="text-2xl mb-4">Debug Tools</h1><DebugPanel /></div>} />
     
     {/* Chat & Shared conversation routes */}
