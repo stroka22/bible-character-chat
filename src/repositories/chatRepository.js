@@ -224,11 +224,12 @@ export const chatRepository = {
             return data || [];
         }
         catch (error) {
-            if (shouldFallback(error)) {
-                return mockChatRepository.getUserChats(userId);
-            }
-            console.error(`Failed to fetch chats for user ${userId}:`, error);
-            throw new Error('Failed to fetch user chats. Please try again later.');
+            // In production, avoid throwing and just return an empty list to keep UI functional.
+            // Detailed errors are logged to console for diagnostics.
+            // We intentionally do not switch to mock mode here.
+            // eslint-disable-next-line no-console
+            console.error(`[chatRepository] getUserChats catch – returning [] for user ${userId}:`, error);
+            return [];
         }
     },
     async updateChat(chatId, updates) {
