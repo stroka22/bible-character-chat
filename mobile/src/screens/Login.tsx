@@ -1,10 +1,12 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Linking, ScrollView, useWindowDimensions } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Wordmark from '../components/Wordmark';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
+  const navigation = useNavigation<any>();
   const { signInWithPassword } = useAuth();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -59,10 +61,10 @@ export default function Login() {
         <Text style={{ fontWeight: '800', fontSize: 16, color: '#0f172a' }}>{loading ? 'Signing in...' : 'Sign In'}</Text>
       </TouchableOpacity>
         <View style={{ marginTop: 12, alignItems: 'center', gap: 8 }}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/signup')}>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={{ color: '#fde68a', textDecorationLine: 'underline', fontWeight: '700' }}>Create account</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/reset-password')}>
+          <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
             <Text style={{ color: '#9ca3af', textDecorationLine: 'underline' }}>Forgot password?</Text>
           </TouchableOpacity>
         </View>

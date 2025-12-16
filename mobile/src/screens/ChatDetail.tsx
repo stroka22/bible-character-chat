@@ -65,7 +65,7 @@ export default function ChatDetail() {
           await requirePremiumOrPrompt({
             userId: (user as any)?.id,
             feature: 'save',
-            onUpgrade: () => { Linking.openURL('https://faithtalkai.com/pricing'); },
+            onUpgrade: () => { try { (navigation as any).navigate('Paywall'); } catch {} },
             onAllowed: async () => {
               try {
                 await chat.toggleFavorite(chatId, !isFav);
@@ -109,7 +109,7 @@ export default function ChatDetail() {
       if ((e as any)?.message === 'UPGRADE_REQUIRED') {
         // show prompt
         // Basic inline notice instead of inserting message bubble
-        alert('Free daily message limit reached. Upgrade at faithtalkai.com/pricing to continue.');
+        (navigation as any).navigate('Paywall');
       } else {
         const errText = e instanceof Error ? e.message : 'Failed to send';
         const aiMsg = await chat.addMessage(chatId, `(Error) ${errText}`, 'assistant');

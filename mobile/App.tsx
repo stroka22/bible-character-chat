@@ -21,6 +21,9 @@ import { requirePremiumOrPrompt } from './src/lib/tier';
 import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
 import Login from './src/screens/Login';
+import SignUp from './src/screens/SignUp';
+import ResetPassword from './src/screens/ResetPassword';
+import Paywall from './src/screens/Paywall';
 import JoinChat from './src/screens/JoinChat';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { theme } from './src/theme';
@@ -75,12 +78,7 @@ function HomeScreen({ navigation }: any) {
             userId: user?.id,
             feature: 'roundtable',
             onAllowed: () => navigation.navigate('RoundtableSetup'),
-            onUpgrade: () => {
-              Alert.alert('Upgrade required', 'Roundtable is a premium feature. Upgrade to continue.', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Upgrade', onPress: () => Linking.openURL('https://faithtalkai.com/pricing') }
-              ]);
-            }
+            onUpgrade: () => navigation.navigate('Paywall')
           });
         }} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Start a Roundtable</Text>
@@ -126,7 +124,7 @@ function AppInner() {
   if (loading) return null;
   const authed = !!user;
   const linking = {
-    prefixes: [LinkingExpo.createURL('/'), 'https://faithtalkai.com', 'faithtalkai://'],
+    prefixes: ([] as string[]).concat([String(LinkingExpo.createURL('/')), 'https://faithtalkai.com', 'faithtalkai://']),
     config: {
       screens: {
         JoinChat: 'join/:code',
@@ -150,8 +148,14 @@ function AppInner() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {/* Always available to support deep links before/after auth */}
         <Stack.Screen name="JoinChat" component={JoinChat} />
+        {/* Always-available screens */}
+        <Stack.Screen name="Paywall" component={Paywall} />
         {!authed ? (
-          <Stack.Screen name="Login" component={Login} />
+          <>
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="SignUp" component={SignUp} />
+            <Stack.Screen name="ResetPassword" component={ResetPassword} />
+          </>
         ) : (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />

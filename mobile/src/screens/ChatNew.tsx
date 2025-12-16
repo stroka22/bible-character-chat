@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
+import { isLocalPremiumActive } from '../lib/iap';
 import { getSiteSettingsForUser } from '../lib/settings';
 import { Alert, Linking, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
@@ -99,14 +100,14 @@ export default function ChatNew() {
     }
     // Gate by character if not premium and not in free list
     try {
-      const premium = (Platform.OS === 'ios') || await isPremiumUser(user.id);
+      const premium = (Platform.OS === 'ios' ? (await isLocalPremiumActive()) : await isPremiumUser(user.id));
       if (!premium) {
         const slug = await getOwnerSlug(user.id);
         const s = await getTierSettings(slug);
         if (!isCharacterFree(s, { id: c.id, name: c.name })) {
           Alert.alert('Upgrade required', `${c.name} is a premium character. Upgrade to continue.`, [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Upgrade', onPress: () => Linking.openURL('https://faithtalkai.com/pricing') }
+            { text: 'Upgrade', onPress: () => (nav as any).navigate('Paywall') }
           ]);
           return;
         }
