@@ -529,6 +529,26 @@ const RoundtableChat = () => {
                       onClick: async () => {
                         try {
                           if (!conversationId) return;
+                          const res = await (await import('../services/chatInvitesService')).createChatInvite(conversationId);
+                          if (res.error || !res.data) return;
+                          const url = `${window.location.origin}/join/${res.data.code}`;
+                          const title = `Join Roundtable: ${topic || 'Discussion'}`;
+                          const text = `Join this roundtable on "${topic}"`;
+                          if (navigator.share) {
+                            try { await navigator.share({ title, text, url }); return; } catch {}
+                          }
+                          await navigator.clipboard.writeText(url);
+                        } catch (e) {
+                          console.error('Failed to create invite:', e);
+                        }
+                      },
+                      className: "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-yellow-400 hover:bg-yellow-500 text-blue-900",
+                      children: "Invite"
+                    }),
+                    _jsx("button", {
+                      onClick: async () => {
+                        try {
+                          if (!conversationId) return;
                           const shareCode = await shareConversation?.(conversationId);
                           if (!shareCode) return;
                           // Include participants in the share URL so shared views can hydrate names/avatars
