@@ -205,50 +205,12 @@ export const chatRepository = {
             return mockChatRepository.getUserChats(userId);
         }
         try {
-            // Primary query: owner OR participant using PostgREST or() syntax.
-            // Some PostgREST versions can be picky about JSONB array containment
-            // inside or(). If this fails, we fall back to two simpler queries.
-            const ownerFilter = `user_id.eq.${userId}`;
-            const participantProbe = [{ id: String(userId) }];
-            const participantFilter = `participants.cs.${encodeURIComponent(JSON.stringify(participantProbe))}`;
-
-            let { data, error } = await supabase
+            // Rely on RLS: return all chats visible to the current user (owner or participant)
+            const { data, error } = await supabase
                 .from('chats')
                 .select('*')
-                .or(`${ownerFilter},${participantFilter}`)
                 .order('updated_at', { ascending: false });
-
-            // If PostgREST complains about the filter, retry with two calls
-            if (error) {
-                // eslint-disable-next-line no-console
-                console.warn('[chatRepository] or() filter failed – retrying with two-step fetch', error);
-
-                const [ownRes, partRes] = await Promise.all([
-                    supabase.from('chats').select('*').eq('user_id', userId),
-                    // Use .contains helper for JSONB which maps to @>
-                    supabase.from('chats').select('*').contains('participants', participantProbe),
-                ]);
-
-                const rows = [
-                    ...(ownRes.data || []),
-                    ...(partRes.data || []),
-                ];
-                // If either subquery errored, surface a single error
-                if (ownRes.error || partRes.error) {
-                    const err = ownRes.error || partRes.error;
-                    throw err;
-                }
-                // De-duplicate by id and sort by updated_at desc
-                const seen = new Set();
-                const deduped = rows.filter(r => {
-                    const id = r && r.id;
-                    if (!id || seen.has(id)) return false;
-                    seen.add(id);
-                    return true;
-                }).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-                return deduped;
-            }
-
+            if (error) throw error;
             return data;
         }
         catch (error) {
