@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { useNavigation } from '@react-navigation/native';
 import { generateCharacterResponse } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
@@ -17,6 +18,7 @@ type Message = {
 };
 
 export default function RoundtableChat({ route }: any) {
+  const navigation = useNavigation<any>();
   const { participantIds, topic } = route.params as { participantIds: string[]; topic: string };
   const [messages, setMessages] = useState<Message[]>([{
     id: `sys-${Date.now()}`,
@@ -199,7 +201,7 @@ export default function RoundtableChat({ route }: any) {
     await requirePremiumOrPrompt({
       userId: user?.id,
       feature: 'save',
-      onUpgrade: () => Linking.openURL('https://faithtalkai.com/pricing'),
+      onUpgrade: () => navigation.navigate('Paywall'),
       onAllowed: async () => {
         try {
           const title = `Roundtable: ${topic}`;

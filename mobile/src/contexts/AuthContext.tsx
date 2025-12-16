@@ -8,6 +8,8 @@ type AuthContextType = {
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<{ error?: any }|void>;
   signOut: () => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ error?: any }|void>;
+  resetPasswordEmail: (email: string) => Promise<{ error?: any }|void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,6 +44,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async signInWithPassword(email: string, password: string) {
       if (!supabase) return { error: new Error('Supabase not configured') };
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error };
+    },
+    async signUpWithEmail(email: string, password: string) {
+      if (!supabase) return { error: new Error('Supabase not configured') };
+      const { error } = await supabase.auth.signUp({ email, password });
+      return { error };
+    },
+    async resetPasswordEmail(email: string) {
+      if (!supabase) return { error: new Error('Supabase not configured') };
+      const redirectTo = "faithtalkai://reset";
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       return { error };
     },
     async signOut() {

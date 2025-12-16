@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
+import { isLocalPremiumActive } from './iap';
 
 type TierSettings = {
   freeMessageLimit: number;
@@ -99,8 +100,12 @@ export async function requirePremiumOrPrompt(opts: {
   onAllowed: () => void;
 }) {
   const { userId, feature, studyId, onUpgrade, onAllowed } = opts;
-  // Path A (iOS): ungate premium features and never show external purchase/upgrade links
-  if (Platform.OS === 'ios') return onAllowed();
+  // iOS: respect local IAP premium flag
+  if (Platform.OS === 'ios') {
+    const local = await isLocalPremiumActive();
+    if (local) return onAllowed();
+    return onUpgrade();
+  }
   const premium = await isPremiumUser(userId);
   if (premium) return onAllowed();
   const slug = await getOwnerSlug(userId);
@@ -153,8 +158,12 @@ export async function guardMessageSend(opts: {
   onAllowed: () => void;
 }) {
   const { userId, onUpgrade, onAllowed } = opts;
-  // Path A (iOS): remove free daily message limit enforcement
-  if (Platform.OS === 'ios') return onAllowed();
+  // iOS: if local premium is active, allow; otherwise treat as hit limit to route to paywall
+  if (Platform.OS === 'ios') {
+    const local = await isLocalPremiumActive();
+    if (local) return onAllowed();
+    return onUpgrade();
+  }
   const premium = await isPremiumUser(userId);
   if (premium) return onAllowed();
   const slug = await getOwnerSlug(userId);

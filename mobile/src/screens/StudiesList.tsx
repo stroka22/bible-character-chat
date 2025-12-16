@@ -62,7 +62,7 @@ export default function StudiesList() {
                     studyId: item.id,
                     onAllowed: () => navigation.navigate('StudyDetail', { studyId: item.id, title: item.title }),
                     onUpgrade: () => {
-                      alert('Upgrade required to access this study. Visit faithtalkai.com/pricing to upgrade.');
+                      (navigation as any).navigate('Paywall');
                     }
                   });
                 } catch {

@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { SafeAreaView, Text, View, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -6,6 +7,7 @@ import { getDailyMessageCount, getOwnerSlug, getTierSettings, isPremiumUser } fr
 import { theme } from '../theme';
 
 export default function Profile() {
+  const navigation = useNavigation<any>();
   const { user, signOut } = useAuth();
   const [email, setEmail] = React.useState<string>('');
   const [ownerSlug, setOwnerSlug] = React.useState<string>('default');
@@ -66,7 +68,7 @@ export default function Profile() {
           </View>
         )}
         {!isIOSPremium && (
-          <TouchableOpacity onPress={() => Linking.openURL('https://faithtalkai.com/pricing')} style={{ backgroundColor: theme.colors.primary, padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}>
+          <TouchableOpacity onPress={() => (navigation as any).navigate('Paywall')} style={{ backgroundColor: theme.colors.primary, padding: 14, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}>
             <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>Upgrade</Text>
           </TouchableOpacity>
         )}

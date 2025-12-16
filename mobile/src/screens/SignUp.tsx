@@ -1,0 +1,50 @@
+import React, { useState } from 'react';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../contexts/AuthContext';
+import { theme } from '../theme';
+
+export default function SignUp() {
+  const { signUpWithEmail } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async () => {
+    setLoading(true);
+    try {
+      const { error } = (await signUpWithEmail(email.trim(), password)) || {};
+      if (error) Alert.alert('Sign Up', error.message || String(error));
+      else Alert.alert('Sign Up', 'Check your email to confirm your account.');
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingTop: insets.top + 16, paddingHorizontal: 16 }}>
+      <View style={{ gap: 10 }}>
+        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800' }}>Create Account</Text>
+        <TextInput
+          autoCapitalize='none'
+          keyboardType='email-address'
+          value={email}
+          onChangeText={setEmail}
+          placeholder='Email'
+          placeholderTextColor={theme.colors.muted}
+          style={{ backgroundColor: theme.colors.surface, color: theme.colors.text, padding: 12, borderRadius: 8 }}
+        />
+        <TextInput
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          placeholder='Password'
+          placeholderTextColor={theme.colors.muted}
+          style={{ backgroundColor: theme.colors.surface, color: theme.colors.text, padding: 12, borderRadius: 8 }}
+        />
+        <TouchableOpacity onPress={onSubmit} disabled={loading || !email.trim() || !password} style={{ backgroundColor: (!email.trim() || !password) ? theme.colors.muted : theme.colors.primary, padding: 16, borderRadius: 12, alignItems: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>{loading ? 'Creating…' : 'Create account'}</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
