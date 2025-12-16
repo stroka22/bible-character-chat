@@ -32,7 +32,7 @@ function linkInline(text, charMap) {
     if (used.has(name)) continue;
     const re = new RegExp(`\\b(${name.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')})\\b`, 'i');
     if (re.test(linked)) {
-      linked = linked.replace(re, `<a href="/chat?character=${c.id}" class="text-blue-700 underline hover:no-underline">$1</a>`);
+      linked = linked.replace(re, `<a href="/chat?character=${c.id}" class="text-blue-700 underline hover:no-underline" target="_blank" rel="noopener noreferrer">$1</a>`);
       used.add(name);
     }
   }
@@ -115,7 +115,7 @@ export default function BibleReader() {
                 {authorChar && (
                   <li>
                     <span className="inline-flex items-center rounded-full bg-blue-100 text-blue-800 px-2 py-0.5 text-xs font-medium mr-2">Author</span>
-                    <Link to={`/chat?character=${authorChar.id}`} className="text-blue-700 underline hover:no-underline">{authorChar.name}</Link>
+                    <a href={`/chat?character=${authorChar.id}`} className="text-blue-700 underline hover:no-underline" target="_blank" rel="noopener noreferrer">{authorChar.name}</a>
                   </li>
                 )}
                 {/* Future: detected names per chapter via lightweight NER/dictionary */}
