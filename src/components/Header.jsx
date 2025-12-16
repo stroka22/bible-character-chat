@@ -164,6 +164,16 @@ const Header = () => {
             Home
           </Link>
           <Link 
+            to="/bible" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/bible') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Bible
+          </Link>
+          <Link 
             to="/how-it-works" 
             className={`text-sm font-medium transition-colors ${
               isActive('/how-it-works') 
@@ -371,57 +381,67 @@ const Header = () => {
       >
         <div className="container mx-auto px-4 py-4">
           <nav className="flex flex-col space-y-4 mb-6">
-            <Link 
-              to="/" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/how-it-works" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/how-it-works') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              Getting&nbsp;Started
-            </Link>
-            <Link 
-              to="/pricing" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/pricing') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              Pricing
-            </Link>
-            <Link 
-              to="/faq" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/faq') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              FAQ
-            </Link>
-            <Link 
-              to="/contact" 
-              className={`text-sm font-medium transition-colors ${
-                isActive('/contact') 
-                  ? 'text-yellow-400' 
-                  : 'text-gray-300'
-              }`}
-            >
-              Contact&nbsp;Us
-            </Link>
-          </nav>
+          <Link 
+            to="/" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Home
+          </Link>
+          <Link 
+            to="/bible" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/bible') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Bible
+          </Link>
+          <Link 
+            to="/how-it-works" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/how-it-works') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Getting Started
+          </Link>
+          <Link 
+            to="/pricing" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/pricing') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Pricing
+          </Link>
+          <Link 
+            to="/faq" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/faq') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            FAQ
+          </Link>
+          <Link 
+            to="/contact" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/contact') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Contact Us
+          </Link>
+        </nav>
 
           {/* Mobile Auth Buttons */}
           <div className="pt-4 border-t border-blue-800">
