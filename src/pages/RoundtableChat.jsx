@@ -537,7 +537,12 @@ const RoundtableChat = () => {
                           if (navigator.share) {
                             try { await navigator.share({ title, text, url }); return; } catch {}
                           }
-                          await navigator.clipboard.writeText(url);
+                          try {
+                            await navigator.clipboard.writeText(url);
+                            try { alert('Invite link copied to clipboard'); } catch {}
+                          } catch (clipErr) {
+                            try { window.prompt('Copy this invite link:', url); } catch {}
+                          }
                         } catch (e) {
                           console.error('Failed to create invite:', e);
                         }
@@ -567,7 +572,12 @@ const RoundtableChat = () => {
                               return;
                             } catch {/* fallthrough */}
                           }
-                          await navigator.clipboard.writeText(url);
+                          try {
+                            await navigator.clipboard.writeText(url);
+                            try { alert('Share link copied to clipboard'); } catch {}
+                          } catch (clipErr) {
+                            try { window.prompt('Copy this link:', url); } catch {}
+                          }
                         } catch (e) {
                           console.error('Failed to share roundtable:', e);
                         }

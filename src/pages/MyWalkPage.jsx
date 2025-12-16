@@ -622,7 +622,7 @@ const MyWalkPage = () => {
                   }`}
                 >
                   {/* Header with title + rename */}
-                  <div className="flex justify-between items-center mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-2">
                     {renamingConversationId === conv.id ? (
                       /* Rename input */
                       <div className="flex-1 flex items-center space-x-2">
@@ -754,7 +754,7 @@ const MyWalkPage = () => {
                             Copy Transcript
                           </button>
                         </h3>
-                        <span className="text-blue-200 text-sm flex-shrink-0">
+                        <span className="text-blue-200 text-sm flex-shrink-0 mt-1 sm:mt-0">
                           {formatDate(conv.updated_at)}
                         </span>
                       </>

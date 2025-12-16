@@ -89,6 +89,49 @@ const SimpleChatWithHistory = () => {
 
     const { conversationId, shareCode } = useParams();
 
+    // Measure header and lead-capture banner to prevent overlap on mobile
+    const [headerPad, setHeaderPad] = useState(96);
+    useEffect(() => {
+      const measure = () => {
+        try {
+          const headerEl = document.querySelector('header');
+          const fixedHeaderH = headerEl ? headerEl.getBoundingClientRect().height : 64;
+          const banner = document.getElementById('lead-banner');
+          let top = fixedHeaderH + 8;
+          if (banner) {
+            const rect = banner.getBoundingClientRect();
+            const belowBanner = Math.max(0, rect.bottom + 8);
+            top = Math.max(top, belowBanner);
+          }
+          // add a small cushion for mobile
+          const cushion = window.innerWidth < 768 ? 40 : 56;
+          setHeaderPad(top + cushion);
+        } catch {}
+      };
+      measure();
+      const t1 = setTimeout(measure, 100);
+      const t2 = setTimeout(measure, 400);
+      let rafId; let frames = 0;
+      const sample = () => { measure(); if (frames++ < 120) rafId = requestAnimationFrame(sample); };
+      rafId = requestAnimationFrame(sample);
+      window.addEventListener('resize', measure);
+      window.addEventListener('scroll', measure);
+      let bodyObserver;
+      try {
+        if ('MutationObserver' in window) {
+          bodyObserver = new MutationObserver(measure);
+          bodyObserver.observe(document.body, { attributes: true, childList: true, subtree: true });
+        }
+      } catch {}
+      return () => {
+        clearTimeout(t1); clearTimeout(t2);
+        try { cancelAnimationFrame(rafId); } catch {}
+        window.removeEventListener('resize', measure);
+        window.removeEventListener('scroll', measure);
+        try { bodyObserver && bodyObserver.disconnect(); } catch {}
+      };
+    }, []);
+
     /* ------------------------------------------------------------------
      * Inject lesson context when URL contains ?study=<id>&lesson=<index>
      * ----------------------------------------------------------------*/
@@ -446,7 +489,7 @@ const SimpleChatWithHistory = () => {
                     const namePrefixRx = /^\s*[A-Z][A-Za-z\s\-']{1,40}\s*[:\-–—]\s+/;
                     const hasNamePrefixes = msgs.some(m => m?.role === 'assistant' && typeof m.content === 'string' && namePrefixRx.test(m.content));
                     const manyParticipants = Array.isArray(conv.participants) && conv.participants.length > 1;
-                    let shouldTreatAsRoundtable = (convType === 'roundtable' || isRoundtableByTitle || manyParticipants || hasSpeakerIds || hasNamePrefixes);
+                    let shouldTreatAsRoundtable = (convType === 'roundtable' || isRoundtableByTitle || manyParticipants);
                     // Optional override: URL param participants=Name1,Name2 to backfill participants by name
                     // Useful for older conversations that predate participants metadata
                     const params = new URLSearchParams(location.search);
@@ -708,7 +751,7 @@ const SimpleChatWithHistory = () => {
 
                 /* Glass container wrapping either selection or chat */
                 _jsx("div", { 
-                    className: "relative z-10 flex items-start justify-center pt-20 md:pt-32 pb-8", 
+                    className: "relative z-10 flex items-start justify-center pb-8", style: { paddingTop: headerPad }, 
                     children: _jsx("div", { 
                         className: "chat-container w-full max-w-6xl h-[calc(100svh-7rem)] md:h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", 
                         children: loadingConversation ? (
@@ -778,8 +821,8 @@ const SimpleChatWithHistory = () => {
                                             _jsxs("div", { 
                                                 className: "flex flex-wrap gap-2",
                                                 children: [
-                                                    _jsx("button", { 
-                                                        onClick: resetChat, 
+                                                    _jsx(Link, { 
+                                                        to: "/", 
                                                         id: "backBtn", 
                                                         className: "text-xs md:text-sm px-2 md:px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
                                                         children: "Back to Characters" 
@@ -928,7 +971,12 @@ const SimpleChatWithHistory = () => {
                                                                 if (navigator.share) {
                                                                     try { await navigator.share({ title, text, url }); return; } catch {}
                                                                 }
-                                                                await navigator.clipboard.writeText(url);
+                                                                try {
+                                                                  await navigator.clipboard.writeText(url);
+                                                                  try { alert('Invite link copied to clipboard'); } catch {}
+                                                                } catch (clipErr) {
+                                                                  try { window.prompt('Copy this invite link:', url); } catch {}
+                                                                }
                                                             } catch (e) {
                                                                 console.error('[Invite] Failed to create invite:', e);
                                                             }
@@ -991,7 +1039,7 @@ const SimpleChatWithHistory = () => {
                                                       }
                                                     } catch (e) {
                                                       // Fallback to clipboard if user cancels or share not supported
-                                                      try { await navigator.clipboard.writeText(shareUrl); } catch {}
+                                                      try { await navigator.clipboard.writeText(shareUrl); alert('Share link copied to clipboard'); } catch { try { window.prompt('Copy this link:', shareUrl); } catch {} }
                                                     }
                                                         },
                                                         children: [
