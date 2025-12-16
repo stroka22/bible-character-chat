@@ -1,46 +1,48 @@
-// Minimal local KJV provider
-// For Phase 1 we include a tiny subset (Genesis 1, John 1) and return placeholders for others.
+import kjv from '../../../data/kjv.json';
 
-const SAMPLE = {
-  'Genesis': {
-    1: [
-      'In the beginning God created the heaven and the earth.',
-      'And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.',
-      'And God said, Let there be light: and there was light.',
-    ]
-  },
-  'John': {
-    1: [
-      'In the beginning was the Word, and the Word was with God, and the Word was God.',
-      'The same was in the beginning with God.',
-      'All things were made by him; and without him was not any thing made that was made.',
-    ]
+function normalize(data) {
+  // Data format: [ { name: 'Genesis', chapters: [ [verse1, verse2, ...], ... ] }, ... ]
+  const out = {};
+  if (Array.isArray(data)) {
+    for (const b of data) {
+      const name = b.name || b.abbrev || 'Unknown';
+      const chapters = Array.isArray(b.chapters) ? b.chapters : [];
+      out[name] = chapters.map((ch) => ch.map((v) => (typeof v === 'string' ? v : (v?.text ?? ''))));
+    }
+  } else if (data && (data.book || data.books)) {
+    const books = data.book || data.books || [];
+    for (const b of books) {
+      const name = b.name || b.book_name || b.book || 'Unknown';
+      const chapters = b.chapters || b.chapter || [];
+      out[name] = chapters.map((ch) => ch.map((v) => (typeof v === 'string' ? v : (v?.text ?? ''))));
+    }
   }
-};
+  return out;
+}
+
+const STORE = normalize(kjv);
 
 export class KjvLocalProvider {
   constructor(opts = {}) { this.opts = opts; }
-  async getBooks() {
-    return Object.keys(SAMPLE);
-  }
-  async getChapters(book) {
-    const b = SAMPLE[book];
-    return b ? Object.keys(b).map(n => Number(n)).sort((a,b)=>a-b) : [];
-  }
+  async getBooks() { return Object.keys(STORE); }
+  async getChapters(book) { return (STORE[book] || []).map((_, i) => i + 1); }
   async getChapterText(book, chapter) {
-    const verses = SAMPLE[book]?.[chapter];
-    if (!verses) return { translation: 'KJV', book, chapter, verses: [], notice: 'Placeholder chapter (full KJV will be loaded when available).'};
-    return { translation: 'KJV', book, chapter, verses };
+    const idx = Number(chapter) - 1;
+    const verses = (STORE[book]?.[idx] || []).slice();
+    return { translation: 'KJV', book, chapter: Number(chapter), verses };
   }
   async search(q) {
     const results = [];
-    for (const [book, chapters] of Object.entries(SAMPLE)) {
-      for (const [chStr, verses] of Object.entries(chapters)) {
-        verses.forEach((v, i) => {
-          if (v.toLowerCase().includes(q.toLowerCase())) results.push({ book, chapter: Number(chStr), verse: i+1, preview: v });
+    const ql = (q || '').toLowerCase();
+    for (const [book, chapters] of Object.entries(STORE)) {
+      chapters.forEach((verses, chIdx) => {
+        verses.forEach((text, vIdx) => {
+          if ((text || '').toLowerCase().includes(ql)) {
+            results.push({ book, chapter: chIdx + 1, verse: vIdx + 1, preview: text });
+          }
         });
-      }
+      });
     }
-    return results;
+    return results.slice(0, 50);
   }
 }

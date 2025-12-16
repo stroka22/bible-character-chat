@@ -2,6 +2,9 @@ import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BOOK_AUTHOR } from '../data/bibleAuthorship.js';
 import { characterRepository } from '../repositories/characterRepository.js';
+import { KjvLocalProvider } from '../services/bible/providers/kjvLocal.js';
+
+const kjvProv = new KjvLocalProvider();
 
 function useCharacters() {
   const [map, setMap] = React.useState(new Map());
@@ -42,27 +45,23 @@ export default function BibleReader() {
   const [data, setData] = React.useState({ translation: 'KJV', book, chapter: Number(chapter), verses: [], notice: '' });
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  const [bookList, setBookList] = React.useState([]);
+  const [chapterList, setChapterList] = React.useState([]);
   const charMap = useCharacters();
 
   const authorName = BOOK_AUTHOR[book];
   const authorChar = authorName ? charMap.get(authorName.toLowerCase()) : null;
 
+  React.useEffect(() => { (async () => setBookList(await kjvProv.getBooks()))(); }, []);
+  React.useEffect(() => { (async () => setChapterList(await kjvProv.getChapters(book)))(); }, [book]);
   React.useEffect(() => {
     (async () => {
       setLoading(true); setError('');
       try {
-        if (translation === 'NIV') {
-          // Until Bible Brain key arrives, show KJV with a notice
-          const mod = await import('../services/bible/providers/kjvLocal.js');
-          const prov = new mod.KjvLocalProvider();
-          const res = await prov.getChapterText(book, Number(chapter));
-          setData({ ...res, notice: 'NIV coming soon via Bible Brain. Showing KJV sample.' });
-        } else {
-          const mod = await import('../services/bible/providers/kjvLocal.js');
-          const prov = new mod.KjvLocalProvider();
-          const res = await prov.getChapterText(book, Number(chapter));
-          setData(res);
-        }
+        const res = await kjvProv.getChapterText(book, Number(chapter));
+        setData(translation === 'NIV'
+          ? { ...res, notice: 'NIV coming soon via Bible Brain. Showing KJV.' }
+          : res);
       } catch (e) {
         setError(e.message || 'Failed to load chapter');
       } finally {
@@ -70,8 +69,6 @@ export default function BibleReader() {
       }
     })();
   }, [translation, book, chapter]);
-
-  const chapters = React.useMemo(() => [1,2,3,4,5,6,7,8,9,10], []); // placeholder nav
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-12">
@@ -86,10 +83,10 @@ export default function BibleReader() {
             <option value="KJV">KJV</option>
           </select>
           <select value={book} onChange={(e)=>navigate(`/bible/${translation}/${e.target.value}/1`)} className="rounded-md border border-gray-300 px-2 py-1">
-            {['Genesis','Exodus','John'].map(b => <option key={b} value={b}>{b}</option>)}
+            {bookList.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
           <select value={String(chapter)} onChange={(e)=>navigate(`/bible/${translation}/${book}/${e.target.value}`)} className="rounded-md border border-gray-300 px-2 py-1">
-            {chapters.map(n => <option key={n} value={n}>{n}</option>)}
+            {chapterList.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
       </div>
@@ -102,7 +99,7 @@ export default function BibleReader() {
         <div className="grid md:grid-cols-12 gap-6">
           <div className="md:col-span-8">
             {data.verses.length === 0 ? (
-              <div className="p-4 bg-white border border-gray-200 rounded">No verses for this chapter in the sample. Choose Genesis 1 or John 1, or wait for NIV.</div>
+              <div className="p-4 bg-white border border-gray-200 rounded">No verses loaded.</div>
             ) : (
               <div className="space-y-3 bg-white border border-gray-200 rounded p-4">
                 {data.verses.map((v, idx) => (
@@ -124,6 +121,7 @@ export default function BibleReader() {
                 {/* Future: detected names per chapter via lightweight NER/dictionary */}
               </ul>
             </div>
+            <div className="mt-4 text-xs text-gray-500">Scripture quotations are from the King James Version (Public Domain).</div>
           </div>
         </div>
       )}
