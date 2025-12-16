@@ -210,8 +210,18 @@ export const chatRepository = {
                 .from('chats')
                 .select('*')
                 .order('updated_at', { ascending: false });
-            if (error) throw error;
-            return data;
+            if (error) {
+                // Gracefully degrade: for common RLS/Auth or parsing errors, return an empty list
+                const code = error.code || '';
+                const status = error.status || error.code;
+                if (code === 'PGRST116' || status === 401 || status === 403 || code === '22P02') {
+                    // eslint-disable-next-line no-console
+                    console.warn('[chatRepository] getUserChats: suppressing error and returning []', error);
+                    return [];
+                }
+                throw error;
+            }
+            return data || [];
         }
         catch (error) {
             if (shouldFallback(error)) {
