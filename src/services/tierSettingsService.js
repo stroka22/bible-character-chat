@@ -234,18 +234,13 @@ export async function getSettings(ownerSlug) {
   const slug = ownerSlug || getOwnerSlug();
   
   try {
-    // Try to get from Supabase first
-    const { data, error } = await supabase
-      .from(TABLE_NAME)
-      .select('*')
-      .eq('owner_slug', slug)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('[tierSettingsService] Supabase error:', error);
-      // Fall back to cache on error (use correct org slug)
-      return loadFromCache(slug) || getDefaultSettings();
+    // Use same-origin proxy to avoid QUIC/HTTP3 issues
+    const response = await fetch(`/api/tier-settings?owner_slug=${encodeURIComponent(slug)}`);
+    if (!response.ok) {
+      throw new Error(`Proxy returned ${response.status}`);
     }
+    const dataArray = await response.json();
+    const data = Array.isArray(dataArray) ? dataArray[0] : dataArray;
     
     if (data) {
       // Found in Supabase, normalize and update cache
@@ -309,15 +304,23 @@ export async function setSettings(data, ownerSlug) {
       ...denormalizeSettings(data)
     };
     
-    // Upsert to Supabase (insert or update on conflict)
-    const { error } = await supabase
-      .from(TABLE_NAME)
-      .upsert(dbData, { 
-        onConflict: 'owner_slug'
-      });
+    // Get auth token if available
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
     
-    if (error) {
-      console.error('[tierSettingsService] Error saving settings:', error);
+    // Use same-origin proxy to avoid QUIC/HTTP3 issues
+    const response = await fetch('/api/tier-settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(dbData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[tierSettingsService] Error saving settings:', errorData);
       // Still update cache even if Supabase fails
       saveToCache(data, slug);
       return false;
