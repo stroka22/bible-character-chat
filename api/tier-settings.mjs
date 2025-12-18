@@ -9,23 +9,26 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIs
 export default async function handler(req, res) {
   const { method } = req;
   
-  // Get auth token from request if present
+  // Get auth token from request - check both Authorization header and Bearer token
+  let authToken = '';
   const authHeader = req.headers.authorization || '';
+  if (authHeader.startsWith('Bearer ')) {
+    authToken = authHeader;
+  }
   
   const headers = {
     'apikey': SUPABASE_ANON_KEY,
     'Content-Type': 'application/json',
-    'Prefer': 'return=minimal',
   };
   
-  // Pass through auth header if present
-  if (authHeader) {
-    headers['Authorization'] = authHeader;
+  // Pass through auth header if present (required for RLS on writes)
+  if (authToken) {
+    headers['Authorization'] = authToken;
   }
 
   try {
     if (method === 'GET') {
-      // GET - fetch tier settings
+      // GET - fetch tier settings (public read allowed)
       const ownerSlug = req.query.owner_slug || req.query.ownerSlug;
       let url = `${SUPABASE_URL}/rest/v1/tier_settings?select=*`;
       if (ownerSlug) {
@@ -38,14 +41,18 @@ export default async function handler(req, res) {
     }
     
     if (method === 'POST' || method === 'PUT') {
-      // POST/PUT - upsert tier settings
+      // POST/PUT - upsert tier settings (requires admin auth)
+      if (!authToken) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+      
       const body = req.body;
       
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/tier_settings`, {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/tier_settings?on_conflict=owner_slug`, {
         method: 'POST',
         headers: {
           ...headers,
-          'Prefer': 'resolution=merge-duplicates,return=minimal',
+          'Prefer': 'resolution=merge-duplicates',
         },
         body: JSON.stringify(body),
       });
