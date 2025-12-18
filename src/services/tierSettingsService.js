@@ -304,9 +304,27 @@ export async function setSettings(data, ownerSlug) {
       ...denormalizeSettings(data)
     };
     
-    // Get auth token if available
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData?.session?.access_token;
+    // Get auth token from localStorage (Supabase stores session there)
+    let token = null;
+    try {
+      const storageKey = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      if (storageKey) {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        token = stored?.access_token;
+      }
+    } catch (e) {
+      console.warn('[tierSettingsService] Could not get token from localStorage:', e);
+    }
+    
+    // Fallback to supabase.auth if localStorage didn't work
+    if (!token) {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        token = sessionData?.session?.access_token;
+      } catch (e) {
+        console.warn('[tierSettingsService] Could not get token from supabase.auth:', e);
+      }
+    }
     
     // Use same-origin proxy to avoid QUIC/HTTP3 issues
     const response = await fetch('/api/tier-settings', {
