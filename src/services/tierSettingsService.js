@@ -313,8 +313,7 @@ export async function setSettings(data, ownerSlug) {
     const { error } = await supabase
       .from(TABLE_NAME)
       .upsert(dbData, { 
-        onConflict: 'owner_slug',
-        returning: 'minimal' // Don't need the returned data
+        onConflict: 'owner_slug'
       });
     
     if (error) {

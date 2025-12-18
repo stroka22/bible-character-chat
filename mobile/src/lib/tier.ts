@@ -100,31 +100,41 @@ export async function requirePremiumOrPrompt(opts: {
   onAllowed: () => void;
 }) {
   const { userId, feature, studyId, onUpgrade, onAllowed } = opts;
-  // iOS: respect local IAP premium flag
+  
+  // Check if user has premium (via IAP on iOS or server flag)
+  let hasPremium = false;
   if (Platform.OS === 'ios') {
-    const local = await isLocalPremiumActive();
-    if (local) return onAllowed();
-    return onUpgrade();
+    hasPremium = await isLocalPremiumActive();
   }
-  const premium = await isPremiumUser(userId);
-  if (premium) return onAllowed();
+  if (!hasPremium) {
+    hasPremium = await isPremiumUser(userId);
+  }
+  
+  // If user has premium, always allow
+  if (hasPremium) return onAllowed();
+  
+  // Check tier settings to see if the feature actually requires premium
   const slug = await getOwnerSlug(userId);
   const s = await getTierSettings(slug);
+  
   // basic rules
   if (feature === 'premiumStudy' && studyId) {
     const set = new Set<string>(s.premiumStudyIds || []);
     if (set.has(String(studyId))) return onUpgrade();
+    return onAllowed(); // Study not in premium list
   }
   if (feature === 'roundtable') {
     // default to premium if not specified
     const gates = s.premiumRoundtableGates || {};
     const isPremiumOnly = gates?.premiumOnly ?? true;
     if (isPremiumOnly) return onUpgrade();
+    return onAllowed();
   }
   if (feature === 'save') {
     // Saving chats/roundtables premium gate (configurable via tier settings)
     const requires = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
     if (requires) return onUpgrade();
+    return onAllowed();
   }
   return onAllowed();
 }
@@ -158,14 +168,20 @@ export async function guardMessageSend(opts: {
   onAllowed: () => void;
 }) {
   const { userId, onUpgrade, onAllowed } = opts;
-  // iOS: if local premium is active, allow; otherwise treat as hit limit to route to paywall
+  
+  // Check if user has premium (via IAP on iOS or server flag)
+  let hasPremium = false;
   if (Platform.OS === 'ios') {
-    const local = await isLocalPremiumActive();
-    if (local) return onAllowed();
-    return onUpgrade();
+    hasPremium = await isLocalPremiumActive();
   }
-  const premium = await isPremiumUser(userId);
-  if (premium) return onAllowed();
+  if (!hasPremium) {
+    hasPremium = await isPremiumUser(userId);
+  }
+  
+  // Premium users have unlimited messages
+  if (hasPremium) return onAllowed();
+  
+  // Check tier settings for message limits
   const slug = await getOwnerSlug(userId);
   const s = await getTierSettings(slug);
   const { count } = await getDailyMessageCount(userId);

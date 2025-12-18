@@ -146,10 +146,6 @@ function AppInner() {
       }
     }}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Always available to support deep links before/after auth */}
-        <Stack.Screen name="JoinChat" component={JoinChat} />
-        {/* Always-available screens */}
-        <Stack.Screen name="Paywall" component={Paywall} />
         {!authed ? (
           <>
             <Stack.Screen name="Login" component={Login} />
@@ -164,6 +160,9 @@ function AppInner() {
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={{ headerShown: true, headerTitleAlign: 'center', headerTitle: () => <BrandHeaderTitle /> }} />
           </>
         )}
+        {/* Deep link only screens - available for both auth states */}
+        <Stack.Screen name="JoinChat" component={JoinChat} />
+        <Stack.Screen name="Paywall" component={Paywall} />
       </Stack.Navigator>
     </NavigationContainer>
   );
