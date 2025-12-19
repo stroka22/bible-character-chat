@@ -1,10 +1,12 @@
 import React from 'react';
 import { SafeAreaView, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
 import { purchaseMonthly, purchaseYearly, restorePurchases } from '../lib/iap';
 
 export default function Paywall() {
+  const navigation = useNavigation<any>();
   const { user } = useAuth();
   const [busy, setBusy] = React.useState(false);
 
@@ -40,9 +42,20 @@ export default function Paywall() {
     } finally { setBusy(false); }
   };
 
+  const goBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('MainTabs');
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16, gap: 12 }}>
+        <TouchableOpacity onPress={goBack} style={{ alignSelf: 'flex-start', paddingVertical: 8, paddingRight: 16 }}>
+          <Text style={{ color: theme.colors.muted, fontSize: 16 }}>← Back</Text>
+        </TouchableOpacity>
         <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800' }}>Go Premium</Text>
         <Text style={{ color: theme.colors.text }}>
           Unlock roundtables, saving, and premium studies.

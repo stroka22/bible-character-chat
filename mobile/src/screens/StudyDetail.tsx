@@ -52,6 +52,53 @@ export default function StudyDetail({ route, navigation }: any) {
     })();
   }, [studyId]);
 
+  async function startLesson(lesson: Lesson) {
+    if (!user || starting) return;
+    setStarting(true);
+    try {
+      // Fetch character if set
+      let char = guide;
+      if (!char && studyMeta?.character_id) {
+        const { data: c } = await supabase
+          .from('characters')
+          .select('id,name,persona_prompt,avatar_url')
+          .eq('id', studyMeta.character_id)
+          .maybeSingle();
+        if (c) char = c as any;
+      }
+      const characterId = char?.id || studyMeta?.character_id || null;
+      const chatTitle = `${title} - Lesson ${lesson.order_index + 1}: ${lesson.title}`;
+      const newChat = await chat.createChat(user.id, characterId, chatTitle);
+      
+      // Add lesson context as system message
+      const lessonPrompt = `You are guiding a Bible study lesson.\nStudy: ${title}\nLesson: ${lesson.title}\n${lesson.summary ? `Summary: ${lesson.summary}` : ''}\n${studyMeta?.character_instructions || ''}`;
+      await chat.addMessage(newChat.id, lessonPrompt, 'system');
+      
+      // Generate intro for the lesson
+      try {
+        const displayName = char?.name || 'Guide';
+        const intro = await generateCharacterResponse(displayName, char?.persona_prompt || '', [
+          { role: 'system', content: lessonPrompt },
+          { role: 'user', content: `Introduce this lesson "${lesson.title}" briefly and invite me to explore it with you.` }
+        ]);
+        if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
+      } catch {}
+      
+      navigation.navigate('MainTabs', {
+        screen: 'Chat',
+        params: {
+          screen: 'ChatDetail',
+          params: { chatId: newChat.id, character: char }
+        }
+      } as any);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Unable to start this lesson.';
+      alert(msg);
+    } finally {
+      setStarting(false);
+    }
+  }
+
   async function startGuidedChat() {
     if (!user || starting) return;
     if (!studyMeta?.character_id) {
@@ -123,12 +170,16 @@ export default function StudyDetail({ route, navigation }: any) {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingBottom: 8 }}
             renderItem={({ item }) => (
-              <View style={{ padding: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8 }}>
+              <TouchableOpacity 
+                onPress={() => startLesson(item)}
+                style={{ padding: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8 }}
+              >
                 <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Lesson {item.order_index + 1}: {item.title}</Text>
                 {!!item.summary && (
                   <Text style={{ color: theme.colors.muted, marginTop: 6 }}>{item.summary}</Text>
                 )}
-              </View>
+                <Text style={{ color: theme.colors.primary, marginTop: 8, fontWeight: '600' }}>Start Lesson →</Text>
+              </TouchableOpacity>
             )}
           />
         )}
