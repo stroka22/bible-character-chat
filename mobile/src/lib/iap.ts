@@ -62,7 +62,13 @@ export async function restorePurchases(userId?: string) {
 async function purchase(productId: string, userId?: string) {
   await initIAP();
   try {
-    await InAppPurchases.getProductsAsync([productId]);
+    const { results: products, responseCode } = await InAppPurchases.getProductsAsync([productId]);
+    if (responseCode !== InAppPurchases.IAPResponseCode.OK) {
+      throw new Error(`Failed to load products (code: ${responseCode})`);
+    }
+    if (!products || products.length === 0) {
+      throw new Error(`Product "${productId}" not found in App Store. Check that the product ID matches exactly and the product status is "Ready to Submit".`);
+    }
     InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }) => {
       (async () => {
         try {
