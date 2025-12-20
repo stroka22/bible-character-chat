@@ -14,10 +14,13 @@ export default function Paywall() {
     if (busy) return; setBusy(true);
     try {
       const res = await purchaseMonthly(user?.id);
-      if (!res.ok) throw new Error('Purchase failed');
+      if (!res.ok) {
+        const errMsg = res.error?.message || res.error?.toString() || 'Purchase could not be completed. Please ensure IAP products are configured in App Store Connect.';
+        throw new Error(errMsg);
+      }
       Alert.alert('Success', 'You are now Premium. Enjoy!');
     } catch (e:any) {
-      Alert.alert('Purchase', e?.message || 'Unable to complete purchase.');
+      Alert.alert('Purchase Issue', e?.message || 'Unable to complete purchase. Please try again later.');
     } finally { setBusy(false); }
   };
 
@@ -25,10 +28,13 @@ export default function Paywall() {
     if (busy) return; setBusy(true);
     try {
       const res = await purchaseYearly(user?.id);
-      if (!res.ok) throw new Error('Purchase failed');
+      if (!res.ok) {
+        const errMsg = res.error?.message || res.error?.toString() || 'Purchase could not be completed. Please ensure IAP products are configured in App Store Connect.';
+        throw new Error(errMsg);
+      }
       Alert.alert('Success', 'You are now Premium. Enjoy!');
     } catch (e:any) {
-      Alert.alert('Purchase', e?.message || 'Unable to complete purchase.');
+      Alert.alert('Purchase Issue', e?.message || 'Unable to complete purchase. Please try again later.');
     } finally { setBusy(false); }
   };
 
@@ -62,10 +68,10 @@ export default function Paywall() {
         </Text>
         <View style={{ marginTop: 12, gap: 10 }}>
           <TouchableOpacity onPress={onMonthly} disabled={busy} style={{ backgroundColor: theme.colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
-            <Text style={{ color: theme.colors.primaryText, fontWeight: '900', fontSize: 16 }}>Monthly — $9.97 (7‑day free trial)</Text>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '900', fontSize: 16 }}>Monthly — $9.99 (7‑day free trial)</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onYearly} disabled={busy} style={{ backgroundColor: theme.colors.card, paddingVertical: 14, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-            <Text style={{ color: theme.colors.text, fontWeight: '900', fontSize: 16 }}>Yearly — $97.97 (7‑day free trial)</Text>
+            <Text style={{ color: theme.colors.text, fontWeight: '900', fontSize: 16 }}>Yearly — $89.99 (7‑day free trial)</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onRestore} disabled={busy} style={{ backgroundColor: theme.colors.surface, paddingVertical: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
             <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Restore Purchases</Text>
