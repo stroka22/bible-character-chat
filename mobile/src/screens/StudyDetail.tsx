@@ -138,7 +138,11 @@ export default function StudyDetail({ route, navigation }: any) {
       }
       const characterId = char?.id || targetCharacterId || '';
       const chatTitle = `${title} - Lesson ${lesson.order_index + 1}: ${lesson.title}`;
-      const newChat = await chat.createChat(user.id, characterId, chatTitle);
+      const lessonId = lesson.id !== 'synthetic-intro' ? lesson.id : undefined;
+      const newChat = await chat.createChat(user.id, characterId, chatTitle, { 
+        studyId: studyId, 
+        lessonId 
+      });
       
       // Build lesson prompts string from the prompts array
       const lessonPromptsText = Array.isArray(lesson.prompts) && lesson.prompts.length > 0
@@ -198,7 +202,7 @@ export default function StudyDetail({ route, navigation }: any) {
         .select('id,name,persona_prompt')
         .eq('id', studyMeta.character_id)
         .maybeSingle();
-      const newChat = await chat.createChat(user.id, String(studyMeta.character_id), title);
+      const newChat = await chat.createChat(user.id, String(studyMeta.character_id), title, { studyId });
       const prompt = String(studyMeta?.character_instructions || '').trim();
       if (prompt) {
         await chat.addMessage(newChat.id, `[Guiding Prompt]\n${prompt}`, 'system');

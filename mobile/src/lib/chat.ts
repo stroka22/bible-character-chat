@@ -35,10 +35,24 @@ export const chat = {
     return (data || []) as Chat[];
   },
 
-  async createChat(userId: string, characterId: string, title?: string): Promise<Chat> {
+  async createChat(
+    userId: string, 
+    characterId: string, 
+    title?: string,
+    options?: { studyId?: string; lessonId?: string }
+  ): Promise<Chat> {
+    const payload: Record<string, any> = {
+      user_id: userId,
+      character_id: characterId,
+      title: title || null,
+      is_favorite: false,
+    };
+    if (options?.studyId) payload.study_id = options.studyId;
+    if (options?.lessonId) payload.lesson_id = options.lessonId;
+    
     const { data, error } = await supabase
       .from('chats')
-      .insert({ user_id: userId, character_id: characterId, title: title || null, is_favorite: false })
+      .insert(payload)
       .select('*')
       .single();
     if (error) throw error;
