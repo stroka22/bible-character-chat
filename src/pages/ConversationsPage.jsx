@@ -288,24 +288,25 @@ const ConversationsPage = () => {
 
         {/* Wrap adjacent conditional renders in a React Fragment */}
         <>
-          {/* Empty state (handles both no conversations and no favourites) */}
-          {!isLoading &&
-            ((!conversations || conversations.length === 0) ||
-              (showOnlyFavorites &&
-                conversations &&
-                !conversations.some(c => c.is_favorite))) && (
+          {/* Empty state (handles both no conversations and no favourites) - excludes Bible study chats */}
+          {!isLoading && (() => {
+            const regularConversations = conversations?.filter(c => !c.study_id) || [];
+            const hasRegular = regularConversations.length > 0;
+            const hasFavorites = regularConversations.some(c => c.is_favorite);
+            return (!hasRegular || (showOnlyFavorites && !hasFavorites));
+          })() && (
             <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-8 text-center">
               <h3 className="text-xl font-semibold text-yellow-300 mb-4">
-                {showOnlyFavorites && conversations && conversations.length > 0
+                {showOnlyFavorites && conversations?.filter(c => !c.study_id).length > 0
                   ? 'No Favorite Conversations'
                   : 'No Conversations Yet'}
               </h3>
               <p className="text-blue-100 mb-6">
-                {showOnlyFavorites && conversations && conversations.length > 0
+                {showOnlyFavorites && conversations?.filter(c => !c.study_id).length > 0
                   ? "You haven't marked any conversations as favorites yet."
                   : "You haven't saved any conversations yet. Start a chat with a biblical character to begin!"}
               </p>
-              {showOnlyFavorites && conversations && conversations.length > 0 ? (
+              {showOnlyFavorites && conversations?.filter(c => !c.study_id).length > 0 ? (
                 <button
                   onClick={() => setShowOnlyFavorites(false)}
                   className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
@@ -323,13 +324,13 @@ const ConversationsPage = () => {
             </div>
           )}
 
-          {/* Simple conversations list */}
+          {/* Simple conversations list (excludes Bible study chats) */}
           {conversations &&
-            conversations.length > 0 &&
-            (!showOnlyFavorites || conversations.some(c => c.is_favorite)) && (
+            conversations.filter(c => !c.study_id).length > 0 &&
+            (!showOnlyFavorites || conversations.filter(c => !c.study_id).some(c => c.is_favorite)) && (
             <div className="space-y-4">
               {conversations
-                .filter(conv => !showOnlyFavorites || conv.is_favorite)
+                .filter(conv => !conv.study_id && (!showOnlyFavorites || conv.is_favorite))
                 .map(conv => (
                 <div
                   key={conv.id}

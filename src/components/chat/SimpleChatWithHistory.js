@@ -733,6 +733,14 @@ const SimpleChatWithHistory = () => {
         } catch {}
     }, [chatId, conversationId, location.search, navigate, shareCode]);
 
+    // Helper to get study options for saveChat
+    const getStudyOptions = () => {
+        const opts = {};
+        if (studyMeta?.id) opts.studyId = studyMeta.id;
+        if (lessonMeta?.id && lessonMeta.id !== 'synthetic-intro') opts.lessonId = lessonMeta.id;
+        return opts;
+    };
+
     // Handle saving the conversation
     const handleSaveConversation = () => {
         if (!isAuthenticated) {
@@ -754,7 +762,7 @@ const SimpleChatWithHistory = () => {
 
         // If we have a title, save directly, otherwise show dialog
         if (conversationTitle) {
-            saveChat(conversationTitle);
+            saveChat(conversationTitle, getStudyOptions());
             // no popup
         } else {
             setShowSaveDialog(true);
@@ -767,7 +775,7 @@ const SimpleChatWithHistory = () => {
             return;
         }
 
-        saveChat(conversationTitle);
+        saveChat(conversationTitle, getStudyOptions());
         setShowSaveDialog(false);
         // no popup
     };
@@ -1002,7 +1010,7 @@ const SimpleChatWithHistory = () => {
                                                                         const title = conversationTitle && conversationTitle.trim()
                                                                           ? conversationTitle.trim()
                                                                           : `Conversation with ${character.name}`;
-                                                                        await saveChat(title);
+                                                                        await saveChat(title, getStudyOptions());
                                                                         await new Promise(r => setTimeout(r, 600));
                                                                         id = chatId;
                                                                     } else {
@@ -1048,7 +1056,7 @@ const SimpleChatWithHistory = () => {
                                                                     const title = conversationTitle && conversationTitle.trim()
                                                                       ? conversationTitle.trim()
                                                                       : `Conversation with ${character.name}`;
-                                                                    await saveChat(title);
+                                                                    await saveChat(title, getStudyOptions());
                                                                     // Allow state + route sync effect to run
                                                                     await new Promise(r => setTimeout(r, 800));
                                                                 } catch (e) {

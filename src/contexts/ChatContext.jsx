@@ -364,12 +364,16 @@ export const ChatProvider = ({ children }) => {
   /**
    * Save the current chat
    * Repository will auto-generate a title if none is supplied
+   * @param {string} overrideTitle - Optional title override
+   * @param {Object} options - Optional settings
+   * @param {string} options.studyId - Bible study ID (for study conversations)
+   * @param {string} options.lessonId - Lesson ID (for study conversations)
    */
-  const saveChat = useCallback(async (overrideTitle) => {
+  const saveChat = useCallback(async (overrideTitle, options = {}) => {
     // ------------------------------------------------------------------
     // Diagnostics + defensive checks
     // ------------------------------------------------------------------
-    console.log('[ChatContext] Attempting to save chat');
+    console.log('[ChatContext] Attempting to save chat', options);
     console.log('[ChatContext] Current character:', character);
     console.log('[ChatContext] Message count:', messages.length);
 
@@ -409,7 +413,15 @@ export const ChatProvider = ({ children }) => {
         : `Conversation with ${
             character?.name ?? 'Unknown'
           } - ${new Date().toLocaleDateString()}`;
-      let newConversation = await createConversation(characterId, title);
+      
+      // Build payload with optional study/lesson info
+      const payload = {
+        character_id: characterId,
+        title,
+        ...(options.studyId ? { study_id: options.studyId } : {}),
+        ...(options.lessonId ? { lesson_id: options.lessonId } : {}),
+      };
+      let newConversation = await createConversation(payload);
 
       // Hard fallback in case provider path could not return an ID
       if (!newConversation || !newConversation.id) {
@@ -418,10 +430,7 @@ export const ChatProvider = ({ children }) => {
           if (typeof window !== 'undefined' && window.localStorage) {
             window.localStorage.setItem('bypass_auth', 'true');
           }
-          newConversation = await conversationRepository.createConversation({
-            character_id: characterId,
-            title,
-          });
+          newConversation = await conversationRepository.createConversation(payload);
         } catch (repoErr) {
           console.error('[ChatContext] Repository fallback failed:', repoErr);
         }

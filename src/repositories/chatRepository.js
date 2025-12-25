@@ -58,8 +58,8 @@ export const chatRepository = {
                 character_id: characterId,
                 title: title || `Chat ${new Date().toLocaleString()}`,
                 is_favorite: false,
-                // Optional roundtable fields (ignored if columns don’t exist)
-                ...(['conversation_type','participants'].reduce((acc, key) => {
+                // Optional fields (conversation_type, participants, study_id, lesson_id) (ignored if columns don’t exist)
+                ...(['conversation_type','participants','study_id','lesson_id'].reduce((acc, key) => {
                   if (Object.prototype.hasOwnProperty.call(extra, key)) acc[key] = extra[key];
                   return acc;
                 }, {}))
