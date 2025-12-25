@@ -201,12 +201,13 @@ const SimpleChatWithHistory = () => {
           setLessonMeta(lesson);
 
           // If lesson has a specific character, switch the chat guide to it.
+          // Skip default greeting - the AI will generate a study-specific intro
           try {
             const targetCharId = lesson.character_id || study.character_id || null;
             if (targetCharId && (!character || character.id !== targetCharId)) {
               const nextChar = await characterRepository.getById(targetCharId);
               if (nextChar) {
-                selectCharacter(nextChar);
+                selectCharacter(nextChar, { skipGreeting: true });
               }
             }
           } catch (e) {
@@ -498,11 +499,14 @@ const SimpleChatWithHistory = () => {
             const params = new URLSearchParams(location.search);
             const charId = params.get('character');
             if (!charId) return;
+            
+            // If this is a Bible study, skip the default greeting - AI will generate intro
+            const isBibleStudy = params.get('study') && params.get('lesson') !== null;
 
             try {
                 const fetched = await characterRepository.getById(charId);
                 if (fetched) {
-                    selectCharacter(fetched);
+                    selectCharacter(fetched, { skipGreeting: isBibleStudy });
                 } else {
                     console.warn(`[SimpleChatWithHistory] Character id ${charId} not found`);
                 }
