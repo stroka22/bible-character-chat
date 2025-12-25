@@ -122,12 +122,6 @@ const StudyLesson = () => {
         
         // Fetch character - lesson override takes precedence over study default
         const characterId = lessonData.character_id || studyData.character_id;
-        console.log('[StudyLesson] Character resolution:', {
-          lessonCharacterId: lessonData.character_id,
-          studyCharacterId: studyData.character_id,
-          resolvedCharacterId: characterId,
-          lessonTitle: lessonData.title
-        });
         if (characterId) {
           const characterData = await characterRepository.getById(characterId);
           setCharacter(characterData);
