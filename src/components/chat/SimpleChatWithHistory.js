@@ -137,8 +137,18 @@ const SimpleChatWithHistory = () => {
      * ----------------------------------------------------------------*/
     useEffect(() => {
       const applyLessonContext = async () => {
+        console.log('[SimpleChatWithHistory] applyLessonContext called', { 
+          hasCharacter: !!character, 
+          characterName: character?.name,
+          shareCode,
+          search: location.search 
+        });
+        
         // Need a selected character before we inject context
-        if (!character) return;
+        if (!character) {
+          console.log('[SimpleChatWithHistory] No character yet, skipping context');
+          return;
+        }
         // Do not modify context for shared view
         if (shareCode) return;
 
