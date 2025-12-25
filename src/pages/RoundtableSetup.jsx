@@ -329,13 +329,13 @@ const RoundtableSetup = () => {
                   
                   // Alphabet selector
                   _jsx("div", {
-                    className: "mb-4 flex flex-wrap gap-1 justify-center",
+                    className: "mb-4 flex flex-wrap gap-0.5 justify-center",
                     children: [
                       _jsx("button", {
                         key: "all",
                         type: "button",
                         onClick: () => setCurrentLetter('all'),
-                        className: `px-2 py-1 rounded text-xs font-medium ${
+                        className: `px-1.5 py-1 rounded text-xs font-medium ${
                           currentLetter === 'all' 
                             ? 'bg-yellow-400 text-blue-900' 
                             : 'text-white/70 hover:bg-white/20'
@@ -347,7 +347,7 @@ const RoundtableSetup = () => {
                           key: letter,
                           type: "button",
                           onClick: () => setCurrentLetter(letter),
-                          className: `w-7 h-7 rounded flex items-center justify-center text-xs font-medium ${
+                          className: `w-6 h-6 rounded flex items-center justify-center text-xs font-medium ${
                             currentLetter === letter 
                               ? 'bg-yellow-400 text-blue-900' 
                               : 'text-white/70 hover:bg-white/20'
