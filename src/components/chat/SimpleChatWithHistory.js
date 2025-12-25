@@ -203,12 +203,20 @@ const SimpleChatWithHistory = () => {
             console.warn('[SimpleChatWithHistory] Failed to apply lesson character:', e);
           }
 
-          const ctx = `You are guiding a Bible study conversation. ` +
-            `Study: ${study.title}. ` +
-            `Lesson ${lesson.order_index + 1}: ${lesson.title}. ` +
-            `Scripture: ${Array.isArray(lesson.scripture_refs) && lesson.scripture_refs.length > 0 ? lesson.scripture_refs.join(', ') : 'N/A'}. ` +
-            `Summary: ${lesson.summary ?? ''} ` +
-            `${study.character_instructions ? `Study Prompt: ${study.character_instructions}` : ''}`.trim();
+          // Build lesson prompts string from the prompts array
+          const lessonPrompts = Array.isArray(lesson.prompts) && lesson.prompts.length > 0
+            ? lesson.prompts.map(p => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n')
+            : '';
+
+          const ctx = [
+            `You are guiding a Bible study conversation.`,
+            `Study: ${study.title}.`,
+            `Lesson ${lesson.order_index + 1}: ${lesson.title}.`,
+            `Scripture: ${Array.isArray(lesson.scripture_refs) && lesson.scripture_refs.length > 0 ? lesson.scripture_refs.join(', ') : 'N/A'}.`,
+            lesson.summary ? `Summary: ${lesson.summary}` : '',
+            lessonPrompts ? `Lesson Instructions:\n${lessonPrompts}` : '',
+            study.character_instructions ? `Study Prompt: ${study.character_instructions}` : ''
+          ].filter(Boolean).join('\n\n').trim();
 
           setLessonContext(ctx);
         } catch (err) {

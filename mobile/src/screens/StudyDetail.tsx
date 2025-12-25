@@ -1,16 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Image } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { generateCharacterResponse } from '../lib/api';
+import { getStudyProgress, toggleLessonComplete, getProgressPercent, StudyProgress } from '../lib/studyProgress';
 import { theme } from '../theme';
+
+type LessonPrompt = {
+  text?: string;
+};
 
 type Lesson = {
   id: string;
   title: string;
   order_index: number;
   summary?: string | null;
+  character_id?: string | null;
+  prompts?: LessonPrompt[] | null;
+  scripture_refs?: string[] | null;
 };
 
 export default function StudyDetail({ route, navigation }: any) {
@@ -21,57 +30,133 @@ export default function StudyDetail({ route, navigation }: any) {
   const [starting, setStarting] = useState(false);
   const [studyMeta, setStudyMeta] = useState<{ character_id?: string | null; character_instructions?: string | null } | null>(null);
   const [guide, setGuide] = useState<{ id: string; name: string; avatar_url?: string | null; persona_prompt?: string | null } | null>(null);
+  const [lessonCharacters, setLessonCharacters] = useState<Record<string, { id: string; name: string; avatar_url?: string | null }>>({});
+  const [progress, setProgress] = useState<StudyProgress | null>(null);
+  const [togglingLesson, setTogglingLesson] = useState<number | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      // fetch study meta (character + instructions)
-      try {
-        const { data: s } = await supabase
-          ?.from('bible_studies')
-          .select('character_id,character_instructions')
-          .eq('id', studyId)
-          .maybeSingle() as any;
-        setStudyMeta(s || {});
-        if (s?.character_id) {
-          const { data: c } = await supabase
-            .from('characters')
-            .select('id,name,avatar_url,persona_prompt')
-            .eq('id', s.character_id)
-            .maybeSingle();
-          if (c) setGuide(c as any);
+  const loadData = async () => {
+    setLoading(true);
+    let studyCharId: string | null = null;
+    try {
+      const { data: s } = await supabase
+        ?.from('bible_studies')
+        .select('character_id,character_instructions')
+        .eq('id', studyId)
+        .maybeSingle() as any;
+      setStudyMeta(s || {});
+      studyCharId = s?.character_id || null;
+      if (s?.character_id) {
+        const { data: c } = await supabase
+          .from('characters')
+          .select('id,name,avatar_url,persona_prompt')
+          .eq('id', s.character_id)
+          .maybeSingle();
+        if (c) setGuide(c as any);
+      }
+    } catch {}
+    const { data } = await supabase
+      ?.from('bible_study_lessons')
+      .select('id,title,order_index,summary,character_id,prompts,scripture_refs')
+      .eq('study_id', studyId)
+      .order('order_index', { ascending: true }) as any;
+    const lessonsData = data || [];
+    setLessons(lessonsData);
+    
+    // Fetch lesson-specific characters (different from study's default)
+    const lessonCharIds = [...new Set(
+      lessonsData
+        .filter((l: Lesson) => l.character_id && l.character_id !== studyCharId)
+        .map((l: Lesson) => l.character_id)
+    )].filter(Boolean) as string[];
+    
+    if (lessonCharIds.length > 0) {
+      const { data: chars } = await supabase
+        .from('characters')
+        .select('id,name,avatar_url')
+        .in('id', lessonCharIds);
+      if (chars) {
+        const charMap: Record<string, { id: string; name: string; avatar_url?: string | null }> = {};
+        chars.forEach((c: any) => { charMap[c.id] = c; });
+        setLessonCharacters(charMap);
+      }
+    }
+    
+    // Load progress
+    if (user?.id) {
+      const p = await getStudyProgress(user.id, studyId);
+      setProgress(p);
+    }
+    setLoading(false);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [studyId, user?.id])
+  );
+
+  const completedLessons = progress?.completed_lessons || [];
+  const progressPercent = getProgressPercent(completedLessons, lessons.length);
+
+  const handleToggleComplete = async (lessonIndex: number) => {
+    if (!user?.id || togglingLesson !== null) return;
+    setTogglingLesson(lessonIndex);
+    try {
+      const { progress: updated, isNowComplete } = await toggleLessonComplete(user.id, studyId, lessonIndex);
+      setProgress(updated);
+      // Check if study is now complete
+      if (isNowComplete && updated) {
+        const newPercent = getProgressPercent(updated.completed_lessons || [], lessons.length);
+        if (newPercent === 100) {
+          Alert.alert('Congratulations!', `You've completed all lessons in "${title}"!`);
         }
-      } catch {}
-      const { data } = await supabase
-        ?.from('bible_study_lessons')
-        .select('id,title,order_index,summary')
-        .eq('study_id', studyId)
-        .order('order_index', { ascending: true }) as any;
-      setLessons(data || []);
-      setLoading(false);
-    })();
-  }, [studyId]);
+      }
+    } catch (e) {
+      console.warn('[StudyDetail] toggleComplete error:', e);
+    } finally {
+      setTogglingLesson(null);
+    }
+  };
 
   async function startLesson(lesson: Lesson) {
     if (!user || starting) return;
     setStarting(true);
     try {
+      // Determine which character to use: lesson override > study default
+      const targetCharacterId = lesson.character_id || studyMeta?.character_id || null;
+      
       // Fetch character if set
       let char = guide;
-      if (!char && studyMeta?.character_id) {
+      // If lesson has its own character or we don't have guide loaded, fetch it
+      if (targetCharacterId && (!char || char.id !== targetCharacterId)) {
         const { data: c } = await supabase
           .from('characters')
           .select('id,name,persona_prompt,avatar_url')
-          .eq('id', studyMeta.character_id)
+          .eq('id', targetCharacterId)
           .maybeSingle();
         if (c) char = c as any;
       }
-      const characterId = char?.id || studyMeta?.character_id || null;
+      const characterId = char?.id || targetCharacterId || '';
       const chatTitle = `${title} - Lesson ${lesson.order_index + 1}: ${lesson.title}`;
       const newChat = await chat.createChat(user.id, characterId, chatTitle);
       
+      // Build lesson prompts string from the prompts array
+      const lessonPromptsText = Array.isArray(lesson.prompts) && lesson.prompts.length > 0
+        ? lesson.prompts.map(p => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n')
+        : '';
+      
       // Add lesson context as system message
-      const lessonPrompt = `You are guiding a Bible study lesson.\nStudy: ${title}\nLesson: ${lesson.title}\n${lesson.summary ? `Summary: ${lesson.summary}` : ''}\n${studyMeta?.character_instructions || ''}`;
+      const lessonPrompt = [
+        `You are guiding a Bible study lesson.`,
+        `Study: ${title}`,
+        `Lesson: ${lesson.title}`,
+        Array.isArray(lesson.scripture_refs) && lesson.scripture_refs.length > 0 
+          ? `Scripture: ${lesson.scripture_refs.join(', ')}` 
+          : '',
+        lesson.summary ? `Summary: ${lesson.summary}` : '',
+        lessonPromptsText ? `Lesson Instructions:\n${lessonPromptsText}` : '',
+        studyMeta?.character_instructions ? `Study Prompt: ${studyMeta.character_instructions}` : ''
+      ].filter(Boolean).join('\n\n');
       await chat.addMessage(newChat.id, lessonPrompt, 'system');
       
       // Generate intro for the lesson
@@ -147,8 +232,35 @@ export default function StudyDetail({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ padding: 16 }}>
+      <View style={{ padding: 16, flex: 1 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8 }}>{title}</Text>
+        
+        {/* Progress Bar */}
+        {user && lessons.length > 0 && (
+          <View style={{ marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
+                {completedLessons.length} of {lessons.length} lessons complete
+              </Text>
+              <Text style={{ 
+                color: progressPercent === 100 ? '#22c55e' : theme.colors.primary, 
+                fontSize: 12, 
+                fontWeight: '700' 
+              }}>
+                {progressPercent}%
+              </Text>
+            </View>
+            <View style={{ height: 6, backgroundColor: theme.colors.surface, borderRadius: 3, overflow: 'hidden' }}>
+              <View style={{ 
+                height: '100%', 
+                width: `${progressPercent}%`, 
+                backgroundColor: progressPercent === 100 ? '#22c55e' : theme.colors.primary,
+                borderRadius: 3 
+              }} />
+            </View>
+          </View>
+        )}
+
         {!!guide && (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             {guide.avatar_url ? (
@@ -169,18 +281,81 @@ export default function StudyDetail({ route, navigation }: any) {
             data={lessons}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingBottom: 8 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity 
-                onPress={() => startLesson(item)}
-                style={{ padding: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8 }}
-              >
-                <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Lesson {item.order_index + 1}: {item.title}</Text>
-                {!!item.summary && (
-                  <Text style={{ color: theme.colors.muted, marginTop: 6 }}>{item.summary}</Text>
-                )}
-                <Text style={{ color: theme.colors.primary, marginTop: 8, fontWeight: '600' }}>Start Lesson →</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) => {
+              const isComplete = completedLessons.includes(item.order_index);
+              const isToggling = togglingLesson === item.order_index;
+              // Determine lesson's character: lesson override > study default
+              const lessonChar = item.character_id 
+                ? (lessonCharacters[item.character_id] || (item.character_id === studyMeta?.character_id ? guide : null))
+                : guide;
+              return (
+                <View style={{ 
+                  padding: 12, 
+                  backgroundColor: theme.colors.card, 
+                  borderRadius: 10, 
+                  marginBottom: 8,
+                  borderLeftWidth: isComplete ? 4 : 0,
+                  borderLeftColor: '#22c55e'
+                }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: theme.colors.text, fontWeight: '700' }}>
+                        Lesson {item.order_index + 1}: {item.title}
+                      </Text>
+                      {!!lessonChar && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                          {lessonChar.avatar_url ? (
+                            <Image source={{ uri: lessonChar.avatar_url }} style={{ width: 16, height: 16, borderRadius: 8 }} />
+                          ) : (
+                            <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: theme.colors.surface }} />
+                          )}
+                          <Text style={{ color: theme.colors.muted, fontSize: 12 }}>Guide: {lessonChar.name}</Text>
+                        </View>
+                      )}
+                      {!!item.summary && (
+                        <Text style={{ color: theme.colors.muted, marginTop: 6 }} numberOfLines={2}>
+                          {item.summary}
+                        </Text>
+                      )}
+                    </View>
+                    {isComplete && (
+                      <Text style={{ color: '#22c55e', fontSize: 18, marginLeft: 8 }}>✓</Text>
+                    )}
+                  </View>
+                  
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                    <TouchableOpacity onPress={() => startLesson(item)} disabled={starting}>
+                      <Text style={{ color: theme.colors.primary, fontWeight: '600' }}>
+                        {starting ? 'Starting...' : 'Start Lesson →'}
+                      </Text>
+                    </TouchableOpacity>
+                    
+                    {user && (
+                      <TouchableOpacity 
+                        onPress={() => handleToggleComplete(item.order_index)}
+                        disabled={isToggling}
+                        style={{ 
+                          paddingHorizontal: 10, 
+                          paddingVertical: 5, 
+                          backgroundColor: isComplete ? '#22c55e20' : theme.colors.surface,
+                          borderRadius: 6,
+                          borderWidth: 1,
+                          borderColor: isComplete ? '#22c55e' : theme.colors.muted
+                        }}
+                      >
+                        <Text style={{ 
+                          color: isComplete ? '#22c55e' : theme.colors.muted, 
+                          fontSize: 12, 
+                          fontWeight: '600' 
+                        }}>
+                          {isToggling ? '...' : isComplete ? 'Completed' : 'Mark Complete'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              );
+            }}
           />
         )}
       </View>
