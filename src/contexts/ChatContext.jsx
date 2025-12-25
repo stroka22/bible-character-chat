@@ -17,7 +17,6 @@ const ChatContext = createContext();
 
 // Provider component
 export const ChatProvider = ({ children }) => {
-  console.log('[ChatContext] Initializing provider');
   // Feature flag: enable/disable local chat cache usage for resume fallback
   const ENABLE_LOCAL_CHAT_CACHE = false;
   
@@ -103,7 +102,6 @@ export const ChatProvider = ({ children }) => {
   let conversationContext;
   try {
     conversationContext = useConversation();
-    console.log('[ChatContext] Successfully connected to ConversationContext');
   } catch (err) {
     console.error('[ChatContext] Error connecting to ConversationContext:', err);
     // Fallback object so the rest of ChatContext can still operate
@@ -272,7 +270,10 @@ export const ChatProvider = ({ children }) => {
 
       // Inject lesson/system context when available
       if (systemContext && typeof systemContext === 'string' && systemContext.trim() !== '') {
+        console.log('[ChatContext] Injecting system context:', systemContext.substring(0, 200) + '...');
         apiMsgs.unshift({ role: 'system', content: systemContext.trim() });
+      } else {
+        console.log('[ChatContext] No system context to inject');
       }
 
       const persona = character.description ||
