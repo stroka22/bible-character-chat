@@ -92,28 +92,44 @@ const StudyLesson = () => {
         const allLessons = await bibleStudiesRepository.listLessons(id);
         setLessons(allLessons || []);
         
-        // Fetch user progress
+        // Fetch user progress (non-blocking - don't fail lesson load if progress fails)
         if (user?.id) {
-          const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
-          setProgress(p);
-          // Ensure current index is up-to-date on view
           try {
-            setIsSavingProgress(true);
-            await bibleStudiesRepository.saveProgress({
-              userId: user.id,
-              studyId: id,
-              currentLessonIndex: parseInt(lessonIndex, 10)
-            });
-          } finally {
-            setIsSavingProgress(false);
+            const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
+            setProgress(p);
+          } catch (progressErr) {
+            console.warn('Could not fetch progress:', progressErr);
+            setProgress(null);
           }
+          // Ensure current index is up-to-date on view (fire and forget)
+          (async () => {
+            try {
+              setIsSavingProgress(true);
+              await bibleStudiesRepository.saveProgress({
+                userId: user.id,
+                studyId: id,
+                currentLessonIndex: parseInt(lessonIndex, 10)
+              });
+            } catch (saveErr) {
+              console.warn('Could not save progress:', saveErr);
+            } finally {
+              setIsSavingProgress(false);
+            }
+          })();
         } else {
           setProgress(null);
         }
         
-        // Fetch character if available
-        if (studyData.character_id) {
-          const characterData = await characterRepository.getById(studyData.character_id);
+        // Fetch character - lesson override takes precedence over study default
+        const characterId = lessonData.character_id || studyData.character_id;
+        console.log('[StudyLesson] Character resolution:', {
+          lessonCharacterId: lessonData.character_id,
+          studyCharacterId: studyData.character_id,
+          resolvedCharacterId: characterId,
+          lessonTitle: lessonData.title
+        });
+        if (characterId) {
+          const characterData = await characterRepository.getById(characterId);
           setCharacter(characterData);
         }
         

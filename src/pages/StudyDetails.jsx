@@ -16,11 +16,13 @@ const StudyDetails = () => {
   const [study, setStudy] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [character, setCharacter] = useState(null);
+  const [lessonCharacters, setLessonCharacters] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const { isPremium } = usePremium();
   const [progress, setProgress] = useState(null);
+  const [togglingLesson, setTogglingLesson] = useState(null);
 
   useEffect(() => {
     const fetchStudyDetails = async () => {
@@ -47,17 +49,40 @@ const StudyDetails = () => {
         setLessons(lessonsData);
 
         // Fetch user progress
+        // Fetch user progress (non-blocking)
         if (user?.id) {
-          const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
-          setProgress(p);
+          try {
+            const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
+            setProgress(p);
+          } catch (progressErr) {
+            console.warn('Could not fetch progress:', progressErr);
+            setProgress(null);
+          }
         } else {
           setProgress(null);
         }
         
-        // Fetch character if available
+        // Fetch study's default character if available
         if (studyData.character_id) {
           const characterData = await characterRepository.getById(studyData.character_id);
           setCharacter(characterData);
+        }
+        
+        // Fetch lesson-specific characters (for lessons with character_id overrides)
+        const lessonCharIds = [...new Set(
+          lessonsData
+            .filter(l => l.character_id && l.character_id !== studyData.character_id)
+            .map(l => l.character_id)
+        )];
+        if (lessonCharIds.length > 0) {
+          const charMap = {};
+          await Promise.all(lessonCharIds.map(async (cid) => {
+            try {
+              const c = await characterRepository.getById(cid);
+              if (c) charMap[cid] = c;
+            } catch {}
+          }));
+          setLessonCharacters(charMap);
         }
         
         setError(null);
@@ -84,6 +109,33 @@ const StudyDetails = () => {
     }
     return Math.min(progress.current_lesson_index ?? 0, lessons.length - 1);
   }, [lessons, progress]);
+
+  const handleToggleComplete = async (e, lessonIndex) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user?.id || togglingLesson !== null) return;
+    setTogglingLesson(lessonIndex);
+    try {
+      const completed = Array.isArray(progress?.completed_lessons) ? [...progress.completed_lessons] : [];
+      const idx = completed.indexOf(lessonIndex);
+      if (idx >= 0) {
+        completed.splice(idx, 1);
+      } else {
+        completed.push(lessonIndex);
+        completed.sort((a, b) => a - b);
+      }
+      const updated = await bibleStudiesRepository.saveProgress({
+        userId: user.id,
+        studyId: id,
+        completedLessons: completed
+      });
+      setProgress(updated);
+    } catch (err) {
+      console.error('Error toggling lesson completion:', err);
+    } finally {
+      setTogglingLesson(null);
+    }
+  };
 
   const handleLessonClick = (lessonIndex) => {
     if (study?.is_premium && !isPremium) {
@@ -333,10 +385,21 @@ const StudyDetails = () => {
                                         }),
                                         
                                         _jsxs("div", { className: "flex items-center gap-2", children: [
-                                          /* Completed chip */
-                                          (user && Array.isArray(progress?.completed_lessons) && progress.completed_lessons.includes(lesson.order_index)) && (
-                                            _jsx("span", { className: "text-[11px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-200 border border-green-500/30", children: "Completed" })
-                                          ),
+                                          /* Toggle complete button */
+                                          (user && !(study.is_premium && !isPremium)) && (() => {
+                                            const isComplete = Array.isArray(progress?.completed_lessons) && progress.completed_lessons.includes(lesson.order_index);
+                                            const isToggling = togglingLesson === lesson.order_index;
+                                            return _jsx("button", {
+                                              onClick: (e) => handleToggleComplete(e, lesson.order_index),
+                                              disabled: isToggling,
+                                              className: `text-[11px] px-2 py-0.5 rounded-full transition-colors ${
+                                                isComplete 
+                                                  ? 'bg-green-500/20 text-green-200 border border-green-500/30 hover:bg-green-500/30' 
+                                                  : 'bg-blue-500/20 text-blue-200 border border-blue-400/30 hover:bg-blue-500/30'
+                                              }`,
+                                              children: isToggling ? '...' : (isComplete ? 'Completed' : 'Mark Complete')
+                                            });
+                                          })(),
                                           /* Lock icon for premium */
                                           (study.is_premium && !isPremium) && (
                                             _jsx("svg", {
@@ -362,6 +425,28 @@ const StudyDetails = () => {
                                         children: lesson.scripture_refs.join(', ')
                                       })
                                     ),
+                                    
+                                    /* Lesson guide (character) */
+                                    (() => {
+                                      const lessonChar = lesson.character_id 
+                                        ? (lessonCharacters[lesson.character_id] || (lesson.character_id === study.character_id ? character : null))
+                                        : character;
+                                      if (!lessonChar) return null;
+                                      return _jsxs("div", {
+                                        className: "flex items-center gap-2 mt-2",
+                                        children: [
+                                          _jsx("img", {
+                                            src: lessonChar.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(lessonChar.name)}&background=random`,
+                                            alt: lessonChar.name,
+                                            className: "w-5 h-5 rounded-full object-cover border border-yellow-400/30"
+                                          }),
+                                          _jsx("span", {
+                                            className: `text-xs ${study.is_premium && !isPremium ? 'text-gray-500' : 'text-blue-200'}`,
+                                            children: `Guide: ${lessonChar.name}`
+                                          })
+                                        ]
+                                      });
+                                    })(),
                                     
                                     /* Summary preview */
                                     _jsx("p", {

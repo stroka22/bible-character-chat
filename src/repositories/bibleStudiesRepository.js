@@ -179,7 +179,7 @@ export const bibleStudiesRepository = {
         scripture_refs: Array.isArray(lesson.scripture_refs) ? lesson.scripture_refs : [],
         summary: lesson.summary || '',
         prompts: Array.isArray(lesson.prompts) ? lesson.prompts : [],
-        character_id: lesson.character_id || null,
+        character_id: (lesson.character_id && lesson.character_id.trim()) ? lesson.character_id.trim() : null,
         updated_at: now,
       };
 
