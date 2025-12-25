@@ -24,9 +24,10 @@ const RoundtableChat = () => {
     consumeAutoStartFlag,
     hydrateFromConversation
   } = useRoundtable();
-  const { shareConversation, fetchConversationWithMessages, getSharedConversation } = useConversation();
+  const { shareConversation, fetchConversationWithMessages, getSharedConversation, updateConversation } = useConversation();
   
   const [inputValue, setInputValue] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
   const messagesEndRef = useRef(null);
   const transcriptRef = useRef(null);
   const headerRef = useRef(null);
@@ -141,6 +142,10 @@ const RoundtableChat = () => {
         }
         if (typeof hydrateFromConversation === 'function') {
           await hydrateFromConversation(convWithParticipants);
+        }
+        // Track saved/favorite status
+        if (convWithParticipants.is_favorite) {
+          setIsSaved(true);
         }
       } catch {}
     })();
@@ -584,6 +589,28 @@ const RoundtableChat = () => {
                       },
                       className: "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-yellow-400 hover:bg-yellow-500 text-blue-900",
                       children: "Share"
+                    }),
+                    // Save button
+                    _jsx("button", {
+                      onClick: async () => {
+                        if (!conversationId) return;
+                        try {
+                          const newValue = !isSaved;
+                          await updateConversation?.(conversationId, { is_favorite: newValue });
+                          setIsSaved(newValue);
+                        } catch (e) {
+                          console.error('Failed to save roundtable:', e);
+                        }
+                      },
+                      disabled: !conversationId || isSharedView,
+                      className: `px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        !conversationId || isSharedView
+                          ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                          : isSaved
+                            ? 'bg-green-500 hover:bg-green-600 text-white'
+                            : 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
+                      }`,
+                      children: isSaved ? "★ Saved" : "Save"
                     })
                   ]
                 })
