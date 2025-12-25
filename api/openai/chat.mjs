@@ -26,16 +26,34 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
-    const systemMessage = {
-      role: 'system',
-      content: `You are ${characterName}, ${characterPersona}.
+    // Check if messages already contain a system message (e.g., study/lesson context)
+    const hasStudyContext = messages.some(m => m.role === 'system');
+    
+    // Build character system message
+    let characterSystemContent = `You are ${characterName}, ${characterPersona}.
       Respond to the user's messages in first person, as if you are truly ${characterName}.
       Draw from biblical knowledge, historical context, and the character's known personality traits.
-      Keep responses concise (under 150 words) but meaningful and in the authentic voice of ${characterName}.
-      Never break character or refer to yourself as an AI.`
-    };
-
-    const completeMessages = [systemMessage, ...messages];
+      Keep responses concise but meaningful and in the authentic voice of ${characterName}.
+      Never break character or refer to yourself as an AI.`;
+    
+    // If there's a study context, merge it with the character instructions
+    // The study context should take priority for guiding the conversation
+    let completeMessages;
+    if (hasStudyContext) {
+      const studySystemMsg = messages.find(m => m.role === 'system');
+      const otherMessages = messages.filter(m => m.role !== 'system');
+      
+      // Combine: character identity + study instructions (study instructions come last for priority)
+      const combinedSystemContent = `${characterSystemContent}\n\n--- IMPORTANT INSTRUCTIONS FOR THIS SESSION ---\n\n${studySystemMsg.content}\n\nFollow the above instructions carefully. They define how you should conduct this specific conversation.`;
+      
+      completeMessages = [
+        { role: 'system', content: combinedSystemContent },
+        ...otherMessages
+      ];
+    } else {
+      const systemMessage = { role: 'system', content: characterSystemContent };
+      completeMessages = [systemMessage, ...messages];
+    }
 
     async function callOpenAI(model) {
       try {
