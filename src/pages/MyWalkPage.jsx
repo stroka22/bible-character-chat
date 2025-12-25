@@ -372,12 +372,11 @@ const MyWalkPage = () => {
     }
   };
 
-  // Sorted conversations based on selected sort mode (excludes Bible study chats)
-  const sortedConversations = useMemo(() => {
-    // Filter out Bible study conversations (those with study_id)
-    const list = [...(conversations || [])].filter(c => !c.study_id);
+  // Helper to sort a list by favorites then date
+  const sortList = (list) => {
+    const sorted = [...list];
     if (sortMode === 'favorites') {
-      list.sort((a, b) => {
+      sorted.sort((a, b) => {
         const favDelta = Number(!!b.is_favorite) - Number(!!a.is_favorite);
         if (favDelta !== 0) return favDelta;
         const da = new Date(a.updated_at || a.created_at || 0).getTime();
@@ -385,14 +384,27 @@ const MyWalkPage = () => {
         return db - da;
       });
     } else {
-      list.sort((a, b) => {
+      sorted.sort((a, b) => {
         const da = new Date(a.updated_at || a.created_at || 0).getTime();
         const db = new Date(b.updated_at || b.created_at || 0).getTime();
         return db - da;
       });
     }
-    return list;
+    return sorted;
+  };
+
+  // Separate conversations into three categories
+  const { regularChats, roundtables, bibleStudies } = useMemo(() => {
+    const all = conversations || [];
+    return {
+      regularChats: sortList(all.filter(c => !c.study_id && c.conversation_type !== 'roundtable')),
+      roundtables: sortList(all.filter(c => c.conversation_type === 'roundtable')),
+      bibleStudies: sortList(all.filter(c => c.study_id)),
+    };
   }, [conversations, sortMode]);
+
+  // For backward compatibility, keep sortedConversations pointing to regularChats
+  const sortedConversations = regularChats;
 
   // Derive pagination
   const totalPages = useMemo(() => {
@@ -544,7 +556,7 @@ const MyWalkPage = () => {
         <section>
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
             <h2 className="text-2xl font-semibold text-yellow-300">
-              Saved Conversations
+              My Walk
             </h2>
             <div className="flex items-center gap-2">
               <label htmlFor="sortMode" className="text-blue-200 text-sm">Sort by</label>
@@ -558,6 +570,19 @@ const MyWalkPage = () => {
                 <option value="favorites">Favorites First</option>
               </select>
             </div>
+          </div>
+
+          {/* Category counts summary */}
+          <div className="flex gap-4 mb-6 text-sm">
+            <span className="text-blue-200">
+              <span className="text-yellow-300 font-semibold">{regularChats.length}</span> Chats
+            </span>
+            <span className="text-blue-200">
+              <span className="text-yellow-300 font-semibold">{roundtables.length}</span> Roundtables
+            </span>
+            <span className="text-blue-200">
+              <span className="text-yellow-300 font-semibold">{bibleStudies.length}</span> Bible Studies
+            </span>
           </div>
 
           {/* Bulk actions toolbar */}
@@ -595,9 +620,17 @@ const MyWalkPage = () => {
             </div>
           )}
 
-          {/* Empty state for conversations (excludes Bible study chats) */}
-          {!conversationsLoading && sortedConversations.length === 0 && (
-            <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center">
+          {/* ===================== CHATS SECTION ===================== */}
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 mt-2 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+            </svg>
+            Chats ({regularChats.length})
+          </h3>
+
+          {/* Empty state for chats */}
+          {!conversationsLoading && regularChats.length === 0 && (
+            <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center mb-6">
               <p className="text-blue-100 mb-4">
                 You haven't saved any conversations yet. Start a chat with a biblical character to begin!
               </p>
@@ -610,7 +643,7 @@ const MyWalkPage = () => {
             </div>
           )}
 
-          {/* Conversations list */}
+          {/* Chats list */}
           {sortedConversations && sortedConversations.length > 0 && (
             <div className="space-y-4">
               {pagedConversations.map(conv => (
@@ -787,9 +820,9 @@ const MyWalkPage = () => {
             </div>
           )}
 
-          {/* Pagination controls */}
+          {/* Pagination controls for Chats */}
           {sortedConversations && sortedConversations.length > PAGE_SIZE && (
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 mb-8">
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
@@ -815,6 +848,108 @@ const MyWalkPage = () => {
               >
                 Next
               </button>
+            </div>
+          )}
+
+          {/* ===================== ROUNDTABLES SECTION ===================== */}
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 mt-6 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+            </svg>
+            Roundtables ({roundtables.length})
+          </h3>
+
+          {roundtables.length === 0 ? (
+            <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center mb-6">
+              <p className="text-blue-100 mb-4">
+                No roundtable discussions yet. Start a roundtable to discuss topics with multiple biblical characters!
+              </p>
+              <Link
+                to="/roundtable"
+                className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+              >
+                Start a Roundtable
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3 mb-8">
+              {roundtables.slice(0, 5).map(conv => (
+                <div
+                  key={conv.id}
+                  className={`p-3 rounded-lg transition-colors flex items-center justify-between ${
+                    conv.is_favorite
+                      ? 'bg-[rgba(255,223,118,0.08)] hover:bg-[rgba(255,223,118,0.12)] border border-yellow-400/30'
+                      : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
+                  }`}
+                >
+                  <div>
+                    <h4 className="text-yellow-300 font-medium">{conv.title || 'Untitled Roundtable'}</h4>
+                    <span className="text-blue-200 text-xs">{formatDate(conv.updated_at)}</span>
+                  </div>
+                  <Link
+                    to={`/roundtable/${conv.id}`}
+                    className="text-yellow-400 hover:text-yellow-300 text-sm"
+                  >
+                    Continue →
+                  </Link>
+                </div>
+              ))}
+              {roundtables.length > 5 && (
+                <p className="text-blue-200 text-sm text-center">
+                  + {roundtables.length - 5} more roundtables
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ===================== BIBLE STUDIES SECTION ===================== */}
+          <h3 className="text-lg font-semibold text-yellow-200 mb-3 mt-6 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+            </svg>
+            Bible Studies ({bibleStudies.length})
+          </h3>
+
+          {bibleStudies.length === 0 ? (
+            <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center mb-6">
+              <p className="text-blue-100 mb-4">
+                No Bible study sessions yet. Explore our guided studies with biblical characters!
+              </p>
+              <Link
+                to="/studies"
+                className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+              >
+                Browse Bible Studies
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3 mb-8">
+              {bibleStudies.slice(0, 5).map(conv => (
+                <div
+                  key={conv.id}
+                  className={`p-3 rounded-lg transition-colors flex items-center justify-between ${
+                    conv.is_favorite
+                      ? 'bg-[rgba(255,223,118,0.08)] hover:bg-[rgba(255,223,118,0.12)] border border-yellow-400/30'
+                      : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
+                  }`}
+                >
+                  <div>
+                    <h4 className="text-yellow-300 font-medium">{conv.title || 'Untitled Study'}</h4>
+                    <span className="text-blue-200 text-xs">{formatDate(conv.updated_at)}</span>
+                  </div>
+                  <Link
+                    to={`/chat/${conv.id}`}
+                    className="text-yellow-400 hover:text-yellow-300 text-sm"
+                  >
+                    Continue →
+                  </Link>
+                </div>
+              ))}
+              {bibleStudies.length > 5 && (
+                <p className="text-blue-200 text-sm text-center">
+                  + {bibleStudies.length - 5} more Bible studies
+                </p>
+              )}
             </div>
           )}
         </section>
