@@ -4,10 +4,12 @@ import { Platform } from 'react-native';
 import { supabase } from './supabase';
 
 // Product IDs (must match App Store Connect)
-export const PRODUCT_MONTHLY = 'com.faithtalkai.premium.monthly';
-export const PRODUCT_YEARLY = 'com.faithtalkai.premium.yearly';
+export const PRODUCT_MONTHLY = 'FTAIMONTHLY';
+export const PRODUCT_YEARLY = 'FTAIYEARLY';
 
 const PREMIUM_KEY = 'iap.premium.active';
+let iapConnected = false;
+let cachedProducts: InAppPurchases.IAPItemDetails[] = [];
 
 export async function isLocalPremiumActive(): Promise<boolean> {
   try { return (await AsyncStorage.getItem(PREMIUM_KEY)) === '1'; } catch { return false; }
@@ -17,17 +19,31 @@ async function setLocalPremiumActive(active: boolean) {
   try { await AsyncStorage.setItem(PREMIUM_KEY, active ? '1' : '0'); } catch {}
 }
 
-export async function initIAP() {
-  if (Platform.OS !== 'ios') return; // focus on iOS for Apple review
+export async function initIAP(): Promise<{ connected: boolean; products: InAppPurchases.IAPItemDetails[] }> {
+  if (Platform.OS !== 'ios') return { connected: false, products: [] };
   try {
-    await InAppPurchases.connectAsync();
-    // Optionally fetch available products to prime the cache
-    await InAppPurchases.getProductsAsync([PRODUCT_MONTHLY, PRODUCT_YEARLY]);
-  } catch {}
+    if (!iapConnected) {
+      await InAppPurchases.connectAsync();
+      iapConnected = true;
+    }
+    // Always fetch products to ensure they're queried before purchase
+    const { results, responseCode } = await InAppPurchases.getProductsAsync([PRODUCT_MONTHLY, PRODUCT_YEARLY]);
+    if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
+      cachedProducts = results;
+    }
+    return { connected: true, products: cachedProducts };
+  } catch (e) {
+    console.warn('[IAP] initIAP error:', e);
+    return { connected: false, products: [] };
+  }
 }
 
 export async function disconnectIAP() {
-  try { await InAppPurchases.disconnectAsync(); } catch {}
+  try {
+    await InAppPurchases.disconnectAsync();
+    iapConnected = false;
+    cachedProducts = [];
+  } catch {}
 }
 
 async function markPremiumOnServer(userId?: string) {
@@ -60,8 +76,18 @@ export async function restorePurchases(userId?: string) {
 }
 
 async function purchase(productId: string, userId?: string) {
-  await initIAP();
+  if (Platform.OS !== 'ios') {
+    return { ok: false, error: new Error('IAP not supported on this platform yet') };
+  }
+  
   try {
+    // Step 1: Connect and fetch products (MUST happen before purchase)
+    const { connected, products: initProducts } = await initIAP();
+    if (!connected) {
+      throw new Error('Failed to connect to App Store. Please check your internet connection and try again.');
+    }
+    
+    // Step 2: Explicitly query the specific product to satisfy StoreKit requirement
     const { results: products, responseCode } = await InAppPurchases.getProductsAsync([productId]);
     if (responseCode !== InAppPurchases.IAPResponseCode.OK) {
       throw new Error(`Failed to load products (code: ${responseCode})`);
@@ -69,27 +95,40 @@ async function purchase(productId: string, userId?: string) {
     if (!products || products.length === 0) {
       throw new Error(`Product "${productId}" not found in App Store. Check that the product ID matches exactly and the product status is "Ready to Submit".`);
     }
-    InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }) => {
-      (async () => {
-        try {
-          if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
-            for (const p of results) {
-              if (p.acknowledged) continue;
-              await InAppPurchases.finishTransactionAsync(p, true);
-              if ([PRODUCT_MONTHLY, PRODUCT_YEARLY].includes(p.productId)) {
-                await setLocalPremiumActive(true);
-                await markPremiumOnServer(userId);
+    
+    // Step 3: Set up purchase listener BEFORE initiating purchase
+    return new Promise((resolve) => {
+      InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }) => {
+        (async () => {
+          try {
+            if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
+              for (const p of results) {
+                if (p.acknowledged) continue;
+                await InAppPurchases.finishTransactionAsync(p, true);
+                if ([PRODUCT_MONTHLY, PRODUCT_YEARLY].includes(p.productId)) {
+                  await setLocalPremiumActive(true);
+                  await markPremiumOnServer(userId);
+                }
               }
+              resolve({ ok: true });
+            } else if (responseCode === InAppPurchases.IAPResponseCode.USER_CANCELED) {
+              resolve({ ok: false, error: new Error('Purchase cancelled') });
+            } else {
+              resolve({ ok: false, error: new Error(`Purchase failed (code: ${responseCode}, error: ${errorCode})`) });
             }
+          } catch (e) {
+            resolve({ ok: false, error: e });
+          } finally {
+            try { (InAppPurchases as any).setPurchaseListener(null); } catch {}
           }
-        } finally {
-          try { (InAppPurchases as any).setPurchaseListener(null); } catch {}
-          try { await disconnectIAP(); } catch {}
-        }
-      })();
+        })();
+      });
+      
+      // Step 4: Initiate purchase AFTER listener is set and products are queried
+      InAppPurchases.purchaseItemAsync(productId).catch((e) => {
+        resolve({ ok: false, error: e });
+      });
     });
-    await InAppPurchases.purchaseItemAsync(productId);
-    return { ok: true };
   } catch (e) {
     return { ok: false, error: e };
   }
@@ -101,4 +140,20 @@ export async function purchaseMonthly(userId?: string) {
 
 export async function purchaseYearly(userId?: string) {
   return purchase(PRODUCT_YEARLY, userId);
+}
+
+// Debug helper to check product availability
+export async function getAvailableProducts(): Promise<{ products: InAppPurchases.IAPItemDetails[]; error?: string }> {
+  if (Platform.OS !== 'ios') {
+    return { products: [], error: 'IAP only available on iOS' };
+  }
+  try {
+    const { connected, products } = await initIAP();
+    if (!connected) {
+      return { products: [], error: 'Failed to connect to App Store' };
+    }
+    return { products };
+  } catch (e: any) {
+    return { products: [], error: e?.message || 'Unknown error' };
+  }
 }

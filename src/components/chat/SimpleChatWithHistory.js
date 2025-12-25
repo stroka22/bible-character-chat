@@ -218,6 +218,14 @@ const SimpleChatWithHistory = () => {
             study.character_instructions ? `Study Prompt: ${study.character_instructions}` : ''
           ].filter(Boolean).join('\n\n').trim();
 
+          console.log('[SimpleChatWithHistory] Lesson context built:', {
+            lessonTitle: lesson.title,
+            hasLessonPrompts: lessonPrompts.length > 0,
+            hasStudyInstructions: !!study.character_instructions,
+            contextLength: ctx.length,
+            contextPreview: ctx.substring(0, 500)
+          });
+
           setLessonContext(ctx);
         } catch (err) {
           console.warn('[SimpleChatWithHistory] Failed to fetch lesson context:', err);
