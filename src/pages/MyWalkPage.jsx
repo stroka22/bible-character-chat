@@ -805,9 +805,20 @@ const MyWalkPage = () => {
                             Copy Transcript
                           </button>
                         </h3>
-                        <span className="text-blue-200 text-sm flex-shrink-0 mt-1 sm:mt-0">
-                          {formatDate(conv.updated_at)}
-                        </span>
+                        <div className="flex items-center gap-3 flex-shrink-0 mt-1 sm:mt-0">
+                          {/* Participant count indicator */}
+                          {Array.isArray(conv.participants) && conv.participants.length > 0 && (
+                            <span className="flex items-center gap-1 text-blue-200 text-sm" title={`${conv.participants.length + 1} participants`}>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                              </svg>
+                              {conv.participants.length + 1}
+                            </span>
+                          )}
+                          <span className="text-blue-200 text-sm">
+                            {formatDate(conv.updated_at)}
+                          </span>
+                        </div>
                       </>
                     )}
                   </div>
@@ -896,18 +907,28 @@ const MyWalkPage = () => {
                           : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
                       }`}
                     >
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <h4 className="text-yellow-300 font-medium">{conv.title || 'Untitled Roundtable'}</h4>
-                        <span className="text-blue-200 text-xs">{formatDate(conv.updated_at)}</span>
+                        <div className="flex items-center gap-3 text-blue-200 text-xs">
+                          {Array.isArray(conv.participants) && conv.participants.length > 0 && (
+                            <span className="flex items-center gap-1" title={`${conv.participants.length + 1} participants`}>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                              </svg>
+                              {conv.participants.length + 1}
+                            </span>
+                          )}
+                          <span>{formatDate(conv.updated_at)}</span>
+                        </div>
                       </div>
                       <Link
                         to={`/roundtable/${conv.id}`}
-                        className="text-yellow-400 hover:text-yellow-300 text-sm"
+                        className="text-yellow-400 hover:text-yellow-300 text-sm ml-3"
                       >
                         Continue →
-                  </Link>
-                </div>
-              ))}
+                      </Link>
+                    </div>
+                  ))}
                 </div>
               )}
             </>
@@ -939,13 +960,23 @@ const MyWalkPage = () => {
                           : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
                       }`}
                     >
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <h4 className="text-yellow-300 font-medium">{conv.title || 'Untitled Study'}</h4>
-                        <span className="text-blue-200 text-xs">{formatDate(conv.updated_at)}</span>
+                        <div className="flex items-center gap-3 text-blue-200 text-xs">
+                          {Array.isArray(conv.participants) && conv.participants.length > 0 && (
+                            <span className="flex items-center gap-1" title={`${conv.participants.length + 1} participants`}>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                              </svg>
+                              {conv.participants.length + 1}
+                            </span>
+                          )}
+                          <span>{formatDate(conv.updated_at)}</span>
+                        </div>
                       </div>
                       <Link
                         to={`/chat/${conv.id}`}
-                        className="text-yellow-400 hover:text-yellow-300 text-sm"
+                        className="text-yellow-400 hover:text-yellow-300 text-sm ml-3"
                       >
                         Continue →
                       </Link>
