@@ -582,8 +582,6 @@ export const ConversationProvider = ({ children }) => {
 
 // Custom hook for using the conversation context
 export const useConversation = () => {
-  console.log('[ConversationContext] Hook called');
-
   try {
     const context = useContext(ConversationContext);
 
