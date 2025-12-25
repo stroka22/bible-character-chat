@@ -25,6 +25,7 @@ const RoundtableSetup = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentLetter, setCurrentLetter] = useState('all');
   
   // Fetch characters on mount
   useEffect(() => {
@@ -61,11 +62,19 @@ const RoundtableSetup = () => {
     });
   };
   
-  // Filter characters based on search query
-  const filteredCharacters = characters.filter(character => 
-    character.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (character.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter characters based on search query and letter
+  const filteredCharacters = characters.filter(character => {
+    // Search filter
+    const matchesSearch = !searchQuery || 
+      character.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (character.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Letter filter
+    const matchesLetter = currentLetter === 'all' || 
+      character.name.toUpperCase().startsWith(currentLetter);
+    
+    return matchesSearch && matchesLetter;
+  }).sort((a, b) => a.name.localeCompare(b.name));
   
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -316,6 +325,37 @@ const RoundtableSetup = () => {
                       placeholder: "Search characters...",
                       className: "w-full bg-white/10 border border-white/30 rounded-full py-2 px-4 text-white placeholder-blue-100/70 focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
                     })
+                  }),
+                  
+                  // Alphabet selector
+                  _jsx("div", {
+                    className: "mb-4 flex flex-wrap gap-1 justify-center",
+                    children: [
+                      _jsx("button", {
+                        key: "all",
+                        type: "button",
+                        onClick: () => setCurrentLetter('all'),
+                        className: `px-2 py-1 rounded text-xs font-medium ${
+                          currentLetter === 'all' 
+                            ? 'bg-yellow-400 text-blue-900' 
+                            : 'text-white/70 hover:bg-white/20'
+                        }`,
+                        children: "All"
+                      }),
+                      ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => 
+                        _jsx("button", {
+                          key: letter,
+                          type: "button",
+                          onClick: () => setCurrentLetter(letter),
+                          className: `w-7 h-7 rounded flex items-center justify-center text-xs font-medium ${
+                            currentLetter === letter 
+                              ? 'bg-yellow-400 text-blue-900' 
+                              : 'text-white/70 hover:bg-white/20'
+                          }`,
+                          children: letter
+                        })
+                      )
+                    ]
                   }),
                   
                   // Character list
