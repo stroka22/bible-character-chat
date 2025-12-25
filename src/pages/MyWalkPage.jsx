@@ -372,9 +372,10 @@ const MyWalkPage = () => {
     }
   };
 
-  // Sorted conversations based on selected sort mode
+  // Sorted conversations based on selected sort mode (excludes Bible study chats)
   const sortedConversations = useMemo(() => {
-    const list = [...(conversations || [])];
+    // Filter out Bible study conversations (those with study_id)
+    const list = [...(conversations || [])].filter(c => !c.study_id);
     if (sortMode === 'favorites') {
       list.sort((a, b) => {
         const favDelta = Number(!!b.is_favorite) - Number(!!a.is_favorite);
@@ -594,8 +595,8 @@ const MyWalkPage = () => {
             </div>
           )}
 
-          {/* Empty state for conversations */}
-          {!conversationsLoading && (!conversations || conversations.length === 0) && (
+          {/* Empty state for conversations (excludes Bible study chats) */}
+          {!conversationsLoading && sortedConversations.length === 0 && (
             <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center">
               <p className="text-blue-100 mb-4">
                 You haven't saved any conversations yet. Start a chat with a biblical character to begin!
