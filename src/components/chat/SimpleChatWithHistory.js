@@ -392,75 +392,93 @@ const SimpleChatWithHistory = () => {
     const introPostedRef = useRef(false);
 
     /* ------------------------------------------------------------------
-     * Auto-post introduction when launched from a Bible-study link
+     * Auto-generate introduction when launched from a Bible-study link
+     * Uses AI to generate intro that follows the study's character_instructions
      * ----------------------------------------------------------------*/
     useEffect(() => {
-      // Skip if intro already posted or impossible to post
-      if (introPostedRef.current || !character) return;
-      // Shared view should not auto-post intro
-      if (shareCode) return;
-      
-      // Check if we have study context from URL
-      const params = new URLSearchParams(location.search);
-      const hasStudyContext = params.get('study') && params.get('lesson');
-      if (!hasStudyContext) return;
-      
-      // Check if we have study and lesson metadata loaded
-      if (!studyMeta || !lessonMeta) return;
-      
-      // Skip if there are user messages already
-      if (messages.some(m => m.role === 'user')) return;
-      
-      // Build the introduction message
-      let introText = `Greetings! I'm ${character.name}, and I'll be guiding you through this Bible study.\n\n`;
-      
-      // Add study title and description
-      introText += `**${studyMeta.title}**\n`;
-      if (studyMeta.description) {
-        introText += `${studyMeta.description}\n\n`;
-      }
-      
-      // Add lesson info
-      introText += `**Lesson ${lessonMeta.order_index + 1}: ${lessonMeta.title}**\n\n`;
-      
-      // Add scripture references if available
-      if (Array.isArray(lessonMeta.scripture_refs) && lessonMeta.scripture_refs.length > 0) {
-        introText += `*Scripture: ${lessonMeta.scripture_refs.join(', ')}*\n\n`;
-      }
-      
-      // Add lesson summary if available
-      if (lessonMeta.summary) {
-        introText += `${lessonMeta.summary}\n\n`;
-      }
-      
-      // Add outline from prompts (up to 6 points)
-      if (Array.isArray(lessonMeta.prompts) && lessonMeta.prompts.length > 0) {
-        introText += `**Key points we'll explore:**\n`;
+      const generateStudyIntro = async () => {
+        // Skip if intro already posted or impossible to post
+        if (introPostedRef.current || !character) return;
+        // Shared view should not auto-post intro
+        if (shareCode) return;
         
-        // Extract text from prompts (handle both string and object formats)
-        const outlinePoints = lessonMeta.prompts
-          .slice(0, 6)
-          .map(p => typeof p === 'string' ? p : (p.text || ''))
-          .filter(text => text.trim() !== '');
+        // Check if we have study context from URL
+        const params = new URLSearchParams(location.search);
+        const hasStudyContext = params.get('study') && params.get('lesson');
+        if (!hasStudyContext) return;
         
-        outlinePoints.forEach(point => {
-          introText += `• ${point}\n`;
-        });
+        // Check if we have study and lesson metadata loaded
+        if (!studyMeta || !lessonMeta) return;
         
-        introText += '\n';
-      }
-      
-      // Add guidance about Q&A format
-      introText += `Feel free to ask questions as we go through this study. I'm here to help you understand the scripture and apply its teachings to your life.\n\n`;
-      
-      // Guiding prompt is injected via system context only; do not show in intro
+        // Skip if there are already messages
+        if (messages.length > 0) return;
+        
+        // Mark as posted immediately to prevent duplicate calls
+        introPostedRef.current = true;
+        
+        // If study has character_instructions, generate intro via AI
+        if (studyMeta.character_instructions && studyMeta.character_instructions.trim()) {
+          try {
+            // Import the API function
+            const { generateCharacterResponse } = await import('../../services/openai.js');
+            
+            // Build the system context (same as what's used in chat)
+            const lessonPrompts = Array.isArray(lessonMeta.prompts) && lessonMeta.prompts.length > 0
+              ? lessonMeta.prompts.map(p => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n')
+              : '';
 
-      // Add warm opening question
-      introText += `What aspect of this lesson are you most interested in exploring today?`;
+            const systemContext = [
+              `You are guiding a Bible study conversation.`,
+              `Study: ${studyMeta.title}.`,
+              `Lesson ${lessonMeta.order_index + 1}: ${lessonMeta.title}.`,
+              `Scripture: ${Array.isArray(lessonMeta.scripture_refs) && lessonMeta.scripture_refs.length > 0 ? lessonMeta.scripture_refs.join(', ') : 'N/A'}.`,
+              lessonMeta.summary ? `Summary: ${lessonMeta.summary}` : '',
+              lessonPrompts ? `Lesson Instructions:\n${lessonPrompts}` : '',
+              studyMeta.character_instructions ? `Study Prompt: ${studyMeta.character_instructions}` : ''
+            ].filter(Boolean).join('\n\n').trim();
+            
+            const persona = character.description || 
+              `a biblical figure known for ${character.scriptural_context || 'wisdom'}`;
+            
+            // Ask AI to generate the opening following the study instructions
+            const introResponse = await generateCharacterResponse(
+              character.name,
+              persona,
+              [
+                { role: 'system', content: systemContext },
+                { role: 'user', content: 'Please begin this Bible study session by following the instructions provided. Start the conversation now.' }
+              ]
+            );
+            
+            if (introResponse && !introResponse.includes('error occurred')) {
+              postAssistantMessage(introResponse);
+              return;
+            }
+          } catch (err) {
+            console.warn('[SimpleChatWithHistory] Failed to generate AI intro, falling back to template:', err);
+          }
+        }
+        
+        // Fallback: use template-based intro if no character_instructions or AI fails
+        let introText = `Greetings! I'm ${character.name}, and I'll be guiding you through this Bible study.\n\n`;
+        introText += `**${studyMeta.title}**\n`;
+        if (studyMeta.description) {
+          introText += `${studyMeta.description}\n\n`;
+        }
+        introText += `**Lesson ${lessonMeta.order_index + 1}: ${lessonMeta.title}**\n\n`;
+        if (Array.isArray(lessonMeta.scripture_refs) && lessonMeta.scripture_refs.length > 0) {
+          introText += `*Scripture: ${lessonMeta.scripture_refs.join(', ')}*\n\n`;
+        }
+        if (lessonMeta.summary) {
+          introText += `${lessonMeta.summary}\n\n`;
+        }
+        introText += `Feel free to ask questions as we go through this study. I'm here to help you understand the scripture and apply its teachings to your life.\n\n`;
+        introText += `What aspect of this lesson are you most interested in exploring today?`;
+        
+        postAssistantMessage(introText);
+      };
       
-      // Post the message and mark intro as posted
-      postAssistantMessage(introText);
-      introPostedRef.current = true;
+      generateStudyIntro();
       
     }, [character, studyMeta, lessonMeta, location.search, messages, postAssistantMessage, shareCode]);
 
