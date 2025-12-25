@@ -447,7 +447,7 @@ const SimpleChatWithHistory = () => {
               persona,
               [
                 { role: 'system', content: systemContext },
-                { role: 'user', content: 'Please begin this Bible study session by following the instructions provided. Start the conversation now.' }
+                { role: 'user', content: 'Begin this Bible study session now. IMPORTANT: Follow the MANDATORY STRUCTURE in the Study Prompt exactly - if it says to open with prayer, you MUST start with a prayer. Do not skip or reorder any required steps.' }
               ]
             );
             
