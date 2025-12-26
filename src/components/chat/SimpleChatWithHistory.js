@@ -778,6 +778,10 @@ const SimpleChatWithHistory = () => {
         const opts = {};
         if (studyMeta?.id) opts.studyId = studyMeta.id;
         if (lessonMeta?.id && lessonMeta.id !== 'synthetic-intro') opts.lessonId = lessonMeta.id;
+        // Get progressId from URL params
+        const params = new URLSearchParams(location.search);
+        const progressId = params.get('progress');
+        if (progressId) opts.progressId = progressId;
         return opts;
     };
 

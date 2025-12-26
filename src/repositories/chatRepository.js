@@ -58,8 +58,8 @@ export const chatRepository = {
                 character_id: characterId,
                 title: title || `Chat ${new Date().toLocaleString()}`,
                 is_favorite: false,
-                // Optional fields (conversation_type, participants, study_id, lesson_id) (ignored if columns don’t exist)
-                ...(['conversation_type','participants','study_id','lesson_id'].reduce((acc, key) => {
+                // Optional fields (conversation_type, participants, study_id, lesson_id, progress_id) (ignored if columns don’t exist)
+                ...(['conversation_type','participants','study_id','lesson_id','progress_id'].reduce((acc, key) => {
                   if (Object.prototype.hasOwnProperty.call(extra, key)) acc[key] = extra[key];
                   return acc;
                 }, {}))
@@ -80,9 +80,10 @@ export const chatRepository = {
                       character_id: characterId,
                       title: title || `Chat ${new Date().toLocaleString()}`,
                       is_favorite: false,
-                      // Keep study_id and lesson_id if provided
+                      // Keep study_id, lesson_id, progress_id if provided
                       ...(extra.study_id ? { study_id: extra.study_id } : {}),
                       ...(extra.lesson_id ? { lesson_id: extra.lesson_id } : {}),
+                      ...(extra.progress_id ? { progress_id: extra.progress_id } : {}),
                     };
                     ({ data, error } = await supabase
                         .from('chats')
@@ -246,6 +247,29 @@ export const chatRepository = {
             return data || [];
         } catch (error) {
             console.error(`Failed to fetch chats for study ${studyId}:`, error);
+            return [];
+        }
+    },
+    async getChatsByProgress(progressId) {
+        if (useMock) {
+            return [];
+        }
+        try {
+            const { data, error } = await supabase
+                .from('chats')
+                .select('*')
+                .eq('progress_id', progressId)
+                .order('updated_at', { ascending: false });
+            if (error) {
+                if (error.message?.includes('column') && error.message?.includes('progress_id')) {
+                    console.warn('[chatRepository] progress_id column not found - migration may be pending');
+                    return [];
+                }
+                throw error;
+            }
+            return data || [];
+        } catch (error) {
+            console.error(`Failed to fetch chats for progress ${progressId}:`, error);
             return [];
         }
     },

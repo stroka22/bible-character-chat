@@ -161,6 +161,7 @@ export const conversationRepository = {
         if (Array.isArray(conversation.participants)) extra.participants = conversation.participants;
         if (conversation.study_id) extra.study_id = conversation.study_id;
         if (conversation.lesson_id) extra.lesson_id = conversation.lesson_id;
+        if (conversation.progress_id) extra.progress_id = conversation.progress_id;
         const created = await chatRepository.createChat(uid, cid, title, extra);
         // Keep legacy activeConversationId in sync for addMessage(content, role)
         this.activeConversationId = created?.id || null;

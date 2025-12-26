@@ -368,6 +368,7 @@ export const ChatProvider = ({ children }) => {
    * @param {Object} options - Optional settings
    * @param {string} options.studyId - Bible study ID (for study conversations)
    * @param {string} options.lessonId - Lesson ID (for study conversations)
+   * @param {string} options.progressId - Progress record ID (for study conversations)
    */
   const saveChat = useCallback(async (overrideTitle, options = {}) => {
     // ------------------------------------------------------------------
@@ -414,12 +415,13 @@ export const ChatProvider = ({ children }) => {
             character?.name ?? 'Unknown'
           } - ${new Date().toLocaleDateString()}`;
       
-      // Build payload with optional study/lesson info
+      // Build payload with optional study/lesson/progress info
       const payload = {
         character_id: characterId,
         title,
         ...(options.studyId ? { study_id: options.studyId } : {}),
         ...(options.lessonId ? { lesson_id: options.lessonId } : {}),
+        ...(options.progressId ? { progress_id: options.progressId } : {}),
       };
       console.log('[ChatContext] Creating conversation with payload:', JSON.stringify(payload, null, 2));
       let newConversation = await createConversation(payload);
