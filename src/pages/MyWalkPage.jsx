@@ -49,8 +49,12 @@ const MyWalkPage = () => {
   // Pagination
   const PAGE_SIZE = 10;
   const [currentPage, setCurrentPage] = useState(1);
-  // Selection state for bulk actions
+  // Selection state for bulk actions (chats)
   const [selectedIds, setSelectedIds] = useState(() => new Set());
+  // Selection state for roundtables bulk delete
+  const [selectedRoundtableIds, setSelectedRoundtableIds] = useState(() => new Set());
+  // Selection state for studies bulk delete
+  const [selectedStudyIds, setSelectedStudyIds] = useState(() => new Set());
 
   const visibleIds = useMemo(() => new Set((conversations || []).map(c => c.id)), [conversations]);
   // Note: compute against conversations to avoid referencing sortedConversations before it's defined
@@ -82,6 +86,26 @@ const MyWalkPage = () => {
       return next;
     });
   };
+
+  // Roundtable selection helpers
+  const toggleSelectRoundtable = (id) => {
+    setSelectedRoundtableIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const clearRoundtableSelection = () => setSelectedRoundtableIds(new Set());
+
+  // Study selection helpers
+  const toggleSelectStudy = (progressId) => {
+    setSelectedStudyIds(prev => {
+      const next = new Set(prev);
+      if (next.has(progressId)) next.delete(progressId); else next.add(progressId);
+      return next;
+    });
+  };
+  const clearStudySelection = () => setSelectedStudyIds(new Set());
 
   // Load favorite characters from server (fallback to localStorage)
   useEffect(() => {
@@ -430,7 +454,7 @@ const MyWalkPage = () => {
     }
   };
 
-  // Bulk delete handler
+  // Bulk delete handler (chats)
   const handleBulkDelete = async () => {
     if (typeof deleteConversation !== 'function') return;
     const ids = Array.from(selectedIds).filter(id => visibleIds.has(id));
@@ -444,6 +468,43 @@ const MyWalkPage = () => {
       await fetchConversations?.();
     } catch (e) {
       console.error('Bulk delete error:', e);
+    }
+  };
+
+  // Bulk delete handler (roundtables)
+  const handleBulkDeleteRoundtables = async () => {
+    if (typeof deleteConversation !== 'function') return;
+    const ids = Array.from(selectedRoundtableIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} roundtable${ids.length>1?'s':''}? This cannot be undone.`)) return;
+    try {
+      for (const id of ids) {
+        try { await deleteConversation(id); } catch (e) { console.warn('Failed to delete roundtable', id, e); }
+      }
+      clearRoundtableSelection();
+      await fetchConversations?.();
+    } catch (e) {
+      console.error('Bulk delete roundtables error:', e);
+    }
+  };
+
+  // Bulk delete handler (studies)
+  const handleBulkDeleteStudies = async () => {
+    const ids = Array.from(selectedStudyIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Remove ${ids.length} study progress record${ids.length>1?'s':''}? This cannot be undone.`)) return;
+    try {
+      for (const progressId of ids) {
+        try { await bibleStudiesRepository.deleteProgress(progressId); } catch (e) { console.warn('Failed to delete study progress', progressId, e); }
+      }
+      clearStudySelection();
+      // Reload studies
+      if (user?.id) {
+        const studies = await bibleStudiesRepository.getUserStudiesWithProgress(user.id);
+        setUserStudies(studies || []);
+      }
+    } catch (e) {
+      console.error('Bulk delete studies error:', e);
     }
   };
 
@@ -985,20 +1046,48 @@ const MyWalkPage = () => {
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {roundtables.map(conv => (
-                    <div
-                      key={conv.id}
-                      className={`p-4 rounded-lg transition-colors ${
-                        conv.is_favorite
-                          ? 'bg-[rgba(255,223,118,0.08)] hover:bg-[rgba(255,223,118,0.12)] border border-yellow-400/30'
-                          : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-yellow-300 font-medium flex items-center flex-wrap gap-2">
-                            {conv.title || 'Untitled Roundtable'}
+                <>
+                  {/* Bulk delete bar for roundtables */}
+                  {selectedRoundtableIds.size > 0 && (
+                    <div className="flex items-center gap-3 mb-3 p-2 bg-red-900/30 border border-red-500/30 rounded-lg">
+                      <span className="text-red-200 text-sm">{selectedRoundtableIds.size} selected</span>
+                      <button
+                        onClick={handleBulkDeleteRoundtables}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-sm rounded"
+                      >
+                        Delete Selected
+                      </button>
+                      <button
+                        onClick={clearRoundtableSelection}
+                        className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {roundtables.map(conv => (
+                      <div
+                        key={conv.id}
+                        className={`p-4 rounded-lg transition-colors ${
+                          selectedRoundtableIds.has(conv.id)
+                            ? 'bg-[rgba(239,68,68,0.15)] border border-red-500/40'
+                            : conv.is_favorite
+                              ? 'bg-[rgba(255,223,118,0.08)] hover:bg-[rgba(255,223,118,0.12)] border border-yellow-400/30'
+                              : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Checkbox */}
+                          <input
+                            type="checkbox"
+                            checked={selectedRoundtableIds.has(conv.id)}
+                            onChange={() => toggleSelectRoundtable(conv.id)}
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-yellow-300 font-medium flex items-center flex-wrap gap-2">
+                              {conv.title || 'Untitled Roundtable'}
                             {/* Favorite button */}
                             <button
                               onClick={async (e) => {
@@ -1088,16 +1177,17 @@ const MyWalkPage = () => {
                             <span>{formatDate(conv.updated_at)}</span>
                           </div>
                         </div>
-                        <Link
-                          to={`/roundtable?conv=${conv.id}`}
-                          className="text-yellow-400 hover:text-yellow-300 text-sm flex-shrink-0"
-                        >
-                          Continue →
-                        </Link>
+                          <Link
+                            to={`/roundtable?conv=${conv.id}`}
+                            className="text-yellow-400 hover:text-yellow-300 text-sm flex-shrink-0"
+                          >
+                            Continue →
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
             </>
           )}
@@ -1122,38 +1212,66 @@ const MyWalkPage = () => {
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {userStudies.map(study => {
-                    const completedCount = Array.isArray(study.progress?.completed_lessons) 
-                      ? study.progress.completed_lessons.length 
-                      : 0;
-                    const totalLessons = study.lesson_count || 0;
-                    const progressPercent = totalLessons > 0 
-                      ? Math.round((completedCount / totalLessons) * 100) 
-                      : 0;
-                    const isComplete = totalLessons > 0 && completedCount >= totalLessons;
-                    
-                    // Find next incomplete lesson
-                    const completedSet = new Set(study.progress?.completed_lessons || []);
-                    let nextLessonIndex = 0;
-                    for (let i = 0; i < totalLessons; i++) {
-                      if (!completedSet.has(i)) {
-                        nextLessonIndex = i;
-                        break;
-                      }
-                    }
-                    
-                    return (
-                      <div
-                        key={study.progressId || study.id}
-                        className={`p-4 rounded-lg transition-colors ${
-                          isComplete
-                            ? 'bg-[rgba(34,197,94,0.1)] hover:bg-[rgba(34,197,94,0.15)] border border-green-500/30'
-                            : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
-                        }`}
+                <>
+                  {/* Bulk delete bar for studies */}
+                  {selectedStudyIds.size > 0 && (
+                    <div className="flex items-center gap-3 mb-3 p-2 bg-red-900/30 border border-red-500/30 rounded-lg">
+                      <span className="text-red-200 text-sm">{selectedStudyIds.size} selected</span>
+                      <button
+                        onClick={handleBulkDeleteStudies}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-sm rounded"
                       >
-                        <div className="flex items-start gap-4">
-                          <div className="flex-1 min-w-0">
+                        Delete Selected
+                      </button>
+                      <button
+                        onClick={clearStudySelection}
+                        className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-3">
+                    {userStudies.map(study => {
+                      const completedCount = Array.isArray(study.progress?.completed_lessons) 
+                        ? study.progress.completed_lessons.length 
+                        : 0;
+                      const totalLessons = study.lesson_count || 0;
+                      const progressPercent = totalLessons > 0 
+                        ? Math.round((completedCount / totalLessons) * 100) 
+                        : 0;
+                      const isComplete = totalLessons > 0 && completedCount >= totalLessons;
+                      
+                      // Find next incomplete lesson
+                      const completedSet = new Set(study.progress?.completed_lessons || []);
+                      let nextLessonIndex = 0;
+                      for (let i = 0; i < totalLessons; i++) {
+                        if (!completedSet.has(i)) {
+                          nextLessonIndex = i;
+                          break;
+                        }
+                      }
+                      
+                      return (
+                        <div
+                          key={study.progressId || study.id}
+                          className={`p-4 rounded-lg transition-colors ${
+                            selectedStudyIds.has(study.progressId)
+                              ? 'bg-[rgba(239,68,68,0.15)] border border-red-500/40'
+                              : isComplete
+                                ? 'bg-[rgba(34,197,94,0.1)] hover:bg-[rgba(34,197,94,0.15)] border border-green-500/30'
+                                : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Checkbox */}
+                            <input
+                              type="checkbox"
+                              checked={selectedStudyIds.has(study.progressId)}
+                              onChange={() => toggleSelectStudy(study.progressId)}
+                              className="mt-1 h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500"
+                            />
+                            <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">
                                 {/* Title with label */}
@@ -1280,9 +1398,10 @@ const MyWalkPage = () => {
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </>
           )}
