@@ -366,7 +366,7 @@ export const bibleStudiesRepository = {
       
       const { data: studies, error: studiesError } = await supabase
         .from('bible_studies')
-        .select('id, title, description, thumbnail_url, character_id, is_premium')
+        .select('id, title, description, character_id, is_premium')
         .in('id', studyIds);
       
       if (studiesError) {
