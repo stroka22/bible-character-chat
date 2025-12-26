@@ -362,15 +362,19 @@ export const bibleStudiesRepository = {
       
       // Get the study details for each progress record
       const studyIds = progressRecords.map(p => p.study_id);
+      console.log('[bibleStudiesRepository] Fetching studies for IDs:', studyIds);
+      
       const { data: studies, error: studiesError } = await supabase
         .from('bible_studies')
         .select('id, title, description, thumbnail_url, character_id, is_premium')
         .in('id', studyIds);
       
       if (studiesError) {
-        console.error('[bibleStudiesRepository] Error fetching studies:', studiesError);
+        console.error('[bibleStudiesRepository] Error fetching studies:', studiesError.message || studiesError);
         return [];
       }
+      
+      console.log('[bibleStudiesRepository] Studies found:', studies?.length || 0);
       
       // Get lesson counts for each study
       const { data: lessonCounts, error: lessonsError } = await supabase
