@@ -1386,9 +1386,9 @@ const MyWalkPage = () => {
                                   </svg>
                                 </button>
                                 
-                                {/* Continue/Review button */}
+                                {/* Continue/Review button - go to lesson page with progress */}
                                 <Link
-                                  to={`/studies/${study.id}?progress=${study.progressId}`}
+                                  to={`/studies/${study.id}/lesson/${study.progress?.current_lesson_index || nextLessonIndex || 0}?progress=${study.progressId}`}
                                   className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-blue-900 rounded-lg text-sm font-medium"
                                 >
                                   {isComplete ? 'Review' : 'Continue'}
