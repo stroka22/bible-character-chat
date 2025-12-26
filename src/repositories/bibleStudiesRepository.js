@@ -331,6 +331,79 @@ export const bibleStudiesRepository = {
     }
   },
 
+  /**
+   * Get all studies that a user has started (has progress records)
+   * Returns study info along with progress data
+   */
+  async getUserStudiesWithProgress(userId) {
+    try {
+      if (!userId) return [];
+      
+      // Get all progress records for this user
+      const { data: progressRecords, error: progressError } = await supabase
+        .from('user_study_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .order('last_activity_at', { ascending: false });
+      
+      if (progressError) {
+        console.error('[bibleStudiesRepository] Error fetching user progress:', progressError);
+        return [];
+      }
+      
+      if (!progressRecords || progressRecords.length === 0) return [];
+      
+      // Get the study details for each progress record
+      const studyIds = progressRecords.map(p => p.study_id);
+      const { data: studies, error: studiesError } = await supabase
+        .from('bible_studies')
+        .select('id, title, description, thumbnail_url, character_id, is_premium')
+        .in('id', studyIds);
+      
+      if (studiesError) {
+        console.error('[bibleStudiesRepository] Error fetching studies:', studiesError);
+        return [];
+      }
+      
+      // Get lesson counts for each study
+      const { data: lessonCounts, error: lessonsError } = await supabase
+        .from('bible_study_lessons')
+        .select('study_id')
+        .in('study_id', studyIds);
+      
+      const countMap = {};
+      if (!lessonsError && lessonCounts) {
+        for (const lc of lessonCounts) {
+          countMap[lc.study_id] = (countMap[lc.study_id] || 0) + 1;
+        }
+      }
+      
+      // Combine progress with study info
+      const studyMap = {};
+      for (const s of (studies || [])) {
+        studyMap[s.id] = s;
+      }
+      
+      return progressRecords.map(progress => {
+        const study = studyMap[progress.study_id];
+        if (!study) return null;
+        return {
+          ...study,
+          progress: {
+            completed_lessons: progress.completed_lessons || [],
+            current_lesson_index: progress.current_lesson_index || 0,
+            last_activity_at: progress.last_activity_at,
+            notes: progress.notes,
+          },
+          lesson_count: countMap[progress.study_id] || 0,
+        };
+      }).filter(Boolean);
+    } catch (err) {
+      console.error('[bibleStudiesRepository] Unexpected error fetching user studies:', err);
+      return [];
+    }
+  },
+
   /* ------------------------------------------------------------------
    * Admin helpers
    * ------------------------------------------------------------------ */

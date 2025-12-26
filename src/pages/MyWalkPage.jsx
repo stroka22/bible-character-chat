@@ -5,6 +5,7 @@ import { useConversation } from '../contexts/ConversationContext.jsx';
 import { characterRepository } from '../repositories/characterRepository';
 import userFavoritesRepository from '../repositories/userFavoritesRepository';
 import userSettingsRepository from '../repositories/userSettingsRepository';
+import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import CharacterCard from '../components/CharacterCard.jsx';
@@ -31,6 +32,10 @@ const MyWalkPage = () => {
   
   // State to track if we've attempted to load conversations
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+
+  // State for Bible studies with progress
+  const [userStudies, setUserStudies] = useState([]);
+  const [studiesLoading, setStudiesLoading] = useState(false);
 
   // State for renaming conversations
   const [renamingConversationId, setRenamingConversationId] = useState(null);
@@ -117,6 +122,27 @@ const MyWalkPage = () => {
       fetchConversations().finally(() => setHasAttemptedLoad(true));
     }
   }, [user, fetchConversations]);
+
+  // Fetch Bible studies with progress when authenticated
+  useEffect(() => {
+    const loadUserStudies = async () => {
+      if (!user?.id) {
+        setUserStudies([]);
+        return;
+      }
+      setStudiesLoading(true);
+      try {
+        const studies = await bibleStudiesRepository.getUserStudiesWithProgress(user.id);
+        setUserStudies(studies || []);
+      } catch (err) {
+        console.error('[MyWalkPage] Error loading user studies:', err);
+        setUserStudies([]);
+      } finally {
+        setStudiesLoading(false);
+      }
+    };
+    loadUserStudies();
+  }, [user?.id]);
 
   // Listen for cross-page conversation changes to refresh the list
   useEffect(() => {
@@ -603,7 +629,7 @@ const MyWalkPage = () => {
                   : 'text-blue-200 hover:text-yellow-200'
               }`}
             >
-              Bible Studies ({bibleStudies.length})
+              Bible Studies ({userStudies.length})
             </button>
           </div>
 
@@ -1017,10 +1043,14 @@ const MyWalkPage = () => {
           {/* ===================== BIBLE STUDIES TAB ===================== */}
           {activeTab === 'studies' && (
             <>
-              {bibleStudies.length === 0 ? (
+              {studiesLoading ? (
+                <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center">
+                  <p className="text-blue-100">Loading your studies...</p>
+                </div>
+              ) : userStudies.length === 0 ? (
                 <div className="bg-[rgba(255,255,255,0.05)] rounded-lg p-6 text-center">
                   <p className="text-blue-100 mb-4">
-                    No Bible study sessions yet. Explore our guided studies with biblical characters!
+                    No Bible studies in progress. Start a guided study with biblical characters!
                   </p>
                   <Link
                     to="/studies"
@@ -1031,117 +1061,94 @@ const MyWalkPage = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {bibleStudies.map(conv => (
-                    <div
-                      key={conv.id}
-                      className={`p-4 rounded-lg transition-colors ${
-                        conv.is_favorite
-                          ? 'bg-[rgba(255,223,118,0.08)] hover:bg-[rgba(255,223,118,0.12)] border border-yellow-400/30'
-                          : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-yellow-300 font-medium flex items-center flex-wrap gap-2">
-                            {conv.title || 'Untitled Study'}
-                            {/* Favorite button */}
-                            <button
-                              onClick={async (e) => {
-                                e.preventDefault();
-                                try {
-                                  await updateConversation(conv.id, { is_favorite: !conv.is_favorite });
-                                  fetchConversations?.();
-                                } catch (err) {
-                                  console.error('Error updating favorite status:', err);
-                                }
-                              }}
-                              className={`${conv.is_favorite ? 'text-yellow-400 hover:text-yellow-300' : 'text-gray-400 hover:text-yellow-300'}`}
-                              title={conv.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            </button>
-                            {/* Rename button */}
-                            <button
-                              onClick={() => {
-                                setRenamingConversationId(conv.id);
-                                setNewTitle(conv.title || '');
-                              }}
-                              className="text-yellow-200 hover:text-white"
-                              title="Rename"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                              </svg>
-                            </button>
-                            {/* Delete button */}
-                            <button
-                              onClick={() => handleDeleteConversation(conv.id)}
-                              className="text-red-400 hover:text-red-500"
-                              title="Delete"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </h4>
-                          {/* Rename input (shown when editing) */}
-                          {renamingConversationId === conv.id && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <input
-                                type="text"
-                                value={newTitle}
-                                onChange={(e) => setNewTitle(e.target.value)}
-                                placeholder="Enter new title"
-                                className="flex-1 p-1 text-blue-900 rounded border border-blue-400 focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
-                                autoFocus
+                  {userStudies.map(study => {
+                    const completedCount = Array.isArray(study.progress?.completed_lessons) 
+                      ? study.progress.completed_lessons.length 
+                      : 0;
+                    const totalLessons = study.lesson_count || 0;
+                    const progressPercent = totalLessons > 0 
+                      ? Math.round((completedCount / totalLessons) * 100) 
+                      : 0;
+                    const isComplete = totalLessons > 0 && completedCount >= totalLessons;
+                    
+                    // Find next incomplete lesson
+                    const completedSet = new Set(study.progress?.completed_lessons || []);
+                    let nextLessonIndex = 0;
+                    for (let i = 0; i < totalLessons; i++) {
+                      if (!completedSet.has(i)) {
+                        nextLessonIndex = i;
+                        break;
+                      }
+                    }
+                    
+                    return (
+                      <div
+                        key={study.id}
+                        className={`p-4 rounded-lg transition-colors ${
+                          isComplete
+                            ? 'bg-[rgba(34,197,94,0.1)] hover:bg-[rgba(34,197,94,0.15)] border border-green-500/30'
+                            : 'bg-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.1)]'
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Thumbnail */}
+                          {study.thumbnail_url && (
+                            <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-blue-800/50">
+                              <img 
+                                src={study.thumbnail_url} 
+                                alt={study.title}
+                                className="w-full h-full object-cover"
                               />
-                              <button
-                                onClick={async () => {
-                                  if (!newTitle.trim()) return;
-                                  try {
-                                    await updateConversation(conv.id, { title: newTitle.trim() });
-                                  } catch (err) {
-                                    console.error('Error renaming:', err);
-                                  } finally {
-                                    setRenamingConversationId(null);
-                                    setNewTitle('');
-                                  }
-                                }}
-                                className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={() => { setRenamingConversationId(null); setNewTitle(''); }}
-                                className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs"
-                              >
-                                Cancel
-                              </button>
                             </div>
                           )}
-                          <div className="flex items-center gap-3 text-blue-200 text-xs mt-1">
-                            {Array.isArray(conv.participants) && conv.participants.length > 0 && (
-                              <span className="flex items-center gap-1" title={`${conv.participants.length + 1} participants`}>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                                </svg>
-                                {conv.participants.length + 1}
-                              </span>
-                            )}
-                            <span>{formatDate(conv.updated_at)}</span>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <h4 className="text-yellow-300 font-medium flex items-center gap-2">
+                                  {study.title}
+                                  {isComplete && (
+                                    <span className="text-green-400" title="Completed">
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                      </svg>
+                                    </span>
+                                  )}
+                                </h4>
+                                
+                                {/* Progress bar */}
+                                <div className="mt-2 flex items-center gap-3">
+                                  <div className="flex-1 max-w-[200px] h-2 bg-blue-900/50 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full transition-all ${isComplete ? 'bg-green-500' : 'bg-yellow-400'}`}
+                                      style={{ width: `${progressPercent}%` }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-blue-200">
+                                    {completedCount} of {totalLessons} lessons
+                                  </span>
+                                </div>
+                                
+                                {/* Last activity */}
+                                {study.progress?.last_activity_at && (
+                                  <p className="text-xs text-blue-300/70 mt-1">
+                                    Last activity: {formatDate(study.progress.last_activity_at)}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              <Link
+                                to={`/studies/${study.id}`}
+                                className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-blue-900 rounded-lg text-sm font-medium flex-shrink-0"
+                              >
+                                {isComplete ? 'Review' : 'Continue'}
+                              </Link>
+                            </div>
                           </div>
                         </div>
-                        <Link
-                          to={`/chat/${conv.id}`}
-                          className="text-yellow-400 hover:text-yellow-300 text-sm flex-shrink-0"
-                        >
-                          Continue →
-                        </Link>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </>
