@@ -1,10 +1,11 @@
 import React from 'react';
-import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView } from 'react-native';
+import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat, type Chat } from '../lib/chat';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import { listFavoriteCharacters } from '../lib/favorites';
+import { getUserStudiesWithProgress, deleteProgress, getProgressPercent, type StudyWithProgress } from '../lib/studyProgress';
 
 type TabType = 'chats' | 'roundtables' | 'studies';
 
@@ -15,18 +16,16 @@ export default function MyWalk() {
   const [loading, setLoading] = React.useState(false);
   const [favChars, setFavChars] = React.useState<any[]>([]);
   const [activeTab, setActiveTab] = React.useState<TabType>('chats');
+  const [userStudies, setUserStudies] = React.useState<StudyWithProgress[]>([]);
+  const [studiesLoading, setStudiesLoading] = React.useState(false);
 
-  // Separate chats by type
+  // Separate chats by type (exclude study chats - those are shown in Studies tab)
   const regularChats = React.useMemo(() => 
     allChats.filter(c => !(c as any).study_id && (c as any).conversation_type !== 'roundtable'), 
     [allChats]
   );
   const roundtables = React.useMemo(() => 
     allChats.filter(c => (c as any).conversation_type === 'roundtable'), 
-    [allChats]
-  );
-  const bibleStudies = React.useMemo(() => 
-    allChats.filter(c => !!(c as any).study_id), 
     [allChats]
   );
 
@@ -45,12 +44,26 @@ export default function MyWalk() {
     }
   }, [user]);
 
+  const loadStudies = React.useCallback(async () => {
+    if (!user?.id) return;
+    setStudiesLoading(true);
+    try {
+      const studies = await getUserStudiesWithProgress(user.id);
+      setUserStudies(studies);
+    } catch (err) {
+      console.warn('[MyWalk] Error loading studies:', err);
+    } finally {
+      setStudiesLoading(false);
+    }
+  }, [user?.id]);
+
   // Refresh when screen comes into focus to reflect latest favorites immediately
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { useFocusEffect } = require('@react-navigation/native');
   useFocusEffect(React.useCallback(() => {
     load();
-  }, [load]));
+    loadStudies();
+  }, [load, loadStudies]));
 
   async function toggleFavorite(c: Chat) {
     await chat.toggleFavorite(c.id, !c.is_favorite);
@@ -66,10 +79,31 @@ export default function MyWalk() {
     return 0;
   };
 
-  // Get items for current tab
-  const currentItems = activeTab === 'chats' ? regularChats 
-    : activeTab === 'roundtables' ? roundtables 
-    : bibleStudies;
+  // Get items for current tab (chats/roundtables)
+  const currentChatItems = activeTab === 'chats' ? regularChats : roundtables;
+
+  // Handle study deletion
+  const handleDeleteStudy = (study: StudyWithProgress) => {
+    Alert.alert(
+      'Delete Study Progress',
+      `Delete "${study.title}"${study.progress.label ? ` (${study.progress.label})` : ''}? This will remove your progress but not the study itself.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await deleteProgress(study.progressId);
+            if (success) {
+              loadStudies();
+            } else {
+              Alert.alert('Error', 'Failed to delete study progress');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   // Get route for navigation based on type
   const getNavRoute = (item: Chat) => {
@@ -129,49 +163,152 @@ export default function MyWalk() {
           style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: activeTab === 'studies' ? theme.colors.accent : 'transparent' }}
         >
           <Text style={{ textAlign: 'center', color: activeTab === 'studies' ? theme.colors.accent : theme.colors.muted, fontWeight: '600' }}>
-            Studies ({bibleStudies.length})
+            Studies ({userStudies.length})
           </Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={currentItems}
-        keyExtractor={(i) => i.id}
-        onRefresh={load}
-        refreshing={loading}
-        contentContainerStyle={{ padding: 12 }}
-        renderItem={({ item }) => {
-          const participantCount = getParticipantCount(item);
-          const navRoute = getNavRoute(item);
-          return (
-            <View style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 8 }}>
-              <TouchableOpacity onPress={() => nav.navigate(navRoute.screen, navRoute.params)}>
-                <Text style={{ fontWeight: '600', color: theme.colors.text }}>{item.title || 'Untitled'}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 12 }}>
-                  {participantCount > 0 && (
-                    <Text style={{ color: theme.colors.muted, fontSize: 12 }}>👥 {participantCount}</Text>
+      {/* Bible Studies Tab */}
+      {activeTab === 'studies' && (
+        <FlatList
+          data={userStudies}
+          keyExtractor={(i) => i.progressId}
+          onRefresh={loadStudies}
+          refreshing={studiesLoading}
+          contentContainerStyle={{ padding: 12 }}
+          renderItem={({ item: study }) => {
+            const completedCount = Array.isArray(study.progress.completed_lessons) 
+              ? study.progress.completed_lessons.length 
+              : 0;
+            const totalLessons = study.lesson_count || 0;
+            const progressPercent = getProgressPercent(study.progress.completed_lessons || [], totalLessons);
+            
+            return (
+              <View style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 8 }}>
+                <TouchableOpacity 
+                  onPress={() => nav.navigate('StudyDetail', { 
+                    studyId: study.id, 
+                    title: study.title,
+                    progressId: study.progressId 
+                  })}
+                >
+                  <Text style={{ fontWeight: '700', color: theme.colors.text, fontSize: 16 }}>
+                    {study.title}
+                  </Text>
+                  {study.progress.label && (
+                    <Text style={{ color: theme.colors.accent, fontSize: 12, marginTop: 2 }}>
+                      {study.progress.label}
+                    </Text>
                   )}
-                  <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{new Date(item.updated_at).toLocaleString()}</Text>
-                </View>
-              </TouchableOpacity>
-              <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
-                <TouchableOpacity onPress={() => toggleFavorite(item)} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: theme.colors.surface }}>
-                  <Text style={{ color: item.is_favorite ? theme.colors.accent : theme.colors.text, fontSize: 12 }}>
-                    {item.is_favorite ? '★ Saved' : '☆ Save'}
+                  
+                  {/* Progress bar */}
+                  <View style={{ marginTop: 8 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
+                        {completedCount} of {totalLessons} lessons
+                      </Text>
+                      <Text style={{ 
+                        color: progressPercent === 100 ? '#22c55e' : theme.colors.primary, 
+                        fontSize: 12, 
+                        fontWeight: '700' 
+                      }}>
+                        {progressPercent}%
+                      </Text>
+                    </View>
+                    <View style={{ height: 4, backgroundColor: theme.colors.surface, borderRadius: 2, overflow: 'hidden' }}>
+                      <View style={{ 
+                        height: '100%', 
+                        width: `${progressPercent}%`, 
+                        backgroundColor: progressPercent === 100 ? '#22c55e' : theme.colors.primary,
+                        borderRadius: 2 
+                      }} />
+                    </View>
+                  </View>
+                  
+                  <Text style={{ color: theme.colors.muted, fontSize: 11, marginTop: 6 }}>
+                    Last activity: {new Date(study.progress.last_activity_at).toLocaleDateString()}
                   </Text>
                 </TouchableOpacity>
+                
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                  <TouchableOpacity 
+                    onPress={() => nav.navigate('StudyDetail', { 
+                      studyId: study.id, 
+                      title: study.title,
+                      progressId: study.progressId 
+                    })}
+                    style={{ paddingVertical: 6, paddingHorizontal: 12, backgroundColor: theme.colors.primary, borderRadius: 6 }}
+                  >
+                    <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>
+                      Continue →
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    onPress={() => handleDeleteStudy(study)}
+                    style={{ paddingVertical: 6, paddingHorizontal: 10, backgroundColor: theme.colors.surface, borderRadius: 6 }}
+                  >
+                    <Text style={{ color: '#ef4444', fontSize: 12 }}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
+            );
+          }}
+          ListEmptyComponent={!studiesLoading ? (
+            <View style={{ alignItems: 'center', marginTop: 64 }}>
+              <Text style={{ color: theme.colors.text, marginBottom: 8 }}>No Bible studies in progress</Text>
+              <TouchableOpacity 
+                onPress={() => nav.navigate('Studies')}
+                style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: theme.colors.primary, borderRadius: 8 }}
+              >
+                <Text style={{ color: theme.colors.primaryText, fontWeight: '600' }}>Browse Studies</Text>
+              </TouchableOpacity>
             </View>
-          );
-        }}
-        ListEmptyComponent={!loading ? (
-          <View style={{ alignItems: 'center', marginTop: 64 }}>
-            <Text style={{ color: theme.colors.text }}>
-              {activeTab === 'chats' ? 'No chats yet' : activeTab === 'roundtables' ? 'No roundtables yet' : 'No Bible studies yet'}
-            </Text>
-          </View>
-        ) : null}
-      />
+          ) : null}
+        />
+      )}
+
+      {/* Chats and Roundtables Tabs */}
+      {activeTab !== 'studies' && (
+        <FlatList
+          data={currentChatItems}
+          keyExtractor={(i) => i.id}
+          onRefresh={load}
+          refreshing={loading}
+          contentContainerStyle={{ padding: 12 }}
+          renderItem={({ item }) => {
+            const participantCount = getParticipantCount(item);
+            const navRoute = getNavRoute(item);
+            return (
+              <View style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 8 }}>
+                <TouchableOpacity onPress={() => nav.navigate(navRoute.screen, navRoute.params)}>
+                  <Text style={{ fontWeight: '600', color: theme.colors.text }}>{item.title || 'Untitled'}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 12 }}>
+                    {participantCount > 0 && (
+                      <Text style={{ color: theme.colors.muted, fontSize: 12 }}>👥 {participantCount}</Text>
+                    )}
+                    <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{new Date(item.updated_at).toLocaleString()}</Text>
+                  </View>
+                </TouchableOpacity>
+                <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity onPress={() => toggleFavorite(item)} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: theme.colors.surface }}>
+                    <Text style={{ color: item.is_favorite ? theme.colors.accent : theme.colors.text, fontSize: 12 }}>
+                      {item.is_favorite ? '★ Saved' : '☆ Save'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          }}
+          ListEmptyComponent={!loading ? (
+            <View style={{ alignItems: 'center', marginTop: 64 }}>
+              <Text style={{ color: theme.colors.text }}>
+                {activeTab === 'chats' ? 'No chats yet' : 'No roundtables yet'}
+              </Text>
+            </View>
+          ) : null}
+        />
+      )}
     </SafeAreaView>
   );
 }

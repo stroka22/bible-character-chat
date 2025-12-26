@@ -23,7 +23,7 @@ type Lesson = {
 };
 
 export default function StudyDetail({ route, navigation }: any) {
-  const { studyId, title } = route.params as { studyId: string; title: string };
+  const { studyId, title, progressId: routeProgressId } = route.params as { studyId: string; title: string; progressId?: string };
   const { user } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,9 +81,9 @@ export default function StudyDetail({ route, navigation }: any) {
       }
     }
     
-    // Load progress
+    // Load progress (use routeProgressId if provided)
     if (user?.id) {
-      const p = await getStudyProgress(user.id, studyId);
+      const p = await getStudyProgress(user.id, studyId, routeProgressId);
       setProgress(p);
     }
     setLoading(false);
@@ -92,7 +92,7 @@ export default function StudyDetail({ route, navigation }: any) {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, [studyId, user?.id])
+    }, [studyId, user?.id, routeProgressId])
   );
 
   const completedLessons = progress?.completed_lessons || [];
@@ -122,6 +122,27 @@ export default function StudyDetail({ route, navigation }: any) {
     if (!user || starting) return;
     setStarting(true);
     try {
+      // Get the current progress ID (from route or from progress state)
+      const currentProgressId = routeProgressId || progress?.id;
+      
+      // Check if there's an existing chat for this lesson and progress
+      if (currentProgressId) {
+        const existingChats = await chat.getChatsByProgress(currentProgressId);
+        const lessonChat = existingChats.find((c: any) => c.lesson_id === lesson.id);
+        if (lessonChat) {
+          // Resume existing chat
+          navigation.navigate('MainTabs', {
+            screen: 'Chat',
+            params: {
+              screen: 'ChatDetail',
+              params: { chatId: lessonChat.id }
+            }
+          } as any);
+          setStarting(false);
+          return;
+        }
+      }
+      
       // Determine which character to use: lesson override > study default
       const targetCharacterId = lesson.character_id || studyMeta?.character_id || null;
       
@@ -141,7 +162,8 @@ export default function StudyDetail({ route, navigation }: any) {
       const lessonId = lesson.id !== 'synthetic-intro' ? lesson.id : undefined;
       const newChat = await chat.createChat(user.id, characterId, chatTitle, { 
         studyId: studyId, 
-        lessonId 
+        lessonId,
+        progressId: currentProgressId
       });
       
       // Build lesson prompts string from the prompts array

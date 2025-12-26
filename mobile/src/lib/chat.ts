@@ -39,7 +39,7 @@ export const chat = {
     userId: string, 
     characterId: string, 
     title?: string,
-    options?: { studyId?: string; lessonId?: string }
+    options?: { studyId?: string; lessonId?: string; progressId?: string }
   ): Promise<Chat> {
     const payload: Record<string, any> = {
       user_id: userId,
@@ -49,6 +49,7 @@ export const chat = {
     };
     if (options?.studyId) payload.study_id = options.studyId;
     if (options?.lessonId) payload.lesson_id = options.lessonId;
+    if (options?.progressId) payload.progress_id = options.progressId;
     
     const { data, error } = await supabase
       .from('chats')
@@ -57,6 +58,20 @@ export const chat = {
       .single();
     if (error) throw error;
     return data as Chat;
+  },
+
+  async getChatsByProgress(progressId: string): Promise<Chat[]> {
+    if (!progressId) return [];
+    const { data, error } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('progress_id', progressId)
+      .order('updated_at', { ascending: false });
+    if (error) {
+      console.warn('[chat] getChatsByProgress error:', error);
+      return [];
+    }
+    return (data || []) as Chat[];
   },
 
   async getChatMessages(chatId: string): Promise<ChatMessage[]> {

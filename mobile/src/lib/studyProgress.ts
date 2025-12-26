@@ -1,23 +1,49 @@
 import { supabase } from './supabase';
 
 export type StudyProgress = {
+  id: string;
   user_id: string;
   study_id: string;
   current_lesson_index: number;
   completed_lessons: number[];
   notes?: string | null;
+  label?: string | null;
+  participants?: string[] | null;
   last_activity_at: string;
+  created_at?: string;
 };
 
-export async function getStudyProgress(userId: string, studyId: string): Promise<StudyProgress | null> {
+export type StudyWithProgress = {
+  id: string;
+  title: string;
+  description?: string | null;
+  character_id?: string | null;
+  is_premium?: boolean;
+  progressId: string;
+  progress: StudyProgress;
+  lesson_count: number;
+};
+
+export async function getStudyProgress(userId: string, studyId: string, progressId?: string): Promise<StudyProgress | null> {
   if (!userId || !studyId) return null;
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('user_study_progress')
       .select('*')
       .eq('user_id', userId)
-      .eq('study_id', studyId)
+      .eq('study_id', studyId);
+    
+    // If progressId is specified, get that specific record
+    if (progressId) {
+      query = query.eq('id', progressId);
+    }
+    
+    // Get most recent progress record
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
+      
     if (error) {
       console.warn('[studyProgress] getStudyProgress error:', error);
       return null;
@@ -145,4 +171,112 @@ export function getProgressPercent(completedLessons: number[], totalLessons: num
   if (totalLessons <= 0) return 0;
   const count = Array.isArray(completedLessons) ? completedLessons.length : 0;
   return Math.round((count / totalLessons) * 100);
+}
+
+/**
+ * Get all studies that a user has started (has progress records)
+ * Returns study info along with progress data
+ */
+export async function getUserStudiesWithProgress(userId: string): Promise<StudyWithProgress[]> {
+  if (!userId) return [];
+  
+  try {
+    // Get all progress records for this user
+    const { data: progressRecords, error: progressError } = await supabase
+      .from('user_study_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .order('last_activity_at', { ascending: false });
+    
+    if (progressError || !progressRecords?.length) return [];
+    
+    // Get the study details for each progress record
+    const studyIds = progressRecords.map(p => p.study_id);
+    
+    const { data: studies, error: studiesError } = await supabase
+      .from('bible_studies')
+      .select('id, title, description, character_id, is_premium')
+      .in('id', studyIds);
+    
+    if (studiesError) return [];
+    
+    // Get lesson counts for each study
+    const { data: lessonCounts } = await supabase
+      .from('bible_study_lessons')
+      .select('study_id')
+      .in('study_id', studyIds);
+    
+    const countMap: Record<string, number> = {};
+    if (lessonCounts) {
+      for (const lc of lessonCounts) {
+        countMap[lc.study_id] = (countMap[lc.study_id] || 0) + 1;
+      }
+    }
+    
+    // Combine progress with study info
+    const studyMap: Record<string, any> = {};
+    for (const s of (studies || [])) {
+      studyMap[s.id] = s;
+    }
+    
+    return progressRecords.map(progress => {
+      const study = studyMap[progress.study_id];
+      if (!study) return null;
+      return {
+        ...study,
+        progressId: progress.id,
+        progress: {
+          id: progress.id,
+          user_id: progress.user_id,
+          study_id: progress.study_id,
+          completed_lessons: progress.completed_lessons || [],
+          current_lesson_index: progress.current_lesson_index || 0,
+          last_activity_at: progress.last_activity_at,
+          notes: progress.notes,
+          label: progress.label || null,
+          participants: progress.participants || [],
+          created_at: progress.created_at,
+        },
+        lesson_count: countMap[progress.study_id] || 0,
+      };
+    }).filter(Boolean) as StudyWithProgress[];
+  } catch (err) {
+    console.warn('[studyProgress] getUserStudiesWithProgress error:', err);
+    return [];
+  }
+}
+
+/**
+ * Delete a specific progress record
+ */
+export async function deleteProgress(progressId: string): Promise<boolean> {
+  if (!progressId) return false;
+  try {
+    const { error } = await supabase
+      .from('user_study_progress')
+      .delete()
+      .eq('id', progressId);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Update the label of a progress record
+ */
+export async function updateProgressLabel(progressId: string, label: string): Promise<StudyProgress | null> {
+  if (!progressId) return null;
+  try {
+    const { data, error } = await supabase
+      .from('user_study_progress')
+      .update({ label })
+      .eq('id', progressId)
+      .select('*')
+      .maybeSingle();
+    if (error) return null;
+    return data as StudyProgress;
+  } catch {
+    return null;
+  }
 }
