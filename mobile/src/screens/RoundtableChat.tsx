@@ -19,12 +19,8 @@ type Message = {
 
 export default function RoundtableChat({ route }: any) {
   const navigation = useNavigation<any>();
-  const { participantIds, topic } = route.params as { participantIds: string[]; topic: string };
-  const [messages, setMessages] = useState<Message[]>([{
-    id: `sys-${Date.now()}`,
-    role: 'system',
-    content: `A roundtable discussion on the topic: "${topic}"`
-  }]);
+  const { participantIds, topic, conversationId } = route.params as { participantIds?: string[]; topic?: string; conversationId?: string };
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [input, setInput] = useState('');
   const [participants, setParticipants] = useState<any[]>([]);
@@ -32,6 +28,7 @@ export default function RoundtableChat({ route }: any) {
   const roundRef = React.useRef<number>(1);
   const [promptTemplate, setPromptTemplate] = useState<string>('');
   const [replyOnlySpeakerId, setReplyOnlySpeakerId] = useState<string | null>(null);
+  const [savedConversationId, setSavedConversationId] = useState<string | null>(conversationId || null);
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { user } = useAuth();
@@ -47,19 +44,73 @@ export default function RoundtableChat({ route }: any) {
         if (typeof tpl === 'string') setPromptTemplate(tpl);
       } catch {}
 
-      const { data } = await supabase
-        .from('characters')
-        .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
-        .in('id', participantIds);
-      const loaded = (data as any) || [];
-      setParticipants(loaded);
-      // Auto-start the first round once characters are loaded
-      if (!didAutoStart.current) {
-        didAutoStart.current = true;
-        try { await generateRound(messages, loaded, undefined, roundRef.current); } catch {}
+      // If resuming an existing conversation, load it
+      if (conversationId) {
+        try {
+          const existingChat = await chat.getChat(conversationId);
+          const existingMessages = await chat.getChatMessages(conversationId);
+          
+          // Load participants from saved chat
+          const savedParticipantIds = existingChat?.participants || [];
+          if (savedParticipantIds.length > 0) {
+            const { data } = await supabase
+              .from('characters')
+              .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
+              .in('id', savedParticipantIds);
+            setParticipants((data as any) || []);
+          }
+          
+          // Convert to Message format
+          const loadedMessages: Message[] = existingMessages.map((m: any) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            speakerId: m.metadata?.speakerCharacterId || null
+          }));
+          setMessages(loadedMessages);
+          
+          // Calculate round index from existing messages
+          const assistantCount = loadedMessages.filter(m => m.role === 'assistant').length;
+          const participantCount = savedParticipantIds.length || 1;
+          const rounds = Math.floor(assistantCount / participantCount) + 1;
+          setRoundIndex(rounds);
+          roundRef.current = rounds;
+          return;
+        } catch (e) {
+          console.warn('Failed to load existing roundtable:', e);
+        }
+      }
+
+      // New conversation - set initial system message
+      if (topic) {
+        setMessages([{
+          id: `sys-${Date.now()}`,
+          role: 'system',
+          content: `A roundtable discussion on the topic: "${topic}"`
+        }]);
+      }
+
+      // Load participants for new conversation
+      if (participantIds && participantIds.length > 0) {
+        const { data } = await supabase
+          .from('characters')
+          .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
+          .in('id', participantIds);
+        const loaded = (data as any) || [];
+        setParticipants(loaded);
+        // Auto-start the first round once characters are loaded
+        if (!didAutoStart.current) {
+          didAutoStart.current = true;
+          const initialMessages = [{
+            id: `sys-${Date.now()}`,
+            role: 'system' as const,
+            content: `A roundtable discussion on the topic: "${topic}"`
+          }];
+          try { await generateRound(initialMessages, loaded, undefined, roundRef.current); } catch {}
+        }
       }
     })();
-  }, [participantIds]);
+  }, [participantIds, conversationId]);
 
   const sendUser = async () => {
     if (!input.trim()) return;
@@ -79,6 +130,12 @@ export default function RoundtableChat({ route }: any) {
     const base = [...messages, userMsg];
     setMessages(base);
     setInput('');
+    
+    // Persist user message if conversation is saved
+    if (savedConversationId) {
+      try { await chat.addMessage(savedConversationId, content, 'user'); } catch {}
+    }
+    
     await generateRound(base, undefined, { onlySpeakerId: targetId || undefined }, roundRef.current);
   };
 
@@ -153,6 +210,11 @@ export default function RoundtableChat({ route }: any) {
         const msg: Message = { id: `a-${speaker.id}-${Date.now()}`, role: 'assistant', content: text, speakerId: String(speaker.id) };
         working.push(msg);
         setMessages(prev => [...prev, msg]);
+        
+        // Persist assistant message if conversation is saved
+        if (savedConversationId) {
+          try { await chat.addMessage(savedConversationId, text, 'assistant'); } catch {}
+        }
       }
     } finally {
       setIsTyping(false);
@@ -198,6 +260,13 @@ export default function RoundtableChat({ route }: any) {
       Alert.alert('Sign in required', 'Please sign in to save this roundtable.');
       return;
     }
+    
+    // If already saved (resumed conversation), just show confirmation
+    if (savedConversationId) {
+      Alert.alert('Already Saved', 'This roundtable is already saved to My Walk. New messages are saved automatically.');
+      return;
+    }
+    
     await requirePremiumOrPrompt({
       userId: user?.id,
       feature: 'save',
@@ -205,9 +274,10 @@ export default function RoundtableChat({ route }: any) {
       onAllowed: async () => {
         try {
           const title = `Roundtable: ${topic}`;
-          const c = await chat.createChat(String(user?.id), String(participantIds[0] || ''), title, {
+          const pIds = participantIds || participants.map(p => p.id);
+          const c = await chat.createChat(String(user?.id), String(pIds[0] || ''), title, {
             conversationType: 'roundtable',
-            participants: participantIds
+            participants: pIds
           });
           const seq = messages.filter(m => m.role !== 'system');
           for (const m of seq) {
@@ -215,6 +285,7 @@ export default function RoundtableChat({ route }: any) {
           }
           // Mark saved chats as favorites so they appear under My Walk
           try { await chat.toggleFavorite(c.id, true); } catch {}
+          setSavedConversationId(c.id);
           Alert.alert('Saved', 'Roundtable saved to My Walk.');
         } catch (e) {
           Alert.alert('Error', `Unable to save this roundtable.${e && (e as any).message ? `\n${(e as any).message}` : ''}`);
