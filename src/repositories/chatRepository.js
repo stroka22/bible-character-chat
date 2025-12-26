@@ -80,6 +80,9 @@ export const chatRepository = {
                       character_id: characterId,
                       title: title || `Chat ${new Date().toLocaleString()}`,
                       is_favorite: false,
+                      // Keep study_id and lesson_id if provided
+                      ...(extra.study_id ? { study_id: extra.study_id } : {}),
+                      ...(extra.lesson_id ? { lesson_id: extra.lesson_id } : {}),
                     };
                     ({ data, error } = await supabase
                         .from('chats')
