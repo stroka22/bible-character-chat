@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { generateCharacterResponse } from '../lib/api';
-import { getStudyProgress, toggleLessonComplete, getProgressPercent, StudyProgress } from '../lib/studyProgress';
+import { getStudyProgress, toggleLessonComplete, getProgressPercent, saveStudyProgress, StudyProgress } from '../lib/studyProgress';
 import { theme } from '../theme';
 
 type LessonPrompt = {
@@ -139,8 +139,30 @@ export default function StudyDetail({ route, navigation }: any) {
     if (!user || starting) return;
     setStarting(true);
     try {
-      // Get the current progress ID (from route or from progress state)
-      const currentProgressId = routeProgressId || progress?.id;
+      // Get or create progress record
+      let currentProgressId = routeProgressId || progress?.id;
+      
+      // If no progress exists, create one
+      if (!currentProgressId) {
+        const newProgress = await saveStudyProgress({
+          userId: user.id,
+          studyId: studyId,
+          currentLessonIndex: lesson.order_index,
+          completedLessons: []
+        });
+        if (newProgress?.id) {
+          currentProgressId = newProgress.id;
+          setProgress(newProgress);
+        }
+      } else {
+        // Update current lesson index
+        await saveStudyProgress({
+          userId: user.id,
+          studyId: studyId,
+          progressId: currentProgressId,
+          currentLessonIndex: lesson.order_index
+        });
+      }
       
       // Check if there's an existing chat for this lesson and progress
       if (currentProgressId) {
