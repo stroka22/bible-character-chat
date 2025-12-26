@@ -292,6 +292,28 @@ export const ChatProvider = ({ children }) => {
       setMessages(prev =>
         prev.map(m => m.id === assistantId ? { ...m, content: reply } : m)
       );
+      
+      // If chat is already saved, persist new messages to database
+      if (chatId && typeof addMessage === 'function') {
+        try {
+          // Persist user message
+          await addMessage({
+            conversation_id: chatId,
+            role: 'user',
+            content: userMessage.content,
+          });
+          // Persist assistant message
+          await addMessage({
+            conversation_id: chatId,
+            role: 'assistant',
+            content: reply,
+            metadata: { speakerCharacterId: character.id }
+          });
+          console.log('[ChatContext] Persisted new messages to saved chat:', chatId);
+        } catch (persistErr) {
+          console.warn('[ChatContext] Failed to persist messages:', persistErr);
+        }
+      }
     } catch (err) {
       console.error('Error generating response:', err);
       setError('Failed to generate response. Please try again.');
@@ -307,7 +329,7 @@ export const ChatProvider = ({ children }) => {
 
     return userMessage;
   // include messages to ensure latest history is sent
-  }, [character, messages, generateMessageId, isPremium, tierSettings]);
+  }, [character, messages, generateMessageId, isPremium, tierSettings, chatId, addMessage]);
 
   /**
    * Retry the last message (regenerate response)
