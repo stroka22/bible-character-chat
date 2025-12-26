@@ -205,7 +205,10 @@ export default function RoundtableChat({ route }: any) {
       onAllowed: async () => {
         try {
           const title = `Roundtable: ${topic}`;
-          const c = await chat.createChat(String(user?.id), String(participantIds[0] || ''), title);
+          const c = await chat.createChat(String(user?.id), String(participantIds[0] || ''), title, {
+            conversationType: 'roundtable',
+            participants: participantIds
+          });
           const seq = messages.filter(m => m.role !== 'system');
           for (const m of seq) {
             await chat.addMessage(c.id, m.content, m.role as any);

@@ -48,7 +48,7 @@ export const chat = {
     userId: string, 
     characterId: string, 
     title?: string,
-    options?: { studyId?: string; lessonId?: string; progressId?: string }
+    options?: { studyId?: string; lessonId?: string; progressId?: string; conversationType?: string; participants?: string[] }
   ): Promise<Chat> {
     const payload: Record<string, any> = {
       user_id: userId,
@@ -59,6 +59,8 @@ export const chat = {
     if (options?.studyId) payload.study_id = options.studyId;
     if (options?.lessonId) payload.lesson_id = options.lessonId;
     if (options?.progressId) payload.progress_id = options.progressId;
+    if (options?.conversationType) payload.conversation_type = options.conversationType;
+    if (options?.participants) payload.participants = options.participants;
     
     const { data, error } = await supabase
       .from('chats')
