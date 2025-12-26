@@ -100,7 +100,12 @@ export default function ChatDetail() {
       // Build context for proxy
       const persona = character?.persona_prompt || '';
       const name = character?.name || 'Guide';
-      const history = [...messages, userMsg].slice(-12).map((m) => ({ role: m.role as any, content: m.content }));
+      
+      // Include system messages (study context) at the start, then recent conversation
+      const systemMsgs = messages.filter(m => m.role === 'system').map(m => ({ role: m.role as any, content: m.content }));
+      const nonSystemMsgs = [...messages, userMsg].filter(m => m.role !== 'system').slice(-12).map(m => ({ role: m.role as any, content: m.content }));
+      const history = [...systemMsgs, ...nonSystemMsgs];
+      
       const reply = await generateCharacterResponse(name, persona, history);
       const aiMsg = await chat.addMessage(chatId, reply || '...', 'assistant');
       setMessages((m) => [...m, aiMsg]);
