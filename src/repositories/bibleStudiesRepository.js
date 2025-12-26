@@ -296,8 +296,11 @@ export const bibleStudiesRepository = {
       
       let data, error;
       
+      console.log('[bibleStudiesRepository] saveProgress called with:', { userId, studyId, progressId, createNew });
+      
       // If we have a progressId, update that specific record
       if (progressId) {
+        console.log('[bibleStudiesRepository] Updating existing record:', progressId);
         ({ data, error } = await supabase
           .from('user_study_progress')
           .update(payload)
@@ -306,6 +309,7 @@ export const bibleStudiesRepository = {
           .maybeSingle());
       } else if (createNew) {
         // Explicitly create new progress record (for "Start Again" feature)
+        console.log('[bibleStudiesRepository] Creating NEW record (createNew=true)');
         ({ data, error } = await supabase
           .from('user_study_progress')
           .insert(payload)
@@ -314,6 +318,7 @@ export const bibleStudiesRepository = {
       } else {
         // Default behavior: find existing record or create one
         // First check if there's an existing progress record for this user/study
+        console.log('[bibleStudiesRepository] No progressId - looking for existing record');
         const { data: existing } = await supabase
           .from('user_study_progress')
           .select('id')
@@ -323,8 +328,11 @@ export const bibleStudiesRepository = {
           .limit(1)
           .maybeSingle();
         
+        console.log('[bibleStudiesRepository] Existing record found:', existing);
+        
         if (existing?.id) {
           // Update existing record
+          console.log('[bibleStudiesRepository] Updating found record:', existing.id);
           ({ data, error } = await supabase
             .from('user_study_progress')
             .update(payload)
@@ -333,6 +341,7 @@ export const bibleStudiesRepository = {
             .maybeSingle());
         } else {
           // No existing record, create new
+          console.log('[bibleStudiesRepository] No existing record - creating new');
           ({ data, error } = await supabase
             .from('user_study_progress')
             .insert(payload)
