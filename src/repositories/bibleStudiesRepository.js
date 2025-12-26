@@ -503,7 +503,7 @@ export const bibleStudiesRepository = {
         studyMap[s.id] = s;
       }
       
-      return progressRecords.map(progress => {
+      const result = progressRecords.map(progress => {
         const study = studyMap[progress.study_id];
         if (!study) return null;
         return {
@@ -522,6 +522,9 @@ export const bibleStudiesRepository = {
           lesson_count: countMap[progress.study_id] || 0,
         };
       }).filter(Boolean);
+      
+      console.log('[bibleStudiesRepository] Returning studies with progress:', result.length, result.map(r => ({ id: r.id, progressId: r.progressId, title: r.title })));
+      return result;
     } catch (err) {
       console.error('[bibleStudiesRepository] Unexpected error fetching user studies:', err);
       return [];
