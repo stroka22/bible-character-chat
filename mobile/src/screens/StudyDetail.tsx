@@ -33,6 +33,7 @@ export default function StudyDetail({ route, navigation }: any) {
   const [lessonCharacters, setLessonCharacters] = useState<Record<string, { id: string; name: string; avatar_url?: string | null }>>({});
   const [progress, setProgress] = useState<StudyProgress | null>(null);
   const [togglingLesson, setTogglingLesson] = useState<number | null>(null);
+  const [lessonChats, setLessonChats] = useState<Record<string, any[]>>({});
 
   const loadData = async () => {
     setLoading(true);
@@ -85,6 +86,22 @@ export default function StudyDetail({ route, navigation }: any) {
     if (user?.id) {
       const p = await getStudyProgress(user.id, studyId, routeProgressId);
       setProgress(p);
+      
+      // Load existing chats for this progress
+      const currentProgressId = routeProgressId || p?.id;
+      if (currentProgressId) {
+        const existingChats = await chat.getChatsByProgress(currentProgressId);
+        // Group chats by lesson_id
+        const chatsByLesson: Record<string, any[]> = {};
+        for (const c of existingChats) {
+          const lessonId = (c as any).lesson_id;
+          if (lessonId) {
+            if (!chatsByLesson[lessonId]) chatsByLesson[lessonId] = [];
+            chatsByLesson[lessonId].push(c);
+          }
+        }
+        setLessonChats(chatsByLesson);
+      }
     }
     setLoading(false);
   };
@@ -314,6 +331,10 @@ export default function StudyDetail({ route, navigation }: any) {
               const lessonChar = item.character_id 
                 ? (lessonCharacters[item.character_id] || (item.character_id === studyMeta?.character_id ? guide : null))
                 : guide;
+              // Check if there are existing chats for this lesson
+              const existingLessonChats = lessonChats[item.id] || [];
+              const hasExistingChat = existingLessonChats.length > 0;
+              
               return (
                 <View style={{ 
                   padding: 12, 
@@ -343,6 +364,29 @@ export default function StudyDetail({ route, navigation }: any) {
                           {item.summary}
                         </Text>
                       )}
+                      
+                      {/* Show conversation history if exists */}
+                      {hasExistingChat && (
+                        <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.colors.surface }}>
+                          <Text style={{ color: theme.colors.muted, fontSize: 11, marginBottom: 4 }}>
+                            Previous conversations:
+                          </Text>
+                          {existingLessonChats.slice(0, 2).map((c: any) => (
+                            <TouchableOpacity 
+                              key={c.id}
+                              onPress={() => navigation.navigate('MainTabs', {
+                                screen: 'Chat',
+                                params: { screen: 'ChatDetail', params: { chatId: c.id } }
+                              })}
+                              style={{ paddingVertical: 4 }}
+                            >
+                              <Text style={{ color: theme.colors.accent, fontSize: 12 }}>
+                                💬 {new Date(c.updated_at).toLocaleDateString()}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
                     </View>
                     {isComplete && (
                       <Text style={{ color: '#22c55e', fontSize: 18, marginLeft: 8 }}>✓</Text>
@@ -352,7 +396,7 @@ export default function StudyDetail({ route, navigation }: any) {
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                     <TouchableOpacity onPress={() => startLesson(item)} disabled={starting}>
                       <Text style={{ color: theme.colors.primary, fontWeight: '600' }}>
-                        {starting ? 'Starting...' : 'Start Lesson →'}
+                        {starting ? 'Loading...' : hasExistingChat ? 'Continue →' : 'Start Lesson →'}
                       </Text>
                     </TouchableOpacity>
                     
