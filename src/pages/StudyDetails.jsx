@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { characterRepository } from '../repositories/characterRepository';
+import { chatRepository } from '../repositories/chatRepository';
 import { usePremium } from '../hooks/usePremium';
 import { useAuth } from '../contexts/AuthContext';
 import UpgradeModal from '../components/modals/UpgradeModal';
@@ -23,6 +24,7 @@ const StudyDetails = () => {
   const { isPremium } = usePremium();
   const [progress, setProgress] = useState(null);
   const [togglingLesson, setTogglingLesson] = useState(null);
+  const [studyChats, setStudyChats] = useState([]);
 
   useEffect(() => {
     const fetchStudyDetails = async () => {
@@ -85,6 +87,17 @@ const StudyDetails = () => {
           setLessonCharacters(charMap);
         }
         
+        // Fetch conversation history for this study (non-blocking)
+        if (user?.id) {
+          try {
+            const chats = await chatRepository.getChatsByStudy(id);
+            setStudyChats(chats || []);
+          } catch (chatErr) {
+            console.warn('Could not fetch study chats:', chatErr);
+            setStudyChats([]);
+          }
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching study details:', err);
@@ -109,6 +122,21 @@ const StudyDetails = () => {
     }
     return Math.min(progress.current_lesson_index ?? 0, lessons.length - 1);
   }, [lessons, progress]);
+
+  // Group chats by lesson_id for easy lookup
+  const chatsByLesson = useMemo(() => {
+    const map = {};
+    for (const chat of studyChats) {
+      const lessonId = chat.lesson_id;
+      if (lessonId) {
+        if (!map[lessonId]) map[lessonId] = [];
+        map[lessonId].push(chat);
+      }
+    }
+    // Also track chats without lesson_id (study-level intro chats)
+    map['_intro'] = studyChats.filter(c => !c.lesson_id);
+    return map;
+  }, [studyChats]);
 
   const handleToggleComplete = async (e, lessonIndex) => {
     e.preventDefault();
@@ -452,7 +480,37 @@ const StudyDetails = () => {
                                     _jsx("p", {
                                       className: `mt-2 line-clamp-2 ${study.is_premium && !isPremium ? 'text-gray-500' : 'text-blue-100/80'}`,
                                       children: lesson.summary || "Start this lesson to begin your study."
-                                    })
+                                    }),
+                                    
+                                    /* Previous conversations for this lesson */
+                                    (() => {
+                                      const lessonChats = chatsByLesson[lesson.id] || [];
+                                      if (lessonChats.length === 0) return null;
+                                      return _jsxs("div", {
+                                        className: "mt-3 pt-3 border-t border-blue-700/30",
+                                        children: [
+                                          _jsx("p", {
+                                            className: "text-xs text-blue-300/70 mb-2",
+                                            children: `${lessonChats.length} previous conversation${lessonChats.length > 1 ? 's' : ''}`
+                                          }),
+                                          _jsx("div", {
+                                            className: "flex flex-wrap gap-2",
+                                            children: lessonChats.slice(0, 3).map(chat => (
+                                              _jsx(Link, {
+                                                to: `/chat/${chat.id}`,
+                                                onClick: (e) => e.stopPropagation(),
+                                                className: "text-xs px-2 py-1 rounded bg-blue-600/30 text-blue-200 hover:bg-blue-500/40 transition-colors",
+                                                children: new Date(chat.updated_at).toLocaleDateString()
+                                              }, chat.id)
+                                            ))
+                                          }),
+                                          lessonChats.length > 3 && _jsx("span", {
+                                            className: "text-xs text-blue-400/60 ml-2",
+                                            children: `+${lessonChats.length - 3} more`
+                                          })
+                                        ]
+                                      });
+                                    })()
                                   ]
                                 })
                               }, lesson.id)

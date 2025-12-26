@@ -221,6 +221,30 @@ export const chatRepository = {
             throw new Error('Failed to fetch user chats. Please try again later.');
         }
     },
+    async getChatsByStudy(studyId) {
+        if (useMock) {
+            return [];
+        }
+        try {
+            const { data, error } = await supabase
+                .from('chats')
+                .select('*')
+                .eq('study_id', studyId)
+                .order('updated_at', { ascending: false });
+            if (error) {
+                // Column may not exist yet
+                if (error.message?.includes('column') && error.message?.includes('study_id')) {
+                    console.warn('[chatRepository] study_id column not found - migration may be pending');
+                    return [];
+                }
+                throw error;
+            }
+            return data || [];
+        } catch (error) {
+            console.error(`Failed to fetch chats for study ${studyId}:`, error);
+            return [];
+        }
+    },
     async updateChat(chatId, updates) {
         if (useMock) {
             return mockChatRepository.updateChat(chatId, updates);
