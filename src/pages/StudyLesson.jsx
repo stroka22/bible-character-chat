@@ -100,26 +100,29 @@ const StudyLesson = () => {
         setLessons(allLessons || []);
         
         // Fetch user progress (non-blocking - don't fail lesson load if progress fails)
+        let fetchedProgress = null;
         if (user?.id) {
           try {
-            const p = await bibleStudiesRepository.getProgress({ 
+            fetchedProgress = await bibleStudiesRepository.getProgress({ 
               userId: user.id, 
               studyId: id,
               progressId: progressIdFromUrl || undefined
             });
-            setProgress(p);
+            setProgress(fetchedProgress);
           } catch (progressErr) {
             console.warn('Could not fetch progress:', progressErr);
             setProgress(null);
           }
           // Ensure current index is up-to-date on view (fire and forget)
+          // Use fetchedProgress directly since state hasn't updated yet
+          const progressIdToUse = fetchedProgress?.id || progressIdFromUrl || undefined;
           (async () => {
             try {
               setIsSavingProgress(true);
               await bibleStudiesRepository.saveProgress({
                 userId: user.id,
                 studyId: id,
-                progressId: progress?.id || progressIdFromUrl || undefined,
+                progressId: progressIdToUse,
                 currentLessonIndex: parseInt(lessonIndex, 10)
               });
             } catch (saveErr) {
@@ -234,11 +237,17 @@ const StudyLesson = () => {
     
     if (character) {
       // Navigate to chat with query params for character and study context
-      const queryParams = new URLSearchParams({
+      const params = {
         character: character.id,
         study: id,
         lesson: lessonIndex
-      }).toString();
+      };
+      // Include progress ID so chat saves to correct progress record
+      const progressToUse = progress?.id || progressIdFromUrl;
+      if (progressToUse) {
+        params.progress = progressToUse;
+      }
+      const queryParams = new URLSearchParams(params).toString();
       
       navigate(`/chat?${queryParams}`);
     }
