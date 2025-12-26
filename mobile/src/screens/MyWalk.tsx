@@ -10,11 +10,15 @@ import { supabase } from '../lib/supabase';
 
 type TabType = 'chats' | 'roundtables' | 'studies';
 
+const PAGE_SIZE = 25;
+
 export default function MyWalk() {
   const { user } = useAuth();
   const nav = useNavigation<any>();
   const [allChats, setAllChats] = React.useState<Chat[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  const [hasMoreChats, setHasMoreChats] = React.useState(false);
   const [favChars, setFavChars] = React.useState<any[]>([]);
   const [activeTab, setActiveTab] = React.useState<TabType>('chats');
   const [userStudies, setUserStudies] = React.useState<StudyWithProgress[]>([]);
@@ -34,8 +38,9 @@ export default function MyWalk() {
     if (!user) return;
     setLoading(true);
     try {
-      const rows = await chat.getUserChats(user.id);
-      setAllChats(rows);
+      const { chats, hasMore } = await chat.getUserChats(user.id, { limit: PAGE_SIZE, offset: 0 });
+      setAllChats(chats);
+      setHasMoreChats(hasMore);
       try {
         const chars = await listFavoriteCharacters(user.id);
         setFavChars(chars);
@@ -44,6 +49,18 @@ export default function MyWalk() {
       setLoading(false);
     }
   }, [user]);
+
+  const loadMoreChats = React.useCallback(async () => {
+    if (!user || loadingMore || !hasMoreChats) return;
+    setLoadingMore(true);
+    try {
+      const { chats, hasMore } = await chat.getUserChats(user.id, { limit: PAGE_SIZE, offset: allChats.length });
+      setAllChats(prev => [...prev, ...chats]);
+      setHasMoreChats(hasMore);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user, loadingMore, hasMoreChats, allChats.length]);
 
   const loadStudies = React.useCallback(async () => {
     if (!user?.id) return;
@@ -436,6 +453,23 @@ export default function MyWalk() {
                 {activeTab === 'chats' ? 'No chats yet' : 'No roundtables yet'}
               </Text>
             </View>
+          ) : null}
+          ListFooterComponent={hasMoreChats ? (
+            <TouchableOpacity 
+              onPress={loadMoreChats}
+              disabled={loadingMore}
+              style={{ 
+                paddingVertical: 12, 
+                alignItems: 'center', 
+                marginTop: 8,
+                backgroundColor: theme.colors.surface,
+                borderRadius: 8
+              }}
+            >
+              <Text style={{ color: theme.colors.primary, fontWeight: '600' }}>
+                {loadingMore ? 'Loading...' : 'Load More'}
+              </Text>
+            </TouchableOpacity>
           ) : null}
         />
       )}

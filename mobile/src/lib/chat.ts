@@ -25,14 +25,23 @@ export const chat = {
     return (data as any) || null;
   },
 
-  async getUserChats(userId: string): Promise<Chat[]> {
+  async getUserChats(userId: string, options?: { limit?: number; offset?: number }): Promise<{ chats: Chat[]; hasMore: boolean }> {
+    const limit = options?.limit || 25;
+    const offset = options?.offset || 0;
+    
     const { data, error } = await supabase
       .from('chats')
       .select('*')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .range(offset, offset + limit);
+    
     if (error) throw error;
-    return (data || []) as Chat[];
+    const chats = (data || []) as Chat[];
+    return { 
+      chats, 
+      hasMore: chats.length > limit 
+    };
   },
 
   async createChat(

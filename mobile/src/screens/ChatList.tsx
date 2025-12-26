@@ -14,8 +14,8 @@ export default function ChatList() {
     if (!user) return;
     setLoading(true);
     try {
-      const rows = await chat.getUserChats(user.id);
-      setItems(rows);
+      const { chats } = await chat.getUserChats(user.id);
+      setItems(chats);
     } finally {
       setLoading(false);
     }
