@@ -604,6 +604,46 @@ const SimpleChatWithHistory = () => {
                     } else {
                       hydrateFromConversation(conv);
                     }
+                    
+                    // If this is a Bible study conversation, restore study context
+                    if (conv.study_id) {
+                      try {
+                        const study = await bibleStudiesRepository.getStudyById(conv.study_id);
+                        if (study) {
+                          setStudyMeta(study);
+                          // If there's a lesson_id, load the lesson too
+                          if (conv.lesson_id) {
+                            const lessons = await bibleStudiesRepository.listLessons(conv.study_id);
+                            const lesson = lessons?.find(l => l.id === conv.lesson_id);
+                            if (lesson) {
+                              setLessonMeta(lesson);
+                              // Build the lesson context
+                              const lessonPrompts = Array.isArray(lesson.prompts) && lesson.prompts.length > 0
+                                ? lesson.prompts.map(p => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n')
+                                : '';
+                              const ctx = [
+                                `You are guiding a Bible study lesson.`,
+                                `Study: ${study.title}.`,
+                                `Lesson ${lesson.order_index + 1}: ${lesson.title}.`,
+                                `Scripture: ${Array.isArray(lesson.scripture_refs) && lesson.scripture_refs.length > 0 ? lesson.scripture_refs.join(', ') : 'N/A'}.`,
+                                lesson.summary ? `Summary: ${lesson.summary}` : '',
+                                lessonPrompts ? `Lesson Instructions:\n${lessonPrompts}` : '',
+                                study.character_instructions ? `Study Prompt: ${study.character_instructions}` : ''
+                              ].filter(Boolean).join('\n\n').trim();
+                              setLessonContext(ctx);
+                            }
+                          } else {
+                            // Study-level intro (no specific lesson)
+                            const ctx = `You are guiding a Bible study conversation. Study: ${study.title}. ` +
+                              `${study.description ? `Description: ${study.description}` : ''} ` +
+                              `${study.character_instructions ? `Study Prompt: ${study.character_instructions}` : ''}`.trim();
+                            setLessonContext(ctx);
+                          }
+                        }
+                      } catch (studyErr) {
+                        console.warn('[SimpleChatWithHistory] Failed to restore study context:', studyErr);
+                      }
+                    }
                 }
             } catch (err) {
                 console.error('[SimpleChatWithHistory] Failed to load conversation:', err);
