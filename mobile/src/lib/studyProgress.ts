@@ -58,11 +58,14 @@ export async function getStudyProgress(userId: string, studyId: string, progress
 export async function saveStudyProgress(opts: {
   userId: string;
   studyId: string;
+  progressId?: string;
   currentLessonIndex?: number;
   completedLessons?: number[];
   notes?: string;
+  label?: string;
+  createNew?: boolean;
 }): Promise<StudyProgress | null> {
-  const { userId, studyId, currentLessonIndex, completedLessons, notes } = opts;
+  const { userId, studyId, progressId, currentLessonIndex, completedLessons, notes, label, createNew } = opts;
   if (!userId || !studyId) return null;
   
   try {
@@ -81,12 +84,45 @@ export async function saveStudyProgress(opts: {
     if (notes !== undefined) {
       payload.notes = notes;
     }
+    if (label !== undefined) {
+      payload.label = label;
+    }
     
-    const { data, error } = await supabase
-      .from('user_study_progress')
-      .upsert(payload, { onConflict: 'user_id,study_id' })
-      .select('*')
-      .maybeSingle();
+    let data, error;
+    
+    // If we have a progressId, update that specific record
+    if (progressId) {
+      ({ data, error } = await supabase
+        .from('user_study_progress')
+        .update(payload)
+        .eq('id', progressId)
+        .select('*')
+        .maybeSingle());
+    } else if (createNew) {
+      // Explicitly create new progress record (for "Start Again" feature)
+      ({ data, error } = await supabase
+        .from('user_study_progress')
+        .insert(payload)
+        .select('*')
+        .maybeSingle());
+    } else {
+      // Default: find existing or create new
+      const existing = await getStudyProgress(userId, studyId);
+      if (existing?.id) {
+        ({ data, error } = await supabase
+          .from('user_study_progress')
+          .update(payload)
+          .eq('id', existing.id)
+          .select('*')
+          .maybeSingle());
+      } else {
+        ({ data, error } = await supabase
+          .from('user_study_progress')
+          .insert(payload)
+          .select('*')
+          .maybeSingle());
+      }
+    }
     
     if (error) {
       console.warn('[studyProgress] saveStudyProgress error:', error);

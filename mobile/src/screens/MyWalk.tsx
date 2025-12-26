@@ -1,11 +1,12 @@
 import React from 'react';
-import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView, Alert } from 'react-native';
+import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView, Alert, TextInput } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat, type Chat } from '../lib/chat';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import { listFavoriteCharacters } from '../lib/favorites';
-import { getUserStudiesWithProgress, deleteProgress, getProgressPercent, type StudyWithProgress } from '../lib/studyProgress';
+import { getUserStudiesWithProgress, deleteProgress, updateProgressLabel, saveStudyProgress, getProgressPercent, type StudyWithProgress } from '../lib/studyProgress';
+import { supabase } from '../lib/supabase';
 
 type TabType = 'chats' | 'roundtables' | 'studies';
 
@@ -82,6 +83,55 @@ export default function MyWalk() {
   // Get items for current tab (chats/roundtables)
   const currentChatItems = activeTab === 'chats' ? regularChats : roundtables;
 
+  // Handle chat deletion
+  const handleDeleteChat = (c: Chat) => {
+    Alert.alert(
+      'Delete Conversation',
+      `Delete "${c.title || 'Untitled'}"? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase.from('chats').delete().eq('id', c.id);
+              if (!error) {
+                load();
+              } else {
+                Alert.alert('Error', 'Failed to delete conversation');
+              }
+            } catch {
+              Alert.alert('Error', 'Failed to delete conversation');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Handle chat rename
+  const handleRenameChat = (c: Chat) => {
+    Alert.prompt(
+      'Rename Conversation',
+      'Enter a new title:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Save',
+          onPress: async (newTitle?: string) => {
+            if (newTitle && newTitle.trim()) {
+              await chat.updateTitle(c.id, newTitle.trim());
+              load();
+            }
+          }
+        }
+      ],
+      'plain-text',
+      c.title || ''
+    );
+  };
+
   // Handle study deletion
   const handleDeleteStudy = (study: StudyWithProgress) => {
     Alert.alert(
@@ -102,6 +152,66 @@ export default function MyWalk() {
           }
         }
       ]
+    );
+  };
+
+  // Handle study label edit
+  const handleEditStudyLabel = (study: StudyWithProgress) => {
+    Alert.prompt(
+      'Edit Label',
+      `Label for "${study.title}":`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Save',
+          onPress: async (newLabel?: string) => {
+            if (newLabel !== undefined) {
+              await updateProgressLabel(study.progressId, newLabel.trim());
+              loadStudies();
+            }
+          }
+        }
+      ],
+      'plain-text',
+      study.progress.label || ''
+    );
+  };
+
+  // Handle start study again
+  const handleStartStudyAgain = (study: StudyWithProgress) => {
+    Alert.prompt(
+      'Start Again',
+      `Starting "${study.title}" again.\n\nEnter a label (e.g., "with Sarah", "January 2025"):`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Start',
+          onPress: async (label?: string) => {
+            if (!user?.id) return;
+            const newProgress = await saveStudyProgress({
+              userId: user.id,
+              studyId: study.id,
+              currentLessonIndex: 0,
+              completedLessons: [],
+              label: label?.trim() || undefined,
+              createNew: true
+            });
+            if (newProgress) {
+              loadStudies();
+              // Navigate to the study detail with new progress
+              nav.navigate('StudyDetail', {
+                studyId: study.id,
+                title: study.title,
+                progressId: newProgress.id
+              });
+            } else {
+              Alert.alert('Error', 'Failed to start study');
+            }
+          }
+        }
+      ],
+      'plain-text',
+      ''
     );
   };
 
@@ -230,7 +340,7 @@ export default function MyWalk() {
                   </Text>
                 </TouchableOpacity>
                 
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                   <TouchableOpacity 
                     onPress={() => nav.navigate('StudyDetail', { 
                       studyId: study.id, 
@@ -244,12 +354,26 @@ export default function MyWalk() {
                     </Text>
                   </TouchableOpacity>
                   
-                  <TouchableOpacity 
-                    onPress={() => handleDeleteStudy(study)}
-                    style={{ paddingVertical: 6, paddingHorizontal: 10, backgroundColor: theme.colors.surface, borderRadius: 6 }}
-                  >
-                    <Text style={{ color: '#ef4444', fontSize: 12 }}>Delete</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <TouchableOpacity 
+                      onPress={() => handleEditStudyLabel(study)}
+                      style={{ paddingVertical: 6, paddingHorizontal: 8, backgroundColor: theme.colors.surface, borderRadius: 6 }}
+                    >
+                      <Text style={{ color: theme.colors.text, fontSize: 12 }}>✏️</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      onPress={() => handleStartStudyAgain(study)}
+                      style={{ paddingVertical: 6, paddingHorizontal: 8, backgroundColor: theme.colors.surface, borderRadius: 6 }}
+                    >
+                      <Text style={{ color: '#22c55e', fontSize: 12 }}>🔄</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      onPress={() => handleDeleteStudy(study)}
+                      style={{ paddingVertical: 6, paddingHorizontal: 8, backgroundColor: theme.colors.surface, borderRadius: 6 }}
+                    >
+                      <Text style={{ color: '#ef4444', fontSize: 12 }}>🗑</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             );
@@ -290,11 +414,17 @@ export default function MyWalk() {
                     <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{new Date(item.updated_at).toLocaleString()}</Text>
                   </View>
                 </TouchableOpacity>
-                <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
+                <View style={{ marginTop: 8, flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                   <TouchableOpacity onPress={() => toggleFavorite(item)} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: theme.colors.surface }}>
                     <Text style={{ color: item.is_favorite ? theme.colors.accent : theme.colors.text, fontSize: 12 }}>
                       {item.is_favorite ? '★ Saved' : '☆ Save'}
                     </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleRenameChat(item)} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: theme.colors.surface }}>
+                    <Text style={{ color: theme.colors.text, fontSize: 12 }}>✏️ Rename</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDeleteChat(item)} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, backgroundColor: theme.colors.surface }}>
+                    <Text style={{ color: '#ef4444', fontSize: 12 }}>🗑 Delete</Text>
                   </TouchableOpacity>
                 </View>
               </View>
