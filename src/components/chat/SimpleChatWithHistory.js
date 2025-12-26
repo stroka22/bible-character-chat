@@ -785,6 +785,28 @@ const SimpleChatWithHistory = () => {
         return opts;
     };
 
+    // Auto-save for Bible study conversations after messages change
+    useEffect(() => {
+        // Only auto-save for Bible study chats
+        if (!studyMeta) return;
+        // Must be authenticated
+        if (!isAuthenticated) return;
+        // Must have a character and messages
+        if (!character || messages.length < 2) return;
+        // Don't save if already saving or loading
+        if (isLoading) return;
+        // Already saved - just need to add new messages
+        if (isChatSaved && chatId) {
+            // Messages are added via addMessage in ChatContext when the chat is saved
+            return;
+        }
+        // Not saved yet - auto-save with study context
+        if (!isChatSaved && conversationTitle) {
+            console.log('[SimpleChatWithHistory] Auto-saving Bible study conversation');
+            saveChat(conversationTitle, getStudyOptions());
+        }
+    }, [studyMeta, isAuthenticated, character, messages.length, isLoading, isChatSaved, chatId, conversationTitle, saveChat]);
+
     // Handle saving the conversation
     const handleSaveConversation = () => {
         if (!isAuthenticated) {
