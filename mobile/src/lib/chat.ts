@@ -8,6 +8,11 @@ export type Chat = {
   is_favorite: boolean | null;
   created_at: string;
   updated_at: string;
+  study_id?: string | null;
+  lesson_id?: string | null;
+  progress_id?: string | null;
+  conversation_type?: string | null;
+  participants?: string[] | null;
 };
 
 export type ChatMessage = {

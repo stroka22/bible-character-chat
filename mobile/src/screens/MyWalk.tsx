@@ -26,11 +26,11 @@ export default function MyWalk() {
 
   // Separate chats by type (exclude study chats - those are shown in Studies tab)
   const regularChats = React.useMemo(() => 
-    allChats.filter(c => !(c as any).study_id && (c as any).conversation_type !== 'roundtable'), 
+    allChats.filter(c => !c.study_id && c.conversation_type !== 'roundtable'), 
     [allChats]
   );
   const roundtables = React.useMemo(() => 
-    allChats.filter(c => (c as any).conversation_type === 'roundtable'), 
+    allChats.filter(c => c.conversation_type === 'roundtable'), 
     [allChats]
   );
 
@@ -234,7 +234,7 @@ export default function MyWalk() {
 
   // Get route for navigation based on type
   const getNavRoute = (item: Chat) => {
-    if ((item as any).conversation_type === 'roundtable') {
+    if (item.conversation_type === 'roundtable') {
       return { screen: 'RoundtableChat', params: { conversationId: item.id } };
     }
     return { screen: 'Chat', params: { screen: 'ChatDetail', params: { chatId: item.id } } };
