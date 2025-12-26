@@ -312,21 +312,32 @@ const StudyDetails = () => {
                             (user && lessons.length > 0) && (
                               _jsx("span", { className: "text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-100 border border-blue-400/30", children: `${Array.isArray(progress?.completed_lessons) ? progress.completed_lessons.length : 0} of ${lessons.length} complete` })
                             ),
-                            (user && lessons.length > 0) && (
-                              _jsx(Link, { to: `/studies/${id}/lesson/${nextLessonIndex}`, className: "text-xs px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white", children: "Resume study" })
-                        ),
-                        // Primary CTA: Start always opens Introduction (lesson 0)
-                        _jsx(Link, {
-                          to: `/studies/${id}/lesson/0`,
-                          onClick: (e) => {
-                            if (study.is_premium && !isPremium) {
-                              e.preventDefault();
-                              setShowUpgrade(true);
-                            }
-                          },
-                          className: "text-xs px-3 py-1.5 rounded-md bg-yellow-400 text-blue-900 font-semibold hover:bg-yellow-300",
-                          children: "Start"
-                        })
+                        // Show Resume if there's progress, otherwise show Start
+                        (user && lessons.length > 0 && progress) ? (
+                          _jsx(Link, {
+                            to: `/studies/${id}/lesson/${nextLessonIndex}`,
+                            onClick: (e) => {
+                              if (study.is_premium && !isPremium) {
+                                e.preventDefault();
+                                setShowUpgrade(true);
+                              }
+                            },
+                            className: "text-xs px-3 py-1.5 rounded-md bg-yellow-400 text-blue-900 font-semibold hover:bg-yellow-300",
+                            children: "Resume"
+                          })
+                        ) : (
+                          _jsx(Link, {
+                            to: `/studies/${id}/lesson/0`,
+                            onClick: (e) => {
+                              if (study.is_premium && !isPremium) {
+                                e.preventDefault();
+                                setShowUpgrade(true);
+                              }
+                            },
+                            className: "text-xs px-3 py-1.5 rounded-md bg-yellow-400 text-blue-900 font-semibold hover:bg-yellow-300",
+                            children: "Start"
+                          })
+                        )
                           ]})
                         ]}),
 

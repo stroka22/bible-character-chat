@@ -266,7 +266,7 @@ export const bibleStudiesRepository = {
     }
   },
   
-  async saveProgress({ userId, studyId, progressId, currentLessonIndex, completedLessons, notes, label }) {
+  async saveProgress({ userId, studyId, progressId, currentLessonIndex, completedLessons, notes, label, createNew = false }) {
     try {
       if (!userId || !studyId) {
         throw new Error('User ID and Study ID are required');
@@ -304,13 +304,41 @@ export const bibleStudiesRepository = {
           .eq('id', progressId)
           .select('*')
           .maybeSingle());
-      } else {
-        // Create new progress record
+      } else if (createNew) {
+        // Explicitly create new progress record (for "Start Again" feature)
         ({ data, error } = await supabase
           .from('user_study_progress')
           .insert(payload)
           .select('*')
           .maybeSingle());
+      } else {
+        // Default behavior: find existing record or create one
+        // First check if there's an existing progress record for this user/study
+        const { data: existing } = await supabase
+          .from('user_study_progress')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('study_id', studyId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (existing?.id) {
+          // Update existing record
+          ({ data, error } = await supabase
+            .from('user_study_progress')
+            .update(payload)
+            .eq('id', existing.id)
+            .select('*')
+            .maybeSingle());
+        } else {
+          // No existing record, create new
+          ({ data, error } = await supabase
+            .from('user_study_progress')
+            .insert(payload)
+            .select('*')
+            .maybeSingle());
+        }
       }
       
       if (error) {

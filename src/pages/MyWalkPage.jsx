@@ -418,6 +418,7 @@ const MyWalkPage = () => {
         currentLessonIndex: 0,
         completedLessons: [],
         label: label.trim() || null,
+        createNew: true,  // Explicitly create a new progress record
       });
       if (newProgress) {
         // Reload studies to show the new one
