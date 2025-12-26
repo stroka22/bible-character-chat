@@ -266,7 +266,7 @@ export const bibleStudiesRepository = {
     }
   },
   
-  async saveProgress({ userId, studyId, currentLessonIndex, completedLessons, notes }) {
+  async saveProgress({ userId, studyId, progressId, currentLessonIndex, completedLessons, notes, label }) {
     try {
       if (!userId || !studyId) {
         throw new Error('User ID and Study ID are required');
@@ -290,11 +290,28 @@ export const bibleStudiesRepository = {
         payload.notes = notes;
       }
       
-      const { data, error } = await supabase
-        .from('user_study_progress')
-        .upsert(payload, { onConflict: 'user_id,study_id' })
-        .select('*')
-        .maybeSingle();
+      if (label !== undefined) {
+        payload.label = label;
+      }
+      
+      let data, error;
+      
+      // If we have a progressId, update that specific record
+      if (progressId) {
+        ({ data, error } = await supabase
+          .from('user_study_progress')
+          .update(payload)
+          .eq('id', progressId)
+          .select('*')
+          .maybeSingle());
+      } else {
+        // Create new progress record
+        ({ data, error } = await supabase
+          .from('user_study_progress')
+          .insert(payload)
+          .select('*')
+          .maybeSingle());
+      }
       
       if (error) {
         console.error('[bibleStudiesRepository] Error saving progress:', error);
@@ -305,6 +322,50 @@ export const bibleStudiesRepository = {
     } catch (err) {
       console.error('[bibleStudiesRepository] Unexpected error saving progress:', err);
       throw new Error(`Failed to save progress: ${err.message}`);
+    }
+  },
+  
+  async deleteProgress(progressId) {
+    try {
+      if (!progressId) throw new Error('Progress ID required');
+      
+      const { error } = await supabase
+        .from('user_study_progress')
+        .delete()
+        .eq('id', progressId);
+      
+      if (error) {
+        console.error('[bibleStudiesRepository] Error deleting progress:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('[bibleStudiesRepository] Unexpected error deleting progress:', err);
+      return false;
+    }
+  },
+  
+  async updateProgressLabel(progressId, label) {
+    try {
+      if (!progressId) throw new Error('Progress ID required');
+      
+      const { data, error } = await supabase
+        .from('user_study_progress')
+        .update({ label })
+        .eq('id', progressId)
+        .select('*')
+        .maybeSingle();
+      
+      if (error) {
+        console.error('[bibleStudiesRepository] Error updating label:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('[bibleStudiesRepository] Unexpected error updating label:', err);
+      return null;
     }
   },
   
@@ -400,11 +461,16 @@ export const bibleStudiesRepository = {
         if (!study) return null;
         return {
           ...study,
+          progressId: progress.id,
           progress: {
+            id: progress.id,
             completed_lessons: progress.completed_lessons || [],
             current_lesson_index: progress.current_lesson_index || 0,
             last_activity_at: progress.last_activity_at,
             notes: progress.notes,
+            label: progress.label || null,
+            participants: progress.participants || [],
+            created_at: progress.created_at,
           },
           lesson_count: countMap[progress.study_id] || 0,
         };
