@@ -327,7 +327,7 @@ const StudyDetails = () => {
                         // Show Resume if there's progress, otherwise show Start
                         (user && lessons.length > 0 && progress) ? (
                           _jsx(Link, {
-                            to: `/studies/${id}/lesson/${nextLessonIndex}`,
+                            to: `/studies/${id}/lesson/${nextLessonIndex}${progress?.id ? `?progress=${progress.id}` : ''}`,
                             onClick: (e) => {
                               if (study.is_premium && !isPremium) {
                                 e.preventDefault();
@@ -410,7 +410,7 @@ const StudyDetails = () => {
                             className: "space-y-4",
                             children: lessons.map((lesson, index) => (
                               _jsx(Link, {
-                                to: `/studies/${id}/lesson/${lesson.order_index}`,
+                                to: `/studies/${id}/lesson/${lesson.order_index}${progress?.id ? `?progress=${progress.id}` : ''}`,
                                 onClick: (e) => {
                                   if (study.is_premium && !isPremium) {
                                     e.preventDefault();

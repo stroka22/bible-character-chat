@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { characterRepository } from '../repositories/characterRepository';
 import { usePremium } from '../hooks/usePremium';
@@ -12,7 +12,14 @@ import { useAuth } from '../contexts/AuthContext';
 const StudyLesson = () => {
   const { id, lessonIndex } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
+  // Get progressId from query params
+  const progressIdFromUrl = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('progress');
+  }, [location.search]);
   const [study, setStudy] = useState(null);
   const [lesson, setLesson] = useState(null);
   const [lessons, setLessons] = useState([]);
@@ -95,7 +102,11 @@ const StudyLesson = () => {
         // Fetch user progress (non-blocking - don't fail lesson load if progress fails)
         if (user?.id) {
           try {
-            const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
+            const p = await bibleStudiesRepository.getProgress({ 
+              userId: user.id, 
+              studyId: id,
+              progressId: progressIdFromUrl || undefined
+            });
             setProgress(p);
           } catch (progressErr) {
             console.warn('Could not fetch progress:', progressErr);
@@ -108,6 +119,7 @@ const StudyLesson = () => {
               await bibleStudiesRepository.saveProgress({
                 userId: user.id,
                 studyId: id,
+                progressId: progress?.id || progressIdFromUrl || undefined,
                 currentLessonIndex: parseInt(lessonIndex, 10)
               });
             } catch (saveErr) {
@@ -139,7 +151,7 @@ const StudyLesson = () => {
     if (id && lessonIndex !== undefined) {
       fetchLessonData();
     }
-  }, [id, lessonIndex, isPremium, user?.id]);
+  }, [id, lessonIndex, isPremium, user?.id, progressIdFromUrl]);
 
   const totalLessons = lessons?.length || 0;
   const currentIndex = useMemo(() => parseInt(lessonIndex ?? '0', 10) || 0, [lessonIndex]);
@@ -163,6 +175,7 @@ const StudyLesson = () => {
       const updated = await bibleStudiesRepository.saveProgress({
         userId: user.id,
         studyId: id,
+        progressId: progress?.id || progressIdFromUrl || undefined,
         currentLessonIndex: currentIndex,
         completedLessons: completed
       });
@@ -181,12 +194,17 @@ const StudyLesson = () => {
     if (user?.id) {
       try {
         setIsSavingProgress(true);
-        await bibleStudiesRepository.saveProgress({ userId: user.id, studyId: id, currentLessonIndex: prev });
+        await bibleStudiesRepository.saveProgress({ 
+          userId: user.id, 
+          studyId: id, 
+          progressId: progress?.id || progressIdFromUrl || undefined,
+          currentLessonIndex: prev 
+        });
       } finally {
         setIsSavingProgress(false);
       }
     }
-    navigate(`/studies/${id}/lesson/${prev}`);
+    navigate(`/studies/${id}/lesson/${prev}${progressIdFromUrl ? `?progress=${progressIdFromUrl}` : ''}`);
   };
 
   const goToNext = async () => {
@@ -195,12 +213,17 @@ const StudyLesson = () => {
     if (user?.id) {
       try {
         setIsSavingProgress(true);
-        await bibleStudiesRepository.saveProgress({ userId: user.id, studyId: id, currentLessonIndex: next });
+        await bibleStudiesRepository.saveProgress({ 
+          userId: user.id, 
+          studyId: id, 
+          progressId: progress?.id || progressIdFromUrl || undefined,
+          currentLessonIndex: next 
+        });
       } finally {
         setIsSavingProgress(false);
       }
     }
-    navigate(`/studies/${id}/lesson/${next}`);
+    navigate(`/studies/${id}/lesson/${next}${progressIdFromUrl ? `?progress=${progressIdFromUrl}` : ''}`);
   };
 
   const handleStartChat = () => {
