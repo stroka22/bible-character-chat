@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { characterRepository } from '../repositories/characterRepository';
+import { chatRepository } from '../repositories/chatRepository';
 import { usePremium } from '../hooks/usePremium';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
@@ -229,21 +230,36 @@ const StudyLesson = () => {
     navigate(`/studies/${id}/lesson/${next}${progressIdFromUrl ? `?progress=${progressIdFromUrl}` : ''}`);
   };
 
-  const handleStartChat = () => {
+  const handleStartChat = async () => {
     if (study?.is_premium && !isPremium) {
       setShowUpgrade(true);
       return;
     }
     
     if (character) {
-      // Navigate to chat with query params for character and study context
+      const progressToUse = progress?.id || progressIdFromUrl;
+      
+      // Check if there's an existing chat for this progress record
+      if (progressToUse) {
+        try {
+          const existingChats = await chatRepository.getChatsByProgress(progressToUse);
+          if (existingChats && existingChats.length > 0) {
+            // Navigate to the most recent chat for this progress
+            const latestChat = existingChats[0];
+            navigate(`/chat/${latestChat.id}`);
+            return;
+          }
+        } catch (err) {
+          console.warn('Could not check for existing chats:', err);
+        }
+      }
+      
+      // No existing chat - start a new one
       const params = {
         character: character.id,
         study: id,
         lesson: lessonIndex
       };
-      // Include progress ID so chat saves to correct progress record
-      const progressToUse = progress?.id || progressIdFromUrl;
       if (progressToUse) {
         params.progress = progressToUse;
       }
