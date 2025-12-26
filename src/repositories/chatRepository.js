@@ -64,6 +64,7 @@ export const chatRepository = {
                   return acc;
                 }, {}))
             };
+            console.log('[chatRepository] Creating chat with data:', JSON.stringify(newChat, null, 2));
 
             let { data, error } = await supabase
                 .from('chats')

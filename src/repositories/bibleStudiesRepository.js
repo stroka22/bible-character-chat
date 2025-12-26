@@ -337,7 +337,12 @@ export const bibleStudiesRepository = {
    */
   async getUserStudiesWithProgress(userId) {
     try {
-      if (!userId) return [];
+      if (!userId) {
+        console.log('[bibleStudiesRepository] No userId provided');
+        return [];
+      }
+      
+      console.log('[bibleStudiesRepository] Fetching progress for user:', userId);
       
       // Get all progress records for this user
       const { data: progressRecords, error: progressError } = await supabase
@@ -350,6 +355,8 @@ export const bibleStudiesRepository = {
         console.error('[bibleStudiesRepository] Error fetching user progress:', progressError);
         return [];
       }
+      
+      console.log('[bibleStudiesRepository] Progress records found:', progressRecords?.length || 0);
       
       if (!progressRecords || progressRecords.length === 0) return [];
       

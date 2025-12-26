@@ -421,6 +421,7 @@ export const ChatProvider = ({ children }) => {
         ...(options.studyId ? { study_id: options.studyId } : {}),
         ...(options.lessonId ? { lesson_id: options.lessonId } : {}),
       };
+      console.log('[ChatContext] Creating conversation with payload:', JSON.stringify(payload, null, 2));
       let newConversation = await createConversation(payload);
 
       // Hard fallback in case provider path could not return an ID

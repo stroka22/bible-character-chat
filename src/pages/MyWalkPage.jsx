@@ -127,12 +127,15 @@ const MyWalkPage = () => {
   useEffect(() => {
     const loadUserStudies = async () => {
       if (!user?.id) {
+        console.log('[MyWalkPage] No user ID, skipping study load');
         setUserStudies([]);
         return;
       }
+      console.log('[MyWalkPage] Loading studies for user:', user.id);
       setStudiesLoading(true);
       try {
         const studies = await bibleStudiesRepository.getUserStudiesWithProgress(user.id);
+        console.log('[MyWalkPage] Loaded studies:', studies);
         setUserStudies(studies || []);
       } catch (err) {
         console.error('[MyWalkPage] Error loading user studies:', err);
