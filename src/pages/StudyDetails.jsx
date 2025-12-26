@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { characterRepository } from '../repositories/characterRepository';
 import { chatRepository } from '../repositories/chatRepository';
@@ -13,7 +13,14 @@ import FloatingHomeButton from '../components/layout/FloatingHomeButton';
 const StudyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
+  // Get progressId from query params (from My Walk page)
+  const progressIdFromUrl = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('progress');
+  }, [location.search]);
   const [study, setStudy] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [character, setCharacter] = useState(null);
@@ -50,11 +57,15 @@ const StudyDetails = () => {
         const lessonsData = await bibleStudiesRepository.listLessons(id);
         setLessons(lessonsData);
 
-        // Fetch user progress
         // Fetch user progress (non-blocking)
+        // Use progressId from URL if provided, otherwise get most recent
         if (user?.id) {
           try {
-            const p = await bibleStudiesRepository.getProgress({ userId: user.id, studyId: id });
+            const p = await bibleStudiesRepository.getProgress({ 
+              userId: user.id, 
+              studyId: id,
+              progressId: progressIdFromUrl || undefined
+            });
             setProgress(p);
           } catch (progressErr) {
             console.warn('Could not fetch progress:', progressErr);
@@ -110,7 +121,7 @@ const StudyDetails = () => {
     if (id) {
       fetchStudyDetails();
     }
-  }, [id, isPremium, user?.id]);
+  }, [id, isPremium, user?.id, progressIdFromUrl]);
 
   const nextLessonIndex = useMemo(() => {
     if (!lessons || lessons.length === 0) return 0;
@@ -155,6 +166,7 @@ const StudyDetails = () => {
       const updated = await bibleStudiesRepository.saveProgress({
         userId: user.id,
         studyId: id,
+        progressId: progress?.id,
         completedLessons: completed
       });
       setProgress(updated);

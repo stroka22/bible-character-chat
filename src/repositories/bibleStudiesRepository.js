@@ -397,15 +397,25 @@ export const bibleStudiesRepository = {
     }
   },
   
-  async getProgress({ userId, studyId }) {
+  async getProgress({ userId, studyId, progressId }) {
     try {
       if (!userId || !studyId) return null;
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('user_study_progress')
         .select('*')
         .eq('user_id', userId)
-        .eq('study_id', studyId)
+        .eq('study_id', studyId);
+      
+      // If progressId specified, get that specific record
+      if (progressId) {
+        query = query.eq('id', progressId);
+      }
+      
+      // Get most recent progress record
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       
       if (error) {
