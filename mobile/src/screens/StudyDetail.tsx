@@ -144,15 +144,22 @@ export default function StudyDetail({ route, navigation }: any) {
       
       // If no progress exists, create one
       if (!currentProgressId) {
+        console.log('[StudyDetail] Creating new progress record for study:', studyId);
         const newProgress = await saveStudyProgress({
           userId: user.id,
           studyId: studyId,
           currentLessonIndex: lesson.order_index,
           completedLessons: []
         });
+        console.log('[StudyDetail] New progress result:', newProgress);
         if (newProgress?.id) {
           currentProgressId = newProgress.id;
           setProgress(newProgress);
+        } else {
+          console.error('[StudyDetail] Failed to create progress record');
+          alert('Failed to start lesson. Please try again.');
+          setStarting(false);
+          return;
         }
       } else {
         // Update current lesson index
@@ -199,11 +206,23 @@ export default function StudyDetail({ route, navigation }: any) {
       const characterId = char?.id || targetCharacterId || '';
       const chatTitle = `${title} - Lesson ${lesson.order_index + 1}: ${lesson.title}`;
       const lessonId = lesson.id !== 'synthetic-intro' ? lesson.id : undefined;
+      
+      console.log('[StudyDetail] Creating chat with:', { 
+        userId: user.id, 
+        characterId, 
+        chatTitle, 
+        studyId, 
+        lessonId, 
+        progressId: currentProgressId 
+      });
+      
       const newChat = await chat.createChat(user.id, characterId, chatTitle, { 
         studyId: studyId, 
         lessonId,
         progressId: currentProgressId
       });
+      
+      console.log('[StudyDetail] Chat created:', newChat);
       
       // Build lesson prompts string from the prompts array
       const lessonPromptsText = Array.isArray(lesson.prompts) && lesson.prompts.length > 0

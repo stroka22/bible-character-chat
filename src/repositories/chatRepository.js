@@ -310,6 +310,21 @@ export const chatRepository = {
             return mockChatRepository.deleteChat(chatId);
         }
         try {
+            // Get current user for ownership check
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error('Not authenticated');
+            
+            // First verify the chat belongs to this user
+            const { data: chatData, error: fetchError } = await supabase
+                .from('chats')
+                .select('user_id')
+                .eq('id', chatId)
+                .maybeSingle();
+            
+            if (fetchError) throw fetchError;
+            if (!chatData) throw new Error('Chat not found');
+            if (chatData.user_id !== user.id) throw new Error('Cannot delete chat owned by another user');
+            
             const { error: messagesError } = await supabase
                 .from('chat_messages')
                 .delete()
