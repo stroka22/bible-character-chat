@@ -27,6 +27,7 @@ export default function ChatDetail() {
   
   // Bible Study state
   const [studyId, setStudyId] = React.useState<string | null>(null);
+  const [studyTitle, setStudyTitle] = React.useState<string | null>(null);
   const [lessonId, setLessonId] = React.useState<string | null>(null);
   const [progressId, setProgressId] = React.useState<string | null>(null);
   const [lessonIndex, setLessonIndex] = React.useState<number>(0);
@@ -46,6 +47,12 @@ export default function ChatDetail() {
           setStudyId(meta.study_id);
           setLessonId(meta.lesson_id || null);
           setProgressId(meta.progress_id || null);
+          
+          // Extract study title from chat title (format: "Study Title - Lesson X: ...")
+          const titleMatch = meta.title?.match(/^(.+?)\s*-\s*Lesson/i);
+          if (titleMatch) {
+            setStudyTitle(titleMatch[1].trim());
+          }
           
           // Get lesson index from title or lesson metadata
           const lessonMatch = meta.title?.match(/Lesson (\d+)/i);
@@ -260,11 +267,32 @@ export default function ChatDetail() {
       }
       
       setIsLessonComplete(true);
-      Alert.alert('Complete!', 'Lesson marked as complete.');
+      setMarkingComplete(false);
+      
+      // Navigate back to study outline
+      Alert.alert(
+        'Lesson Complete!', 
+        'Would you like to continue to the next lesson?',
+        [
+          {
+            text: 'Stay Here',
+            style: 'cancel'
+          },
+          {
+            text: 'View Outline',
+            onPress: () => {
+              navigation.navigate('StudyDetail', {
+                studyId,
+                title: studyTitle || 'Bible Study',
+                progressId: progressId
+              });
+            }
+          }
+        ]
+      );
     } catch (e) {
       console.warn('[ChatDetail] Error marking complete:', e);
       Alert.alert('Error', 'Failed to mark lesson complete');
-    } finally {
       setMarkingComplete(false);
     }
   }
