@@ -230,7 +230,9 @@ export default function StudyDetail({ route, navigation }: any) {
         : '';
       
       // Add lesson context as system message
+      // Put Study Prompt (character_instructions) FIRST so it's prioritized
       const lessonPrompt = [
+        studyMeta?.character_instructions ? `=== MANDATORY STUDY PROMPT (FOLLOW EXACTLY) ===\n${studyMeta.character_instructions}\n=== END MANDATORY STUDY PROMPT ===` : '',
         `You are guiding a Bible study lesson.`,
         `Study: ${title}`,
         `Lesson: ${lesson.title}`,
@@ -238,8 +240,7 @@ export default function StudyDetail({ route, navigation }: any) {
           ? `Scripture: ${lesson.scripture_refs.join(', ')}` 
           : '',
         lesson.summary ? `Summary: ${lesson.summary}` : '',
-        lessonPromptsText ? `Lesson Instructions:\n${lessonPromptsText}` : '',
-        studyMeta?.character_instructions ? `Study Prompt: ${studyMeta.character_instructions}` : ''
+        lessonPromptsText ? `Lesson Instructions:\n${lessonPromptsText}` : ''
       ].filter(Boolean).join('\n\n');
       
       console.log('[StudyDetail] Lesson prompt:', lessonPrompt);
@@ -251,9 +252,16 @@ export default function StudyDetail({ route, navigation }: any) {
       try {
         const displayName = char?.name || 'Guide';
         console.log('[StudyDetail] Generating intro with character:', displayName);
+        
+        // Build a stronger intro prompt that emphasizes following the Study Prompt structure
+        const hasStudyPrompt = studyMeta?.character_instructions && studyMeta.character_instructions.trim().length > 0;
+        const introRequest = hasStudyPrompt
+          ? `Begin this Bible study session now. You MUST follow the MANDATORY STRUCTURE in the Study Prompt section above EXACTLY. If the Study Prompt says to open with prayer, you MUST start with a prayer. If it specifies steps or format, follow them precisely. Do not skip, reorder, or improvise any required steps. The Study Prompt instructions take priority over everything else.`
+          : `Begin this Bible study session now. Start with a warm greeting and introduce the lesson topic.`;
+        
         const intro = await generateCharacterResponse(displayName, char?.persona_prompt || '', [
           { role: 'system', content: lessonPrompt },
-          { role: 'user', content: 'Begin this Bible study session now. IMPORTANT: Follow the MANDATORY STRUCTURE in the Study Prompt exactly - if it says to open with prayer, you MUST start with a prayer. Do not skip or reorder any required steps.' }
+          { role: 'user', content: introRequest }
         ]);
         console.log('[StudyDetail] Generated intro:', intro?.slice(0, 200));
         if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
