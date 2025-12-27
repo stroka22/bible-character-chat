@@ -46,16 +46,17 @@ const SignupPage: React.FC = () => {
       // Show success message
       setSuccessMessage('Account created successfully! You can now log in.');
       
-      // Check for pending invite codes and redirect appropriately
-      const pendingChatCode = sessionStorage.getItem('pendingChatJoinCode');
-      const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+      // Check for pending invite codes - use URL params as backup for browsers blocking storage
+      let pendingChatCode = null;
+      try { pendingChatCode = sessionStorage.getItem('pendingChatJoinCode'); } catch {}
+      if (!pendingChatCode) {
+        pendingChatCode = new URLSearchParams(window.location.search).get('joinCode');
+      }
       
       setTimeout(() => {
         if (pendingChatCode) {
-          // Will be handled by AuthContext after login
-          navigate('/login');
-        } else if (pendingInviteCode) {
-          navigate('/login');
+          // Pass joinCode to login page in URL for browsers blocking sessionStorage
+          navigate(`/login?joinCode=${pendingChatCode}`);
         } else {
           navigate('/login');
         }

@@ -6,8 +6,9 @@ import { redeemChatInvite } from '../services/chatInvitesService';
 const JoinChat = () => {
   const { code } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [status, setStatus] = useState({ state: 'init', message: '' });
+  const [attempted, setAttempted] = useState(false);
 
   useEffect(() => {
     if (!code) {
@@ -15,10 +16,22 @@ const JoinChat = () => {
       return;
     }
 
+    // Wait for auth to finish loading before deciding what to do
+    if (loading) {
+      setStatus({ state: 'init', message: 'Checking authentication...' });
+      return;
+    }
+
+    // Prevent running twice
+    if (attempted) return;
+    setAttempted(true);
+
     const acceptIfLoggedIn = async () => {
       if (!user) {
+        // Store code and redirect to signup
         try { sessionStorage.setItem('pendingChatJoinCode', code); } catch {}
-        navigate('/signup', { replace: true });
+        // Also store in URL param as backup
+        navigate(`/signup?joinCode=${code}`, { replace: true });
         return;
       }
 
@@ -38,7 +51,7 @@ const JoinChat = () => {
     };
 
     acceptIfLoggedIn();
-  }, [code, user, navigate]);
+  }, [code, user, loading, navigate, attempted]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white">

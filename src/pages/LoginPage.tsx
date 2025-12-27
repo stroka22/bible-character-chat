@@ -48,15 +48,22 @@ const LoginPage: React.FC = () => {
       /* ------------------------------------------------------------------
        * Check for pending invite codes first
        * ---------------------------------------------------------------- */
-      const pendingChatCode = sessionStorage.getItem('pendingChatJoinCode');
+      // Check sessionStorage first, then URL params as backup (for browsers blocking storage)
+      let pendingChatCode = null;
+      try { pendingChatCode = sessionStorage.getItem('pendingChatJoinCode'); } catch {}
+      if (!pendingChatCode) {
+        pendingChatCode = new URLSearchParams(location.search).get('joinCode');
+      }
+      
       if (pendingChatCode) {
-        sessionStorage.removeItem('pendingChatJoinCode');
+        try { sessionStorage.removeItem('pendingChatJoinCode'); } catch {}
         console.debug('[LoginPage] Redirecting to pending chat invite:', pendingChatCode);
         navigate(`/join/${pendingChatCode}`, { replace: true });
         return;
       }
 
-      const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+      let pendingInviteCode = null;
+      try { pendingInviteCode = sessionStorage.getItem('pendingInviteCode'); } catch {}
       if (pendingInviteCode) {
         // Let the AuthContext handle this one
         console.debug('[LoginPage] Pending org invite will be handled by AuthContext');
