@@ -17,7 +17,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.faithtalkai.app",
       "icon": "./assets/icon-ios.png",
-      "buildNumber": "29",
+      "buildNumber": "30",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
