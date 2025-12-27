@@ -211,9 +211,9 @@ export default function RoundtableChat({ route }: any) {
         working.push(msg);
         setMessages(prev => [...prev, msg]);
         
-        // Persist assistant message if conversation is saved
+        // Persist assistant message if conversation is saved (with speaker metadata)
         if (savedConversationId) {
-          try { await chat.addMessage(savedConversationId, text, 'assistant'); } catch {}
+          try { await chat.addMessage(savedConversationId, text, 'assistant', { speakerCharacterId: String(speaker.id) }); } catch {}
         }
       }
     } finally {
@@ -281,7 +281,8 @@ export default function RoundtableChat({ route }: any) {
           });
           const seq = messages.filter(m => m.role !== 'system');
           for (const m of seq) {
-            await chat.addMessage(c.id, m.content, m.role as any);
+            const metadata = m.speakerId ? { speakerCharacterId: m.speakerId } : undefined;
+            await chat.addMessage(c.id, m.content, m.role as any, metadata);
           }
           // Mark saved chats as favorites so they appear under My Walk
           try { await chat.toggleFavorite(c.id, true); } catch {}

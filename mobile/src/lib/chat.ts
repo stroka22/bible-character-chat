@@ -100,12 +100,25 @@ export const chat = {
     return (data || []) as ChatMessage[];
   },
 
-  async addMessage(chatId: string, content: string, role: ChatMessage['role']): Promise<ChatMessage> {
-    const { data, error } = await supabase
+  async addMessage(chatId: string, content: string, role: ChatMessage['role'], metadata?: { speakerCharacterId?: string }): Promise<ChatMessage> {
+    const baseMessage = { chat_id: chatId, content, role };
+    const newMessage = metadata ? { ...baseMessage, metadata } : baseMessage;
+    
+    let { data, error } = await supabase
       .from('chat_messages')
-      .insert({ chat_id: chatId, content, role })
+      .insert(newMessage)
       .select('*')
       .single();
+    
+    // If metadata column doesn't exist, retry without it
+    if (error && error.message?.toLowerCase().includes('metadata')) {
+      ({ data, error } = await supabase
+        .from('chat_messages')
+        .insert(baseMessage)
+        .select('*')
+        .single());
+    }
+    
     if (error) throw error;
     // bump parent chat timestamp
     await supabase.from('chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);

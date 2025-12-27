@@ -241,6 +241,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   }
                 }
               } catch {}
+              // Handle pending chat join code after signup/login
+              try {
+                const pendingChatCode = sessionStorage.getItem('pendingChatJoinCode');
+                if (pendingChatCode) {
+                  sessionStorage.removeItem('pendingChatJoinCode');
+                  // Redirect to the join page to complete the flow
+                  window.location.href = `/join/${pendingChatCode}`;
+                }
+              } catch {}
             } else {
               setProfile(null);
               setRole('unknown');

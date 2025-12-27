@@ -210,10 +210,11 @@ export const chatRepository = {
             return mockChatRepository.getUserChats(userId);
         }
         try {
-            // Rely on RLS: return all chats visible to the current user (owner or participant)
+            // Filter by user_id for safety (RLS should also enforce this)
             const { data, error } = await supabase
                 .from('chats')
                 .select('*')
+                .eq('user_id', userId)
                 .order('updated_at', { ascending: false });
             if (error) throw error;
             return data;
