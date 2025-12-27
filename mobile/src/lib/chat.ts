@@ -21,6 +21,9 @@ export type ChatMessage = {
   content: string;
   role: 'user' | 'assistant' | 'system';
   created_at: string;
+  metadata?: {
+    speakerCharacterId?: string;
+  } | null;
 };
 
 export const chat = {

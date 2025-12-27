@@ -46,9 +46,19 @@ const SignupPage: React.FC = () => {
       // Show success message
       setSuccessMessage('Account created successfully! You can now log in.');
       
-      // Redirect to login page after a short delay
+      // Check for pending invite codes and redirect appropriately
+      const pendingChatCode = sessionStorage.getItem('pendingChatJoinCode');
+      const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+      
       setTimeout(() => {
-        navigate('/login');
+        if (pendingChatCode) {
+          // Will be handled by AuthContext after login
+          navigate('/login');
+        } else if (pendingInviteCode) {
+          navigate('/login');
+        } else {
+          navigate('/login');
+        }
       }, 2000);
     } catch (err) {
       // Error is handled by the AuthContext and available via the error state

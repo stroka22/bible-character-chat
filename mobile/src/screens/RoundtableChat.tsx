@@ -50,14 +50,23 @@ export default function RoundtableChat({ route }: any) {
           const existingChat = await chat.getChat(conversationId);
           const existingMessages = await chat.getChatMessages(conversationId);
           
+          console.log('[RoundtableChat] Loaded chat:', existingChat);
+          console.log('[RoundtableChat] Chat participants:', existingChat?.participants);
+          console.log('[RoundtableChat] Message count:', existingMessages.length);
+          
           // Load participants from saved chat
           const savedParticipantIds = existingChat?.participants || [];
+          console.log('[RoundtableChat] savedParticipantIds:', savedParticipantIds);
+          
           if (savedParticipantIds.length > 0) {
             const { data } = await supabase
               .from('characters')
               .select('id,name,persona_prompt,description,avatar_url,character_traits,scriptural_context')
               .in('id', savedParticipantIds);
+            console.log('[RoundtableChat] Loaded characters:', data);
             setParticipants((data as any) || []);
+          } else {
+            console.warn('[RoundtableChat] No participant IDs found in saved chat');
           }
           
           // Convert to Message format
@@ -67,6 +76,7 @@ export default function RoundtableChat({ route }: any) {
             content: m.content,
             speakerId: m.metadata?.speakerCharacterId || null
           }));
+          console.log('[RoundtableChat] Loaded messages with speakerIds:', loadedMessages.map(m => ({ role: m.role, speakerId: m.speakerId })));
           setMessages(loadedMessages);
           
           // Calculate round index from existing messages

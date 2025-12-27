@@ -46,6 +46,23 @@ const LoginPage: React.FC = () => {
       await refreshProfile();
 
       /* ------------------------------------------------------------------
+       * Check for pending invite codes first
+       * ---------------------------------------------------------------- */
+      const pendingChatCode = sessionStorage.getItem('pendingChatJoinCode');
+      if (pendingChatCode) {
+        sessionStorage.removeItem('pendingChatJoinCode');
+        console.debug('[LoginPage] Redirecting to pending chat invite:', pendingChatCode);
+        navigate(`/join/${pendingChatCode}`, { replace: true });
+        return;
+      }
+
+      const pendingInviteCode = sessionStorage.getItem('pendingInviteCode');
+      if (pendingInviteCode) {
+        // Let the AuthContext handle this one
+        console.debug('[LoginPage] Pending org invite will be handled by AuthContext');
+      }
+
+      /* ------------------------------------------------------------------
        * Decide where to send the user based on their role
        * ---------------------------------------------------------------- */
       const target =

@@ -243,12 +243,12 @@ export default function StudyDetail({ route, navigation }: any) {
       ].filter(Boolean).join('\n\n');
       await chat.addMessage(newChat.id, lessonPrompt, 'system');
       
-      // Generate intro for the lesson
+      // Generate intro for the lesson - use same prompt as web to enforce structure
       try {
         const displayName = char?.name || 'Guide';
         const intro = await generateCharacterResponse(displayName, char?.persona_prompt || '', [
           { role: 'system', content: lessonPrompt },
-          { role: 'user', content: `Introduce this lesson "${lesson.title}" briefly and invite me to explore it with you.` }
+          { role: 'user', content: 'Begin this Bible study session now. IMPORTANT: Follow the MANDATORY STRUCTURE in the Study Prompt exactly - if it says to open with prayer, you MUST start with a prayer. Do not skip or reorder any required steps.' }
         ]);
         if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
       } catch {}
