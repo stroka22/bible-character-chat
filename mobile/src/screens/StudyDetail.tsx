@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, Alert } from 'react-native';
+import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, Alert, Share } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -371,9 +371,23 @@ export default function StudyDetail({ route, navigation }: any) {
             <Text style={{ color: theme.colors.muted }}>Guide: <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{guide.name}</Text></Text>
           </View>
         )}
-        <TouchableOpacity disabled={starting} onPress={startGuidedChat} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 12 }}>
-          <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>{starting ? 'Starting…' : 'Start Guided Chat'}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+          <TouchableOpacity disabled={starting} onPress={startGuidedChat} style={{ backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}>
+            <Text style={{ fontWeight: '600', fontSize: 13, color: theme.colors.primaryText }}>{starting ? 'Starting…' : 'Start Guided Chat'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={async () => {
+              const url = `https://faithtalkai.com/studies/${studyId}`;
+              const message = `Join me in studying "${title}" on Faith Talk AI!\n\n${url}`;
+              try {
+                await Share.share({ message, url, title: 'Invite Friend to Bible Study' });
+              } catch {}
+            }} 
+            style={{ backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
+          >
+            <Text style={{ fontWeight: '600', fontSize: 13, color: theme.colors.primaryText }}>Invite Friend</Text>
+          </TouchableOpacity>
+        </View>
         {loading ? (
           <ActivityIndicator color={theme.colors.primary} />
         ) : (

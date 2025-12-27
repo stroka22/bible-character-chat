@@ -10,6 +10,7 @@ import { Linking } from 'react-native';
 import { generateCharacterResponse } from '../lib/api';
 import { theme } from '../theme';
 import { saveStudyProgress, getStudyProgress } from '../lib/studyProgress';
+import { inviteFriendToChat } from '../lib/invites';
 
 export default function ChatDetail() {
   const route = useRoute<any>();
@@ -119,22 +120,40 @@ export default function ChatDetail() {
           <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{character?.name || title}</Text>
         </View>
       ),
-      headerRight: () => studyId ? null : (
-        <TouchableOpacity onPress={async () => {
-          await requirePremiumOrPrompt({
-            userId: (user as any)?.id,
-            feature: 'save',
-            onUpgrade: () => { try { (navigation as any).navigate('Paywall'); } catch {} },
-            onAllowed: async () => {
-              try {
-                await chat.toggleFavorite(chatId, !isFav);
-                setIsFav(!isFav);
-              } catch {}
-            }
-          });
-        }} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: theme.colors.surface, borderRadius: 6 }}>
-          <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{isFav ? 'Unsave' : 'Save'}</Text>
-        </TouchableOpacity>
+      headerRight: () => (
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {/* Invite Friend button */}
+          <TouchableOpacity 
+            onPress={async () => {
+              const { success, error } = await inviteFriendToChat(chatId, title);
+              if (error) {
+                Alert.alert('Error', error);
+              }
+            }} 
+            style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: theme.colors.primary, borderRadius: 6 }}
+          >
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>Invite Friend</Text>
+          </TouchableOpacity>
+          
+          {/* Save button - only for non-study chats */}
+          {!studyId && (
+            <TouchableOpacity onPress={async () => {
+              await requirePremiumOrPrompt({
+                userId: (user as any)?.id,
+                feature: 'save',
+                onUpgrade: () => { try { (navigation as any).navigate('Paywall'); } catch {} },
+                onAllowed: async () => {
+                  try {
+                    await chat.toggleFavorite(chatId, !isFav);
+                    setIsFav(!isFav);
+                  } catch {}
+                }
+              });
+            }} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: theme.colors.surface, borderRadius: 6 }}>
+              <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>{isFav ? 'Unsave' : 'Save'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )
     });
   }, [navigation, isFav, title, chatId, character, studyId]);

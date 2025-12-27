@@ -9,6 +9,7 @@ import { theme } from '../theme';
 import { chat } from '../lib/chat';
 import { requirePremiumOrPrompt, getOwnerSlug as getTierOwnerSlug, getTierSettings } from '../lib/tier';
 import { useAuth } from '../contexts/AuthContext';
+import { inviteFriendToChat } from '../lib/invites';
 
 type Message = {
   id: string;
@@ -341,13 +342,24 @@ export default function RoundtableChat({ route }: any) {
       <View style={{ padding: 16, paddingBottom: 8 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
         <Text style={{ color: theme.colors.text }}>{topic}</Text>
-        <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
+        <View style={{ marginTop: 8, flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
           <TouchableOpacity onPress={saveToMyWalk} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
-            <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Save to My Walk</Text>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>Save to My Walk</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={nextRound} disabled={isTyping} style={{ alignSelf: 'flex-start', backgroundColor: isTyping ? theme.colors.muted : theme.colors.card, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}>
-            <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Next Round</Text>
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 13 }}>Next Round</Text>
           </TouchableOpacity>
+          {savedConversationId && (
+            <TouchableOpacity 
+              onPress={async () => {
+                const { error } = await inviteFriendToChat(savedConversationId, `Roundtable: ${topic}`);
+                if (error) Alert.alert('Error', error);
+              }} 
+              style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}
+            >
+              <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>Invite Friend</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <FlatList
