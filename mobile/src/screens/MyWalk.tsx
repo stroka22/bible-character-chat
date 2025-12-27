@@ -1,10 +1,10 @@
 import React from 'react';
-import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView, Alert, TextInput } from 'react-native';
+import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView, Alert, TextInput, Modal } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat, type Chat } from '../lib/chat';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
-import { listFavoriteCharacters } from '../lib/favorites';
+import { listFavoriteCharacters, setFavoriteCharacter } from '../lib/favorites';
 import { getUserStudiesWithProgress, deleteProgress, updateProgressLabel, saveStudyProgress, getProgressPercent, type StudyWithProgress } from '../lib/studyProgress';
 import { supabase } from '../lib/supabase';
 
@@ -23,6 +23,11 @@ export default function MyWalk() {
   const [activeTab, setActiveTab] = React.useState<TabType>('chats');
   const [userStudies, setUserStudies] = React.useState<StudyWithProgress[]>([]);
   const [studiesLoading, setStudiesLoading] = React.useState(false);
+  
+  // Add favorites modal state
+  const [showAddFavorite, setShowAddFavorite] = React.useState(false);
+  const [allCharacters, setAllCharacters] = React.useState<any[]>([]);
+  const [loadingCharacters, setLoadingCharacters] = React.useState(false);
 
   // Separate chats by type (exclude study chats - those are shown in Studies tab)
   const regularChats = React.useMemo(() => 
@@ -87,6 +92,39 @@ export default function MyWalk() {
     await chat.toggleFavorite(c.id, !c.is_favorite);
     await load();
   }
+
+  // Load all characters for the add favorites modal
+  const loadAllCharacters = React.useCallback(async () => {
+    setLoadingCharacters(true);
+    try {
+      const { data } = await supabase
+        .from('characters')
+        .select('id, name, description, avatar_url')
+        .or('is_visible.is.null,is_visible.eq.true')
+        .order('name');
+      setAllCharacters(data || []);
+    } catch (e) {
+      console.warn('[MyWalk] Error loading characters:', e);
+    } finally {
+      setLoadingCharacters(false);
+    }
+  }, []);
+
+  const openAddFavoriteModal = async () => {
+    setShowAddFavorite(true);
+    await loadAllCharacters();
+  };
+
+  const addFavorite = async (character: any) => {
+    if (!user?.id) return;
+    try {
+      await setFavoriteCharacter(user.id, character.id, true);
+      setFavChars(prev => [...prev, character]);
+      setShowAddFavorite(false);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to add favorite');
+    }
+  };
 
   // Get participant count for display
   const getParticipantCount = (c: Chat) => {
@@ -266,7 +304,6 @@ export default function MyWalk() {
                     style: 'destructive',
                     onPress: async () => {
                       try {
-                        const { setFavoriteCharacter } = await import('../lib/favorites');
                         await setFavoriteCharacter(user!.id, item.id, false);
                         setFavChars(prev => prev.filter(c => c.id !== item.id));
                       } catch (e) {
@@ -290,7 +327,58 @@ export default function MyWalk() {
             <Text style={{ color: theme.colors.muted }}>No favorite characters yet</Text>
           </View>
         ) : null}
+        ListFooterComponent={() => (
+          <TouchableOpacity 
+            onPress={openAddFavoriteModal}
+            style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: theme.colors.primary, marginHorizontal: 4, justifyContent: 'center', alignItems: 'center' }}
+          >
+            <Text style={{ color: theme.colors.primaryText, fontSize: 24, fontWeight: '700' }}>+</Text>
+          </TouchableOpacity>
+        )}
       />
+
+      {/* Add Favorite Modal */}
+      <Modal visible={showAddFavorite} animationType="slide" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: theme.colors.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', paddingBottom: 40 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.text }}>Add Favorite Character</Text>
+              <TouchableOpacity onPress={() => setShowAddFavorite(false)}>
+                <Text style={{ color: theme.colors.primary, fontSize: 16 }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            {loadingCharacters ? (
+              <View style={{ padding: 40, alignItems: 'center' }}>
+                <Text style={{ color: theme.colors.muted }}>Loading characters...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={allCharacters.filter(c => !favChars.some(f => f.id === c.id))}
+                keyExtractor={(i) => String(i.id)}
+                contentContainerStyle={{ padding: 16 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    onPress={() => addFavorite(item)}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8 }}
+                  >
+                    <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.colors.surface }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: theme.colors.text, fontWeight: '600' }}>{item.name}</Text>
+                      {item.description ? <Text numberOfLines={1} style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>{item.description}</Text> : null}
+                    </View>
+                    <Text style={{ color: theme.colors.primary, fontWeight: '600' }}>Add</Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={
+                  <View style={{ padding: 20, alignItems: 'center' }}>
+                    <Text style={{ color: theme.colors.muted }}>All characters are already favorites!</Text>
+                  </View>
+                }
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
       
       {/* Tab selector */}
       <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.colors.surface, marginTop: 16 }}>
