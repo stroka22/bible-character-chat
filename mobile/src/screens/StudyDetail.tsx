@@ -241,17 +241,25 @@ export default function StudyDetail({ route, navigation }: any) {
         lessonPromptsText ? `Lesson Instructions:\n${lessonPromptsText}` : '',
         studyMeta?.character_instructions ? `Study Prompt: ${studyMeta.character_instructions}` : ''
       ].filter(Boolean).join('\n\n');
+      
+      console.log('[StudyDetail] Lesson prompt:', lessonPrompt);
+      console.log('[StudyDetail] Study character_instructions:', studyMeta?.character_instructions);
+      
       await chat.addMessage(newChat.id, lessonPrompt, 'system');
       
       // Generate intro for the lesson - use same prompt as web to enforce structure
       try {
         const displayName = char?.name || 'Guide';
+        console.log('[StudyDetail] Generating intro with character:', displayName);
         const intro = await generateCharacterResponse(displayName, char?.persona_prompt || '', [
           { role: 'system', content: lessonPrompt },
           { role: 'user', content: 'Begin this Bible study session now. IMPORTANT: Follow the MANDATORY STRUCTURE in the Study Prompt exactly - if it says to open with prayer, you MUST start with a prayer. Do not skip or reorder any required steps.' }
         ]);
+        console.log('[StudyDetail] Generated intro:', intro?.slice(0, 200));
         if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
-      } catch {}
+      } catch (introErr) {
+        console.warn('[StudyDetail] Intro generation failed:', introErr);
+      }
       
       navigation.navigate('MainTabs', {
         screen: 'Chat',
