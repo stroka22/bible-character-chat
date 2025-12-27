@@ -46,7 +46,6 @@ export default function ChatDetail() {
         if (meta?.study_id) {
           setStudyId(meta.study_id);
           setLessonId(meta.lesson_id || null);
-          setProgressId(meta.progress_id || null);
           
           // Extract study title from chat title (format: "Study Title - Lesson X: ...")
           const titleMatch = meta.title?.match(/^(.+?)\s*-\s*Lesson/i);
@@ -59,13 +58,36 @@ export default function ChatDetail() {
           const idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
           setLessonIndex(idx);
           
-          // Check if this lesson is already complete
-          if (user?.id && meta.progress_id) {
-            const progress = await getStudyProgress(user.id, meta.study_id, meta.progress_id);
+          // Check for existing progress - first from chat, then search for any progress
+          let foundProgressId = meta.progress_id || null;
+          let progress = null;
+          
+          if (user?.id) {
+            if (foundProgressId) {
+              progress = await getStudyProgress(user.id, meta.study_id, foundProgressId);
+            }
+            // If no progress_id on chat or couldn't find it, look for any progress for this study
+            if (!progress) {
+              progress = await getStudyProgress(user.id, meta.study_id);
+              if (progress?.id) {
+                foundProgressId = progress.id;
+                // Update the chat with the progress_id if found
+                try {
+                  const { supabase } = await import('../lib/supabase');
+                  await supabase
+                    .from('chats')
+                    .update({ progress_id: progress.id })
+                    .eq('id', chatId);
+                } catch {}
+              }
+            }
+            
             if (progress?.completed_lessons?.includes(idx)) {
               setIsLessonComplete(true);
             }
           }
+          
+          setProgressId(foundProgressId);
         }
         
         if (!character && meta?.character_id) {
@@ -97,7 +119,7 @@ export default function ChatDetail() {
           <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{character?.name || title}</Text>
         </View>
       ),
-      headerRight: () => (
+      headerRight: () => studyId ? null : (
         <TouchableOpacity onPress={async () => {
           await requirePremiumOrPrompt({
             userId: (user as any)?.id,
@@ -115,7 +137,7 @@ export default function ChatDetail() {
         </TouchableOpacity>
       )
     });
-  }, [navigation, isFav, title, chatId, character]);
+  }, [navigation, isFav, title, chatId, character, studyId]);
 
   // character is passed from ChatNew; optional.
 
@@ -333,39 +355,37 @@ export default function ChatDetail() {
               style={{ 
                 flex: 1,
                 height: 40, 
-                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.card,
-                borderWidth: 1,
-                borderColor: theme.colors.border,
+                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.primary,
                 borderRadius: 8, 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                opacity: markingComplete ? 0.6 : 1
+                opacity: (markingComplete || isLessonComplete) ? 0.6 : 1
               }}
             >
-              <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.text, fontWeight: '600' }}>
+              <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '700' }}>
                 {getSaveButtonText()}
               </Text>
             </TouchableOpacity>
             
-            {/* Mark Complete button */}
+            {/* Lesson Complete button */}
             <TouchableOpacity 
               onPress={handleMarkComplete}
               disabled={markingComplete || isLessonComplete}
               style={{ 
                 flex: 1,
                 height: 40, 
-                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.accent, 
+                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.primary, 
                 borderRadius: 8, 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                opacity: markingComplete ? 0.6 : 1
+                opacity: (markingComplete || isLessonComplete) ? 0.6 : 1
               }}
             >
               {markingComplete ? (
                 <ActivityIndicator color={theme.colors.primaryText} size="small" />
               ) : (
                 <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '700' }}>
-                  {isLessonComplete ? '✓ Lesson Complete' : 'Mark Complete'}
+                  {isLessonComplete ? '✓ Lesson Complete' : 'Lesson Complete'}
                 </Text>
               )}
             </TouchableOpacity>

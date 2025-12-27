@@ -283,17 +283,42 @@ export async function getUserStudiesWithProgress(userId: string): Promise<StudyW
 }
 
 /**
- * Delete a specific progress record
+ * Delete a specific progress record and all linked chats/messages
  */
 export async function deleteProgress(progressId: string): Promise<boolean> {
   if (!progressId) return false;
   try {
+    // First, find all chats linked to this progress record
+    const { data: linkedChats } = await supabase
+      .from('chats')
+      .select('id')
+      .eq('progress_id', progressId);
+    
+    // Delete messages for each linked chat, then delete the chats
+    if (linkedChats && linkedChats.length > 0) {
+      const chatIds = linkedChats.map(c => c.id);
+      
+      // Delete all messages for these chats
+      await supabase
+        .from('chat_messages')
+        .delete()
+        .in('chat_id', chatIds);
+      
+      // Delete the chats themselves
+      await supabase
+        .from('chats')
+        .delete()
+        .in('id', chatIds);
+    }
+    
+    // Now delete the progress record
     const { error } = await supabase
       .from('user_study_progress')
       .delete()
       .eq('id', progressId);
     return !error;
-  } catch {
+  } catch (e) {
+    console.warn('[studyProgress] deleteProgress error:', e);
     return false;
   }
 }
