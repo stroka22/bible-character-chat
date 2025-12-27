@@ -322,12 +322,7 @@ export default function MyWalk() {
             </View>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={!loading ? (
-          <View style={{ paddingHorizontal: 16 }}>
-            <Text style={{ color: theme.colors.muted }}>No favorite characters yet</Text>
-          </View>
-        ) : null}
-        ListFooterComponent={() => (
+        ListHeaderComponent={() => (
           <TouchableOpacity 
             onPress={openAddFavoriteModal}
             style={{ width: 52, height: 52, borderRadius: 10, backgroundColor: theme.colors.primary, marginHorizontal: 4, justifyContent: 'center', alignItems: 'center' }}
@@ -335,6 +330,11 @@ export default function MyWalk() {
             <Text style={{ color: theme.colors.primaryText, fontSize: 24, fontWeight: '700' }}>+</Text>
           </TouchableOpacity>
         )}
+        ListEmptyComponent={!loading ? (
+          <View style={{ paddingHorizontal: 16 }}>
+            <Text style={{ color: theme.colors.muted }}>Tap + to add favorites</Text>
+          </View>
+        ) : null}
       />
 
       {/* Add Favorite Modal */}

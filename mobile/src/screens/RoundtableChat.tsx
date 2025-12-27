@@ -178,29 +178,46 @@ export default function RoundtableChat({ route }: any) {
         // Build system prompt (admin template or default)
         const others = used.filter(p => String(p.id) !== String(speaker.id)).map(p => p.name).join(', ');
         const latestUser = [...working].reverse().find(m => m.role === 'user')?.content || '';
-        const recentAssistantMsgs = [...working].filter(m => m.role === 'assistant').slice(-3);
-        const recentRemarks = recentAssistantMsgs.map((m) => {
+        // Get ALL previous assistant messages for full context
+        const allAssistantMsgs = [...working].filter(m => m.role === 'assistant');
+        const recentRemarks = allAssistantMsgs.map((m) => {
           const sp = participants.find(p => String(p.id) === String(m.speakerId));
           const name = sp?.name || 'Participant';
-          const snippet = String(m.content || '').slice(0, 120).replace(/\s+/g, ' ');
-          return `- ${name}: ${snippet}${m.content && m.content.length > 120 ? '…' : ''}`;
-        }).join('\n');
+          const snippet = String(m.content || '').slice(0, 200).replace(/\s+/g, ' ');
+          return `${name}: "${snippet}${m.content && m.content.length > 200 ? '…' : ''}"`;
+        }).join('\n\n');
         const persona = speaker.persona_prompt || speaker.description || `a biblical figure known for ${speaker.scriptural_context || 'wisdom'}`;
         const traits = Array.isArray(speaker.character_traits) ? speaker.character_traits.join(', ') : (speaker.character_traits || '');
+        
+        // Build a prompt that forces unique perspective based on the character
+        const uniqueAngle = speaker.name === 'Paul' ? 'your conversion experience, missionary journeys, and letters to the churches' :
+          speaker.name === 'Peter' ? 'your time walking with Jesus, denying him, and leading the early church' :
+          speaker.name === 'Moses' ? 'leading Israel out of Egypt, receiving the Law, and wandering in the wilderness' :
+          speaker.name === 'David' ? 'your experiences as shepherd, warrior, king, and psalmist' :
+          speaker.name === 'Mary' ? 'your experience as the mother of Jesus and witnessing his ministry' :
+          speaker.name === 'Abraham' ? 'your journey of faith, leaving Ur, and the covenant promises' :
+          speaker.name === 'Solomon' ? 'your wisdom, building the temple, and the lessons from Ecclesiastes' :
+          speaker.name === 'Elijah' ? 'confronting the prophets of Baal, fleeing Jezebel, and hearing God\'s still small voice' :
+          `your unique biblical experiences and perspective`;
+        
         const defaultPrompt = (
-          `You are ${speaker.name}. Persona: ${persona}. ${traits ? `Known traits: ${traits}.` : ''}\n` +
-          `You are participating in a roundtable discussion (Round ${currentRound}) on the topic: "${topic}".\n` +
-          `The other participants are: ${others || 'none'}.\n` +
-          (recentRemarks ? `Recent remarks from others:\n${recentRemarks}\n` : '') +
-          `CRITICAL INSTRUCTIONS:\n` +
-          `- Respond ONLY as ${speaker.name} in first person. Do NOT include your name as a prefix.\n` +
-          `- Your response MUST be COMPLETELY DIFFERENT from what others have said. Do NOT repeat, paraphrase, or echo their points.\n` +
-          `- Draw from YOUR unique biblical experiences, stories, and perspective that only ${speaker.name} would have.\n` +
-          `- Reference specific scripture passages or events from YOUR life/ministry.\n` +
-          `- If others made similar points, explicitly DISAGREE, CHALLENGE, or offer a CONTRASTING viewpoint.\n` +
-          `- Keep it concise (80-120 words).\n` +
-          (latestUser ? `The user said: "${latestUser}" - address this directly.\n` : '') +
-          `Remember: You are ${speaker.name}. Speak with your unique voice and perspective.`
+          `You are ${speaker.name}. ${persona}. ${traits ? `Traits: ${traits}.` : ''}\n\n` +
+          `ROUNDTABLE DISCUSSION - Round ${currentRound}\n` +
+          `Topic: "${topic}"\n` +
+          `Other participants: ${others || 'none'}\n\n` +
+          (recentRemarks ? `WHAT OTHERS HAVE ALREADY SAID (DO NOT REPEAT ANY OF THIS):\n${recentRemarks}\n\n` : '') +
+          `YOUR TASK:\n` +
+          `You MUST offer a FRESH, UNIQUE perspective that NO ONE else has mentioned.\n\n` +
+          `REQUIREMENTS:\n` +
+          `1. Draw ONLY from ${uniqueAngle}.\n` +
+          `2. Share a SPECIFIC story, event, or scripture from YOUR life that relates to this topic.\n` +
+          `3. If others talked about faith, YOU talk about something different - maybe obedience, patience, suffering, or joy.\n` +
+          `4. If others quoted certain scriptures, YOU quote DIFFERENT ones from your own experience.\n` +
+          `5. You may DISAGREE with or BUILD UPON what others said, but add NEW insight.\n` +
+          `6. Speak in first person as ${speaker.name}. Do NOT prefix with your name.\n` +
+          `7. Keep response to 80-120 words.\n\n` +
+          (latestUser ? `The user asked: "${latestUser}" - respond to this.\n\n` : '') +
+          `Now speak as ${speaker.name} with YOUR unique voice and experience.`
         ).trim();
 
         const sysContent = (promptTemplate && typeof promptTemplate === 'string' && promptTemplate.trim().length > 0)

@@ -43,18 +43,18 @@ function BrandHeaderTitle({ navigation }: { navigation?: any }) {
   );
 }
 
-function ChatStackScreen() {
+function ChatStackScreen({ navigation }: any) {
   return (
     <ChatStack.Navigator>
       <ChatStack.Screen name="ChatNew" component={ChatNew} options={{
         headerShown: true,
         headerTitleAlign: 'center',
-        headerTitle: () => <BrandHeaderTitle />,
+        headerTitle: () => <BrandHeaderTitle navigation={navigation} />,
       }} />
       <ChatStack.Screen name="ChatDetail" component={ChatDetail} options={{
         headerShown: true,
         headerTitleAlign: 'center',
-        headerTitle: () => <BrandHeaderTitle />,
+        headerTitle: () => <BrandHeaderTitle navigation={navigation} />,
       }} />
     </ChatStack.Navigator>
   );
