@@ -292,6 +292,7 @@ export default function ChatDetail() {
       setMarkingComplete(false);
       
       // Navigate back to study outline
+      const finalProgressId = currentProgressId || progressId;
       Alert.alert(
         'Lesson Complete!', 
         'Would you like to continue to the next lesson?',
@@ -306,7 +307,7 @@ export default function ChatDetail() {
               navigation.navigate('StudyDetail', {
                 studyId,
                 title: studyTitle || 'Bible Study',
-                progressId: progressId
+                progressId: finalProgressId
               });
             }
           }
@@ -347,22 +348,22 @@ export default function ChatDetail() {
         />
         {/* Save/Complete buttons for Bible Studies */}
         {studyId && (
-          <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 8, gap: 8 }}>
+          <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 6, gap: 6 }}>
             {/* Save Progress button */}
             <TouchableOpacity 
               onPress={handleSaveProgress}
               disabled={markingComplete || isLessonComplete}
               style={{ 
                 flex: 1,
-                height: 40, 
+                height: 34, 
                 backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.primary,
-                borderRadius: 8, 
+                borderRadius: 6, 
                 alignItems: 'center', 
                 justifyContent: 'center',
                 opacity: (markingComplete || isLessonComplete) ? 0.6 : 1
               }}
             >
-              <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '700' }}>
+              <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>
                 {getSaveButtonText()}
               </Text>
             </TouchableOpacity>
@@ -373,9 +374,9 @@ export default function ChatDetail() {
               disabled={markingComplete || isLessonComplete}
               style={{ 
                 flex: 1,
-                height: 40, 
+                height: 34, 
                 backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.primary, 
-                borderRadius: 8, 
+                borderRadius: 6, 
                 alignItems: 'center', 
                 justifyContent: 'center',
                 opacity: (markingComplete || isLessonComplete) ? 0.6 : 1
@@ -384,7 +385,7 @@ export default function ChatDetail() {
               {markingComplete ? (
                 <ActivityIndicator color={theme.colors.primaryText} size="small" />
               ) : (
-                <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '700' }}>
+                <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>
                   {isLessonComplete ? '✓ Lesson Complete' : 'Lesson Complete'}
                 </Text>
               )}

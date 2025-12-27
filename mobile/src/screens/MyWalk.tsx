@@ -386,7 +386,7 @@ export default function MyWalk() {
           onPress={() => setActiveTab('chats')}
           style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: activeTab === 'chats' ? theme.colors.accent : 'transparent' }}
         >
-          <Text style={{ textAlign: 'center', color: activeTab === 'chats' ? theme.colors.accent : theme.colors.muted, fontWeight: '600' }}>
+          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'chats' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 13 }}>
             Chats ({regularChats.length})
           </Text>
         </TouchableOpacity>
@@ -394,7 +394,7 @@ export default function MyWalk() {
           onPress={() => setActiveTab('roundtables')}
           style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: activeTab === 'roundtables' ? theme.colors.accent : 'transparent' }}
         >
-          <Text style={{ textAlign: 'center', color: activeTab === 'roundtables' ? theme.colors.accent : theme.colors.muted, fontWeight: '600' }}>
+          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'roundtables' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 13 }}>
             Roundtables ({roundtables.length})
           </Text>
         </TouchableOpacity>
@@ -402,7 +402,7 @@ export default function MyWalk() {
           onPress={() => setActiveTab('studies')}
           style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: activeTab === 'studies' ? theme.colors.accent : 'transparent' }}
         >
-          <Text style={{ textAlign: 'center', color: activeTab === 'studies' ? theme.colors.accent : theme.colors.muted, fontWeight: '600' }}>
+          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'studies' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 13 }}>
             Studies ({userStudies.length})
           </Text>
         </TouchableOpacity>
@@ -562,9 +562,23 @@ export default function MyWalk() {
           }}
           ListEmptyComponent={!loading ? (
             <View style={{ alignItems: 'center', marginTop: 64 }}>
-              <Text style={{ color: theme.colors.text }}>
+              <Text style={{ color: theme.colors.text, marginBottom: 8 }}>
                 {activeTab === 'chats' ? 'No chats yet' : 'No roundtables yet'}
               </Text>
+              <TouchableOpacity 
+                onPress={() => {
+                  if (activeTab === 'chats') {
+                    nav.navigate('Chat', { screen: 'ChatNew' });
+                  } else {
+                    nav.navigate('RoundtableSetup');
+                  }
+                }}
+                style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: theme.colors.primary, borderRadius: 8 }}
+              >
+                <Text style={{ color: theme.colors.primaryText, fontWeight: '600' }}>
+                  {activeTab === 'chats' ? 'Start a Chat' : 'Start a Roundtable'}
+                </Text>
+              </TouchableOpacity>
             </View>
           ) : null}
           ListFooterComponent={hasMoreChats ? (

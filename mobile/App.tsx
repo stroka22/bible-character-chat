@@ -33,28 +33,29 @@ const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
 const ChatStack = createNativeStackNavigator();
 
-function BrandHeaderTitle({ navigation }: { navigation?: any }) {
+function BrandHeaderTitle() {
   const { width } = useWindowDimensions();
   const w = Math.min(width * 0.12, 56);
+  const nav = require('@react-navigation/native').useNavigation();
   return (
-    <TouchableOpacity onPress={() => navigation?.navigate?.('Home')} disabled={!navigation}>
+    <TouchableOpacity onPress={() => nav?.navigate?.('Home')}>
       <Wordmark width={w} variant="iconOnly" />
     </TouchableOpacity>
   );
 }
 
-function ChatStackScreen({ navigation }: any) {
+function ChatStackScreen() {
   return (
     <ChatStack.Navigator>
       <ChatStack.Screen name="ChatNew" component={ChatNew} options={{
         headerShown: true,
         headerTitleAlign: 'center',
-        headerTitle: () => <BrandHeaderTitle navigation={navigation} />,
+        headerTitle: () => <BrandHeaderTitle />,
       }} />
       <ChatStack.Screen name="ChatDetail" component={ChatDetail} options={{
         headerShown: true,
         headerTitleAlign: 'center',
-        headerTitle: () => <BrandHeaderTitle navigation={navigation} />,
+        headerTitle: () => <BrandHeaderTitle />,
       }} />
     </ChatStack.Navigator>
   );
@@ -162,7 +163,7 @@ function AppInner() {
             <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ navigation }) => ({ 
               headerShown: true, 
               headerTitleAlign: 'center', 
-              headerTitle: () => <BrandHeaderTitle navigation={navigation} />,
+              headerTitle: () => <BrandHeaderTitle />,
               headerLeft: () => (
                 <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })} style={{ paddingHorizontal: 8 }}>
                   <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Home'}</Text>
@@ -172,7 +173,7 @@ function AppInner() {
             <Stack.Screen name="RoundtableSetup" component={RoundtableSetup} options={({ navigation }) => ({ 
               headerShown: true, 
               headerTitleAlign: 'center', 
-              headerTitle: () => <BrandHeaderTitle navigation={navigation} />,
+              headerTitle: () => <BrandHeaderTitle />,
               headerLeft: () => (
                 <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })} style={{ paddingHorizontal: 8 }}>
                   <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Home'}</Text>
@@ -182,7 +183,7 @@ function AppInner() {
             <Stack.Screen name="RoundtableChat" component={RoundtableChat} options={({ navigation }) => ({ 
               headerShown: true, 
               headerTitleAlign: 'center', 
-              headerTitle: () => <BrandHeaderTitle navigation={navigation} />,
+              headerTitle: () => <BrandHeaderTitle />,
               headerLeft: () => (
                 <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })} style={{ paddingHorizontal: 8 }}>
                   <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Home'}</Text>
@@ -199,7 +200,7 @@ function AppInner() {
   );
 }
 
-function MainTabs({ navigation }: any) {
+function MainTabs() {
   return (
     <Tabs.Navigator screenOptions={{
       headerTitleAlign: 'center',
@@ -208,7 +209,7 @@ function MainTabs({ navigation }: any) {
       tabBarStyle: { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border },
       tabBarActiveTintColor: theme.colors.primary,
       tabBarInactiveTintColor: theme.colors.muted,
-      headerTitle: () => <BrandHeaderTitle navigation={navigation} />
+      headerTitle: () => <BrandHeaderTitle />
     }}>
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Chat" component={ChatStackScreen} options={{ headerShown: false }} />
