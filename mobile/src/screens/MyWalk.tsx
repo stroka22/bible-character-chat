@@ -244,7 +244,7 @@ export default function MyWalk() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent }}>My Walk</Text>
-        <Text style={{ color: theme.colors.muted, marginTop: 4 }}>Favorite Characters</Text>
+        <Text style={{ color: theme.colors.muted, marginTop: 4 }}>Favorite Characters <Text style={{ fontSize: 11 }}>(hold to remove)</Text></Text>
       </View>
       <FlatList
         data={favChars}
@@ -253,7 +253,32 @@ export default function MyWalk() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 0, paddingTop: 4 }}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => nav.navigate('Chat', { preselectedCharacterId: item.id })} style={{ width: 180, height: 52, paddingHorizontal: 10, borderRadius: 10, backgroundColor: theme.colors.card, marginHorizontal: 4, justifyContent: 'center' }}>
+          <TouchableOpacity 
+            onPress={() => nav.navigate('Chat', { preselectedCharacterId: item.id })} 
+            onLongPress={() => {
+              Alert.alert(
+                'Remove Favorite',
+                `Remove ${item.name} from your favorites?`,
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { 
+                    text: 'Remove', 
+                    style: 'destructive',
+                    onPress: async () => {
+                      try {
+                        const { setFavoriteCharacter } = await import('../lib/favorites');
+                        await setFavoriteCharacter(user!.id, item.id, false);
+                        setFavChars(prev => prev.filter(c => c.id !== item.id));
+                      } catch (e) {
+                        Alert.alert('Error', 'Failed to remove favorite');
+                      }
+                    }
+                  }
+                ]
+              );
+            }}
+            style={{ width: 180, height: 52, paddingHorizontal: 10, borderRadius: 10, backgroundColor: theme.colors.card, marginHorizontal: 4, justifyContent: 'center' }}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Image source={{ uri: item.avatar_url || 'https://faithtalkai.com/downloads/logo-pack/favicons/favicon-180.png' }} style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.colors.surface }} />
               <Text style={{ color: theme.colors.text, fontWeight: '700' }} numberOfLines={1}>{item.name}</Text>

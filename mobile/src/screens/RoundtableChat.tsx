@@ -191,11 +191,16 @@ export default function RoundtableChat({ route }: any) {
           `You are ${speaker.name}. Persona: ${persona}. ${traits ? `Known traits: ${traits}.` : ''}\n` +
           `You are participating in a roundtable discussion (Round ${currentRound}) on the topic: "${topic}".\n` +
           `The other participants are: ${others || 'none'}.\n` +
-          (recentRemarks ? `Recent remarks:\n${recentRemarks}\n` : '') +
-          `Respond in first person as ${speaker.name}. Do not include any name prefixes.\n` +
-          `Keep it concise (<=110 words). Do not repeat prior points; add a distinct, scripture-grounded perspective; if someone already made your point, add a complementary or contrasting insight. Optionally reference others by name.\n` +
-          (latestUser ? `Latest user input to consider: "${latestUser}"\n` : '') +
-          `Stay in character and draw from biblical knowledge.`
+          (recentRemarks ? `Recent remarks from others:\n${recentRemarks}\n` : '') +
+          `CRITICAL INSTRUCTIONS:\n` +
+          `- Respond ONLY as ${speaker.name} in first person. Do NOT include your name as a prefix.\n` +
+          `- Your response MUST be COMPLETELY DIFFERENT from what others have said. Do NOT repeat, paraphrase, or echo their points.\n` +
+          `- Draw from YOUR unique biblical experiences, stories, and perspective that only ${speaker.name} would have.\n` +
+          `- Reference specific scripture passages or events from YOUR life/ministry.\n` +
+          `- If others made similar points, explicitly DISAGREE, CHALLENGE, or offer a CONTRASTING viewpoint.\n` +
+          `- Keep it concise (80-120 words).\n` +
+          (latestUser ? `The user said: "${latestUser}" - address this directly.\n` : '') +
+          `Remember: You are ${speaker.name}. Speak with your unique voice and perspective.`
         ).trim();
 
         const sysContent = (promptTemplate && typeof promptTemplate === 'string' && promptTemplate.trim().length > 0)
