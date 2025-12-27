@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Linking } from 'react-native';
 import { generateCharacterResponse } from '../lib/api';
 import { theme } from '../theme';
+import { saveStudyProgress, getStudyProgress } from '../lib/studyProgress';
 
 export default function ChatDetail() {
   const route = useRoute<any>();
@@ -23,6 +24,14 @@ export default function ChatDetail() {
   const [title, setTitle] = React.useState<string>('Chat');
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  
+  // Bible Study state
+  const [studyId, setStudyId] = React.useState<string | null>(null);
+  const [lessonId, setLessonId] = React.useState<string | null>(null);
+  const [progressId, setProgressId] = React.useState<string | null>(null);
+  const [lessonIndex, setLessonIndex] = React.useState<number>(0);
+  const [isLessonComplete, setIsLessonComplete] = React.useState(false);
+  const [markingComplete, setMarkingComplete] = React.useState(false);
 
   React.useEffect(() => {
     (async () => {
@@ -31,6 +40,27 @@ export default function ChatDetail() {
         const meta = await chat.getChat(chatId);
         setIsFav(!!meta?.is_favorite);
         setTitle(meta?.title || 'Chat');
+        
+        // Load Bible Study info if this is a study chat
+        if (meta?.study_id) {
+          setStudyId(meta.study_id);
+          setLessonId(meta.lesson_id || null);
+          setProgressId(meta.progress_id || null);
+          
+          // Get lesson index from title or lesson metadata
+          const lessonMatch = meta.title?.match(/Lesson (\d+)/i);
+          const idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
+          setLessonIndex(idx);
+          
+          // Check if this lesson is already complete
+          if (user?.id && meta.progress_id) {
+            const progress = await getStudyProgress(user.id, meta.study_id, meta.progress_id);
+            if (progress?.completed_lessons?.includes(idx)) {
+              setIsLessonComplete(true);
+            }
+          }
+        }
+        
         if (!character && meta?.character_id) {
           try {
             const { data: c } = await (await import('../lib/supabase')).supabase
@@ -45,7 +75,7 @@ export default function ChatDetail() {
       const rows = await chat.getChatMessages(chatId);
       setMessages(rows);
     })();
-  }, [chatId]);
+  }, [chatId, user?.id]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -125,6 +155,100 @@ export default function ChatDetail() {
     }
   }
 
+  // Mark lesson complete and save progress
+  async function handleMarkComplete() {
+    if (!user?.id || !studyId) return;
+    setMarkingComplete(true);
+    
+    try {
+      // Check if we have an existing progress record
+      let currentProgressId = progressId;
+      let existingProgress = currentProgressId 
+        ? await getStudyProgress(user.id, studyId, currentProgressId)
+        : await getStudyProgress(user.id, studyId);
+      
+      const isFirstSave = !existingProgress;
+      
+      if (isFirstSave) {
+        // First time - ask user if they want to save
+        Alert.alert(
+          'Save Progress',
+          'Would you like to save this Bible Study to your My Walk page?',
+          [
+            { 
+              text: 'Not Now', 
+              style: 'cancel',
+              onPress: () => setMarkingComplete(false)
+            },
+            {
+              text: 'Save',
+              onPress: async () => {
+                try {
+                  // Create new progress record
+                  const newProgress = await saveStudyProgress({
+                    userId: user.id,
+                    studyId,
+                    currentLessonIndex: lessonIndex,
+                    completedLessons: [lessonIndex],
+                    createNew: true
+                  });
+                  
+                  if (newProgress?.id) {
+                    setProgressId(newProgress.id);
+                    setIsLessonComplete(true);
+                    
+                    // Update the chat with the progress_id
+                    try {
+                      const { supabase } = await import('../lib/supabase');
+                      await supabase
+                        .from('chats')
+                        .update({ progress_id: newProgress.id })
+                        .eq('id', chatId);
+                    } catch {}
+                    
+                    Alert.alert('Saved!', 'Your progress has been saved to My Walk.');
+                  }
+                } catch (e) {
+                  Alert.alert('Error', 'Failed to save progress');
+                } finally {
+                  setMarkingComplete(false);
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        // Subsequent saves - auto-save
+        const completedLessons = Array.isArray(existingProgress?.completed_lessons) 
+          ? [...existingProgress.completed_lessons] 
+          : [];
+        
+        if (!completedLessons.includes(lessonIndex)) {
+          completedLessons.push(lessonIndex);
+          completedLessons.sort((a, b) => a - b);
+        }
+        
+        await saveStudyProgress({
+          userId: user.id,
+          studyId,
+          progressId: existingProgress?.id,
+          currentLessonIndex: lessonIndex,
+          completedLessons
+        });
+        
+        setIsLessonComplete(true);
+        setMarkingComplete(false);
+        
+        // Brief confirmation
+        Alert.alert('Complete!', 'Lesson marked as complete.');
+      }
+    } catch (e) {
+      console.warn('[ChatDetail] Error marking complete:', e);
+      Alert.alert('Error', 'Failed to mark lesson complete');
+      setMarkingComplete(false);
+    }
+  }
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -145,6 +269,32 @@ export default function ChatDetail() {
             </View>
           )}
         />
+        {/* Mark Complete button for Bible Studies */}
+        {studyId && (
+          <View style={{ paddingHorizontal: 12, paddingBottom: 8 }}>
+            <TouchableOpacity 
+              onPress={handleMarkComplete}
+              disabled={markingComplete || isLessonComplete}
+              style={{ 
+                height: 40, 
+                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.accent, 
+                borderRadius: 8, 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                opacity: markingComplete ? 0.6 : 1
+              }}
+            >
+              {markingComplete ? (
+                <ActivityIndicator color={theme.colors.primaryText} size="small" />
+              ) : (
+                <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '700' }}>
+                  {isLessonComplete ? '✓ Lesson Complete' : 'Mark Complete'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+        
         <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: 12 + Math.max(insets.bottom, 6) }}>
           <TextInput
             value={input}
