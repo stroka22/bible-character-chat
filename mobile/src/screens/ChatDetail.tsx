@@ -155,70 +155,92 @@ export default function ChatDetail() {
     }
   }
 
-  // Mark lesson complete and save progress
-  async function handleMarkComplete() {
+  // Determine if study is already saved (has progress record)
+  const isSavedToMyWalk = !!progressId;
+
+  // Handle save action (doesn't mark complete)
+  async function handleSaveProgress() {
     if (!user?.id || !studyId) return;
     setMarkingComplete(true);
     
     try {
-      // Check if we have an existing progress record
-      let currentProgressId = progressId;
-      let existingProgress = currentProgressId 
-        ? await getStudyProgress(user.id, studyId, currentProgressId)
-        : await getStudyProgress(user.id, studyId);
-      
-      const isFirstSave = !existingProgress;
-      
-      if (isFirstSave) {
-        // First time - ask user if they want to save
-        Alert.alert(
-          'Save Progress',
-          'Would you like to save this Bible Study to your My Walk page?',
-          [
-            { 
-              text: 'Not Now', 
-              style: 'cancel',
-              onPress: () => setMarkingComplete(false)
-            },
-            {
-              text: 'Save',
-              onPress: async () => {
-                try {
-                  // Create new progress record
-                  const newProgress = await saveStudyProgress({
-                    userId: user.id,
-                    studyId,
-                    currentLessonIndex: lessonIndex,
-                    completedLessons: [lessonIndex],
-                    createNew: true
-                  });
-                  
-                  if (newProgress?.id) {
-                    setProgressId(newProgress.id);
-                    setIsLessonComplete(true);
-                    
-                    // Update the chat with the progress_id
-                    try {
-                      const { supabase } = await import('../lib/supabase');
-                      await supabase
-                        .from('chats')
-                        .update({ progress_id: newProgress.id })
-                        .eq('id', chatId);
-                    } catch {}
-                    
-                    Alert.alert('Saved!', 'Your progress has been saved to My Walk.');
-                  }
-                } catch (e) {
-                  Alert.alert('Error', 'Failed to save progress');
-                } finally {
-                  setMarkingComplete(false);
-                }
-              }
-            }
-          ]
-        );
+      if (!isSavedToMyWalk) {
+        // First time - save to My Walk (create progress record)
+        const newProgress = await saveStudyProgress({
+          userId: user.id,
+          studyId,
+          currentLessonIndex: lessonIndex,
+          completedLessons: [],
+          createNew: true
+        });
+        
+        if (newProgress?.id) {
+          setProgressId(newProgress.id);
+          
+          // Update the chat with the progress_id
+          try {
+            const { supabase } = await import('../lib/supabase');
+            await supabase
+              .from('chats')
+              .update({ progress_id: newProgress.id })
+              .eq('id', chatId);
+          } catch {}
+          
+          Alert.alert('Saved!', 'This study has been saved to your My Walk page.');
+        }
       } else {
-        // Subsequent saves - auto-save
+        // Already saved - just update progress
+        await saveStudyProgress({
+          userId: user.id,
+          studyId,
+          progressId,
+          currentLessonIndex: lessonIndex
+        });
+        
+        Alert.alert('Saved!', 'Your progress has been saved.');
+      }
+    } catch (e) {
+      console.warn('[ChatDetail] Error saving progress:', e);
+      Alert.alert('Error', 'Failed to save progress');
+    } finally {
+      setMarkingComplete(false);
+    }
+  }
+
+  // Handle mark complete action
+  async function handleMarkComplete() {
+    if (!user?.id || !studyId || isLessonComplete) return;
+    setMarkingComplete(true);
+    
+    try {
+      let currentProgressId = progressId;
+      
+      // If not saved yet, create progress record first
+      if (!isSavedToMyWalk) {
+        const newProgress = await saveStudyProgress({
+          userId: user.id,
+          studyId,
+          currentLessonIndex: lessonIndex,
+          completedLessons: [lessonIndex],
+          createNew: true
+        });
+        
+        if (newProgress?.id) {
+          currentProgressId = newProgress.id;
+          setProgressId(newProgress.id);
+          
+          // Update the chat with the progress_id
+          try {
+            const { supabase } = await import('../lib/supabase');
+            await supabase
+              .from('chats')
+              .update({ progress_id: newProgress.id })
+              .eq('id', chatId);
+          } catch {}
+        }
+      } else {
+        // Get existing progress and add this lesson to completed
+        const existingProgress = await getStudyProgress(user.id, studyId, progressId!);
         const completedLessons = Array.isArray(existingProgress?.completed_lessons) 
           ? [...existingProgress.completed_lessons] 
           : [];
@@ -231,23 +253,27 @@ export default function ChatDetail() {
         await saveStudyProgress({
           userId: user.id,
           studyId,
-          progressId: existingProgress?.id,
+          progressId,
           currentLessonIndex: lessonIndex,
           completedLessons
         });
-        
-        setIsLessonComplete(true);
-        setMarkingComplete(false);
-        
-        // Brief confirmation
-        Alert.alert('Complete!', 'Lesson marked as complete.');
       }
+      
+      setIsLessonComplete(true);
+      Alert.alert('Complete!', 'Lesson marked as complete.');
     } catch (e) {
       console.warn('[ChatDetail] Error marking complete:', e);
       Alert.alert('Error', 'Failed to mark lesson complete');
+    } finally {
       setMarkingComplete(false);
     }
   }
+
+  // Get button text based on state
+  const getSaveButtonText = () => {
+    if (!isSavedToMyWalk) return 'Save to My Walk';
+    return 'Save Progress';
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
@@ -269,13 +295,36 @@ export default function ChatDetail() {
             </View>
           )}
         />
-        {/* Mark Complete button for Bible Studies */}
+        {/* Save/Complete buttons for Bible Studies */}
         {studyId && (
-          <View style={{ paddingHorizontal: 12, paddingBottom: 8 }}>
+          <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 8, gap: 8 }}>
+            {/* Save Progress button */}
+            <TouchableOpacity 
+              onPress={handleSaveProgress}
+              disabled={markingComplete || isLessonComplete}
+              style={{ 
+                flex: 1,
+                height: 40, 
+                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.card,
+                borderWidth: 1,
+                borderColor: theme.colors.border,
+                borderRadius: 8, 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                opacity: markingComplete ? 0.6 : 1
+              }}
+            >
+              <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.text, fontWeight: '600' }}>
+                {getSaveButtonText()}
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Mark Complete button */}
             <TouchableOpacity 
               onPress={handleMarkComplete}
               disabled={markingComplete || isLessonComplete}
               style={{ 
+                flex: 1,
                 height: 40, 
                 backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.accent, 
                 borderRadius: 8, 
