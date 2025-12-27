@@ -366,6 +366,30 @@ export const bibleStudiesRepository = {
     try {
       if (!progressId) throw new Error('Progress ID required');
       
+      // First, get all chats linked to this progress
+      const { data: linkedChats } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('progress_id', progressId);
+      
+      // Delete messages and chats linked to this progress
+      if (linkedChats && linkedChats.length > 0) {
+        const chatIds = linkedChats.map(c => c.id);
+        
+        // Delete messages first
+        await supabase
+          .from('chat_messages')
+          .delete()
+          .in('chat_id', chatIds);
+        
+        // Delete the chats
+        await supabase
+          .from('chats')
+          .delete()
+          .in('id', chatIds);
+      }
+      
+      // Now delete the progress record
       const { error } = await supabase
         .from('user_study_progress')
         .delete()
