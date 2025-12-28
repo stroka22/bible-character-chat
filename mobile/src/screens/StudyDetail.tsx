@@ -39,11 +39,21 @@ export default function StudyDetail({ route, navigation }: any) {
     setLoading(true);
     let studyCharId: string | null = null;
     try {
-      const { data: s } = await supabase
+      const { data: s, error: studyError } = await supabase
         ?.from('bible_studies')
         .select('character_id,character_instructions')
         .eq('id', studyId)
         .maybeSingle() as any;
+      
+      console.log('[StudyDetail] Loaded study meta:', { 
+        studyId, 
+        hasData: !!s, 
+        character_id: s?.character_id,
+        character_instructions_length: s?.character_instructions?.length || 0,
+        character_instructions_preview: s?.character_instructions?.substring(0, 100),
+        error: studyError?.message
+      });
+      
       setStudyMeta(s || {});
       studyCharId = s?.character_id || null;
       if (s?.character_id) {
