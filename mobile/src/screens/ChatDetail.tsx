@@ -260,11 +260,14 @@ export default function ChatDetail() {
     if (!user?.id || !studyId || isLessonComplete) return;
     setMarkingComplete(true);
     
+    console.log('[ChatDetail] handleMarkComplete - lessonIndex:', lessonIndex, 'studyId:', studyId, 'progressId:', progressId);
+    
     try {
       let currentProgressId = progressId;
       
       // If not saved yet, create progress record first
       if (!isSavedToMyWalk) {
+        console.log('[ChatDetail] Creating new progress with completedLessons:', [lessonIndex]);
         const newProgress = await saveStudyProgress({
           userId: user.id,
           studyId,
@@ -272,6 +275,7 @@ export default function ChatDetail() {
           completedLessons: [lessonIndex],
           createNew: true
         });
+        console.log('[ChatDetail] New progress created:', newProgress);
         
         if (newProgress?.id) {
           currentProgressId = newProgress.id;
@@ -288,7 +292,9 @@ export default function ChatDetail() {
         }
       } else {
         // Get existing progress and add this lesson to completed
+        console.log('[ChatDetail] Updating existing progress:', progressId);
         const existingProgress = await getStudyProgress(user.id, studyId, progressId!);
+        console.log('[ChatDetail] Existing progress:', existingProgress);
         const completedLessons = Array.isArray(existingProgress?.completed_lessons) 
           ? [...existingProgress.completed_lessons] 
           : [];
@@ -298,6 +304,7 @@ export default function ChatDetail() {
           completedLessons.sort((a, b) => a - b);
         }
         
+        console.log('[ChatDetail] Saving with completedLessons:', completedLessons);
         await saveStudyProgress({
           userId: user.id,
           studyId,
