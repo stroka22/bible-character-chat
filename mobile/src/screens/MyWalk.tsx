@@ -295,7 +295,20 @@ export default function MyWalk() {
             onPress={async () => {
               // Start a new chat with this character
               try {
+                // Fetch character's opening line
+                const { data: charData } = await supabase
+                  .from('characters')
+                  .select('opening_sentence')
+                  .eq('id', item.id)
+                  .maybeSingle();
+                
                 const newChat = await chat.createChat(user!.id, item.id, `Chat with ${item.name}`);
+                
+                // Add opening line if available
+                if (charData?.opening_sentence) {
+                  try { await chat.addMessage(newChat.id, charData.opening_sentence, 'assistant'); } catch {}
+                }
+                
                 nav.navigate('Chat', { screen: 'ChatDetail', params: { chatId: newChat.id, character: item } });
               } catch (e) {
                 Alert.alert('Error', 'Failed to start chat');

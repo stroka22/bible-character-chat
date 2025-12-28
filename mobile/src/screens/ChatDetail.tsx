@@ -54,9 +54,29 @@ export default function ChatDetail() {
             setStudyTitle(titleMatch[1].trim());
           }
           
-          // Get lesson index from title or lesson metadata
-          const lessonMatch = meta.title?.match(/Lesson (\d+)/i);
-          const idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
+          // Get lesson index from database (more reliable than parsing title)
+          let idx = 0;
+          if (meta.lesson_id) {
+            try {
+              const { data: lessonData } = await (await import('../lib/supabase')).supabase
+                .from('bible_study_lessons')
+                .select('order_index')
+                .eq('id', meta.lesson_id)
+                .maybeSingle();
+              if (lessonData?.order_index !== undefined) {
+                idx = lessonData.order_index;
+                console.log('[ChatDetail] Got lesson order_index from DB:', idx);
+              }
+            } catch (e) {
+              console.warn('[ChatDetail] Failed to fetch lesson order_index:', e);
+            }
+          }
+          // Fallback: parse from title if DB lookup failed
+          if (idx === 0 && !meta.lesson_id) {
+            const lessonMatch = meta.title?.match(/Lesson (\d+)/i);
+            idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
+            console.log('[ChatDetail] Parsed lesson index from title:', idx);
+          }
           setLessonIndex(idx);
           
           // Check for existing progress - first from chat, then search for any progress
