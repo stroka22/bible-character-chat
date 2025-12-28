@@ -29,13 +29,13 @@ export default function MyWalk() {
   const [allCharacters, setAllCharacters] = React.useState<any[]>([]);
   const [loadingCharacters, setLoadingCharacters] = React.useState(false);
 
-  // Separate chats by type (exclude study chats - those are shown in Studies tab)
+  // Separate chats by type (only show saved/favorited items, exclude study chats - those are shown in Studies tab)
   const regularChats = React.useMemo(() => 
-    allChats.filter(c => !c.study_id && c.conversation_type !== 'roundtable'), 
+    allChats.filter(c => c.is_favorite && !c.study_id && c.conversation_type !== 'roundtable'), 
     [allChats]
   );
   const roundtables = React.useMemo(() => 
-    allChats.filter(c => c.conversation_type === 'roundtable'), 
+    allChats.filter(c => c.is_favorite && c.conversation_type === 'roundtable'), 
     [allChats]
   );
 
@@ -292,7 +292,15 @@ export default function MyWalk() {
         contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 0, paddingTop: 4 }}
         renderItem={({ item }) => (
           <TouchableOpacity 
-            onPress={() => nav.navigate('Chat', { preselectedCharacterId: item.id })} 
+            onPress={async () => {
+              // Start a new chat with this character
+              try {
+                const newChat = await chat.createChat(user!.id, item.id, `Chat with ${item.name}`);
+                nav.navigate('Chat', { screen: 'ChatDetail', params: { chatId: newChat.id, character: item } });
+              } catch (e) {
+                Alert.alert('Error', 'Failed to start chat');
+              }
+            }} 
             onLongPress={() => {
               Alert.alert(
                 'Remove Favorite',

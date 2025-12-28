@@ -47,11 +47,16 @@ function BrandHeaderTitle() {
 function ChatStackScreen() {
   return (
     <ChatStack.Navigator>
-      <ChatStack.Screen name="ChatNew" component={ChatNew} options={{
+      <ChatStack.Screen name="ChatNew" component={ChatNew} options={({ navigation }) => ({
         headerShown: true,
         headerTitleAlign: 'center',
         headerTitle: () => <BrandHeaderTitle />,
-      }} />
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => navigation.navigate('Home')} style={{ paddingHorizontal: 8 }}>
+            <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Home'}</Text>
+          </TouchableOpacity>
+        ),
+      })} />
       <ChatStack.Screen name="ChatDetail" component={ChatDetail} options={{
         headerShown: true,
         headerTitleAlign: 'center',

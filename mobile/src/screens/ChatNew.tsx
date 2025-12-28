@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList, Image, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
@@ -28,18 +28,20 @@ export default function ChatNew() {
   const [siteSettings, setSiteSettings] = React.useState<{ defaultFeaturedCharacterId: string | null; enforceAdminDefault: boolean }>({ defaultFeaturedCharacterId: null, enforceAdminDefault: false });
   // Categories row removed for clarity and speed
 
-  // Load favorites set once and whenever user changes
-  React.useEffect(() => {
-    let mounted = true;
-    (async () => {
-      if (!user) { setFavIds(new Set()); return; }
-      try {
-        const favs = await getFavoriteCharacterIds(user.id);
-        if (mounted) setFavIds(favs);
-      } catch {}
-    })();
-    return () => { mounted = false; };
-  }, [user]);
+  // Load favorites when screen comes into focus (syncs with My Walk changes)
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      (async () => {
+        if (!user) { setFavIds(new Set()); return; }
+        try {
+          const favs = await getFavoriteCharacterIds(user.id);
+          if (mounted) setFavIds(favs);
+        } catch {}
+      })();
+      return () => { mounted = false; };
+    }, [user])
+  );
 
   // Load site settings (featured character + enforcement)
   React.useEffect(() => {

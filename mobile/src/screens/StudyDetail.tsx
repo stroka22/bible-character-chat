@@ -186,12 +186,22 @@ export default function StudyDetail({ route, navigation }: any) {
         const existingChats = await chat.getChatsByProgress(currentProgressId);
         const lessonChat = existingChats.find((c: any) => c.lesson_id === lesson.id);
         if (lessonChat) {
-          // Resume existing chat
+          // Resume existing chat - pass character for avatar display
+          const targetCharacterId = lesson.character_id || studyMeta?.character_id || null;
+          let char = guide;
+          if (targetCharacterId && (!char || char.id !== targetCharacterId)) {
+            const { data: c } = await supabase
+              .from('characters')
+              .select('id,name,persona_prompt,avatar_url')
+              .eq('id', targetCharacterId)
+              .maybeSingle();
+            if (c) char = c as any;
+          }
           navigation.navigate('MainTabs', {
             screen: 'Chat',
             params: {
               screen: 'ChatDetail',
-              params: { chatId: lessonChat.id }
+              params: { chatId: lessonChat.id, character: char }
             }
           } as any);
           setStarting(false);
