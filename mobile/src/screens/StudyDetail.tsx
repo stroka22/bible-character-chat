@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, Alert, Share } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
@@ -25,6 +25,7 @@ type Lesson = {
 export default function StudyDetail({ route, navigation }: any) {
   const { studyId, title, progressId: routeProgressId } = route.params as { studyId: string; title: string; progressId?: string };
   const { user } = useAuth();
+  const isFocused = useIsFocused();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
@@ -116,11 +117,13 @@ export default function StudyDetail({ route, navigation }: any) {
     setLoading(false);
   };
 
-  useFocusEffect(
-    useCallback(() => {
+  // Always reload data when screen comes into focus (e.g., after marking lesson complete)
+  useEffect(() => {
+    if (isFocused) {
+      console.log('[StudyDetail] Screen focused, reloading data...');
       loadData();
-    }, [studyId, user?.id, routeProgressId])
-  );
+    }
+  }, [isFocused]);
 
   const completedLessons = progress?.completed_lessons || [];
   const progressPercent = getProgressPercent(completedLessons, lessons.length);

@@ -48,6 +48,10 @@ export async function getStudyProgress(userId: string, studyId: string, progress
       console.warn('[studyProgress] getStudyProgress error:', error);
       return null;
     }
+    console.log('[studyProgress] getStudyProgress result:', { 
+      progressId: data?.id, 
+      completed_lessons: data?.completed_lessons 
+    });
     return data as StudyProgress | null;
   } catch (e) {
     console.warn('[studyProgress] getStudyProgress exception:', e);
@@ -80,6 +84,7 @@ export async function saveStudyProgress(opts: {
     }
     if (completedLessons !== undefined) {
       payload.completed_lessons = completedLessons;
+      console.log('[studyProgress] Setting completed_lessons:', completedLessons);
     }
     if (notes !== undefined) {
       payload.notes = notes;
