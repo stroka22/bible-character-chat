@@ -875,7 +875,7 @@ const SimpleChatWithHistory = () => {
                 _jsx("div", { 
                     className: "relative z-10 flex items-start justify-center pb-8", style: { paddingTop: headerPad }, 
                     children: _jsx("div", { 
-                        className: "chat-container w-full max-w-6xl h-[calc(100svh-7rem)] md:h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", 
+                        className: "chat-container w-full max-w-6xl h-[calc(100dvh-7rem)] md:h-[88vh] mx-4 md:mx-6 bg-white/5 backdrop-blur-md border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col", 
                         children: loadingConversation ? (
                             /* Simple loading state */
                             _jsx("div", {

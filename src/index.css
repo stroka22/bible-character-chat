@@ -58,3 +58,25 @@
   .animate-float-slow      { animation: float-slow 9s ease-in-out infinite; }
   .animate-ray-pulse       { animation: ray-pulse 5s ease-in-out infinite; }
 }
+
+/* ---------------------------------------------------------------------
+  Mobile chat scrolling fixes
+------------------------------------------------------------------------ */
+
+.chat-messages {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.chat-container {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure messages don't overflow their bubbles */
+@layer components {
+  .message-bubble {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+}
