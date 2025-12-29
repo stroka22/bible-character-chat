@@ -525,9 +525,15 @@ export default function ChatDetail() {
                   });
                   
                   // Build lesson prompt
-                  const lessonPromptsText = Array.isArray(lessonData?.prompts) 
-                    ? lessonData.prompts.map((p: any) => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n')
-                    : '';
+                  // Handle prompts as array, JSON string, or plain text
+                  let lessonPromptsText = '';
+                  if (lessonData?.prompts) {
+                    if (Array.isArray(lessonData.prompts)) {
+                      lessonPromptsText = lessonData.prompts.map((p: any) => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n');
+                    } else if (typeof lessonData.prompts === 'string') {
+                      lessonPromptsText = lessonData.prompts;
+                    }
+                  }
                   const studyInstructions = studyData?.character_instructions || '';
                   
                   // Lesson prompt comes FIRST - this is the primary instruction
