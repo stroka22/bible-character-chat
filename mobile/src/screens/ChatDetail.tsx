@@ -519,13 +519,14 @@ export default function ChatDetail() {
               }}
               style={{ 
                 height: 44, 
-                backgroundColor: theme.colors.accent,
+                backgroundColor: theme.colors.primary,
                 borderRadius: 8, 
                 alignItems: 'center', 
                 justifyContent: 'center',
+                paddingHorizontal: 16,
               }}
             >
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
+              <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 14 }} numberOfLines={1}>
                 Start Lesson 1: {nextLesson.title}
               </Text>
             </TouchableOpacity>
