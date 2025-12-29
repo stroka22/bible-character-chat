@@ -545,14 +545,14 @@ export default function ChatDetail() {
                   // Add system message
                   await chat.addMessage(newChat.id, lessonPrompt, 'system');
                   
-                  // Generate intro message
+                  // Generate intro message following the study prompt structure
                   try {
                     const intro = await generateCharacterResponse(
                       charInfo?.name || 'Guide',
                       charInfo?.persona_prompt || '',
                       [
                         { role: 'system', content: lessonPrompt },
-                        { role: 'user', content: 'Begin this lesson with a warm greeting and introduce what we will be studying.' }
+                        { role: 'user', content: 'Begin this Bible study session now. IMPORTANT: Follow the MANDATORY STRUCTURE in the Study Prompt exactly - if it says to open with prayer, you MUST start with a prayer. Do not skip or reorder any required steps.' }
                       ]
                     );
                     if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
