@@ -74,31 +74,44 @@ export default function ChatDetail() {
               }
               
               // Check if this is the Introduction lesson:
-              // Only treat as Introduction if order_index is 0 AND there's a next lesson
-              // This way single-lesson studies or studies without intro still work
-              if (idx === 0 && meta.study_id) {
-                const { data: nextLessonData } = await supabase
+              // It's Introduction if: this is the FIRST lesson AND there's a next lesson
+              if (meta.study_id) {
+                // Check if this is the first lesson (lowest order_index)
+                const { data: firstLesson } = await supabase
                   .from('bible_study_lessons')
-                  .select('id, title, order_index, character_id')
+                  .select('order_index')
                   .eq('study_id', meta.study_id)
-                  .gt('order_index', idx)
                   .order('order_index', { ascending: true })
                   .limit(1)
                   .maybeSingle();
-                  
-                if (nextLessonData) {
-                  // There IS a next lesson, so this is Introduction
-                  setIsIntroduction(true);
-                  setNextLesson(nextLessonData);
-                  console.log('[ChatDetail] This is Introduction, next lesson:', nextLessonData);
+                
+                const isFirstLesson = firstLesson?.order_index === idx;
+                
+                // Get next lesson if this is the first one
+                if (isFirstLesson) {
+                  const { data: nextLessonData } = await supabase
+                    .from('bible_study_lessons')
+                    .select('id, title, order_index, character_id')
+                    .eq('study_id', meta.study_id)
+                    .gt('order_index', idx)
+                    .order('order_index', { ascending: true })
+                    .limit(1)
+                    .maybeSingle();
+                    
+                  if (nextLessonData) {
+                    // There IS a next lesson, so this is Introduction
+                    setIsIntroduction(true);
+                    setNextLesson(nextLessonData);
+                    console.log('[ChatDetail] This is Introduction, next lesson:', nextLessonData);
+                  } else {
+                    // No next lesson, this is the only lesson
+                    setIsIntroduction(false);
+                    console.log('[ChatDetail] No next lesson found, treating as regular lesson');
+                  }
                 } else {
-                  // No next lesson, this is the only/first real lesson
+                  // Not the first lesson, definitely not Introduction
                   setIsIntroduction(false);
-                  console.log('[ChatDetail] No next lesson found, treating as regular lesson');
                 }
-              } else {
-                // order_index > 0, definitely not Introduction
-                setIsIntroduction(false);
               }
             } catch (e) {
               console.warn('[ChatDetail] Failed to fetch lesson order_index:', e);
