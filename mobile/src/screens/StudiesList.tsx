@@ -4,6 +4,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getStudyProgress, getProgressPercent, StudyProgress } from '../lib/studyProgress';
+import { getOwnerSlug } from '../lib/tier';
 import { theme } from '../theme';
 
 type Study = {
@@ -29,25 +30,32 @@ export default function StudiesList() {
   const loadStudies = async () => {
     setLoading(true);
     try {
-      // Fetch studies
+      // Get user's organization
+      const userSlug = user?.id ? await getOwnerSlug(user.id) : 'default';
+      console.log('[StudiesList] Loading studies for owner_slug:', userSlug);
+      
+      // Fetch studies for user's organization (or default)
       const { data: studiesData } = await supabase
         ?.from('bible_studies')
         .select('id,title,owner_slug,visibility,cover_image_url')
         .eq('visibility', 'public')
+        .or(`owner_slug.eq.${userSlug},owner_slug.is.null`)
         .order('created_at', { ascending: false }) as any;
       const rows: Study[] = studiesData || [];
+      console.log('[StudiesList] Found', rows.length, 'studies');
       
-      // Deduplicate by normalized title
-      const seen = new Set<string>();
-      const unique: Study[] = [];
+      // Deduplicate by normalized title (prefer user's org over null)
+      const seen = new Map<string, Study>();
       for (const s of rows) {
         const key = (s.title || '').trim().toLowerCase();
         if (!key) continue;
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(s);
+        const existing = seen.get(key);
+        // Prefer the one matching user's org
+        if (!existing || (s.owner_slug === userSlug && existing.owner_slug !== userSlug)) {
+          seen.set(key, s);
         }
       }
+      const unique: Study[] = Array.from(seen.values());
       
       // Fetch lesson counts for each study
       const studyIds = unique.map(s => s.id);
