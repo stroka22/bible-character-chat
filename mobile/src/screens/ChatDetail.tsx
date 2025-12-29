@@ -427,6 +427,13 @@ export default function ChatDetail() {
             </View>
           )}
         />
+        {/* DEBUG: Show isIntroduction state */}
+        {studyId && (
+          <Text style={{ color: theme.colors.muted, fontSize: 10, textAlign: 'center', paddingBottom: 4 }}>
+            isIntro: {isIntroduction ? 'YES' : 'NO'} | lessonIdx: {lessonIndex} | nextLesson: {nextLesson ? nextLesson.title : 'none'}
+          </Text>
+        )}
+        
         {/* Save/Complete buttons for Bible Studies (not for Introduction) */}
         {studyId && !isIntroduction && (
           <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 6, gap: 6 }}>
