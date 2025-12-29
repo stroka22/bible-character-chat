@@ -378,11 +378,6 @@ export default function StudyDetail({ route, navigation }: any) {
       <View style={{ padding: 16, flex: 1 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8 }}>{title}</Text>
         
-        {/* DEBUG: Show study ID - remove after testing */}
-        <Text style={{ color: theme.colors.muted, fontSize: 10, marginBottom: 4 }}>
-          ID: {studyId} {studyId === 'a52fe2cf-a931-4488-b377-7ab4d2259ec6' ? '✓' : '✗ WRONG'}
-        </Text>
-        
         {/* Progress Bar */}
         {user && lessons.length > 0 && (
           <View style={{ marginBottom: 12 }}>
