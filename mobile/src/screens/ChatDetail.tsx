@@ -443,7 +443,7 @@ export default function ChatDetail() {
         {/* DEBUG: Show isIntroduction state */}
         {studyId && (
           <Text style={{ color: theme.colors.muted, fontSize: 10, textAlign: 'center', paddingBottom: 4 }}>
-            isIntro: {isIntroduction ? 'YES' : 'NO'} | lessonIdx: {lessonIndex} | nextLesson: {nextLesson ? nextLesson.title : 'none'}
+            isIntro: {isIntroduction ? 'YES' : 'NO'} | idx: {lessonIndex} | lessonId: {lessonId || 'NONE'} | next: {nextLesson ? nextLesson.title : 'none'}
           </Text>
         )}
         
