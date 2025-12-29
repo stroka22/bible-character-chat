@@ -252,16 +252,22 @@ export default function StudyDetail({ route, navigation }: any) {
         ? lesson.prompts.map(p => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n')
         : '';
       
-      // Re-fetch study instructions to ensure we have the latest (avoid race conditions)
-      let studyInstructions = studyMeta?.character_instructions || '';
-      if (!studyInstructions) {
-        const { data: freshStudy } = await supabase
+      // Always fetch study instructions fresh to ensure we have the latest
+      let studyInstructions = '';
+      try {
+        const { data: freshStudy, error: studyError } = await supabase
           .from('bible_studies')
           .select('character_instructions')
           .eq('id', studyId)
           .maybeSingle();
         studyInstructions = freshStudy?.character_instructions || '';
-        console.log('[StudyDetail] Re-fetched study instructions, length:', studyInstructions.length);
+        console.log('[StudyDetail] Fetched study instructions:', {
+          length: studyInstructions.length,
+          preview: studyInstructions.substring(0, 100),
+          error: studyError?.message
+        });
+      } catch (e) {
+        console.error('[StudyDetail] Failed to fetch study instructions:', e);
       }
       
       // Add lesson context as system message
