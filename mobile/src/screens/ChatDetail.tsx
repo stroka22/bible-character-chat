@@ -34,6 +34,8 @@ export default function ChatDetail() {
   const [lessonIndex, setLessonIndex] = React.useState<number>(0);
   const [isLessonComplete, setIsLessonComplete] = React.useState(false);
   const [markingComplete, setMarkingComplete] = React.useState(false);
+  const [isIntroduction, setIsIntroduction] = React.useState(false);
+  const [nextLesson, setNextLesson] = React.useState<{ id: string; title: string; order_index: number; character_id?: string | null } | null>(null);
 
   React.useEffect(() => {
     (async () => {
@@ -56,16 +58,37 @@ export default function ChatDetail() {
           
           // Get lesson index from database (more reliable than parsing title)
           let idx = 0;
+          let lessonTitle = '';
           if (meta.lesson_id) {
             try {
-              const { data: lessonData } = await (await import('../lib/supabase')).supabase
+              const { supabase } = await import('../lib/supabase');
+              const { data: lessonData } = await supabase
                 .from('bible_study_lessons')
-                .select('order_index')
+                .select('order_index, title')
                 .eq('id', meta.lesson_id)
                 .maybeSingle();
               if (lessonData?.order_index !== undefined) {
                 idx = lessonData.order_index;
-                console.log('[ChatDetail] Got lesson order_index from DB:', idx);
+                lessonTitle = lessonData.title || '';
+                console.log('[ChatDetail] Got lesson order_index from DB:', idx, 'title:', lessonTitle);
+              }
+              
+              // Check if this is the Introduction lesson (order_index 0 and title contains "Introduction")
+              const isIntro = idx === 0 && lessonTitle.toLowerCase().includes('introduction');
+              setIsIntroduction(isIntro);
+              
+              // If Introduction, fetch the next lesson (Lesson 1)
+              if (isIntro && meta.study_id) {
+                const { data: nextLessonData } = await supabase
+                  .from('bible_study_lessons')
+                  .select('id, title, order_index, character_id')
+                  .eq('study_id', meta.study_id)
+                  .eq('order_index', 1)
+                  .maybeSingle();
+                if (nextLessonData) {
+                  setNextLesson(nextLessonData);
+                  console.log('[ChatDetail] Next lesson:', nextLessonData);
+                }
               }
             } catch (e) {
               console.warn('[ChatDetail] Failed to fetch lesson order_index:', e);
@@ -435,6 +458,67 @@ export default function ChatDetail() {
                   {isLessonComplete ? '✓ Lesson Complete' : 'Lesson Complete'}
                 </Text>
               )}
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        {/* Start Next Lesson button for Introduction */}
+        {isIntroduction && nextLesson && (
+          <View style={{ paddingHorizontal: 12, paddingBottom: 6 }}>
+            <TouchableOpacity 
+              onPress={async () => {
+                // Navigate to Lesson 1
+                try {
+                  const { supabase } = await import('../lib/supabase');
+                  
+                  // Get study meta for character
+                  const { data: studyData } = await supabase
+                    .from('bible_studies')
+                    .select('character_id')
+                    .eq('id', studyId)
+                    .maybeSingle();
+                  
+                  // Get or use existing progress
+                  const currentProgressId = progressId;
+                  
+                  // Get character info
+                  let charInfo = character;
+                  const charId = nextLesson.character_id || studyData?.character_id;
+                  if (charId && (!charInfo || charInfo.id !== charId)) {
+                    const { data: c } = await supabase
+                      .from('characters')
+                      .select('id,name,avatar_url,persona_prompt')
+                      .eq('id', charId)
+                      .maybeSingle();
+                    if (c) charInfo = c;
+                  }
+                  
+                  // Create chat for lesson 1
+                  const chatTitle = `${studyTitle} - Lesson ${nextLesson.order_index + 1}: ${nextLesson.title}`;
+                  const newChat = await chat.createChat(user!.id, charInfo?.id || '', chatTitle, {
+                    studyId: studyId!,
+                    lessonId: nextLesson.id,
+                    progressId: currentProgressId || undefined
+                  });
+                  
+                  // Navigate to the new chat
+                  navigation.replace('ChatDetail', { chatId: newChat.id, character: charInfo });
+                } catch (e) {
+                  console.warn('[ChatDetail] Error starting next lesson:', e);
+                  Alert.alert('Error', 'Failed to start lesson');
+                }
+              }}
+              style={{ 
+                height: 44, 
+                backgroundColor: theme.colors.accent,
+                borderRadius: 8, 
+                alignItems: 'center', 
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>
+                Start Lesson 1: {nextLesson.title}
+              </Text>
             </TouchableOpacity>
           </View>
         )}
