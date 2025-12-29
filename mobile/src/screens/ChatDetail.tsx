@@ -415,8 +415,8 @@ export default function ChatDetail() {
             </View>
           )}
         />
-        {/* Save/Complete buttons for Bible Studies */}
-        {studyId && (
+        {/* Save/Complete buttons for Bible Studies (not for Introduction) */}
+        {studyId && !isIntroduction && (
           <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 6, gap: 6 }}>
             {/* Save Progress button */}
             <TouchableOpacity 
