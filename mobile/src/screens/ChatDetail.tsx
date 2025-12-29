@@ -74,14 +74,9 @@ export default function ChatDetail() {
               }
               
               // Check if this is the Introduction lesson:
-              // - order_index is 0 (first lesson), OR
-              // - title contains "introduction"
-              const isIntro = idx === 0 || lessonTitle.toLowerCase().includes('introduction');
-              console.log('[ChatDetail] Is Introduction?', isIntro, 'title:', lessonTitle, 'order_index:', idx);
-              setIsIntroduction(isIntro);
-              
-              // If Introduction, fetch the next lesson (the one after this)
-              if (isIntro && meta.study_id) {
+              // Only treat as Introduction if order_index is 0 AND there's a next lesson
+              // This way single-lesson studies or studies without intro still work
+              if (idx === 0 && meta.study_id) {
                 const { data: nextLessonData } = await supabase
                   .from('bible_study_lessons')
                   .select('id, title, order_index, character_id')
@@ -90,10 +85,20 @@ export default function ChatDetail() {
                   .order('order_index', { ascending: true })
                   .limit(1)
                   .maybeSingle();
+                  
                 if (nextLessonData) {
+                  // There IS a next lesson, so this is Introduction
+                  setIsIntroduction(true);
                   setNextLesson(nextLessonData);
-                  console.log('[ChatDetail] Next lesson:', nextLessonData);
+                  console.log('[ChatDetail] This is Introduction, next lesson:', nextLessonData);
+                } else {
+                  // No next lesson, this is the only/first real lesson
+                  setIsIntroduction(false);
+                  console.log('[ChatDetail] No next lesson found, treating as regular lesson');
                 }
+              } else {
+                // order_index > 0, definitely not Introduction
+                setIsIntroduction(false);
               }
             } catch (e) {
               console.warn('[ChatDetail] Failed to fetch lesson order_index:', e);
@@ -105,11 +110,7 @@ export default function ChatDetail() {
             idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
             console.log('[ChatDetail] Parsed lesson index from title:', idx);
             
-            // Also check for Introduction: first lesson (Lesson 1) or title contains "introduction"
-            if (idx === 0 || meta.title?.toLowerCase().includes('introduction')) {
-              console.log('[ChatDetail] Detected Introduction from fallback check');
-              setIsIntroduction(true);
-            }
+            // Don't set isIntroduction in fallback - we can't reliably detect without DB lookup
           }
           setLessonIndex(idx);
           
