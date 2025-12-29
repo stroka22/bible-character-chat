@@ -73,17 +73,20 @@ export default function ChatDetail() {
                 console.log('[ChatDetail] Got lesson order_index from DB:', idx, 'title:', lessonTitle);
               }
               
-              // Check if this is the Introduction lesson (order_index 0 and title contains "Introduction")
-              const isIntro = idx === 0 && lessonTitle.toLowerCase().includes('introduction');
+              // Check if this is the Introduction lesson (title contains "Introduction")
+              const isIntro = lessonTitle.toLowerCase().includes('introduction');
+              console.log('[ChatDetail] Is Introduction?', isIntro, 'title:', lessonTitle, 'order_index:', idx);
               setIsIntroduction(isIntro);
               
-              // If Introduction, fetch the next lesson (Lesson 1)
+              // If Introduction, fetch the next lesson (the one after this)
               if (isIntro && meta.study_id) {
                 const { data: nextLessonData } = await supabase
                   .from('bible_study_lessons')
                   .select('id, title, order_index, character_id')
                   .eq('study_id', meta.study_id)
-                  .eq('order_index', 1)
+                  .gt('order_index', idx)
+                  .order('order_index', { ascending: true })
+                  .limit(1)
                   .maybeSingle();
                 if (nextLessonData) {
                   setNextLesson(nextLessonData);
@@ -99,6 +102,12 @@ export default function ChatDetail() {
             const lessonMatch = meta.title?.match(/Lesson (\d+)/i);
             idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
             console.log('[ChatDetail] Parsed lesson index from title:', idx);
+            
+            // Also check for Introduction in chat title as fallback
+            if (meta.title?.toLowerCase().includes('introduction')) {
+              console.log('[ChatDetail] Detected Introduction from chat title');
+              setIsIntroduction(true);
+            }
           }
           setLessonIndex(idx);
           
