@@ -59,9 +59,11 @@ export default function ChatDetail() {
           // Get lesson index from database (more reliable than parsing title)
           let idx = 0;
           let lessonTitle = '';
+          const { supabase } = await import('../lib/supabase');
+          
           if (meta.lesson_id) {
+            // This chat is linked to a specific lesson
             try {
-              const { supabase } = await import('../lib/supabase');
               const { data: lessonData } = await supabase
                 .from('bible_study_lessons')
                 .select('order_index, title')
@@ -72,58 +74,33 @@ export default function ChatDetail() {
                 lessonTitle = lessonData.title || '';
                 console.log('[ChatDetail] Got lesson order_index from DB:', idx, 'title:', lessonTitle);
               }
-              
-              // Check if this is the Introduction lesson:
-              // It's Introduction if: this is the FIRST lesson AND there's a next lesson
-              if (meta.study_id) {
-                // Check if this is the first lesson (lowest order_index)
-                const { data: firstLesson } = await supabase
-                  .from('bible_study_lessons')
-                  .select('order_index')
-                  .eq('study_id', meta.study_id)
-                  .order('order_index', { ascending: true })
-                  .limit(1)
-                  .maybeSingle();
-                
-                const isFirstLesson = firstLesson?.order_index === idx;
-                
-                // Get next lesson if this is the first one
-                if (isFirstLesson) {
-                  const { data: nextLessonData } = await supabase
-                    .from('bible_study_lessons')
-                    .select('id, title, order_index, character_id')
-                    .eq('study_id', meta.study_id)
-                    .gt('order_index', idx)
-                    .order('order_index', { ascending: true })
-                    .limit(1)
-                    .maybeSingle();
-                    
-                  if (nextLessonData) {
-                    // There IS a next lesson, so this is Introduction
-                    setIsIntroduction(true);
-                    setNextLesson(nextLessonData);
-                    console.log('[ChatDetail] This is Introduction, next lesson:', nextLessonData);
-                  } else {
-                    // No next lesson, this is the only lesson
-                    setIsIntroduction(false);
-                    console.log('[ChatDetail] No next lesson found, treating as regular lesson');
-                  }
-                } else {
-                  // Not the first lesson, definitely not Introduction
-                  setIsIntroduction(false);
-                }
-              }
+              // Not introduction - it's a specific lesson
+              setIsIntroduction(false);
             } catch (e) {
               console.warn('[ChatDetail] Failed to fetch lesson order_index:', e);
             }
-          }
-          // Fallback: parse from title if DB lookup failed
-          if (idx === 0 && !meta.lesson_id) {
-            const lessonMatch = meta.title?.match(/Lesson (\d+)/i);
-            idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
-            console.log('[ChatDetail] Parsed lesson index from title:', idx);
+          } else if (meta.study_id) {
+            // No lesson_id = this is the Introduction/overview chat
+            console.log('[ChatDetail] No lesson_id - this is Introduction');
             
-            // Don't set isIntroduction in fallback - we can't reliably detect without DB lookup
+            // Get the first lesson to show "Start Lesson 1" button
+            try {
+              const { data: firstLessonData } = await supabase
+                .from('bible_study_lessons')
+                .select('id, title, order_index, character_id')
+                .eq('study_id', meta.study_id)
+                .order('order_index', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+                
+              if (firstLessonData) {
+                setIsIntroduction(true);
+                setNextLesson(firstLessonData);
+                console.log('[ChatDetail] First lesson:', firstLessonData);
+              }
+            } catch (e) {
+              console.warn('[ChatDetail] Failed to fetch first lesson:', e);
+            }
           }
           setLessonIndex(idx);
           
