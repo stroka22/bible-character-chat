@@ -530,16 +530,16 @@ export default function ChatDetail() {
                     : '';
                   const studyInstructions = studyData?.character_instructions || '';
                   
+                  // Lesson prompt comes FIRST - this is the primary instruction
                   const lessonPrompt = [
-                    studyInstructions ? `=== STUDY PROMPT ===\n${studyInstructions}\n=== END STUDY PROMPT ===` : '',
-                    `You are guiding a Bible study lesson.`,
+                    lessonPromptsText ? `=== YOUR INSTRUCTIONS ===\n${lessonPromptsText}\n=== END INSTRUCTIONS ===` : '',
+                    studyInstructions ? `=== STUDY CONTEXT ===\n${studyInstructions}\n=== END STUDY CONTEXT ===` : '',
                     `Study: ${studyTitle}`,
                     `Lesson: ${lessonData?.title || nextLesson.title}`,
                     Array.isArray(lessonData?.scripture_refs) && lessonData.scripture_refs.length > 0 
                       ? `Scripture: ${lessonData.scripture_refs.join(', ')}` 
                       : '',
-                    lessonData?.summary ? `Summary: ${lessonData.summary}` : '',
-                    lessonPromptsText ? `Lesson Instructions:\n${lessonPromptsText}` : ''
+                    lessonData?.summary ? `Summary: ${lessonData.summary}` : ''
                   ].filter(Boolean).join('\n\n');
                   
                   // Add system message
