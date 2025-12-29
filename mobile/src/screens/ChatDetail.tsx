@@ -73,8 +73,10 @@ export default function ChatDetail() {
                 console.log('[ChatDetail] Got lesson order_index from DB:', idx, 'title:', lessonTitle);
               }
               
-              // Check if this is the Introduction lesson (title contains "Introduction")
-              const isIntro = lessonTitle.toLowerCase().includes('introduction');
+              // Check if this is the Introduction lesson:
+              // - order_index is 0 (first lesson), OR
+              // - title contains "introduction"
+              const isIntro = idx === 0 || lessonTitle.toLowerCase().includes('introduction');
               console.log('[ChatDetail] Is Introduction?', isIntro, 'title:', lessonTitle, 'order_index:', idx);
               setIsIntroduction(isIntro);
               
@@ -103,9 +105,9 @@ export default function ChatDetail() {
             idx = lessonMatch ? parseInt(lessonMatch[1], 10) - 1 : 0;
             console.log('[ChatDetail] Parsed lesson index from title:', idx);
             
-            // Also check for Introduction in chat title as fallback
-            if (meta.title?.toLowerCase().includes('introduction')) {
-              console.log('[ChatDetail] Detected Introduction from chat title');
+            // Also check for Introduction: first lesson (Lesson 1) or title contains "introduction"
+            if (idx === 0 || meta.title?.toLowerCase().includes('introduction')) {
+              console.log('[ChatDetail] Detected Introduction from fallback check');
               setIsIntroduction(true);
             }
           }
