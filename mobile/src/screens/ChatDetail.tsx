@@ -464,19 +464,33 @@ export default function ChatDetail() {
           </View>
         )}
         
-        {/* Start Next Lesson button for Introduction */}
+        <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: isIntroduction ? 6 : 12 + Math.max(insets.bottom, 6) }}>
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Type a message…"
+            placeholderTextColor={theme.colors.muted}
+            style={{ flex: 1, height: 44, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12 }}
+            editable={!sending}
+          />
+          <TouchableOpacity disabled={sending} onPress={onSend} style={{ height: 44, paddingHorizontal: 16, backgroundColor: theme.colors.primary, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}>
+            {sending ? <ActivityIndicator color={theme.colors.primaryText} /> : <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Send</Text>}
+          </TouchableOpacity>
+        </View>
+        
+        {/* Start Next Lesson button for Introduction - below input */}
         {isIntroduction && nextLesson && (
-          <View style={{ paddingHorizontal: 12, paddingBottom: 6 }}>
+          <View style={{ paddingHorizontal: 12, paddingBottom: 12 + Math.max(insets.bottom, 6) }}>
             <TouchableOpacity 
               onPress={async () => {
                 // Navigate to Lesson 1
                 try {
                   const { supabase } = await import('../lib/supabase');
                   
-                  // Get study meta for character
+                  // Get study meta for character and study instructions
                   const { data: studyData } = await supabase
                     .from('bible_studies')
-                    .select('character_id')
+                    .select('character_id, character_instructions')
                     .eq('id', studyId)
                     .maybeSingle();
                   
@@ -495,13 +509,56 @@ export default function ChatDetail() {
                     if (c) charInfo = c;
                   }
                   
+                  // Get lesson details for prompts
+                  const { data: lessonData } = await supabase
+                    .from('bible_study_lessons')
+                    .select('title, summary, scripture_refs, prompts')
+                    .eq('id', nextLesson.id)
+                    .maybeSingle();
+                  
                   // Create chat for lesson 1
-                  const chatTitle = `${studyTitle} - Lesson ${nextLesson.order_index + 1}: ${nextLesson.title}`;
+                  const chatTitle = `${studyTitle} - Lesson ${nextLesson.order_index}: ${nextLesson.title}`;
                   const newChat = await chat.createChat(user!.id, charInfo?.id || '', chatTitle, {
                     studyId: studyId!,
                     lessonId: nextLesson.id,
                     progressId: currentProgressId || undefined
                   });
+                  
+                  // Build lesson prompt
+                  const lessonPromptsText = Array.isArray(lessonData?.prompts) 
+                    ? lessonData.prompts.map((p: any) => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n')
+                    : '';
+                  const studyInstructions = studyData?.character_instructions || '';
+                  
+                  const lessonPrompt = [
+                    studyInstructions ? `=== STUDY PROMPT ===\n${studyInstructions}\n=== END STUDY PROMPT ===` : '',
+                    `You are guiding a Bible study lesson.`,
+                    `Study: ${studyTitle}`,
+                    `Lesson: ${lessonData?.title || nextLesson.title}`,
+                    Array.isArray(lessonData?.scripture_refs) && lessonData.scripture_refs.length > 0 
+                      ? `Scripture: ${lessonData.scripture_refs.join(', ')}` 
+                      : '',
+                    lessonData?.summary ? `Summary: ${lessonData.summary}` : '',
+                    lessonPromptsText ? `Lesson Instructions:\n${lessonPromptsText}` : ''
+                  ].filter(Boolean).join('\n\n');
+                  
+                  // Add system message
+                  await chat.addMessage(newChat.id, lessonPrompt, 'system');
+                  
+                  // Generate intro message
+                  try {
+                    const intro = await generateCharacterResponse(
+                      charInfo?.name || 'Guide',
+                      charInfo?.persona_prompt || '',
+                      [
+                        { role: 'system', content: lessonPrompt },
+                        { role: 'user', content: 'Begin this lesson with a warm greeting and introduce what we will be studying.' }
+                      ]
+                    );
+                    if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
+                  } catch (e) {
+                    console.warn('[ChatDetail] Failed to generate intro:', e);
+                  }
                   
                   // Navigate to the new chat
                   navigation.replace('ChatDetail', { chatId: newChat.id, character: charInfo });
@@ -525,20 +582,6 @@ export default function ChatDetail() {
             </TouchableOpacity>
           </View>
         )}
-        
-        <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: 12 + Math.max(insets.bottom, 6) }}>
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            placeholder="Type a message…"
-            placeholderTextColor={theme.colors.muted}
-            style={{ flex: 1, height: 44, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12 }}
-            editable={!sending}
-          />
-          <TouchableOpacity disabled={sending} onPress={onSend} style={{ height: 44, paddingHorizontal: 16, backgroundColor: theme.colors.primary, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}>
-            {sending ? <ActivityIndicator color={theme.colors.primaryText} /> : <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Send</Text>}
-          </TouchableOpacity>
-        </View>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
