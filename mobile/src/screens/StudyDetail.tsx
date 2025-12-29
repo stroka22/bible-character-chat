@@ -24,6 +24,7 @@ type Lesson = {
 
 export default function StudyDetail({ route, navigation }: any) {
   const { studyId, title, progressId: routeProgressId } = route.params as { studyId: string; title: string; progressId?: string };
+  console.log('[StudyDetail] Loading study:', { studyId, title, expectedId: 'a52fe2cf-a931-4488-b377-7ab4d2259ec6' });
   const { user } = useAuth();
   const isFocused = useIsFocused();
   const [lessons, setLessons] = useState<Lesson[]>([]);
