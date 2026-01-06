@@ -6,6 +6,7 @@ import { characterRepository } from '../repositories/characterRepository';
 import { chatRepository } from '../repositories/chatRepository';
 import { usePremium } from '../hooks/usePremium';
 import { useAuth } from '../contexts/AuthContext';
+import { getSettings as getTierSettings } from '../services/tierSettingsService';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
 import FloatingHomeButton from '../components/layout/FloatingHomeButton';
@@ -15,6 +16,7 @@ const StudyDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [premiumStudyIds, setPremiumStudyIds] = useState([]);
   
   // Get progressId from query params (from My Walk page)
   const progressIdFromUrl = useMemo(() => {
@@ -32,6 +34,26 @@ const StudyDetails = () => {
   const [progress, setProgress] = useState(null);
   const [togglingLesson, setTogglingLesson] = useState(null);
   const [studyChats, setStudyChats] = useState([]);
+  
+  // Helper to check if study requires premium
+  const isStudyPremium = (s) => {
+    if (!s) return false;
+    if (s.is_premium) return true;
+    if (premiumStudyIds.includes(s.id)) return true;
+    return false;
+  };
+
+  // Load premium study IDs from tier settings
+  useEffect(() => {
+    (async () => {
+      try {
+        const settings = await getTierSettings();
+        if (Array.isArray(settings?.premiumStudyIds)) {
+          setPremiumStudyIds(settings.premiumStudyIds);
+        }
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchStudyDetails = async () => {
@@ -49,7 +71,7 @@ const StudyDetails = () => {
         setStudy(studyData);
         
         // Check premium access
-        if (studyData.is_premium && !isPremium) {
+        if (isStudyPremium(studyData) && !isPremium) {
           // Still show details but will gate lesson access
         }
         
@@ -298,7 +320,7 @@ const StudyDetails = () => {
                       className: "bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/15 mb-6",
                       children: [
                         /* Premium badge */
-                        study.is_premium && (
+                        isStudyPremium(study) && (
                           _jsx("div", {
                             className: "mb-4",
                             children: _jsx("span", {
@@ -329,7 +351,7 @@ const StudyDetails = () => {
                           _jsx(Link, {
                             to: `/studies/${id}/lesson/${nextLessonIndex}${progress?.id ? `?progress=${progress.id}` : ''}`,
                             onClick: (e) => {
-                              if (study.is_premium && !isPremium) {
+                              if (isStudyPremium(study) && !isPremium) {
                                 e.preventDefault();
                                 setShowUpgrade(true);
                               }
@@ -341,7 +363,7 @@ const StudyDetails = () => {
                           _jsx(Link, {
                             to: `/studies/${id}/lesson/0`,
                             onClick: (e) => {
-                              if (study.is_premium && !isPremium) {
+                              if (isStudyPremium(study) && !isPremium) {
                                 e.preventDefault();
                                 setShowUpgrade(true);
                               }
@@ -412,14 +434,14 @@ const StudyDetails = () => {
                               _jsx(Link, {
                                 to: `/studies/${id}/lesson/${lesson.order_index}${progress?.id ? `?progress=${progress.id}` : ''}`,
                                 onClick: (e) => {
-                                  if (study.is_premium && !isPremium) {
+                                  if (isStudyPremium(study) && !isPremium) {
                                     e.preventDefault();
                                     handleLessonClick(lesson.order_index);
                                   }
                                 },
                                 className: `
                                   block p-4 rounded-lg transition-all
-                                  ${study.is_premium && !isPremium
+                                  ${isStudyPremium(study) && !isPremium
                                     ? 'bg-gray-700/30 border border-gray-600/30 cursor-not-allowed'
                                     : 'bg-blue-800/30 border border-blue-700/30 hover:bg-blue-700/40'}
                                 `,
@@ -429,7 +451,7 @@ const StudyDetails = () => {
                                       className: "flex justify-between items-center mb-2",
                                       children: [
                                         _jsxs("h3", {
-                                          className: `font-semibold ${study.is_premium && !isPremium ? 'text-gray-400' : 'text-yellow-300'}`,
+                                          className: `font-semibold ${isStudyPremium(study) && !isPremium ? 'text-gray-400' : 'text-yellow-300'}`,
                                           children: [
                                             "Lesson ", lesson.order_index + 1, ": ", lesson.title
                                           ]
@@ -437,7 +459,7 @@ const StudyDetails = () => {
                                         
                                         _jsxs("div", { className: "flex items-center gap-2", children: [
                                           /* Toggle complete button */
-                                          (user && !(study.is_premium && !isPremium)) && (() => {
+                                          (user && !(isStudyPremium(study) && !isPremium)) && (() => {
                                             const isComplete = Array.isArray(progress?.completed_lessons) && progress.completed_lessons.includes(lesson.order_index);
                                             const isToggling = togglingLesson === lesson.order_index;
                                             return _jsx("button", {
@@ -452,7 +474,7 @@ const StudyDetails = () => {
                                             });
                                           })(),
                                           /* Lock icon for premium */
-                                          (study.is_premium && !isPremium) && (
+                                          (isStudyPremium(study) && !isPremium) && (
                                             _jsx("svg", {
                                               xmlns: "http://www.w3.org/2000/svg",
                                               className: "h-5 w-5 text-gray-400",
@@ -472,7 +494,7 @@ const StudyDetails = () => {
                                     /* Scripture references */
                                     lesson.scripture_refs && lesson.scripture_refs.length > 0 && (
                                       _jsx("p", {
-                                        className: `text-sm ${study.is_premium && !isPremium ? 'text-gray-500' : 'text-blue-200'}`,
+                                        className: `text-sm ${isStudyPremium(study) && !isPremium ? 'text-gray-500' : 'text-blue-200'}`,
                                         children: lesson.scripture_refs.join(', ')
                                       })
                                     ),
@@ -492,7 +514,7 @@ const StudyDetails = () => {
                                             className: "w-5 h-5 rounded-full object-cover border border-yellow-400/30"
                                           }),
                                           _jsx("span", {
-                                            className: `text-xs ${study.is_premium && !isPremium ? 'text-gray-500' : 'text-blue-200'}`,
+                                            className: `text-xs ${isStudyPremium(study) && !isPremium ? 'text-gray-500' : 'text-blue-200'}`,
                                             children: `Guide: ${lessonChar.name}`
                                           })
                                         ]
@@ -501,7 +523,7 @@ const StudyDetails = () => {
                                     
                                     /* Summary preview */
                                     _jsx("p", {
-                                      className: `mt-2 line-clamp-2 ${study.is_premium && !isPremium ? 'text-gray-500' : 'text-blue-100/80'}`,
+                                      className: `mt-2 line-clamp-2 ${isStudyPremium(study) && !isPremium ? 'text-gray-500' : 'text-blue-100/80'}`,
                                       children: lesson.summary || "Start this lesson to begin your study."
                                     }),
                                     
@@ -544,7 +566,7 @@ const StudyDetails = () => {
                     }),
 
                     /* Premium upgrade CTA */
-                    (study.is_premium && !isPremium) && (
+                    (isStudyPremium(study) && !isPremium) && (
                       _jsx("div", {
                         className: "mt-8 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 backdrop-blur-sm rounded-xl p-6 border border-yellow-500/30",
                         children: _jsxs("div", {

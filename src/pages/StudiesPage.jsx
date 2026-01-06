@@ -6,7 +6,7 @@ import { usePremium } from '../hooks/usePremium';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import Footer from '../components/Footer';
 import { supabase } from '../services/supabase';
-import { getOwnerSlug } from '../services/tierSettingsService';
+import { getOwnerSlug, getSettings as getTierSettings } from '../services/tierSettingsService';
 import { useAuth } from '../contexts/AuthContext';
 
 const StudiesPage = () => {
@@ -14,12 +14,32 @@ const StudiesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [premiumStudyIds, setPremiumStudyIds] = useState([]);
   const { isPremium } = usePremium();
   const { role } = useAuth();
+  
+  // Helper to check if study requires premium
+  const isStudyPremium = (study) => {
+    if (isStudyPremium(study)) return true;
+    if (premiumStudyIds.includes(study.id)) return true;
+    return false;
+  };
 
   // Owner filter (superadmin only)
   const [ownerSlug, setOwnerSlug] = useState((getOwnerSlug() || '').toLowerCase());
   const [ownerOptions, setOwnerOptions] = useState(['__ALL__', (getOwnerSlug() || '').toLowerCase(), 'faithtalkai']);
+
+  // Load premium study IDs from tier settings
+  useEffect(() => {
+    (async () => {
+      try {
+        const settings = await getTierSettings();
+        if (Array.isArray(settings?.premiumStudyIds)) {
+          setPremiumStudyIds(settings.premiumStudyIds);
+        }
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     const fetchStudies = async () => {
@@ -74,7 +94,7 @@ const StudiesPage = () => {
   }, [role]);
 
   const handleStudyClick = (study) => {
-    if (study.is_premium && !isPremium) {
+    if (isStudyPremium(study) && !isPremium) {
       setShowUpgrade(true);
       return;
     }
@@ -212,7 +232,7 @@ const StudiesPage = () => {
                     _jsx(Link, {
                       to: `/studies/${study.id}`,
                       onClick: (e) => {
-                        if (study.is_premium && !isPremium) {
+                        if (isStudyPremium(study) && !isPremium) {
                           e.preventDefault();
                           handleStudyClick(study);
                         }
@@ -221,7 +241,7 @@ const StudiesPage = () => {
                         relative block bg-white/10 backdrop-blur-sm rounded-xl overflow-hidden
                         border border-white/15 transition-all duration-300
                         hover:bg-white/15 hover:shadow-lg hover:-translate-y-1
-                        ${study.is_premium && !isPremium ? 'relative' : ''}
+                        ${isStudyPremium(study) && !isPremium ? 'relative' : ''}
                       `,
                       children: _jsxs("div", {
                         children: [
@@ -251,7 +271,7 @@ const StudiesPage = () => {
                               }),
                               
                               /* Premium badge */
-                              study.is_premium && (
+                              isStudyPremium(study) && (
                                 _jsx("span", {
                                   className: `
                                     inline-block px-3 py-1 text-xs font-medium rounded-full
@@ -266,7 +286,7 @@ const StudiesPage = () => {
                           }),
 
                           /* Premium overlay */
-                          (study.is_premium && !isPremium) && (
+                          (isStudyPremium(study) && !isPremium) && (
                             _jsx("div", {
                               className: "pointer-events-none absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center",
                               children: _jsx("div", {
