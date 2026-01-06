@@ -14,15 +14,20 @@ export default function Paywall() {
   const [busy, setBusy] = React.useState(false);
 
   const onMonthly = async () => {
-    if (busy) return; setBusy(true);
+    console.log('[Paywall] onMonthly tapped, busy:', busy);
+    if (busy) return; 
+    setBusy(true);
     try {
+      console.log('[Paywall] Calling purchaseMonthly...');
       const res = await purchaseMonthly(user?.id);
+      console.log('[Paywall] purchaseMonthly result:', res);
       if (!res.ok) {
         const errMsg = res.error?.message || res.error?.toString() || 'Purchase could not be completed. Please ensure IAP products are configured in App Store Connect.';
         throw new Error(errMsg);
       }
       Alert.alert('Success', 'You are now Premium. Enjoy!');
     } catch (e:any) {
+      console.log('[Paywall] Monthly purchase error:', e);
       Alert.alert('Purchase Issue', e?.message || 'Unable to complete purchase. Please try again later.');
     } finally { setBusy(false); }
   };
