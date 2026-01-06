@@ -20,7 +20,7 @@ const StudiesPage = () => {
   
   // Helper to check if study requires premium
   const isStudyPremium = (study) => {
-    if (isStudyPremium(study)) return true;
+    if (study.is_premium) return true;
     if (premiumStudyIds.includes(study.id)) return true;
     return false;
   };
