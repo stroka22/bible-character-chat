@@ -1,9 +1,12 @@
 import React from 'react';
-import { SafeAreaView, Text, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView, Text, TouchableOpacity, View, Alert, ActivityIndicator, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
 import { purchaseMonthly, purchaseYearly, restorePurchases } from '../lib/iap';
+
+const PRIVACY_URL = 'https://faithtalkai.com/privacy';
+const TERMS_URL = 'https://faithtalkai.com/terms';
 
 export default function Paywall() {
   const navigation = useNavigation<any>();
@@ -77,6 +80,20 @@ export default function Paywall() {
             <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Restore Purchases</Text>
           </TouchableOpacity>
           {busy && <ActivityIndicator color={theme.colors.primary} style={{ marginTop: 6 }} />}
+        </View>
+        
+        <Text style={{ color: theme.colors.muted, fontSize: 12, textAlign: 'center', marginTop: 16, lineHeight: 18 }}>
+          Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period. 
+          Manage subscriptions in your Apple ID settings.
+        </Text>
+        
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 12 }}>
+          <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_URL)}>
+            <Text style={{ color: theme.colors.accent, fontSize: 13, textDecorationLine: 'underline' }}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL(TERMS_URL)}>
+            <Text style={{ color: theme.colors.accent, fontSize: 13, textDecorationLine: 'underline' }}>Terms of Use</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
