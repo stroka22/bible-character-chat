@@ -125,22 +125,31 @@ export async function requirePremiumOrPrompt(opts: {
 }) {
   const { userId, feature, studyId, onUpgrade, onAllowed } = opts;
   
+  console.log('[Tier] requirePremiumOrPrompt called:', { userId, feature, studyId });
+  
   // Check if user has premium (via IAP on iOS or server flag)
   let hasPremium = false;
   if (Platform.OS === 'ios') {
     hasPremium = await isLocalPremiumActive();
+    console.log('[Tier] isLocalPremiumActive:', hasPremium);
   }
   if (!hasPremium) {
     hasPremium = await isPremiumUser(userId);
+    console.log('[Tier] isPremiumUser:', hasPremium);
   }
   
   // If user has premium, always allow
-  if (hasPremium) return onAllowed();
+  if (hasPremium) {
+    console.log('[Tier] User has premium, allowing');
+    return onAllowed();
+  }
   
   // Check tier settings to see if the feature actually requires premium
   const slug = await getOwnerSlug(userId);
   const s = await getTierSettings(slug);
   const gates = s.premiumRoundtableGates;
+  
+  console.log('[Tier] slug:', slug, 'gates:', gates, 'premiumStudyIds:', s.premiumStudyIds);
   
   // Check each feature type
   if (feature === 'premiumStudy' && studyId) {

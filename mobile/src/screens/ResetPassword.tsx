@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
 
 export default function ResetPassword() {
+  const navigation = useNavigation<any>();
   const { resetPasswordEmail } = useAuth();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
@@ -22,6 +24,9 @@ export default function ResetPassword() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, paddingTop: insets.top + 16, paddingHorizontal: 16 }}>
       <View style={{ gap: 10 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ alignSelf: 'flex-start', paddingVertical: 8, paddingRight: 16 }}>
+          <Text style={{ color: theme.colors.muted, fontSize: 16 }}>← Back</Text>
+        </TouchableOpacity>
         <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800' }}>Reset Password</Text>
         <TextInput
           autoCapitalize='none'

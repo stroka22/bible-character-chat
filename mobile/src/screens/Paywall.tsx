@@ -71,10 +71,10 @@ export default function Paywall() {
         </Text>
         <View style={{ marginTop: 12, gap: 10 }}>
           <TouchableOpacity onPress={onMonthly} disabled={busy} style={{ backgroundColor: theme.colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}>
-            <Text style={{ color: theme.colors.primaryText, fontWeight: '900', fontSize: 16 }}>Monthly — $9.99 (7‑day free trial)</Text>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '900', fontSize: 16 }}>Monthly — $6.99/month</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onYearly} disabled={busy} style={{ backgroundColor: theme.colors.card, paddingVertical: 14, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-            <Text style={{ color: theme.colors.text, fontWeight: '900', fontSize: 16 }}>Yearly — $89.99 (7‑day free trial)</Text>
+            <Text style={{ color: theme.colors.text, fontWeight: '900', fontSize: 16 }}>Yearly — $49.99/year</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onRestore} disabled={busy} style={{ backgroundColor: theme.colors.surface, paddingVertical: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
             <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Restore Purchases</Text>
