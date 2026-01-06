@@ -3,13 +3,23 @@ import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import { isLocalPremiumActive } from './iap';
 
+type PremiumRoundtableGates = {
+  savingRequiresPremium: boolean;
+  premiumOnly: boolean;
+  allowAllSpeak: boolean;
+  strictRotation: boolean;
+  followUpsMin?: number | null;
+  repliesPerRoundMin?: number | null;
+  promptTemplate?: string;
+};
+
 type TierSettings = {
   freeMessageLimit: number;
   freeCharacterLimit: number;
   freeCharacters: string[];
   freeCharacterNames: string[];
-  premiumRoundtableGates?: any;
-  premiumStudyIds?: string[];
+  premiumRoundtableGates: PremiumRoundtableGates;
+  premiumStudyIds: string[];
   lastUpdated?: string;
 };
 
@@ -36,7 +46,12 @@ function defaults(): TierSettings {
     freeCharacterLimit: 10,
     freeCharacters: [],
     freeCharacterNames: [],
-    premiumRoundtableGates: {},
+    premiumRoundtableGates: {
+      savingRequiresPremium: true,
+      premiumOnly: true,
+      allowAllSpeak: false,
+      strictRotation: false,
+    },
     premiumStudyIds: [],
     lastUpdated: new Date().toISOString(),
   };
@@ -52,12 +67,21 @@ export async function getTierSettings(slug: string): Promise<TierSettings> {
       .maybeSingle();
     if (error) throw error;
     if (data) {
+      const gates = data.premium_roundtable_gates || {};
       const s: TierSettings = {
         freeMessageLimit: data.free_message_limit ?? 5,
         freeCharacterLimit: data.free_character_limit ?? 10,
         freeCharacters: data.free_characters ?? [],
         freeCharacterNames: data.free_character_names ?? [],
-        premiumRoundtableGates: data.premium_roundtable_gates ?? {},
+        premiumRoundtableGates: {
+          savingRequiresPremium: gates.savingRequiresPremium !== false,
+          premiumOnly: gates.premiumOnly !== false,
+          allowAllSpeak: !!gates.allowAllSpeak,
+          strictRotation: !!gates.strictRotation,
+          followUpsMin: gates.followUpsMin ?? null,
+          repliesPerRoundMin: gates.repliesPerRoundMin ?? null,
+          promptTemplate: gates.promptTemplate ?? '',
+        },
         premiumStudyIds: data.premium_study_ids ?? [],
         lastUpdated: data.updated_at ?? new Date().toISOString(),
       };
@@ -94,7 +118,7 @@ export async function isPremiumUser(userId?: string): Promise<boolean> {
 
 export async function requirePremiumOrPrompt(opts: {
   userId?: string;
-  feature: 'roundtable' | 'premiumStudy' | 'save' | 'other';
+  feature: 'roundtable' | 'premiumStudy' | 'save' | 'allSpeak' | 'strictRotation' | 'other';
   studyId?: string;
   onUpgrade: () => void;
   onAllowed: () => void;
@@ -116,26 +140,35 @@ export async function requirePremiumOrPrompt(opts: {
   // Check tier settings to see if the feature actually requires premium
   const slug = await getOwnerSlug(userId);
   const s = await getTierSettings(slug);
+  const gates = s.premiumRoundtableGates;
   
-  // basic rules
+  // Check each feature type
   if (feature === 'premiumStudy' && studyId) {
     const set = new Set<string>(s.premiumStudyIds || []);
     if (set.has(String(studyId))) return onUpgrade();
     return onAllowed(); // Study not in premium list
   }
+  
   if (feature === 'roundtable') {
-    // default to premium if not specified
-    const gates = s.premiumRoundtableGates || {};
-    const isPremiumOnly = gates?.premiumOnly ?? true;
-    if (isPremiumOnly) return onUpgrade();
+    if (gates.premiumOnly) return onUpgrade();
     return onAllowed();
   }
+  
   if (feature === 'save') {
-    // Saving chats/roundtables premium gate (configurable via tier settings)
-    const requires = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
-    if (requires) return onUpgrade();
+    if (gates.savingRequiresPremium) return onUpgrade();
     return onAllowed();
   }
+  
+  if (feature === 'allSpeak') {
+    if (gates.allowAllSpeak) return onUpgrade();
+    return onAllowed();
+  }
+  
+  if (feature === 'strictRotation') {
+    if (gates.strictRotation) return onUpgrade();
+    return onAllowed();
+  }
+  
   return onAllowed();
 }
 

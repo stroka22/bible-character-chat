@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, ScrollView, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
-import { getOwnerSlug, isPremiumUser } from '../lib/tier';
+import { getOwnerSlug, isPremiumUser, requirePremiumOrPrompt } from '../lib/tier';
 import { getRoundtableSettings } from '../lib/settings';
+import { useAuth } from '../contexts/AuthContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { theme } from '../theme';
 
@@ -14,6 +15,7 @@ type Character = {
 };
 
 export default function RoundtableSetup({ navigation }: NativeStackScreenProps<any>) {
+  const { user } = useAuth();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [topic, setTopic] = useState('');
@@ -21,6 +23,7 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
   const [search, setSearch] = useState('');
   const [activeLetter, setActiveLetter] = useState('');
   const [maxParticipants, setMaxParticipants] = useState<number>(8);
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -71,9 +74,22 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
     return matchesText && matchesLetter;
   });
 
-  const start = () => {
-    if (!topic.trim() || selected.length === 0) return;
-    navigation.navigate('RoundtableChat', { participantIds: selected, topic });
+  const start = async () => {
+    if (!topic.trim() || selected.length === 0 || starting) return;
+    setStarting(true);
+    
+    await requirePremiumOrPrompt({
+      userId: user?.id,
+      feature: 'roundtable',
+      onUpgrade: () => {
+        setStarting(false);
+        navigation.navigate('Paywall');
+      },
+      onAllowed: () => {
+        setStarting(false);
+        navigation.navigate('RoundtableChat', { participantIds: selected, topic });
+      },
+    });
   };
 
   return (
@@ -123,8 +139,8 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
             ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           />
         )}
-        <TouchableOpacity onPress={start} disabled={!topic.trim() || selected.length === 0} style={{ marginTop: 16, backgroundColor: (!topic.trim() || selected.length === 0) ? theme.colors.muted : theme.colors.primary, padding: 14, borderRadius: 10, alignItems: 'center' }}>
-          <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>Start Roundtable</Text>
+        <TouchableOpacity onPress={start} disabled={!topic.trim() || selected.length === 0 || starting} style={{ marginTop: 16, backgroundColor: (!topic.trim() || selected.length === 0 || starting) ? theme.colors.muted : theme.colors.primary, padding: 14, borderRadius: 10, alignItems: 'center' }}>
+          <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>{starting ? 'Starting...' : 'Start Roundtable'}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
