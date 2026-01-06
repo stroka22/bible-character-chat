@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
 import { useConversation } from '../../contexts/ConversationContext.jsx';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePremium } from '../../hooks/usePremium';
 import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 // Added `basicOnly` prop: when true in compact mode, only show
 // copy, favorite & save – omit rename/delete even for saved chats.
@@ -11,6 +12,7 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
     const { character, chatId, messages, saveChatTitle, toggleFavorite, saveChat, deleteCurrentChat, isChatSaved, isFavorite } = useChat();
     const { shareConversation } = useConversation();
     const { user } = useAuth();
+    const { isPremium } = usePremium();
     const [bypassMode, setBypassMode] = useState(false);
     useEffect(() => {
         const bypass = localStorage.getItem('bypass_auth') === 'true';
