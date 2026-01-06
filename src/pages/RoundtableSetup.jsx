@@ -90,6 +90,12 @@ const RoundtableSetup = () => {
       return;
     }
     
+    // Check if roundtables require premium
+    if (!isPremium && premiumGates?.premiumOnly !== false) {
+      setShowUpgrade(true);
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -432,7 +438,7 @@ const RoundtableSetup = () => {
         }),
         _jsx(Footer, {})
         ,
-        _jsx(UpgradeModal, { isOpen: showUpgrade, onClose: () => setShowUpgrade(false), limitType: 'roundtable', featureName: 'Higher Replies Per Round' })
+        _jsx(UpgradeModal, { isOpen: showUpgrade, onClose: () => setShowUpgrade(false), limitType: 'roundtable', featureName: 'Roundtables' })
       ]
     })
   );
