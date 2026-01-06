@@ -116,6 +116,7 @@ export default function StudiesList() {
                 try {
                   const { requirePremiumOrPrompt } = await import('../lib/tier');
                   await requirePremiumOrPrompt({
+                    userId: user?.id,
                     feature: 'premiumStudy',
                     studyId: item.id,
                     onAllowed: () => navigation.navigate('StudyDetail', { studyId: item.id, title: item.title }),
