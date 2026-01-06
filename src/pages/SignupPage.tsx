@@ -8,10 +8,11 @@ const SignupPage: React.FC = () => {
   const { signUp, loading, error } = useAuth();
   
   // Form state
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -24,7 +25,7 @@ const SignupPage: React.FC = () => {
     setSuccessMessage(null);
     
     // Form validation
-    if (!email || !password || !confirmPassword || !displayName) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setFormError('All fields are required');
       return;
     }
@@ -121,20 +122,37 @@ const SignupPage: React.FC = () => {
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label htmlFor="display-name" className="block text-sm font-medium text-gray-700">
-                Display Name
-              </label>
-              <input
-                id="display-name"
-                name="displayName"
-                type="text"
-                autoComplete="name"
-                required
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
-              />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <input
+                  id="first-name"
+                  name="firstName"
+                  type="text"
+                  autoComplete="given-name"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <input
+                  id="last-name"
+                  name="lastName"
+                  type="text"
+                  autoComplete="family-name"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 sm:text-sm"
+                />
+              </div>
             </div>
             
             <div>
