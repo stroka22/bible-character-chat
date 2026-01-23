@@ -271,11 +271,6 @@ const RoundtableChat = () => {
     setInputValue('');
   };
   
-  // Handle advance round
-  const handleAdvanceRound = async () => {
-    await advanceRound();
-  };
-  
   // Normalize content (strip accidental JSON wrapper and redundant speaker names)
   const normalizeContent = (raw, speakerName) => {
     if (raw == null) return raw;
@@ -483,16 +478,7 @@ const RoundtableChat = () => {
                       className: "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors bg-yellow-400 hover:bg-yellow-500 text-blue-900",
                       children: "New Roundtable"
                     }),
-                    _jsx("button", {
-                      onClick: handleAdvanceRound,
-                      disabled: isTyping || isSharedView,
-                      className: `px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        (isTyping || isSharedView)
-                          ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                          : 'bg-yellow-400 hover:bg-yellow-500 text-blue-900'
-                      }`,
-                      children: isTyping ? "Characters Responding..." : "Advance Round"
-                    }),
+
                     _jsx("button", {
                       onClick: async () => {
                         try {
