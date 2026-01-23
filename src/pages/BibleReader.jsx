@@ -2,9 +2,15 @@ import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BOOK_AUTHOR } from '../data/bibleAuthorship.js';
 import { characterRepository } from '../repositories/characterRepository.js';
-import { KjvLocalProvider } from '../services/bible/providers/kjvLocal.js';
+import { LocalBibleProvider, AVAILABLE_TRANSLATIONS } from '../services/bible/providers/localBible.js';
 
-const kjvProv = new KjvLocalProvider();
+const providers = {};
+function getProvider(translation) {
+  if (!providers[translation]) {
+    providers[translation] = new LocalBibleProvider(translation);
+  }
+  return providers[translation];
+}
 
 function useCharacters() {
   const [map, setMap] = React.useState(new Map());
@@ -41,7 +47,7 @@ function linkInline(text, charMap) {
 
 export default function BibleReader() {
   const navigate = useNavigate();
-  const { translation = 'NIV', book = 'Genesis', chapter = '1' } = useParams();
+  const { translation = 'KJV', book = 'Genesis', chapter = '1' } = useParams();
   const [data, setData] = React.useState({ translation: 'KJV', book, chapter: Number(chapter), verses: [], notice: '' });
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
@@ -51,17 +57,18 @@ export default function BibleReader() {
 
   const authorName = BOOK_AUTHOR[book];
   const authorChar = authorName ? charMap.get(authorName.toLowerCase()) : null;
+  
+  // Get provider for current translation
+  const prov = getProvider(translation);
 
-  React.useEffect(() => { (async () => setBookList(await kjvProv.getBooks()))(); }, []);
-  React.useEffect(() => { (async () => setChapterList(await kjvProv.getChapters(book)))(); }, [book]);
+  React.useEffect(() => { (async () => setBookList(await prov.getBooks()))(); }, [translation]);
+  React.useEffect(() => { (async () => setChapterList(await prov.getChapters(book)))(); }, [book, translation]);
   React.useEffect(() => {
     (async () => {
       setLoading(true); setError('');
       try {
-        const res = await kjvProv.getChapterText(book, Number(chapter));
-        setData(translation === 'NIV'
-          ? { ...res, notice: 'NIV coming soon via Bible Brain. Showing KJV.' }
-          : res);
+        const res = await prov.getChapterText(book, Number(chapter));
+        setData(res);
       } catch (e) {
         setError(e.message || 'Failed to load chapter');
       } finally {
@@ -79,8 +86,9 @@ export default function BibleReader() {
         </div>
         <div className="flex items-center gap-2">
           <select value={translation} onChange={(e)=>navigate(`/bible/${e.target.value}/${book}/${chapter}`)} className="rounded-md border border-gray-300 px-2 py-1">
-            <option value="NIV">NIV (default)</option>
-            <option value="KJV">KJV</option>
+            {AVAILABLE_TRANSLATIONS.map(t => (
+              <option key={t.code} value={t.code}>{t.code} - {t.name}</option>
+            ))}
           </select>
           <select value={book} onChange={(e)=>navigate(`/bible/${translation}/${e.target.value}/1`)} className="rounded-md border border-gray-300 px-2 py-1">
             {bookList.map(b => <option key={b} value={b}>{b}</option>)}
@@ -121,7 +129,7 @@ export default function BibleReader() {
                 {/* Future: detected names per chapter via lightweight NER/dictionary */}
               </ul>
             </div>
-            <div className="mt-4 text-xs text-gray-500">Scripture quotations are from the King James Version (Public Domain).</div>
+            <div className="mt-4 text-xs text-gray-500">Scripture quotations are from {AVAILABLE_TRANSLATIONS.find(t => t.code === translation)?.name || translation} (Public Domain).</div>
           </div>
         </div>
       )}

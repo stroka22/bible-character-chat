@@ -1,21 +1,32 @@
 // Bible provider interface and simple registry
-// We will support multiple providers: 'kjv-local' and 'biblebrain'
+// Supports local translations (KJV, ASV, WEB, YLT) and BibleBrain API
 
 export const PROVIDERS = {
-  KJV_LOCAL: 'kjv-local',
+  LOCAL: 'local',
   BIBLE_BRAIN: 'biblebrain',
 };
 
-export function createBibleProvider(name, options = {}) {
+export const TRANSLATIONS = {
+  KJV: 'KJV',
+  ASV: 'ASV',
+  WEB: 'WEB',
+  YLT: 'YLT',
+};
+
+export async function createBibleProvider(name, options = {}) {
   switch (name) {
-    case PROVIDERS.KJV_LOCAL:
-      return new (await import('./providers/kjvLocal.js')).KjvLocalProvider(options);
+    case PROVIDERS.LOCAL:
+      const { LocalBibleProvider } = await import('./providers/localBible.js');
+      return new LocalBibleProvider(options.translation || 'KJV');
     case PROVIDERS.BIBLE_BRAIN:
-      return new (await import('./providers/bibleBrain.js')).BibleBrainProvider(options);
+      const { BibleBrainProvider } = await import('./providers/bibleBrain.js');
+      return new BibleBrainProvider(options);
     default:
       throw new Error('Unknown bible provider: ' + name);
   }
 }
+
+export { AVAILABLE_TRANSLATIONS } from './providers/localBible.js';
 
 export const BIBLE_META = {
   // Canonical order and basic metadata for 66 books (KJV/standard order)
