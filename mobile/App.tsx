@@ -20,6 +20,7 @@ import { Linking } from 'react-native';
 import { requirePremiumOrPrompt } from './src/lib/tier';
 import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
+import BibleReader from './src/screens/BibleReader';
 import Login from './src/screens/Login';
 import SignUp from './src/screens/SignUp';
 import ResetPassword from './src/screens/ResetPassword';
@@ -218,6 +219,7 @@ function MainTabs() {
     }}>
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Chat" component={ChatStackScreen} options={{ headerShown: false }} />
+      <Tabs.Screen name="Bible" component={BibleReader} />
       <Tabs.Screen name="Studies" component={StudiesList} />
       <Tabs.Screen name="My Walk" component={MyWalk} />
       <Tabs.Screen name="Profile" component={Profile} />
