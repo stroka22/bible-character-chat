@@ -328,13 +328,7 @@ export default function RoundtableChat({ route }: any) {
     });
   };
 
-  const nextRound = async () => {
-    if (isTyping) return;
-    const next = (roundRef.current || roundIndex || 1) + 1
-    roundRef.current = next;
-    setRoundIndex(next);
-    await generateRound(messages, undefined, undefined, next);
-  };
+
 
 
   return (
@@ -346,9 +340,7 @@ export default function RoundtableChat({ route }: any) {
           <TouchableOpacity onPress={saveToMyWalk} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
             <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>Save to My Walk</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={nextRound} disabled={isTyping} style={{ alignSelf: 'flex-start', backgroundColor: isTyping ? theme.colors.muted : theme.colors.card, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}>
-            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 13 }}>Next Round</Text>
-          </TouchableOpacity>
+
           {savedConversationId && (
             <TouchableOpacity 
               onPress={async () => {
