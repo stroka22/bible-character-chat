@@ -83,11 +83,21 @@ const SimpleChatWithHistory = () => {
     const [premiumStudyIds, setPremiumStudyIds] = useState([]);
     const [studyMeta, setStudyMeta] = useState(null);
     const [lessonMeta, setLessonMeta] = useState(null);
+    const [initialMessage, setInitialMessage] = useState('');
     // Series feature deprecated; keep studies functionality intact
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
 
     const { conversationId, shareCode } = useParams();
+    
+    // Check for pre-filled message from URL
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const msgParam = params.get('message') || params.get('context');
+        if (msgParam) {
+            setInitialMessage(decodeURIComponent(msgParam));
+        }
+    }, [location.search]);
 
     // Measure header and lead-capture banner to prevent overlap on mobile
     const [headerPad, setHeaderPad] = useState(96);
@@ -1303,7 +1313,8 @@ const SimpleChatWithHistory = () => {
                                             onSendMessage: sendMessage,
                                             disabled: isLoading, 
                                             placeholder: `Ask ${character.name} anything...`,
-                                            className: "bg-[rgba(255,255,255,.15)] border border-[rgba(255,255,255,.3)] rounded-lg text-white focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30"
+                                            className: "bg-[rgba(255,255,255,.15)] border border-[rgba(255,255,255,.3)] rounded-lg text-white focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30",
+                                            initialMessage: initialMessage
                                         })
                                     }),
                                     

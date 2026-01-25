@@ -18,8 +18,9 @@ const ChatInput = ({
     disabled = false,
     placeholder = "Ask me anything...",
     onSendMessage = undefined,
+    initialMessage = '',
 }) => {
-    const [message, setMessage] = useState('');
+    const [message, setMessage] = useState(initialMessage);
     const inputRef = useRef(null);
     const { sendMessage: ctxSendMessage, isTyping, error } = useChat();
 
@@ -30,6 +31,13 @@ const ChatInput = ({
             inputRef.current.focus();
         }
     }, []);
+    
+    // Update message if initialMessage changes
+    useEffect(() => {
+        if (initialMessage) {
+            setMessage(initialMessage);
+        }
+    }, [initialMessage]);
     const handleInput = (e) => {
         const textarea = e.target;
         setMessage(textarea.value);
