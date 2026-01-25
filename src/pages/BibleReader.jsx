@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BOOK_AUTHOR } from '../data/bibleAuthorship.js';
 import { characterRepository } from '../repositories/characterRepository.js';
 import { LocalBibleProvider, AVAILABLE_TRANSLATIONS } from '../services/bible/providers/localBible.js';
+import { readingPlansRepository } from '../repositories/readingPlansRepository.js';
 
 const providers = {};
 function getProvider(translation) {
@@ -57,6 +58,17 @@ export default function BibleReader() {
 
   const authorName = BOOK_AUTHOR[book];
   const authorChar = authorName ? charMap.get(authorName.toLowerCase()) : null;
+  const [featuredPlans, setFeaturedPlans] = React.useState([]);
+
+  // Load featured reading plans
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const plans = await readingPlansRepository.getAll();
+        setFeaturedPlans(plans.filter(p => p.is_featured).slice(0, 3));
+      } catch {}
+    })();
+  }, []);
   
   // Get provider for current translation (NIV falls back to KJV until API is ready)
   const effectiveTranslation = translation === 'NIV' ? 'KJV' : translation;
@@ -135,6 +147,32 @@ export default function BibleReader() {
                 {/* Future: detected names per chapter via lightweight NER/dictionary */}
               </ul>
             </div>
+            
+            {/* Reading Plans Section */}
+            {featuredPlans.length > 0 && (
+              <div className="mt-4 bg-white border border-gray-200 rounded p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Reading Plans</h3>
+                <div className="space-y-3">
+                  {featuredPlans.map(plan => (
+                    <Link 
+                      key={plan.id} 
+                      to={`/reading-plans/${plan.slug}`}
+                      className="block p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <div className="font-medium text-gray-900 text-sm">{plan.title}</div>
+                      <div className="text-xs text-gray-500 mt-1">{plan.duration_days} days · {plan.difficulty}</div>
+                    </Link>
+                  ))}
+                </div>
+                <Link 
+                  to="/reading-plans" 
+                  className="block mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View all plans →
+                </Link>
+              </div>
+            )}
+            
             <div className="mt-4 text-xs text-gray-500">Scripture quotations are from {AVAILABLE_TRANSLATIONS.find(t => t.code === translation)?.name || translation} (Public Domain).</div>
           </div>
         </div>
