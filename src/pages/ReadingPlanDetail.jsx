@@ -76,10 +76,16 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h3 className="text-sm font-semibold text-yellow-800 mb-2">Reflection Question</h3>
             <p className="text-yellow-900">{day.reflection_prompt}</p>
+            <Link
+              to={`/chat?context=${encodeURIComponent(`I'm reading ${day.title || `Day ${day.day_number}`} from the "${plan.title}" reading plan. Today's passages: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')}. ${day.reflection_prompt}`)}`}
+              className="inline-block mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Discuss this with a Bible character →
+            </Link>
           </div>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={onComplete}
             className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
@@ -97,6 +103,12 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
           >
             Open in Bible Reader
           </button>
+          <Link
+            to={`/chat?context=${encodeURIComponent(`Today's reading: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')} from "${plan.title}"`)}`}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-center"
+          >
+            Chat About This
+          </Link>
         </div>
       </div>
     </div>

@@ -214,14 +214,29 @@ export default function ReadingPlanDetail() {
                   Reflection Question
                 </Text>
                 <Text style={{ color: '#78350f' }}>{selectedDay.reflection_prompt}</Text>
+                <TouchableOpacity 
+                  onPress={() => {
+                    const readingsStr = selectedDay.readings?.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ') || '';
+                    navigation.navigate('Chat', {
+                      screen: 'ChatNew',
+                      params: {
+                        initialMessage: `I'm reading "${selectedDay.title || `Day ${selectedDay.day_number}`}" from the "${plan.title}" reading plan. Today's passages: ${readingsStr}. ${selectedDay.reflection_prompt}`,
+                      },
+                    });
+                  }}
+                  style={{ marginTop: 12 }}
+                >
+                  <Text style={{ color: '#1d4ed8', fontWeight: '600', fontSize: 14 }}>
+                    Discuss this with a Bible character →
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 
-            <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
+            <View style={{ gap: 12, marginTop: 20 }}>
               <TouchableOpacity
                 onPress={handleCompleteDay}
                 style={{
-                  flex: 1,
                   backgroundColor: '#16a34a',
                   paddingVertical: 14,
                   borderRadius: 10,
@@ -229,6 +244,26 @@ export default function ReadingPlanDetail() {
                 }}
               >
                 <Text style={{ color: '#fff', fontWeight: '700' }}>Mark Complete ✓</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={() => {
+                  const readingsStr = selectedDay.readings?.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ') || '';
+                  navigation.navigate('Chat', {
+                    screen: 'ChatNew',
+                    params: {
+                      initialMessage: `I'd like to discuss today's reading: ${readingsStr} from "${plan.title}"`,
+                    },
+                  });
+                }}
+                style={{
+                  backgroundColor: '#9333ea',
+                  paddingVertical: 14,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: '700' }}>Chat About This</Text>
               </TouchableOpacity>
             </View>
           </View>
