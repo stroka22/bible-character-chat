@@ -73,6 +73,114 @@ VALUES (
   false
 ) ON CONFLICT (slug) DO NOTHING;
 
+-- 7. Acts of the Apostles - 14 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'acts-14-days',
+  'Acts of the Apostles in 14 Days',
+  'Follow the early church from Pentecost to Paul''s journey to Rome. See how the gospel spread across the ancient world.',
+  14,
+  'book',
+  'easy',
+  false
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 8. Genesis - 21 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'genesis-21-days',
+  'Genesis in 21 Days',
+  'Explore the book of beginnings - creation, the fall, the flood, and the patriarchs Abraham, Isaac, Jacob, and Joseph.',
+  21,
+  'book',
+  'medium',
+  true
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 9. Sermon on the Mount - 7 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'sermon-on-mount-7',
+  'Sermon on the Mount in 7 Days',
+  'A week-long deep dive into Jesus'' most famous teaching in Matthew 5-7. Transform your understanding of kingdom living.',
+  7,
+  'topical',
+  'easy',
+  true
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 10. Epistles Overview - 30 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'epistles-30-days',
+  'New Testament Letters in 30 Days',
+  'Read through all the epistles from Romans to Jude. Discover practical wisdom for Christian living from the apostles.',
+  30,
+  'testament',
+  'medium',
+  false
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 11. Prophets Highlights - 21 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'prophets-21-days',
+  'Prophets Highlights in 21 Days',
+  'Key passages from Isaiah, Jeremiah, Ezekiel, Daniel and the minor prophets. Discover God''s heart for justice and redemption.',
+  21,
+  'topical',
+  'medium',
+  false
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 12. Life of David - 14 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'life-of-david-14',
+  'Life of David in 14 Days',
+  'From shepherd boy to king. Follow David''s journey through 1 & 2 Samuel, including his triumphs, failures, and heart for God.',
+  14,
+  'character',
+  'medium',
+  false
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 13. Easter Journey - 7 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'easter-journey-7',
+  'Easter Journey in 7 Days',
+  'Walk with Jesus through His final week - from the triumphal entry to the resurrection. Perfect for Easter preparation.',
+  7,
+  'topical',
+  'easy',
+  false
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 14. Christmas Story - 7 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'christmas-story-7',
+  'Christmas Story in 7 Days',
+  'Experience the nativity through the prophecies and Gospel accounts. Prepare your heart for celebrating Jesus'' birth.',
+  7,
+  'topical',
+  'easy',
+  false
+) ON CONFLICT (slug) DO NOTHING;
+
+-- 15. Women of the Bible - 14 Days
+INSERT INTO public.reading_plans (slug, title, description, duration_days, category, difficulty, is_featured)
+VALUES (
+  'women-of-bible-14',
+  'Women of the Bible in 14 Days',
+  'Meet Ruth, Esther, Mary, and other remarkable women whose faith shaped history. Stories of courage, faith, and devotion.',
+  14,
+  'character',
+  'easy',
+  false
+) ON CONFLICT (slug) DO NOTHING;
+
 -- Now seed the daily readings for each plan
 
 -- GOSPELS IN 30 DAYS
@@ -186,6 +294,174 @@ BEGIN
     (plan_uuid, 12, 'Living Sacrifices', '[{"book":"Romans","chapter":12}]', 'How can you be transformed by renewing your mind?'),
     (plan_uuid, 13, 'Submission & Love', '[{"book":"Romans","chapter":13},{"book":"Romans","chapter":14}]', 'How should Christians relate to authorities?'),
     (plan_uuid, 14, 'Unity & Benediction', '[{"book":"Romans","chapter":15},{"book":"Romans","chapter":16}]', 'What has Romans taught you about the gospel?')
+    ON CONFLICT (plan_id, day_number) DO NOTHING;
+  END IF;
+END $$;
+
+-- ACTS 14 DAYS
+DO $$
+DECLARE
+  plan_uuid uuid;
+BEGIN
+  SELECT id INTO plan_uuid FROM public.reading_plans WHERE slug = 'acts-14-days';
+  IF plan_uuid IS NOT NULL THEN
+    INSERT INTO public.reading_plan_days (plan_id, day_number, title, readings, reflection_prompt) VALUES
+    (plan_uuid, 1, 'Ascension & Pentecost', '[{"book":"Acts","chapter":1},{"book":"Acts","chapter":2}]', 'What difference did the Holy Spirit make for the disciples?'),
+    (plan_uuid, 2, 'The Early Church', '[{"book":"Acts","chapter":3},{"book":"Acts","chapter":4}]', 'What characterized the early church community?'),
+    (plan_uuid, 3, 'Persecution & Growth', '[{"book":"Acts","chapter":5},{"book":"Acts","chapter":6}]', 'How did the church respond to opposition?'),
+    (plan_uuid, 4, 'Stephen''s Martyrdom', '[{"book":"Acts","chapter":7}]', 'What can we learn from Stephen''s faith and courage?'),
+    (plan_uuid, 5, 'The Gospel Spreads', '[{"book":"Acts","chapter":8},{"book":"Acts","chapter":9}]', 'How did Saul''s conversion change everything?'),
+    (plan_uuid, 6, 'Gentiles Included', '[{"book":"Acts","chapter":10},{"book":"Acts","chapter":11}]', 'What does Peter''s vision teach about God''s heart?'),
+    (plan_uuid, 7, 'The Church at Antioch', '[{"book":"Acts","chapter":12},{"book":"Acts","chapter":13}]', 'How did the church discern God''s leading?'),
+    (plan_uuid, 8, 'First Missionary Journey', '[{"book":"Acts","chapter":14},{"book":"Acts","chapter":15}]', 'What was the Jerusalem Council''s decision about Gentiles?'),
+    (plan_uuid, 9, 'Second Journey Begins', '[{"book":"Acts","chapter":16},{"book":"Acts","chapter":17}]', 'How did Paul adapt his message to different audiences?'),
+    (plan_uuid, 10, 'Corinth & Ephesus', '[{"book":"Acts","chapter":18},{"book":"Acts","chapter":19}]', 'What impact did the gospel have in these cities?'),
+    (plan_uuid, 11, 'Farewell to Ephesus', '[{"book":"Acts","chapter":20}]', 'What was Paul''s charge to the Ephesian elders?'),
+    (plan_uuid, 12, 'Arrest in Jerusalem', '[{"book":"Acts","chapter":21},{"book":"Acts","chapter":22}]', 'How did Paul respond to threats on his life?'),
+    (plan_uuid, 13, 'Trials & Testimony', '[{"book":"Acts","chapter":23},{"book":"Acts","chapter":24},{"book":"Acts","chapter":25}]', 'How did Paul use his trials to share the gospel?'),
+    (plan_uuid, 14, 'Journey to Rome', '[{"book":"Acts","chapter":26},{"book":"Acts","chapter":27},{"book":"Acts","chapter":28}]', 'How does Acts end, and what does it mean for us?')
+    ON CONFLICT (plan_id, day_number) DO NOTHING;
+  END IF;
+END $$;
+
+-- SERMON ON THE MOUNT - 7 DAYS
+DO $$
+DECLARE
+  plan_uuid uuid;
+BEGIN
+  SELECT id INTO plan_uuid FROM public.reading_plans WHERE slug = 'sermon-on-mount-7';
+  IF plan_uuid IS NOT NULL THEN
+    INSERT INTO public.reading_plan_days (plan_id, day_number, title, readings, reflection_prompt) VALUES
+    (plan_uuid, 1, 'The Beatitudes', '[{"book":"Matthew","chapter":5,"verses":"1-16"}]', 'Which beatitude challenges you the most?'),
+    (plan_uuid, 2, 'Fulfilling the Law', '[{"book":"Matthew","chapter":5,"verses":"17-48"}]', 'How does Jesus raise the standard beyond external behavior?'),
+    (plan_uuid, 3, 'Secret Righteousness', '[{"book":"Matthew","chapter":6,"verses":"1-18"}]', 'What does it mean to practice righteousness in secret?'),
+    (plan_uuid, 4, 'Treasures & Worry', '[{"book":"Matthew","chapter":6,"verses":"19-34"}]', 'Where is your treasure, and what does that reveal about your heart?'),
+    (plan_uuid, 5, 'Judging & Asking', '[{"book":"Matthew","chapter":7,"verses":"1-12"}]', 'How do the commands about judging and asking relate to each other?'),
+    (plan_uuid, 6, 'Two Gates, Two Trees', '[{"book":"Matthew","chapter":7,"verses":"13-23"}]', 'What distinguishes true disciples from false prophets?'),
+    (plan_uuid, 7, 'The Wise Builder', '[{"book":"Matthew","chapter":7,"verses":"24-29"}]', 'What does it mean to build your life on the rock?')
+    ON CONFLICT (plan_id, day_number) DO NOTHING;
+  END IF;
+END $$;
+
+-- GENESIS 21 DAYS
+DO $$
+DECLARE
+  plan_uuid uuid;
+BEGIN
+  SELECT id INTO plan_uuid FROM public.reading_plans WHERE slug = 'genesis-21-days';
+  IF plan_uuid IS NOT NULL THEN
+    INSERT INTO public.reading_plan_days (plan_id, day_number, title, readings, reflection_prompt) VALUES
+    (plan_uuid, 1, 'Creation', '[{"book":"Genesis","chapter":1},{"book":"Genesis","chapter":2}]', 'What does being made in God''s image mean to you?'),
+    (plan_uuid, 2, 'The Fall', '[{"book":"Genesis","chapter":3}]', 'How do you see the effects of the fall in the world today?'),
+    (plan_uuid, 3, 'Cain, Abel & Seth', '[{"book":"Genesis","chapter":4},{"book":"Genesis","chapter":5}]', 'What does Cain''s story teach about sin and its consequences?'),
+    (plan_uuid, 4, 'Noah & the Flood', '[{"book":"Genesis","chapter":6},{"book":"Genesis","chapter":7}]', 'What characterized Noah''s faith?'),
+    (plan_uuid, 5, 'New Beginning & Covenant', '[{"book":"Genesis","chapter":8},{"book":"Genesis","chapter":9}]', 'What does the rainbow covenant tell us about God?'),
+    (plan_uuid, 6, 'Tower of Babel', '[{"book":"Genesis","chapter":10},{"book":"Genesis","chapter":11}]', 'What was wrong with the builders'' motivation?'),
+    (plan_uuid, 7, 'Call of Abram', '[{"book":"Genesis","chapter":12},{"book":"Genesis","chapter":13}]', 'What did it cost Abram to follow God''s call?'),
+    (plan_uuid, 8, 'Abram & Lot', '[{"book":"Genesis","chapter":14},{"book":"Genesis","chapter":15}]', 'How did God reassure Abram about His promises?'),
+    (plan_uuid, 9, 'Hagar & Ishmael', '[{"book":"Genesis","chapter":16},{"book":"Genesis","chapter":17}]', 'What happens when we try to help God fulfill His promises?'),
+    (plan_uuid, 10, 'Sodom & Gomorrah', '[{"book":"Genesis","chapter":18},{"book":"Genesis","chapter":19}]', 'What does Abraham''s intercession teach us about prayer?'),
+    (plan_uuid, 11, 'Isaac Born', '[{"book":"Genesis","chapter":20},{"book":"Genesis","chapter":21}]', 'How did Sarah respond to God''s faithfulness?'),
+    (plan_uuid, 12, 'The Test', '[{"book":"Genesis","chapter":22}]', 'What does this story foreshadow about Jesus?'),
+    (plan_uuid, 13, 'A Bride for Isaac', '[{"book":"Genesis","chapter":23},{"book":"Genesis","chapter":24}]', 'How did the servant show faith in his mission?'),
+    (plan_uuid, 14, 'Jacob & Esau', '[{"book":"Genesis","chapter":25},{"book":"Genesis","chapter":26},{"book":"Genesis","chapter":27}]', 'What can we learn from this family''s dysfunction?'),
+    (plan_uuid, 15, 'Jacob''s Ladder', '[{"book":"Genesis","chapter":28},{"book":"Genesis","chapter":29}]', 'How did God meet Jacob in his lowest moment?'),
+    (plan_uuid, 16, 'Jacob''s Wives & Children', '[{"book":"Genesis","chapter":30},{"book":"Genesis","chapter":31}]', 'How did God bless Jacob despite his scheming?'),
+    (plan_uuid, 17, 'Wrestling with God', '[{"book":"Genesis","chapter":32},{"book":"Genesis","chapter":33}]', 'What changed in Jacob after Peniel?'),
+    (plan_uuid, 18, 'Joseph''s Dreams', '[{"book":"Genesis","chapter":37}]', 'How do Joseph''s brothers respond to his dreams?'),
+    (plan_uuid, 19, 'Joseph in Egypt', '[{"book":"Genesis","chapter":39},{"book":"Genesis","chapter":40},{"book":"Genesis","chapter":41}]', 'How did Joseph respond to injustice and temptation?'),
+    (plan_uuid, 20, 'Brothers Reunited', '[{"book":"Genesis","chapter":42},{"book":"Genesis","chapter":43},{"book":"Genesis","chapter":44},{"book":"Genesis","chapter":45}]', 'How did Joseph show grace to his brothers?'),
+    (plan_uuid, 21, 'Blessing & Legacy', '[{"book":"Genesis","chapter":46},{"book":"Genesis","chapter":47},{"book":"Genesis","chapter":48},{"book":"Genesis","chapter":49},{"book":"Genesis","chapter":50}]', 'What did Joseph mean by "God meant it for good"?')
+    ON CONFLICT (plan_id, day_number) DO NOTHING;
+  END IF;
+END $$;
+
+-- EASTER JOURNEY - 7 DAYS
+DO $$
+DECLARE
+  plan_uuid uuid;
+BEGIN
+  SELECT id INTO plan_uuid FROM public.reading_plans WHERE slug = 'easter-journey-7';
+  IF plan_uuid IS NOT NULL THEN
+    INSERT INTO public.reading_plan_days (plan_id, day_number, title, readings, reflection_prompt) VALUES
+    (plan_uuid, 1, 'Triumphal Entry (Palm Sunday)', '[{"book":"Matthew","chapter":21,"verses":"1-17"},{"book":"John","chapter":12,"verses":"12-19"}]', 'Why did Jesus weep over Jerusalem?'),
+    (plan_uuid, 2, 'Teaching in the Temple', '[{"book":"Matthew","chapter":21,"verses":"18-46"},{"book":"Matthew","chapter":22}]', 'What was Jesus'' message to the religious leaders?'),
+    (plan_uuid, 3, 'Olivet Discourse', '[{"book":"Matthew","chapter":24},{"book":"Matthew","chapter":25}]', 'How should we live in light of Jesus'' return?'),
+    (plan_uuid, 4, 'The Last Supper', '[{"book":"John","chapter":13},{"book":"John","chapter":14}]', 'What did Jesus want His disciples to remember?'),
+    (plan_uuid, 5, 'Gethsemane & Arrest', '[{"book":"Matthew","chapter":26},{"book":"John","chapter":18}]', 'What do we learn from Jesus'' prayer in the garden?'),
+    (plan_uuid, 6, 'Trial & Crucifixion (Good Friday)', '[{"book":"Matthew","chapter":27},{"book":"John","chapter":19}]', 'What do Jesus'' words from the cross reveal?'),
+    (plan_uuid, 7, 'Resurrection (Easter)', '[{"book":"Matthew","chapter":28},{"book":"John","chapter":20}]', 'How does the resurrection change everything?')
+    ON CONFLICT (plan_id, day_number) DO NOTHING;
+  END IF;
+END $$;
+
+-- CHRISTMAS STORY - 7 DAYS
+DO $$
+DECLARE
+  plan_uuid uuid;
+BEGIN
+  SELECT id INTO plan_uuid FROM public.reading_plans WHERE slug = 'christmas-story-7';
+  IF plan_uuid IS NOT NULL THEN
+    INSERT INTO public.reading_plan_days (plan_id, day_number, title, readings, reflection_prompt) VALUES
+    (plan_uuid, 1, 'The Prophecies', '[{"book":"Isaiah","chapter":7,"verses":"14"},{"book":"Isaiah","chapter":9,"verses":"1-7"},{"book":"Micah","chapter":5,"verses":"2-5"}]', 'How do these prophecies point to Jesus?'),
+    (plan_uuid, 2, 'Gabriel''s Announcements', '[{"book":"Luke","chapter":1,"verses":"1-56"}]', 'How did Mary respond to the angel''s message?'),
+    (plan_uuid, 3, 'John''s Birth', '[{"book":"Luke","chapter":1,"verses":"57-80"}]', 'What was John''s purpose according to Zechariah?'),
+    (plan_uuid, 4, 'Joseph''s Dream', '[{"book":"Matthew","chapter":1}]', 'What do the names Jesus and Emmanuel mean?'),
+    (plan_uuid, 5, 'The Birth of Jesus', '[{"book":"Luke","chapter":2,"verses":"1-20"}]', 'Why did God announce Jesus'' birth to shepherds?'),
+    (plan_uuid, 6, 'The Wise Men', '[{"book":"Matthew","chapter":2}]', 'What do the gifts of the wise men symbolize?'),
+    (plan_uuid, 7, 'The Word Made Flesh', '[{"book":"John","chapter":1,"verses":"1-18"}]', 'What does it mean that the Word became flesh and dwelt among us?')
+    ON CONFLICT (plan_id, day_number) DO NOTHING;
+  END IF;
+END $$;
+
+-- WOMEN OF THE BIBLE - 14 DAYS
+DO $$
+DECLARE
+  plan_uuid uuid;
+BEGIN
+  SELECT id INTO plan_uuid FROM public.reading_plans WHERE slug = 'women-of-bible-14';
+  IF plan_uuid IS NOT NULL THEN
+    INSERT INTO public.reading_plan_days (plan_id, day_number, title, readings, reflection_prompt) VALUES
+    (plan_uuid, 1, 'Eve: Mother of All Living', '[{"book":"Genesis","chapter":2,"verses":"18-25"},{"book":"Genesis","chapter":3}]', 'What was Eve''s role in creation and the fall?'),
+    (plan_uuid, 2, 'Sarah: Mother of Nations', '[{"book":"Genesis","chapter":18,"verses":"1-15"},{"book":"Genesis","chapter":21,"verses":"1-7"}]', 'How did Sarah''s faith grow over time?'),
+    (plan_uuid, 3, 'Rebekah: The Chosen Bride', '[{"book":"Genesis","chapter":24}]', 'What qualities made Rebekah stand out?'),
+    (plan_uuid, 4, 'Miriam: Prophetess & Leader', '[{"book":"Exodus","chapter":2,"verses":"1-10"},{"book":"Exodus","chapter":15,"verses":"19-21"}]', 'How did Miriam use her gifts for God?'),
+    (plan_uuid, 5, 'Rahab: Faith & Courage', '[{"book":"Joshua","chapter":2},{"book":"Joshua","chapter":6,"verses":"22-25"}]', 'What can we learn from Rahab''s faith?'),
+    (plan_uuid, 6, 'Deborah: Judge & Warrior', '[{"book":"Judges","chapter":4},{"book":"Judges","chapter":5}]', 'How did Deborah lead Israel?'),
+    (plan_uuid, 7, 'Ruth: Loyalty & Love', '[{"book":"Ruth","chapter":1},{"book":"Ruth","chapter":2}]', 'What does Ruth''s commitment teach about faithfulness?'),
+    (plan_uuid, 8, 'Ruth: Redemption', '[{"book":"Ruth","chapter":3},{"book":"Ruth","chapter":4}]', 'How does Ruth''s story point to Jesus?'),
+    (plan_uuid, 9, 'Hannah: Prayer & Dedication', '[{"book":"1 Samuel","chapter":1},{"book":"1 Samuel","chapter":2,"verses":"1-11"}]', 'What can we learn from Hannah''s prayer?'),
+    (plan_uuid, 10, 'Esther: For Such a Time', '[{"book":"Esther","chapter":4},{"book":"Esther","chapter":5}]', 'How did Esther show courage?'),
+    (plan_uuid, 11, 'Esther: Victory', '[{"book":"Esther","chapter":7},{"book":"Esther","chapter":8}]', 'What does Esther''s story teach about God''s providence?'),
+    (plan_uuid, 12, 'Mary: Chosen & Blessed', '[{"book":"Luke","chapter":1,"verses":"26-56"}]', 'How did Mary respond to God''s call?'),
+    (plan_uuid, 13, 'Mary Magdalene: Witness', '[{"book":"John","chapter":20,"verses":"1-18"}]', 'Why was Mary the first to see the risen Lord?'),
+    (plan_uuid, 14, 'Priscilla & Other Leaders', '[{"book":"Acts","chapter":18,"verses":"1-4, 24-28"},{"book":"Romans","chapter":16,"verses":"1-16"}]', 'How did women serve in the early church?')
+    ON CONFLICT (plan_id, day_number) DO NOTHING;
+  END IF;
+END $$;
+
+-- LIFE OF DAVID - 14 DAYS
+DO $$
+DECLARE
+  plan_uuid uuid;
+BEGIN
+  SELECT id INTO plan_uuid FROM public.reading_plans WHERE slug = 'life-of-david-14';
+  IF plan_uuid IS NOT NULL THEN
+    INSERT INTO public.reading_plan_days (plan_id, day_number, title, readings, reflection_prompt) VALUES
+    (plan_uuid, 1, 'Anointed as King', '[{"book":"1 Samuel","chapter":16}]', 'What did God see in David that others missed?'),
+    (plan_uuid, 2, 'David & Goliath', '[{"book":"1 Samuel","chapter":17}]', 'What gave David confidence to face the giant?'),
+    (plan_uuid, 3, 'Friendship with Jonathan', '[{"book":"1 Samuel","chapter":18},{"book":"1 Samuel","chapter":19}]', 'What made David and Jonathan''s friendship special?'),
+    (plan_uuid, 4, 'Fleeing from Saul', '[{"book":"1 Samuel","chapter":20},{"book":"1 Samuel","chapter":21},{"book":"1 Samuel","chapter":22}]', 'How did David handle being pursued?'),
+    (plan_uuid, 5, 'Sparing Saul', '[{"book":"1 Samuel","chapter":24},{"book":"1 Samuel","chapter":26}]', 'Why did David refuse to kill Saul?'),
+    (plan_uuid, 6, 'David & Abigail', '[{"book":"1 Samuel","chapter":25}]', 'How did Abigail show wisdom?'),
+    (plan_uuid, 7, 'King of Judah', '[{"book":"2 Samuel","chapter":1},{"book":"2 Samuel","chapter":2}]', 'How did David honor Saul in death?'),
+    (plan_uuid, 8, 'King of All Israel', '[{"book":"2 Samuel","chapter":5},{"book":"2 Samuel","chapter":6}]', 'How did David worship when the ark came to Jerusalem?'),
+    (plan_uuid, 9, 'God''s Covenant with David', '[{"book":"2 Samuel","chapter":7}]', 'What did God promise David about his dynasty?'),
+    (plan_uuid, 10, 'David''s Sin', '[{"book":"2 Samuel","chapter":11},{"book":"2 Samuel","chapter":12}]', 'What led to David''s downfall?'),
+    (plan_uuid, 11, 'Consequences & Repentance', '[{"book":"Psalms","chapter":51}]', 'What does true repentance look like?'),
+    (plan_uuid, 12, 'Absalom''s Rebellion', '[{"book":"2 Samuel","chapter":15},{"book":"2 Samuel","chapter":16}]', 'How did David respond to his son''s betrayal?'),
+    (plan_uuid, 13, 'Absalom''s Death', '[{"book":"2 Samuel","chapter":18}]', 'What does David''s grief reveal about his heart?'),
+    (plan_uuid, 14, 'David''s Last Words', '[{"book":"2 Samuel","chapter":23,"verses":"1-7"},{"book":"1 Kings","chapter":2,"verses":"1-12"}]', 'What legacy did David leave behind?')
     ON CONFLICT (plan_id, day_number) DO NOTHING;
   END IF;
 END $$;
