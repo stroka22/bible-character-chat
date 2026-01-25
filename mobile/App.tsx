@@ -21,6 +21,8 @@ import { requirePremiumOrPrompt } from './src/lib/tier';
 import StudiesList from './src/screens/StudiesList';
 import StudyDetail from './src/screens/StudyDetail';
 import BibleReader from './src/screens/BibleReader';
+import ReadingPlans from './src/screens/ReadingPlans';
+import ReadingPlanDetail from './src/screens/ReadingPlanDetail';
 import Login from './src/screens/Login';
 import SignUp from './src/screens/SignUp';
 import ResetPassword from './src/screens/ResetPassword';
@@ -196,6 +198,16 @@ function AppInner() {
                 </TouchableOpacity>
               )
             })} />
+            <Stack.Screen name="ReadingPlanDetail" component={ReadingPlanDetail} options={({ navigation }) => ({ 
+              headerShown: true, 
+              headerTitleAlign: 'center', 
+              headerTitle: () => <BrandHeaderTitle />,
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Plans' })} style={{ paddingHorizontal: 8 }}>
+                  <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Plans'}</Text>
+                </TouchableOpacity>
+              )
+            })} />
           </>
         )}
         {/* Deep link only screens - available for both auth states */}
@@ -220,6 +232,7 @@ function MainTabs() {
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Chat" component={ChatStackScreen} options={{ headerShown: false }} />
       <Tabs.Screen name="Bible" component={BibleReader} />
+      <Tabs.Screen name="Plans" component={ReadingPlans} />
       <Tabs.Screen name="Studies" component={StudiesList} />
       <Tabs.Screen name="My Walk" component={MyWalk} />
       <Tabs.Screen name="Profile" component={Profile} />

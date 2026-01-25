@@ -48,6 +48,8 @@ import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
 import StudyLesson from './pages/StudyLesson.jsx';
 const BibleReader = lazy(() => import('./pages/BibleReader.jsx'));
+const ReadingPlansPage = lazy(() => import('./pages/ReadingPlansPage.jsx'));
+const ReadingPlanDetail = lazy(() => import('./pages/ReadingPlanDetail.jsx'));
 import RoundtableSetup from './pages/RoundtableSetup.jsx';
 import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
@@ -342,6 +344,9 @@ function App(): JSX.Element {
     {/* -------- Bible Reader (public) -------------------------- */}
     <Route path="/bible" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
     <Route path="/bible/:translation/:book/:chapter" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
+    {/* -------- Reading Plans ------------------------------------ */}
+    <Route path="/reading-plans" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPage /></Suspense>} />
+    <Route path="/reading-plans/:slug" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlanDetail /></Suspense>} />
     <Route path="/debug" element={<div className="min-h-screen bg-slate-800 text-white p-4"><h1 className="text-2xl mb-4">Debug Tools</h1><DebugPanel /></div>} />
     
     {/* Chat & Shared conversation routes */}
