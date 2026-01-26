@@ -26,10 +26,14 @@ export interface Translation {
 }
 
 export const AVAILABLE_TRANSLATIONS: Translation[] = [
-  { code: 'NIV', name: 'New International Version', year: 1978 },
   { code: 'KJV', name: 'King James Version', year: 1769 },
+  { code: 'AKJV', name: 'American King James Version', year: 1999 },
   { code: 'ASV', name: 'American Standard Version', year: 1901 },
+  { code: 'BBE', name: 'Bible in Basic English', year: 1965 },
+  { code: 'DRB', name: 'Douay-Rheims Bible', year: 1899 },
   { code: 'WEB', name: 'World English Bible', year: 2000 },
+  { code: 'WEBSTER', name: "Webster's Bible", year: 1833 },
+  { code: 'WEYMOUTH', name: 'Weymouth New Testament', year: 1903 },
   { code: 'YLT', name: "Young's Literal Translation", year: 1898 },
 ];
 

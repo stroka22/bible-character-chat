@@ -70,23 +70,17 @@ export default function BibleReader() {
     })();
   }, []);
   
-  // Get provider for current translation (NIV falls back to KJV until API is ready)
-  const effectiveTranslation = translation === 'NIV' ? 'KJV' : translation;
-  const prov = getProvider(effectiveTranslation);
+  // Get provider for current translation
+  const prov = getProvider(translation);
 
-  React.useEffect(() => { (async () => setBookList(await prov.getBooks()))(); }, [effectiveTranslation]);
-  React.useEffect(() => { (async () => setChapterList(await prov.getChapters(book)))(); }, [book, effectiveTranslation]);
+  React.useEffect(() => { (async () => setBookList(await prov.getBooks()))(); }, [translation]);
+  React.useEffect(() => { (async () => setChapterList(await prov.getChapters(book)))(); }, [book, translation]);
   React.useEffect(() => {
     (async () => {
       setLoading(true); setError('');
       try {
         const res = await prov.getChapterText(book, Number(chapter));
-        // Add notice if NIV is selected but showing KJV
-        if (translation === 'NIV') {
-          setData({ ...res, notice: 'NIV coming soon via Bible Brain. Showing KJV.' });
-        } else {
-          setData(res);
-        }
+        setData(res);
       } catch (e) {
         setError(e.message || 'Failed to load chapter');
       } finally {

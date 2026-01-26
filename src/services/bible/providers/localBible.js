@@ -29,11 +29,26 @@ async function loadStore(translation) {
     case 'KJV':
       mod = await import('../../../data/kjv.json');
       break;
+    case 'AKJV':
+      mod = await import('../../../data/akjv.json');
+      break;
     case 'ASV':
       mod = await import('../../../data/asv.json');
       break;
+    case 'BBE':
+      mod = await import('../../../data/bbe.json');
+      break;
+    case 'DRB':
+      mod = await import('../../../data/drb.json');
+      break;
     case 'WEB':
       mod = await import('../../../data/web.json');
+      break;
+    case 'WEBSTER':
+      mod = await import('../../../data/webster.json');
+      break;
+    case 'WEYMOUTH':
+      mod = await import('../../../data/weymouth.json');
       break;
     case 'YLT':
       mod = await import('../../../data/ylt.json');
@@ -86,11 +101,15 @@ export class LocalBibleProvider {
   }
 }
 
-// Available translations
+// Available translations (all public domain)
 export const AVAILABLE_TRANSLATIONS = [
-  { code: 'NIV', name: 'New International Version', year: 1978 },
   { code: 'KJV', name: 'King James Version', year: 1769 },
+  { code: 'AKJV', name: 'American King James Version', year: 1999 },
   { code: 'ASV', name: 'American Standard Version', year: 1901 },
+  { code: 'BBE', name: 'Bible in Basic English', year: 1965 },
+  { code: 'DRB', name: 'Douay-Rheims Bible', year: 1899 },
   { code: 'WEB', name: 'World English Bible', year: 2000 },
+  { code: 'WEBSTER', name: "Webster's Bible", year: 1833 },
+  { code: 'WEYMOUTH', name: 'Weymouth New Testament', year: 1903, ntOnly: true },
   { code: 'YLT', name: "Young's Literal Translation", year: 1898 },
 ];
