@@ -26,6 +26,7 @@ export interface Translation {
 }
 
 export const AVAILABLE_TRANSLATIONS: Translation[] = [
+  { code: 'NIV', name: 'New International Version', year: 1978 },
   { code: 'KJV', name: 'King James Version', year: 1769 },
   { code: 'ASV', name: 'American Standard Version', year: 1901 },
   { code: 'WEB', name: 'World English Bible', year: 2000 },

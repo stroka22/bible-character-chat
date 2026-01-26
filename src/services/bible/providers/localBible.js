@@ -86,8 +86,9 @@ export class LocalBibleProvider {
   }
 }
 
-// Available translations (NIV removed until API is ready)
+// Available translations
 export const AVAILABLE_TRANSLATIONS = [
+  { code: 'NIV', name: 'New International Version', year: 1978 },
   { code: 'KJV', name: 'King James Version', year: 1769 },
   { code: 'ASV', name: 'American Standard Version', year: 1901 },
   { code: 'WEB', name: 'World English Bible', year: 2000 },
