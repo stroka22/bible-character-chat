@@ -53,8 +53,20 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
           <h2 className="text-2xl font-bold text-gray-900 mt-1">{day.title || `Day ${day.day_number}`}</h2>
         </div>
 
+        {/* Context/Teaching Section */}
+        {day.context && (
+          <div className="mb-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">📖 Today's Teaching</h3>
+            <div className="text-blue-900 prose prose-sm max-w-none">
+              {day.context.split('\n\n').map((paragraph, idx) => (
+                <p key={idx} className="mb-3 last:mb-0 leading-relaxed">{paragraph}</p>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">Today's Reading</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">📜 Today's Scripture</h3>
           <div className="space-y-2">
             {readings.map((reading, idx) => (
               <Link
@@ -74,7 +86,7 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
 
         {day.reflection_prompt && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <h3 className="text-sm font-semibold text-yellow-800 mb-2">Reflection Question</h3>
+            <h3 className="text-sm font-semibold text-yellow-800 mb-2">💭 Reflection Question</h3>
             <p className="text-yellow-900">{day.reflection_prompt}</p>
             <Link
               to={`/chat?context=${encodeURIComponent(`I'm reading ${day.title || `Day ${day.day_number}`} from the "${plan.title}" reading plan. Today's passages: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')}. ${day.reflection_prompt}`)}`}
