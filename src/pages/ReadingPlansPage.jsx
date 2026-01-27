@@ -18,15 +18,18 @@ function PlanCard({ plan, userProgress, onStart, compact = false }) {
 
   if (compact) {
     return (
-      <div className="flex-shrink-0 w-72 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer">
+      <Link 
+        to={`/reading-plans/${plan.slug}`}
+        className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer block"
+      >
         <div className="p-4">
           <div className="flex items-start justify-between mb-1">
             <h3 className="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">{plan.title}</h3>
           </div>
           
-          <p className="text-gray-500 text-xs mb-2 line-clamp-2">{plan.description}</p>
+          <p className="text-gray-500 text-sm mb-3">{plan.description}</p>
           
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span className="text-xs text-gray-500">{plan.duration_days} days</span>
             <span className="text-gray-300">•</span>
             <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${difficultyColors[plan.difficulty] || difficultyColors.medium}`}>
@@ -48,23 +51,19 @@ function PlanCard({ plan, userProgress, onStart, compact = false }) {
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <Link 
-                to={`/reading-plans/${plan.slug}`}
-                className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1.5 px-3 rounded-lg transition-colors"
-              >
+              <span className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
                 Continue ({progressPercent}%)
-              </Link>
+              </span>
             </div>
           ) : (
-            <button
-              onClick={(e) => { e.stopPropagation(); onStart(plan.id); }}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 text-sm font-medium py-1.5 px-3 rounded-lg transition-colors"
+            <span
+              className="block w-full text-center bg-gray-100 text-gray-900 text-sm font-medium py-1.5 px-3 rounded-lg"
             >
-              Start Plan
-            </button>
+              View Plan
+            </span>
           )}
         </div>
-      </div>
+      </Link>
     );
   }
 
