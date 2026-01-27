@@ -57,12 +57,6 @@ function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, show
               <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${difficultyColors[plan.difficulty] || difficultyColors.medium}`}>
                 {plan.difficulty}
               </span>
-              {plan.is_featured && (
-                <>
-                  <span className="text-gray-300">•</span>
-                  <span className="text-xs text-blue-600">★ Featured</span>
-                </>
-              )}
             </div>
 
             {isCompleted ? (
@@ -111,9 +105,6 @@ function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, show
       <div className="p-5">
         <div className="flex items-start justify-between mb-2">
           <h3 className="text-lg font-semibold text-gray-900">{plan.title}</h3>
-          {plan.is_featured && (
-            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">Featured</span>
-          )}
         </div>
         
         <p className="text-gray-600 text-sm mb-3">{plan.description}</p>
