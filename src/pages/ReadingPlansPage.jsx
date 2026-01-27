@@ -26,7 +26,7 @@ function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, show
 
   if (compact) {
     return (
-      <div className="relative flex-shrink-0 w-80">
+      <div className="relative flex-shrink-0 w-72">
         {/* Remove Button */}
         {showRemove && (
           <button
@@ -42,14 +42,19 @@ function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, show
         
         <Link 
           to={`/reading-plans/${plan.slug}`}
-          className="block bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
+          className="block bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer h-[220px] flex flex-col"
         >
-          <div className="p-4">
+          <div className="p-4 flex flex-col h-full">
             <div className="flex items-start justify-between mb-1">
               <h3 className="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">{plan.title}</h3>
             </div>
             
-            <p className="text-gray-500 text-sm mb-3">{plan.description}</p>
+            <p 
+              className="text-gray-500 text-sm mb-3 line-clamp-2 flex-shrink-0" 
+              title={plan.description}
+            >
+              {plan.description}
+            </p>
             
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span className="text-xs text-gray-500">{plan.duration_days} days</span>
@@ -59,41 +64,43 @@ function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, show
               </span>
             </div>
 
-            {isCompleted ? (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-sm text-green-600 font-medium">Completed!</span>
+            <div className="mt-auto">
+              {isCompleted ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm text-green-600 font-medium">Completed!</span>
+                  </div>
+                  <span className="block w-full text-center bg-green-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
+                    View / Restart
+                  </span>
                 </div>
-                <span className="block w-full text-center bg-green-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
-                  View / Restart
+              ) : progress ? (
+                <div>
+                  <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                    <span>Day {currentDay} of {plan.duration_days}</span>
+                    <span>{progressPercent}% complete</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                    <div 
+                      className="bg-blue-600 h-1.5 rounded-full transition-all" 
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <span className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
+                    Continue Reading
+                  </span>
+                </div>
+              ) : (
+                <span
+                  className="block w-full text-center bg-gray-100 text-gray-900 text-sm font-medium py-1.5 px-3 rounded-lg"
+                >
+                  View Plan
                 </span>
-              </div>
-            ) : progress ? (
-              <div>
-                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                  <span>Day {currentDay} of {plan.duration_days}</span>
-                  <span>{progressPercent}% complete</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                  <div 
-                    className="bg-blue-600 h-1.5 rounded-full transition-all" 
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
-                <span className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
-                  Continue Reading
-                </span>
-              </div>
-            ) : (
-              <span
-                className="block w-full text-center bg-gray-100 text-gray-900 text-sm font-medium py-1.5 px-3 rounded-lg"
-              >
-                View Plan
-              </span>
-            )}
+              )}
+            </div>
           </div>
         </Link>
       </div>

@@ -507,18 +507,27 @@ const SimpleChatWithHistory = () => {
             if (shareCode) return;
 
             const params = new URLSearchParams(location.search);
-            const charId = params.get('character');
-            if (!charId) return;
+            const charParam = params.get('character');
+            if (!charParam) return;
             
             // If this is a Bible study, skip the default greeting - AI will generate intro
             const isBibleStudy = params.get('study') && params.get('lesson') !== null;
+            // Skip greeting if context is provided (e.g., from reading plans)
+            const hasContext = params.get('context');
 
             try {
-                const fetched = await characterRepository.getById(charId);
+                // Try to fetch by ID first
+                let fetched = await characterRepository.getById(charParam);
+                
+                // If not found by ID, try by name
+                if (!fetched && characterRepository.getByName) {
+                    fetched = await characterRepository.getByName(charParam);
+                }
+                
                 if (fetched) {
-                    selectCharacter(fetched, { skipGreeting: isBibleStudy });
+                    selectCharacter(fetched, { skipGreeting: isBibleStudy || hasContext });
                 } else {
-                    console.warn(`[SimpleChatWithHistory] Character id ${charId} not found`);
+                    console.warn(`[SimpleChatWithHistory] Character "${charParam}" not found by ID or name`);
                 }
             } catch (err) {
                 console.warn('[SimpleChatWithHistory] Failed to fetch character from query param:', err);
