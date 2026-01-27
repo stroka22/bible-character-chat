@@ -4,11 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { readingPlansRepository } from '../repositories/readingPlansRepository';
 
 // Compact card for horizontal scroll rows
-function PlanCard({ plan, userProgress, onStart, compact = false }) {
+function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, showRemove = false, isCompleted = false }) {
   const progress = userProgress?.find(p => p.plan_id === plan.id);
+  const completedDaysCount = progress?.completed_days?.length || 0;
   const progressPercent = progress 
-    ? Math.round((progress.completed_days?.length || 0) / plan.duration_days * 100)
+    ? Math.round(completedDaysCount / plan.duration_days * 100)
     : 0;
+  const currentDay = progress?.current_day || 1;
   
   const difficultyColors = {
     easy: 'bg-green-100 text-green-800',
@@ -16,54 +18,91 @@ function PlanCard({ plan, userProgress, onStart, compact = false }) {
     intensive: 'bg-red-100 text-red-800',
   };
 
+  const handleRemove = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onRemove) onRemove(plan.id, plan.title);
+  };
+
   if (compact) {
     return (
-      <Link 
-        to={`/reading-plans/${plan.slug}`}
-        className="flex-shrink-0 w-80 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer block"
-      >
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-1">
-            <h3 className="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">{plan.title}</h3>
-          </div>
-          
-          <p className="text-gray-500 text-sm mb-3">{plan.description}</p>
-          
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <span className="text-xs text-gray-500">{plan.duration_days} days</span>
-            <span className="text-gray-300">•</span>
-            <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${difficultyColors[plan.difficulty] || difficultyColors.medium}`}>
-              {plan.difficulty}
-            </span>
-            {plan.is_featured && (
-              <>
-                <span className="text-gray-300">•</span>
-                <span className="text-xs text-blue-600">★ Featured</span>
-              </>
+      <div className="relative flex-shrink-0 w-80">
+        {/* Remove Button */}
+        {showRemove && (
+          <button
+            onClick={handleRemove}
+            className="absolute -top-2 -right-2 z-10 bg-gray-800 hover:bg-red-600 text-white rounded-full p-1 shadow-lg transition-colors"
+            title="Remove from Continue Reading"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+        
+        <Link 
+          to={`/reading-plans/${plan.slug}`}
+          className="block bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
+        >
+          <div className="p-4">
+            <div className="flex items-start justify-between mb-1">
+              <h3 className="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">{plan.title}</h3>
+            </div>
+            
+            <p className="text-gray-500 text-sm mb-3">{plan.description}</p>
+            
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <span className="text-xs text-gray-500">{plan.duration_days} days</span>
+              <span className="text-gray-300">•</span>
+              <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${difficultyColors[plan.difficulty] || difficultyColors.medium}`}>
+                {plan.difficulty}
+              </span>
+              {plan.is_featured && (
+                <>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-xs text-blue-600">★ Featured</span>
+                </>
+              )}
+            </div>
+
+            {isCompleted ? (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-sm text-green-600 font-medium">Completed!</span>
+                </div>
+                <span className="block w-full text-center bg-green-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
+                  View / Restart
+                </span>
+              </div>
+            ) : progress ? (
+              <div>
+                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                  <span>Day {currentDay} of {plan.duration_days}</span>
+                  <span>{progressPercent}% complete</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                  <div 
+                    className="bg-blue-600 h-1.5 rounded-full transition-all" 
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <span className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
+                  Continue Reading
+                </span>
+              </div>
+            ) : (
+              <span
+                className="block w-full text-center bg-gray-100 text-gray-900 text-sm font-medium py-1.5 px-3 rounded-lg"
+              >
+                View Plan
+              </span>
             )}
           </div>
-
-          {progress ? (
-            <div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                <div 
-                  className="bg-blue-600 h-1.5 rounded-full transition-all" 
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <span className="block w-full text-center bg-blue-600 text-white text-sm font-medium py-1.5 px-3 rounded-lg">
-                Continue ({progressPercent}%)
-              </span>
-            </div>
-          ) : (
-            <span
-              className="block w-full text-center bg-gray-100 text-gray-900 text-sm font-medium py-1.5 px-3 rounded-lg"
-            >
-              View Plan
-            </span>
-          )}
-        </div>
-      </Link>
+        </Link>
+      </div>
     );
   }
 
@@ -120,7 +159,7 @@ function PlanCard({ plan, userProgress, onStart, compact = false }) {
 }
 
 // Horizontal scroll row component
-function PlanRow({ title, plans, userProgress, onStart, icon }) {
+function PlanRow({ title, plans, userProgress, onStart, onRemove, icon, showRemove = false, isCompletedRow = false }) {
   const scrollRef = useRef(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -177,7 +216,7 @@ function PlanRow({ title, plans, userProgress, onStart, icon }) {
         {/* Scrollable Container */}
         <div 
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide"
+          className="flex gap-4 overflow-x-auto pb-2 pt-3 pl-1 scrollbar-hide"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {plans.map(plan => (
@@ -186,6 +225,9 @@ function PlanRow({ title, plans, userProgress, onStart, icon }) {
               plan={plan} 
               userProgress={userProgress}
               onStart={onStart}
+              onRemove={onRemove}
+              showRemove={showRemove}
+              isCompleted={isCompletedRow}
               compact
             />
           ))}
@@ -212,8 +254,10 @@ export default function ReadingPlansPage() {
   const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [userProgress, setUserProgress] = useState([]);
+  const [completedProgress, setCompletedProgress] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [removeConfirm, setRemoveConfirm] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -223,12 +267,14 @@ export default function ReadingPlansPage() {
     setLoading(true);
     setError('');
     try {
-      const [allPlans, progress] = await Promise.all([
+      const [allPlans, progress, completed] = await Promise.all([
         readingPlansRepository.getAll(),
         user ? readingPlansRepository.getUserPlans(user.id) : [],
+        user ? readingPlansRepository.getCompletedPlans(user.id) : [],
       ]);
       setPlans(allPlans);
       setUserProgress(progress);
+      setCompletedProgress(completed || []);
     } catch (e) {
       console.error('Error loading reading plans:', e);
       setError('Failed to load reading plans');
@@ -252,6 +298,22 @@ export default function ReadingPlansPage() {
     }
   };
 
+  const handleRemovePlan = async (planId, planTitle) => {
+    setRemoveConfirm({ planId, planTitle });
+  };
+
+  const confirmRemovePlan = async () => {
+    if (!removeConfirm || !user) return;
+    try {
+      await readingPlansRepository.leavePlan(user.id, removeConfirm.planId);
+      setUserProgress(prev => prev.filter(p => p.plan_id !== removeConfirm.planId));
+      setRemoveConfirm(null);
+    } catch (e) {
+      console.error('Error removing plan:', e);
+      setError('Failed to remove plan');
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter plans by search
@@ -262,8 +324,11 @@ export default function ReadingPlansPage() {
       )
     : plans;
 
-  // Get active plans
-  const activePlans = userProgress.filter(p => !p.is_completed).map(p => p.plan);
+  // Get active plans (filter out any null plans)
+  const activePlans = userProgress.filter(p => !p.is_completed && p.plan).map(p => p.plan);
+  
+  // Get completed plans (filter out any null plans)
+  const completedPlans = completedProgress.filter(p => p.plan).map(p => p.plan);
 
   // Organize plans by category
   const featuredPlans = filteredPlans.filter(p => p.is_featured);
@@ -347,7 +412,7 @@ export default function ReadingPlansPage() {
       ) : (
         // Netflix-style rows
         <>
-          {/* Your Active Plans */}
+          {/* Your Active Plans - with remove option */}
           {activePlans.length > 0 && (
             <PlanRow 
               title="Continue Reading" 
@@ -355,6 +420,20 @@ export default function ReadingPlansPage() {
               plans={activePlans}
               userProgress={userProgress}
               onStart={handleStartPlan}
+              onRemove={handleRemovePlan}
+              showRemove={true}
+            />
+          )}
+
+          {/* Completed Plans */}
+          {completedPlans.length > 0 && (
+            <PlanRow 
+              title="Completed" 
+              icon="✅"
+              plans={completedPlans}
+              userProgress={completedProgress}
+              onStart={handleStartPlan}
+              isCompletedRow={true}
             />
           )}
 
@@ -456,6 +535,32 @@ export default function ReadingPlansPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Remove Confirmation Modal */}
+      {removeConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Remove Reading Plan?</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to remove <span className="font-medium">"{removeConfirm.planTitle}"</span> from your reading list? Your progress will be lost.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setRemoveConfirm(null)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRemovePlan}
+                className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

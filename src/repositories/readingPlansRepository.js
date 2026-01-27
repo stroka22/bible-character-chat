@@ -82,6 +82,22 @@ export const readingPlansRepository = {
     return data || [];
   },
 
+  // Get all user's completed plans
+  async getCompletedPlans(userId) {
+    const { data, error } = await supabase
+      .from('user_reading_plan_progress')
+      .select(`
+        *,
+        plan:reading_plans(*)
+      `)
+      .eq('user_id', userId)
+      .eq('is_completed', true)
+      .order('last_activity_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
   // Start a plan for a user
   async startPlan(userId, planId) {
     const { data, error } = await supabase
