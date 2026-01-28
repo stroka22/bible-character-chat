@@ -141,8 +141,8 @@ const Header = () => {
     <header 
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled 
-          ? 'bg-gradient-to-b from-[#2d1810] to-[#3d2314]/95 backdrop-blur-sm shadow-lg py-2' 
-          : 'bg-gradient-to-b from-[#2d1810] to-[#3d2314] py-4'
+          ? 'bg-[#0a0a2a]/95 backdrop-blur-sm shadow-md py-2' 
+          : 'bg-[#0a0a2a] py-4'
       }`}
     >
       <div className="container mx-auto px-4 flex items-center justify-between">
@@ -157,8 +157,8 @@ const Header = () => {
             to="/" 
             className={`text-sm font-medium transition-colors ${
               isActive('/') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Home
@@ -167,8 +167,8 @@ const Header = () => {
             to="/bible" 
             className={`text-sm font-medium transition-colors ${
               isActive('/bible') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Bible
@@ -177,8 +177,8 @@ const Header = () => {
             to="/how-it-works" 
             className={`text-sm font-medium transition-colors ${
               isActive('/how-it-works') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Getting&nbsp;Started
@@ -187,8 +187,8 @@ const Header = () => {
             to="/pricing" 
             className={`text-sm font-medium transition-colors ${
               isActive('/pricing') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Pricing
@@ -197,8 +197,8 @@ const Header = () => {
             to="/faq" 
             className={`text-sm font-medium transition-colors ${
               isActive('/faq') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             FAQ
@@ -207,8 +207,8 @@ const Header = () => {
             to="/contact" 
             className={`text-sm font-medium transition-colors ${
               isActive('/contact') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Contact&nbsp;Us
@@ -228,8 +228,8 @@ const Header = () => {
                   aria-label="My Walk"
                   className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                     isActive('/my-walk')
-                      ? 'bg-amber-300 text-amber-900'
-                      : 'bg-amber-400 text-amber-900 hover:bg-amber-300'
+                      ? 'bg-yellow-300 text-blue-900'
+                      : 'bg-yellow-400 text-blue-900 hover:bg-yellow-300'
                   }`}
                 >
                   {/* sparkles icon */}
@@ -251,13 +251,13 @@ const Header = () => {
                 aria-haspopup="true"
                 aria-expanded={userMenuOpen}
               >
-                <div className="w-8 h-8 rounded-full bg-amber-400 text-amber-900 flex items-center justify-center font-semibold">
+                <div className="w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center">
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                <span className="text-amber-100 text-sm">{user?.email?.split('@')[0] || 'User'}</span>
+                <span className="text-white text-sm">{user?.email?.split('@')[0] || 'User'}</span>
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
-                  className="h-4 w-4 text-amber-300" 
+                  className="h-4 w-4 text-gray-400" 
                   viewBox="0 0 20 20" 
                   fill="currentColor"
                 >
@@ -317,13 +317,13 @@ const Header = () => {
             <>
               <Link 
                 to="/login" 
-                className="text-sm font-medium text-amber-100 hover:text-amber-300 transition-colors"
+                className="text-sm font-medium text-white hover:text-yellow-300 transition-colors"
               >
                 Log In
               </Link>
               <Link 
                 to="/signup" 
-                className="px-4 py-2 text-sm font-medium text-amber-900 bg-amber-400 rounded-lg hover:bg-amber-300 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-blue-900 bg-yellow-400 rounded-lg hover:bg-yellow-300 transition-colors"
               >
                 Sign Up
               </Link>
@@ -373,7 +373,7 @@ const Header = () => {
 
       {/* Mobile Menu */}
       <div 
-        className={`md:hidden absolute top-full left-0 right-0 bg-[#3d2314] border-t border-amber-800/50 shadow-lg transition-all duration-300 ${
+        className={`md:hidden absolute top-full left-0 right-0 bg-[#0a0a2a] border-t border-blue-800 shadow-lg transition-all duration-300 ${
           isMenuOpen 
             ? 'max-h-screen opacity-100 visible' 
             : 'max-h-0 opacity-0 invisible'
@@ -385,8 +385,8 @@ const Header = () => {
             to="/" 
             className={`text-sm font-medium transition-colors ${
               isActive('/') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Home
@@ -395,8 +395,8 @@ const Header = () => {
             to="/bible" 
             className={`text-sm font-medium transition-colors ${
               isActive('/bible') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Bible
@@ -405,8 +405,8 @@ const Header = () => {
             to="/how-it-works" 
             className={`text-sm font-medium transition-colors ${
               isActive('/how-it-works') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Getting Started
@@ -415,8 +415,8 @@ const Header = () => {
             to="/pricing" 
             className={`text-sm font-medium transition-colors ${
               isActive('/pricing') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Pricing
@@ -425,8 +425,8 @@ const Header = () => {
             to="/faq" 
             className={`text-sm font-medium transition-colors ${
               isActive('/faq') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             FAQ
@@ -435,8 +435,8 @@ const Header = () => {
             to="/contact" 
             className={`text-sm font-medium transition-colors ${
               isActive('/contact') 
-                ? 'text-amber-400' 
-                : 'text-amber-100/80 hover:text-amber-300'
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
             }`}
           >
             Contact Us
@@ -444,21 +444,21 @@ const Header = () => {
         </nav>
 
           {/* Mobile Auth Buttons */}
-          <div className="pt-4 border-t border-amber-800/50">
+          <div className="pt-4 border-t border-blue-800">
             {loading ? (
-              <div className="w-8 h-8 rounded-full animate-pulse bg-amber-800/50"></div>
+              <div className="w-8 h-8 rounded-full animate-pulse bg-gray-700"></div>
             ) : isAuthenticated ? (
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-amber-400 text-amber-900 flex items-center justify-center font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-yellow-400 text-blue-900 flex items-center justify-center">
                     {user?.email?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className="text-amber-100 text-sm">{user?.email || 'User'}</span>
+                  <span className="text-white text-sm">{user?.email || 'User'}</span>
                 </div>
                 {isAuthenticated && (
                   <Link
                     to="/my-walk"
-                    className="block w-full px-3 py-2 mt-3 text-sm font-semibold text-center bg-amber-400 text-amber-900 rounded-full hover:bg-amber-300 transition-colors"
+                    className="block w-full px-3 py-2 mt-3 text-sm font-semibold text-center bg-yellow-400 text-blue-900 rounded-full hover:bg-yellow-300 transition-colors"
                   >
                     <div className="inline-flex items-center justify-center">
                       <svg
@@ -476,13 +476,13 @@ const Header = () => {
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <Link 
                     to="/profile" 
-                    className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-900/50 rounded-lg hover:bg-amber-900/70 transition-colors"
+                    className="px-3 py-2 text-sm text-center text-white bg-blue-800 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Profile
                   </Link>
                   <Link 
                     to="/settings" 
-                    className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-900/50 rounded-lg hover:bg-amber-900/70 transition-colors"
+                    className="px-3 py-2 text-sm text-center text-white bg-blue-800 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Settings
                   </Link>
@@ -490,20 +490,20 @@ const Header = () => {
                 {shouldShowAdminLink && (
                   <Link 
                     to="/admin" 
-                    className="block w-full px-3 py-2 mt-2 text-sm text-center text-amber-100 bg-amber-800/50 rounded-lg hover:bg-amber-800/70 transition-colors"
+                    className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-blue-700 rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     Admin Panel
                   </Link>
                 )}
                 <Link 
                   to="/account?open=1"
-                  className="block w-full px-3 py-2 mt-2 text-sm text-center text-amber-900 bg-amber-400 rounded-lg hover:bg-amber-300 transition-colors"
+                  className="block w-full px-3 py-2 mt-2 text-sm text-center text-blue-900 bg-yellow-400 rounded-lg hover:bg-yellow-300 transition-colors"
                 >
                   Manage Subscription
                 </Link>
                 <button 
                   onClick={handleLogout}
-                  className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-red-800 rounded-lg hover:bg-red-700 transition-colors"
+                  className="block w-full px-3 py-2 mt-2 text-sm text-center text-white bg-red-700 rounded-lg hover:bg-red-600 transition-colors"
                 >
                   Sign Out
                 </button>
@@ -512,13 +512,13 @@ const Header = () => {
               <div className="grid grid-cols-2 gap-2">
                 <Link 
                   to="/login" 
-                  className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-900/50 rounded-lg hover:bg-amber-900/70 transition-colors"
+                  className="px-3 py-2 text-sm text-center text-white bg-blue-800 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Log In
                 </Link>
                 <Link 
                   to="/signup" 
-                  className="px-3 py-2 text-sm text-center text-amber-900 bg-amber-400 rounded-lg hover:bg-amber-300 transition-colors"
+                  className="px-3 py-2 text-sm text-center text-blue-900 bg-yellow-400 rounded-lg hover:bg-yellow-300 transition-colors"
                 >
                   Sign Up
                 </Link>
