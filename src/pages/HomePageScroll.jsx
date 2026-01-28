@@ -318,8 +318,8 @@ const HomePageScroll = () => {
   }, []);
 
   const handleCharacterClick = (character) => {
-    // Navigate to characters page - the character selection will happen there
-    navigate('/characters');
+    // Navigate to chat with the selected character
+    navigate(`/chat?character=${character.slug || character.id}`);
   };
 
   const handlePlanClick = (plan) => {
@@ -359,7 +359,7 @@ const HomePageScroll = () => {
 
               {/* CTA Buttons - compact */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                <WaxSealButton href="/characters" variant="primary" className="!px-5 !py-2.5 !text-sm">
+                <WaxSealButton href="/chat" variant="primary" className="!px-5 !py-2.5 !text-sm">
                   Begin a Conversation
                 </WaxSealButton>
                 <WaxSealButton href="/reading-plans" variant="secondary" className="!px-5 !py-2.5 !text-sm">
@@ -445,7 +445,7 @@ const HomePageScroll = () => {
           <SectionHeader 
             title="Meet the Characters"
             subtitle="Engage with figures from Scripture"
-            action={{ label: 'View All', href: '/characters' }}
+            action={{ label: 'View All', href: '/chat' }}
           />
           
           {loading ? (
