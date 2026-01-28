@@ -9,10 +9,211 @@ export const readingPlansRepository = {
       .select('*')
       .eq('is_active', true)
       .order('is_featured', { ascending: false })
+      .order('display_order', { ascending: true })
       .order('duration_days', { ascending: true });
     
     if (error) throw error;
     return data || [];
+  },
+
+  // ============================================
+  // ADMIN: Get all plans (including inactive)
+  // ============================================
+  async getAllAdmin() {
+    const { data, error } = await supabase
+      .from('reading_plans')
+      .select('*')
+      .order('category', { ascending: true })
+      .order('display_order', { ascending: true })
+      .order('title', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // ============================================
+  // ADMIN: Get all categories
+  // ============================================
+  async getCategories() {
+    const { data, error } = await supabase
+      .from('reading_plan_categories')
+      .select('*')
+      .order('display_order', { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // ============================================
+  // ADMIN: Create category
+  // ============================================
+  async createCategory(category) {
+    const { data, error } = await supabase
+      .from('reading_plan_categories')
+      .insert(category)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================
+  // ADMIN: Update category
+  // ============================================
+  async updateCategory(id, updates) {
+    const { data, error } = await supabase
+      .from('reading_plan_categories')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================
+  // ADMIN: Delete category
+  // ============================================
+  async deleteCategory(id) {
+    const { error } = await supabase
+      .from('reading_plan_categories')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  },
+
+  // ============================================
+  // ADMIN: Create reading plan
+  // ============================================
+  async createPlan(plan) {
+    const { data, error } = await supabase
+      .from('reading_plans')
+      .insert(plan)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================
+  // ADMIN: Update reading plan
+  // ============================================
+  async updatePlan(id, updates) {
+    const { data, error } = await supabase
+      .from('reading_plans')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================
+  // ADMIN: Delete reading plan
+  // ============================================
+  async deletePlan(id) {
+    const { error } = await supabase
+      .from('reading_plans')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  },
+
+  // ============================================
+  // ADMIN: Toggle featured status
+  // ============================================
+  async toggleFeatured(id, isFeatured) {
+    const { data, error } = await supabase
+      .from('reading_plans')
+      .update({ is_featured: isFeatured })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================
+  // ADMIN: Update plan category
+  // ============================================
+  async updatePlanCategory(id, category) {
+    const { data, error } = await supabase
+      .from('reading_plans')
+      .update({ category })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================
+  // ADMIN: Reorder plans within category
+  // ============================================
+  async reorderPlans(category, planIds) {
+    const { error } = await supabase.rpc('reorder_reading_plans', {
+      p_category: category,
+      p_plan_ids: planIds,
+    });
+    
+    if (error) throw error;
+    return true;
+  },
+
+  // ============================================
+  // ADMIN: Reorder featured plans
+  // ============================================
+  async reorderFeatured(planIds) {
+    const { error } = await supabase.rpc('reorder_featured_plans', {
+      p_plan_ids: planIds,
+    });
+    
+    if (error) throw error;
+    return true;
+  },
+
+  // ============================================
+  // ADMIN: Update plan day
+  // ============================================
+  async updatePlanDay(dayId, updates) {
+    const { data, error } = await supabase
+      .from('reading_plan_days')
+      .update(updates)
+      .eq('id', dayId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // ============================================
+  // ADMIN: Bulk update display order
+  // ============================================
+  async bulkUpdateOrder(updates) {
+    // updates is array of { id, display_order }
+    const promises = updates.map(({ id, display_order }) =>
+      supabase
+        .from('reading_plans')
+        .update({ display_order })
+        .eq('id', id)
+    );
+    
+    const results = await Promise.all(promises);
+    const errors = results.filter(r => r.error);
+    if (errors.length > 0) throw errors[0].error;
+    return true;
   },
 
   // Get a single plan by slug

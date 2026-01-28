@@ -11,7 +11,8 @@ import { RoundtableProvider } from './contexts/RoundtableContext.jsx';
  * Global styles
  * ------------------------------------------------------------------ */
 import './styles/tooltips.css'; // Custom tooltip system
-import HomePage from './pages/HomePage';
+import HomePage from './pages/HomePage'; // Original chat-focused home page
+import HomePageScroll from './pages/HomePageScroll'; // New scroll-themed preview
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import PricingPage from './pages/PricingPage';
@@ -314,6 +315,7 @@ function App(): JSX.Element {
       <main className="flex-1 px-4 md:px-6"><Routes>
     {/* Public routes */}
     <Route path="/" element={<HomePage />} />
+    <Route path="/preview" element={<HomePageScroll />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />

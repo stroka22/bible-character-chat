@@ -11,6 +11,7 @@ import AdminFeaturedCharacter from '../components/admin/AdminFeaturedCharacter';
 import AdminFavorites from '../components/admin/AdminFavorites';
 import AccountTierManagement from '../components/admin/AccountTierManagement';
 import AdminStudiesPage from './admin/AdminStudiesPage.jsx';
+import AdminReadingPlansPage from './admin/AdminReadingPlansPage.jsx';
 
 // Helper function for basic CSV parsing
 const parseCSV = (csvText: string): Array<Record<string, string>> => {
@@ -83,7 +84,8 @@ const AdminPage: React.FC = () => {
     | 'faq'
     | 'accountTiers'
     | 'roundtable'
-    | 'studies';
+    | 'studies'
+    | 'readingPlans';
   const [activeTab, setActiveTab] = useState<AdminMainTab>('overview');
 
   // Form state for manual creation/editing
@@ -377,6 +379,7 @@ const AdminPage: React.FC = () => {
             <button onClick={() => setActiveTab('groups')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'groups' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Groups</button>
             <button onClick={() => setActiveTab('featured')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'featured' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Featured Character</button>
             <button onClick={() => setActiveTab('studies')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'studies' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Bible Studies</button>
+            <button onClick={() => setActiveTab('readingPlans')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'readingPlans' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Reading Plans</button>
             <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
             <button onClick={() => setActiveTab('faq')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'faq' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>FAQ</button>
           </nav>
@@ -528,6 +531,11 @@ const AdminPage: React.FC = () => {
               <div className="text-gray-900 font-semibold">Bible Studies</div>
               <div className="text-sm text-gray-600 mb-3">Manage studies and lessons.</div>
               <button onClick={() => setActiveTab('studies')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Open</button>
+            </div>
+            <div className="p-4 bg-white rounded-md shadow border">
+              <div className="text-gray-900 font-semibold">Reading Plans</div>
+              <div className="text-sm text-gray-600 mb-3">Manage reading plans and categories.</div>
+              <button onClick={() => setActiveTab('readingPlans')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Manage</button>
             </div>
             <div className="p-4 bg-white rounded-md shadow border">
               <div className="text-gray-900 font-semibold">Characters</div>
@@ -943,6 +951,10 @@ const AdminPage: React.FC = () => {
 
       {activeTab === 'studies' && (
         <AdminStudiesPage embedded={true} />
+      )}
+
+      {activeTab === 'readingPlans' && (
+        <AdminReadingPlansPage embedded={true} />
       )}
 
       {/* ----------------------------------------------------------------

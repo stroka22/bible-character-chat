@@ -6,7 +6,7 @@ import React from 'react';
  * A reusable component for the FaithTalkAI logo
  * 
  * @param {Object} props
- * @param {('light'|'dark')} [props.variant='dark'] - Color variant (light for white text, dark for blue text)
+ * @param {('light'|'dark')} [props.variant='dark'] - Color variant (light for cream/gold on dark, dark for brown text on light)
  * @param {('sm'|'md'|'lg'|'xl'|number)} [props.size='md'] - Size of the logo
  * @param {string} [props.className] - Additional CSS classes
  * @returns {JSX.Element} The FaithTalkAI logo
@@ -17,19 +17,19 @@ const FaithLogo = ({
   className = '',
   ...props
 }) => {
-  // Define color scheme based on variant
+  // Define color scheme based on variant - now using warm wood/parchment tones
   const colors = {
     dark: {
-      text: '#2A3F5F',        // Navy
-      bubble: '#2A3F5F',      // Navy
-      cross: '#FACC15',       // Gold
-      ai: '#FACC15',          // Gold
+      text: '#5c3a21',        // Dark wood brown
+      bubble: '#5c3a21',      // Dark wood brown
+      cross: '#d97706',       // Amber gold
+      ai: '#d97706',          // Amber gold
     },
     light: {
-      text: '#FFFFFF',        // White
-      bubble: '#FFFFFF',      // White outline
-      cross: '#FACC15',       // Gold
-      ai: '#FACC15',          // Gold
+      text: '#fef3c7',        // Cream/parchment
+      bubble: '#fef3c7',      // Cream/parchment
+      cross: '#fbbf24',       // Bright gold
+      ai: '#fbbf24',          // Bright gold
     },
   };
 

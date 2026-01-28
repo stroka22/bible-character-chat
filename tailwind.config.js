@@ -6,6 +6,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'serif': ['Cinzel', 'Georgia', 'serif'],
+        'body': ['Cormorant Garamond', 'Georgia', 'serif'],
+      },
       colors: {
         primary: {
           50: '#f0f9ff',
