@@ -53,7 +53,7 @@ jobs:
       - name: Push migrations
         if: ${{ !(hashFiles('.skip_migrations') != '') }}
         run: |
-          supabase db push
+          supabase db push --include-all
 
       - name: No-op (secrets missing)
         if: ${{ hashFiles('.skip_migrations') != '' }}
