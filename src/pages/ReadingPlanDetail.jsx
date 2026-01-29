@@ -155,12 +155,14 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
           >
             Open in Bible Reader
           </button>
-          <Link
-            to={`/chat?character=${characterParam}&context=${chatContext}`}
+          <a
+            href={`/chat?character=${characterParam}&context=${chatContext}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-center"
           >
             Chat with {suggestedCharacter}
-          </Link>
+          </a>
         </div>
       </div>
     </div>
