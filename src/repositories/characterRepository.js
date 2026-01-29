@@ -87,8 +87,8 @@ export const characterRepository = {
     },
     async getByName(name) {
         try {
-            // Use .limit(1) instead of .single() to avoid 406 error when no rows found
-            const { data, error } = await supabase
+            // First try exact match (case-insensitive)
+            let { data, error } = await supabase
                 .from('characters')
                 .select('*')
                 .ilike('name', name)
@@ -96,6 +96,22 @@ export const characterRepository = {
             if (error) {
                 throw error;
             }
+            
+            // If no exact match, try partial match (name starts with the search term)
+            // This handles cases like searching "Paul" finding "Paul, The Apostle to the Gentiles"
+            if (!data || data.length === 0) {
+                const result = await supabase
+                    .from('characters')
+                    .select('*')
+                    .ilike('name', `${name}%`)
+                    .limit(1);
+                data = result.data;
+                error = result.error;
+                if (error) {
+                    throw error;
+                }
+            }
+            
             // Return first match or null if no results
             if (!data || data.length === 0) {
                 return null;
