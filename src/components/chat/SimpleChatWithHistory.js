@@ -524,15 +524,20 @@ const SimpleChatWithHistory = () => {
             const hasContext = params.get('context');
 
             try {
+                console.log(`[SimpleChatWithHistory] Looking up character: "${charParam}"`);
                 // Try to fetch by ID first
                 let fetched = await characterRepository.getById(charParam);
+                console.log(`[SimpleChatWithHistory] getById result:`, fetched?.name || 'not found');
                 
                 // If not found by ID, try by name
                 if (!fetched && characterRepository.getByName) {
+                    console.log(`[SimpleChatWithHistory] Trying getByName for: "${charParam}"`);
                     fetched = await characterRepository.getByName(charParam);
+                    console.log(`[SimpleChatWithHistory] getByName result:`, fetched?.name || 'not found');
                 }
                 
                 if (fetched) {
+                    console.log(`[SimpleChatWithHistory] Calling selectCharacter for: ${fetched.name}`);
                     selectCharacter(fetched, { skipGreeting: isBibleStudy || hasContext });
                 } else {
                     console.warn(`[SimpleChatWithHistory] Character "${charParam}" not found by ID or name`);
