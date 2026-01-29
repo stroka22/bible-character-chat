@@ -355,6 +355,33 @@ export const readingPlansRepository = {
     return data;
   },
 
+  // Unmark a day as complete
+  async uncompleteDay(userId, planId, dayNumber) {
+    // First get current progress
+    const progress = await this.getUserProgress(userId, planId);
+    
+    if (!progress) {
+      throw new Error('No progress found for this plan');
+    }
+
+    const completedDays = (progress.completed_days || []).filter(d => d !== dayNumber);
+
+    const { data, error } = await supabase
+      .from('user_reading_plan_progress')
+      .update({
+        completed_days: completedDays,
+        is_completed: false,
+        last_activity_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+      .eq('plan_id', planId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
   // Reset plan progress
   async resetPlan(userId, planId) {
     const { data, error } = await supabase

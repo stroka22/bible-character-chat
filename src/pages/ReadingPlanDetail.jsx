@@ -36,7 +36,7 @@ function DayCard({ day, isCompleted, isCurrent, onSelect }) {
   );
 }
 
-function ReadingView({ day, plan, onComplete, onBack, navigate }) {
+function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, onNextDay, isCompleted, navigate }) {
   const readings = day.readings || [];
   const suggestedCharacter = getBestCharacterSuggestion(readings, plan.title);
   const chatContext = encodeURIComponent(`Today's reading: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')} from "${plan.title}". ${day.reflection_prompt || ''}`);
@@ -44,20 +44,50 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
   
   // Get context from the plan's day-specific context columns (day1_context, day2_context, etc.)
   const dayContext = day.context || plan[`day${day.day_number}_context`] || null;
+
+  const hasPrev = day.day_number > 1;
+  const hasNext = day.day_number < plan.duration_days;
   
   return (
     <div className="max-w-3xl mx-auto">
-      <button 
-        onClick={onBack}
-        className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-1"
-      >
-        ← Back to Plan
-      </button>
+      {/* Navigation header */}
+      <div className="flex items-center justify-between mb-4">
+        <button 
+          onClick={onBack}
+          className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+        >
+          ← Back to Plan
+        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onPrevDay}
+            disabled={!hasPrev}
+            className={`px-3 py-1 rounded ${hasPrev ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+          >
+            ← Prev
+          </button>
+          <span className="text-sm text-gray-500">Day {day.day_number}/{plan.duration_days}</span>
+          <button
+            onClick={onNextDay}
+            disabled={!hasNext}
+            className={`px-3 py-1 rounded ${hasNext ? 'bg-gray-200 hover:bg-gray-300 text-gray-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+          >
+            Next →
+          </button>
+        </div>
+      </div>
       
       <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
-        <div className="mb-6">
-          <span className="text-sm text-blue-600 font-medium">Day {day.day_number} of {plan.duration_days}</span>
-          <h2 className="text-2xl font-bold text-gray-900 mt-1">{day.title || `Day ${day.day_number}`}</h2>
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <span className="text-sm text-blue-600 font-medium">Day {day.day_number} of {plan.duration_days}</span>
+            <h2 className="text-2xl font-bold text-gray-900 mt-1">{day.title || `Day ${day.day_number}`}</h2>
+          </div>
+          {isCompleted && (
+            <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1">
+              ✓ Completed
+            </span>
+          )}
         </div>
 
         {/* Context/Teaching Section */}
@@ -99,12 +129,21 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
         )}
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={onComplete}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-          >
-            Mark Complete ✓
-          </button>
+          {isCompleted ? (
+            <button
+              onClick={onUncomplete}
+              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            >
+              Unmark Complete
+            </button>
+          ) : (
+            <button
+              onClick={onComplete}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            >
+              Mark Complete ✓
+            </button>
+          )}
           <button
             onClick={() => {
               const reading = readings[0];
@@ -223,6 +262,33 @@ export default function ReadingPlanDetail() {
     }
   };
 
+  const handleUncompleteDay = async () => {
+    if (!user || !progress || !selectedDay) return;
+    try {
+      const updatedProgress = await readingPlansRepository.uncompleteDay(
+        user.id, 
+        plan.id, 
+        selectedDay.day_number
+      );
+      setProgress(updatedProgress);
+    } catch (e) {
+      console.error('Error unmarking day:', e);
+      setError('Failed to unmark day');
+    }
+  };
+
+  const handlePrevDay = () => {
+    if (!selectedDay || selectedDay.day_number <= 1) return;
+    const prevDay = days.find(d => d.day_number === selectedDay.day_number - 1);
+    if (prevDay) setSelectedDay(prevDay);
+  };
+
+  const handleNextDay = () => {
+    if (!selectedDay || selectedDay.day_number >= plan.duration_days) return;
+    const nextDay = days.find(d => d.day_number === selectedDay.day_number + 1);
+    if (nextDay) setSelectedDay(nextDay);
+  };
+
   const completedDays = new Set(progress?.completed_days || []);
   const progressPercent = progress 
     ? Math.round((completedDays.size / plan?.duration_days) * 100)
@@ -258,7 +324,11 @@ export default function ReadingPlanDetail() {
           day={selectedDay} 
           plan={plan}
           onComplete={handleCompleteDay}
+          onUncomplete={handleUncompleteDay}
           onBack={() => setSelectedDay(null)}
+          onPrevDay={handlePrevDay}
+          onNextDay={handleNextDay}
+          isCompleted={completedDays.has(selectedDay.day_number)}
           navigate={navigate}
         />
       ) : (
