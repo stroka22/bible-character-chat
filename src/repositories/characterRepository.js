@@ -87,18 +87,20 @@ export const characterRepository = {
     },
     async getByName(name) {
         try {
+            // Use .limit(1) instead of .single() to avoid 406 error when no rows found
             const { data, error } = await supabase
                 .from('characters')
                 .select('*')
                 .ilike('name', name)
-                .single();
+                .limit(1);
             if (error) {
-                if (error.code === 'PGRST116') {
-                    return null;
-                }
                 throw error;
             }
-            return this.sanitizeCharacter(data);
+            // Return first match or null if no results
+            if (!data || data.length === 0) {
+                return null;
+            }
+            return this.sanitizeCharacter(data[0]);
         }
         catch (error) {
             console.error(`Failed to fetch character with name ${name} from Supabase. Falling back to mock data...`, error);
