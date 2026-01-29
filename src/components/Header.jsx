@@ -174,6 +174,16 @@ const Header = () => {
             Bible
           </Link>
           <Link 
+            to="/reading-plans" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/reading-plans') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Reading&nbsp;Plans
+          </Link>
+          <Link 
             to="/how-it-works" 
             className={`text-sm font-medium transition-colors ${
               isActive('/how-it-works') 
@@ -400,6 +410,16 @@ const Header = () => {
             }`}
           >
             Bible
+          </Link>
+          <Link 
+            to="/reading-plans" 
+            className={`text-sm font-medium transition-colors ${
+              isActive('/reading-plans') 
+                ? 'text-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-300'
+            }`}
+          >
+            Reading Plans
           </Link>
           <Link 
             to="/how-it-works" 
