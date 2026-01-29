@@ -498,9 +498,6 @@ const SimpleChatWithHistory = () => {
      * ----------------------------------------------------------------*/
     useEffect(() => {
         (async () => {
-            // Already have a character selected -> nothing to do
-            if (character) return;
-
             // If we are restoring by conversationId, skip auto-selection
             if (conversationId) return;
             // Shared view: never auto-select from query
@@ -509,6 +506,17 @@ const SimpleChatWithHistory = () => {
             const params = new URLSearchParams(location.search);
             const charParam = params.get('character');
             if (!charParam) return;
+            
+            // Check if we already have the requested character selected
+            if (character) {
+                const currentName = (character.name || '').toLowerCase();
+                const currentId = character.id || '';
+                const requestedLower = charParam.toLowerCase();
+                // If already have the right character, skip
+                if (currentId === charParam || currentName === requestedLower) {
+                    return;
+                }
+            }
             
             // If this is a Bible study, skip the default greeting - AI will generate intro
             const isBibleStudy = params.get('study') && params.get('lesson') !== null;
