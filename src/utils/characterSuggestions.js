@@ -190,6 +190,29 @@ export function getBestCharacterSuggestion(readings, planTitle = '') {
   if (titleLower.includes('elijah')) return 'Elijah';
   if (titleLower.includes('mary')) return 'Mary';
   if (titleLower.includes('women')) return 'Ruth';
+  if (titleLower.includes('spirit')) return 'Paul';
+  if (titleLower.includes('romans')) return 'Paul';
+  if (titleLower.includes('corinthians')) return 'Paul';
+  if (titleLower.includes('galatians')) return 'Paul';
+  if (titleLower.includes('ephesians')) return 'Paul';
+  if (titleLower.includes('philippians')) return 'Paul';
+  if (titleLower.includes('colossians')) return 'Paul';
+  if (titleLower.includes('thessalonians')) return 'Paul';
+  if (titleLower.includes('hebrews')) return 'Paul';
+  if (titleLower.includes('acts')) return 'Paul';
+  if (titleLower.includes('mark')) return 'Peter';
+  if (titleLower.includes('prayer')) return 'David';
+  if (titleLower.includes('leadership')) return 'Moses';
+  if (titleLower.includes('marriage')) return 'Ruth';
+  if (titleLower.includes('parenting')) return 'Mary';
+  if (titleLower.includes('suffering')) return 'Job';
+  if (titleLower.includes('grief')) return 'David';
+  if (titleLower.includes('anxiety')) return 'David';
+  if (titleLower.includes('peace')) return 'Paul';
+  if (titleLower.includes('faith')) return 'Abraham';
+  if (titleLower.includes('hope')) return 'Paul';
+  if (titleLower.includes('identity')) return 'Paul';
+  if (titleLower.includes('forgiveness')) return 'Joseph';
   
   return fromReadings[0] || 'Jesus';
 }

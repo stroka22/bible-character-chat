@@ -39,9 +39,11 @@ function DayCard({ day, isCompleted, isCurrent, onSelect }) {
 function ReadingView({ day, plan, onComplete, onBack, navigate }) {
   const readings = day.readings || [];
   const suggestedCharacter = getBestCharacterSuggestion(readings, plan.title);
-  const chatContext = encodeURIComponent(`Today's reading: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')} from "${plan.title}"`);
-  const reflectionContext = encodeURIComponent(`I'm reading ${day.title || `Day ${day.day_number}`} from the "${plan.title}" reading plan. Today's passages: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')}. ${day.reflection_prompt || ''}`);
+  const chatContext = encodeURIComponent(`Today's reading: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')} from "${plan.title}". ${day.reflection_prompt || ''}`);
   const characterParam = encodeURIComponent(suggestedCharacter);
+  
+  // Get context from the plan's day-specific context columns (day1_context, day2_context, etc.)
+  const dayContext = day.context || plan[`day${day.day_number}_context`] || null;
   
   return (
     <div className="max-w-3xl mx-auto">
@@ -59,11 +61,11 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
         </div>
 
         {/* Context/Teaching Section */}
-        {day.context && (
+        {dayContext && (
           <div className="mb-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
             <h3 className="text-lg font-semibold text-blue-900 mb-3">📖 Today's Teaching</h3>
             <div className="text-blue-900 prose prose-sm max-w-none">
-              {day.context.split('\n\n').map((paragraph, idx) => (
+              {dayContext.split('\n\n').map((paragraph, idx) => (
                 <p key={idx} className="mb-3 last:mb-0 leading-relaxed">{paragraph}</p>
               ))}
             </div>
@@ -93,12 +95,6 @@ function ReadingView({ day, plan, onComplete, onBack, navigate }) {
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h3 className="text-sm font-semibold text-yellow-800 mb-2">💭 Reflection Question</h3>
             <p className="text-yellow-900">{day.reflection_prompt}</p>
-            <Link
-              to={`/chat?character=${characterParam}&context=${reflectionContext}`}
-              className="inline-block mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Discuss this with {suggestedCharacter} →
-            </Link>
           </div>
         )}
 
