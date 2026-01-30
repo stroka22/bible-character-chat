@@ -288,11 +288,7 @@ Stay in character and draw from biblical knowledge.`;
     (async () => {
       try {
         const slugToUse = ownerSlug === '__ALL__' ? undefined : ownerSlug;
-        console.log('[AccountTierManagement] Loading studies for owner:', slugToUse);
         const st = await bibleStudiesRepository.listStudies({ ownerSlug: slugToUse, includePrivate: true });
-        console.log('[AccountTierManagement] Loaded studies count:', st?.length);
-        console.log('[AccountTierManagement] Loaded studies titles:', JSON.stringify(st?.map(s => s.title)));
-        console.log('[AccountTierManagement] Full studies data:', JSON.stringify(st));
         setStudies(st || []);
       } catch (e) {
         console.warn('Failed to reload studies for owner:', e);
@@ -752,11 +748,11 @@ Stay in character and draw from biblical knowledge.`;
 
                   {/* Premium Studies */}
                   <div className="space-y-3 p-4 border rounded-md">
-                    <h4 className="font-medium text-blue-800 mb-1">Premium Bible Studies ({studies.length})</h4>
+                    <h4 className="font-medium text-blue-800 mb-1">Premium Bible Studies</h4>
                     <p className="text-xs text-gray-600">Select studies that require Premium access.</p>
                     <div className="max-h-60 overflow-y-auto border rounded">
                       {studies.length === 0 ? (
-                        <div className="p-3 text-sm text-gray-500">No studies found for this organization. (owner: {ownerSlug})</div>
+                        <div className="p-3 text-sm text-gray-500">No studies found for this organization.</div>
                       ) : (
                         studies.map((s) => {
                           const checked = premiumStudyIds.includes(s.id);
