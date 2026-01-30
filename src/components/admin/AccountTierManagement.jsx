@@ -290,7 +290,9 @@ Stay in character and draw from biblical knowledge.`;
         const slugToUse = ownerSlug === '__ALL__' ? undefined : ownerSlug;
         console.log('[AccountTierManagement] Loading studies for owner:', slugToUse);
         const st = await bibleStudiesRepository.listStudies({ ownerSlug: slugToUse, includePrivate: true });
-        console.log('[AccountTierManagement] Loaded studies:', st?.length, st?.map(s => s.title));
+        console.log('[AccountTierManagement] Loaded studies count:', st?.length);
+        console.log('[AccountTierManagement] Loaded studies titles:', JSON.stringify(st?.map(s => s.title)));
+        console.log('[AccountTierManagement] Full studies data:', JSON.stringify(st));
         setStudies(st || []);
       } catch (e) {
         console.warn('Failed to reload studies for owner:', e);
