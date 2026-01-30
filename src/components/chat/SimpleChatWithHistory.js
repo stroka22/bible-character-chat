@@ -1035,12 +1035,21 @@ const SimpleChatWithHistory = () => {
                                             _jsxs("div", { 
                                                 className: "flex flex-wrap gap-2",
                                                 children: [
-                                                    _jsx(Link, { 
-                                                        to: "/", 
-                                                        id: "backBtn", 
-                                                        className: "text-xs md:text-sm px-2 md:px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
-                                                        children: "Back to Characters" 
-                                                    })
+                                                    studyMeta ? (
+                                                        _jsx(Link, { 
+                                                            to: `/study/${studyMeta.id}`, 
+                                                            id: "backBtn", 
+                                                            className: "text-xs md:text-sm px-2 md:px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
+                                                            children: "Back to Study" 
+                                                        })
+                                                    ) : (
+                                                        _jsx(Link, { 
+                                                            to: "/", 
+                                                            id: "backBtn", 
+                                                            className: "text-xs md:text-sm px-2 md:px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
+                                                            children: "Back to Characters" 
+                                                        })
+                                                    )
                                                 ] 
                                             })
                                         ]
