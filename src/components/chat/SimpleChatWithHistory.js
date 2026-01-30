@@ -84,6 +84,9 @@ const SimpleChatWithHistory = () => {
     const [studyMeta, setStudyMeta] = useState(null);
     const [lessonMeta, setLessonMeta] = useState(null);
     const [initialMessage, setInitialMessage] = useState('');
+    const [studyProgress, setStudyProgress] = useState(null);
+    const [isLessonComplete, setIsLessonComplete] = useState(false);
+    const [isMarkingComplete, setIsMarkingComplete] = useState(false);
     // Series feature deprecated; keep studies functionality intact
     const messagesEndRef = useRef(null);
     const isResumed = messages.length > 0;
@@ -209,6 +212,26 @@ const SimpleChatWithHistory = () => {
 
           setStudyMeta(study);
           setLessonMeta(lesson);
+
+          // Load user progress for this study to check lesson completion
+          if (user?.id) {
+            try {
+              const progressId = params.get('progress');
+              const progress = await bibleStudiesRepository.getProgress({
+                userId: user.id,
+                studyId: study.id,
+                progressId: progressId || undefined
+              });
+              setStudyProgress(progress);
+              // Check if current lesson is already complete
+              const completedLessons = progress?.completed_lessons || [];
+              setIsLessonComplete(completedLessons.includes(lesson.order_index));
+            } catch (progressErr) {
+              console.warn('[SimpleChatWithHistory] Could not fetch study progress:', progressErr);
+              setStudyProgress(null);
+              setIsLessonComplete(false);
+            }
+          }
 
           // If lesson has a specific character, switch the chat guide to it.
           // Skip default greeting - the AI will generate a study-specific intro
@@ -878,6 +901,43 @@ const SimpleChatWithHistory = () => {
         // no popup
     };
 
+    // Handle marking current lesson as complete
+    const handleMarkLessonComplete = async () => {
+        if (!user?.id || !studyMeta?.id || !lessonMeta) return;
+        
+        setIsMarkingComplete(true);
+        try {
+            const params = new URLSearchParams(location.search);
+            const progressId = studyProgress?.id || params.get('progress') || undefined;
+            
+            // Get current completed lessons and add this one
+            const currentCompleted = studyProgress?.completed_lessons || [];
+            const lessonIndex = lessonMeta.order_index;
+            
+            if (!currentCompleted.includes(lessonIndex)) {
+                const updatedCompleted = [...currentCompleted, lessonIndex].sort((a, b) => a - b);
+                
+                await bibleStudiesRepository.saveProgress({
+                    userId: user.id,
+                    studyId: studyMeta.id,
+                    progressId: progressId,
+                    completedLessons: updatedCompleted,
+                    currentLessonIndex: lessonIndex
+                });
+                
+                setStudyProgress(prev => ({
+                    ...prev,
+                    completed_lessons: updatedCompleted
+                }));
+                setIsLessonComplete(true);
+            }
+        } catch (err) {
+            console.error('[SimpleChatWithHistory] Failed to mark lesson complete:', err);
+        } finally {
+            setIsMarkingComplete(false);
+        }
+    };
+
     // Navigate to conversations page
     const goToConversations = () => {
         navigate('/conversations');
@@ -1071,6 +1131,35 @@ const SimpleChatWithHistory = () => {
                                                                     })
                                                                 }),
                                                                 "Save"
+                                                            ]
+                                                        })
+                                                    ),
+                                                    
+                                                    // Mark Lesson Complete button (only show for Bible study lessons)
+                                                    isAuthenticated && studyMeta && lessonMeta && (
+                                                        _jsxs("button", {
+                                                            onClick: handleMarkLessonComplete,
+                                                            disabled: isLessonComplete || isMarkingComplete,
+                                                            className: `flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all text-xs md:text-sm ${
+                                                                isLessonComplete 
+                                                                    ? 'bg-green-500/30 border border-green-400 text-green-300 cursor-default'
+                                                                    : 'bg-[rgba(34,197,94,.2)] border border-green-400 text-green-400 hover:bg-green-500 hover:text-white'
+                                                            }`,
+                                                            children: [
+                                                                _jsx("svg", {
+                                                                    xmlns: "http://www.w3.org/2000/svg",
+                                                                    className: "h-5 w-5",
+                                                                    viewBox: "0 0 20 20",
+                                                                    fill: "currentColor",
+                                                                    children: _jsx("path", {
+                                                                        fillRule: "evenodd",
+                                                                        d: isLessonComplete 
+                                                                            ? "M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                                            : "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z",
+                                                                        clipRule: "evenodd"
+                                                                    })
+                                                                }),
+                                                                isMarkingComplete ? "Saving..." : (isLessonComplete ? "Completed" : "Mark Complete")
                                                             ]
                                                         })
                                                     ),
