@@ -284,6 +284,17 @@ Stay in character and draw from biblical knowledge.`;
   useEffect(() => {
     fetchSettings(ownerSlug, characters);
     loadFeaturedCharacter(ownerSlug);
+    // Reload studies for this owner
+    (async () => {
+      try {
+        const slugToUse = ownerSlug === '__ALL__' ? undefined : ownerSlug;
+        const st = await bibleStudiesRepository.listStudies({ ownerSlug: slugToUse, includePrivate: true });
+        setStudies(st || []);
+      } catch (e) {
+        console.warn('Failed to reload studies for owner:', e);
+        setStudies([]);
+      }
+    })();
     (async () => {
       try {
         setRtLoading(true);
