@@ -750,11 +750,11 @@ Stay in character and draw from biblical knowledge.`;
 
                   {/* Premium Studies */}
                   <div className="space-y-3 p-4 border rounded-md">
-                    <h4 className="font-medium text-blue-800 mb-1">Premium Bible Studies</h4>
+                    <h4 className="font-medium text-blue-800 mb-1">Premium Bible Studies ({studies.length})</h4>
                     <p className="text-xs text-gray-600">Select studies that require Premium access.</p>
                     <div className="max-h-60 overflow-y-auto border rounded">
                       {studies.length === 0 ? (
-                        <div className="p-3 text-sm text-gray-500">No studies found for this organization.</div>
+                        <div className="p-3 text-sm text-gray-500">No studies found for this organization. (owner: {ownerSlug})</div>
                       ) : (
                         studies.map((s) => {
                           const checked = premiumStudyIds.includes(s.id);
