@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { readingPlansRepository } from '../repositories/readingPlansRepository';
-import Footer from '../components/Footer';
+import FooterScroll from '../components/FooterScroll';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
+import PreviewLayout from '../components/PreviewLayout';
 
 // Compact card for horizontal scroll rows - scroll theme
 function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, showRemove = false, isCompleted = false }) {
@@ -274,7 +275,7 @@ export default function ReadingPlansPageScroll() {
   const beginnerPlans = filteredPlans.filter(p => p.difficulty === 'easy');
 
   return (
-    <>
+    <PreviewLayout>
       <ScrollBackground>
         <ScrollWrap className="max-w-6xl mx-auto">
           {/* Header */}
@@ -371,7 +372,7 @@ export default function ReadingPlansPageScroll() {
         </ScrollWrap>
       </ScrollBackground>
 
-      <Footer />
+      <FooterScroll />
 
       {/* Remove Confirmation Modal */}
       {removeConfirm && (
@@ -398,6 +399,6 @@ export default function ReadingPlansPageScroll() {
           </div>
         </div>
       )}
-    </>
+    </PreviewLayout>
   );
 }

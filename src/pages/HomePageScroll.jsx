@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import { readingPlansRepository } from '../repositories/readingPlansRepository';
-import Footer from '../components/Footer';
+import FooterScroll from '../components/FooterScroll';
+import PreviewLayout from '../components/PreviewLayout';
 
 // Scroll wrap container - makes content look like it's on an unfurled scroll
 const ScrollWrap = ({ children, className = '' }) => (
@@ -327,6 +328,7 @@ const HomePageScroll = () => {
   };
 
   return (
+    <PreviewLayout>
     <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100">
       {/* Parchment texture overlay */}
       <div 
@@ -674,9 +676,10 @@ const HomePageScroll = () => {
 
       {/* Footer */}
       <div className="relative z-10">
-        <Footer />
+        <FooterScroll />
       </div>
     </div>
+    </PreviewLayout>
   );
 };
 

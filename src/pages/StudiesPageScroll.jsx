@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import { usePremium } from '../hooks/usePremium';
 import UpgradeModal from '../components/modals/UpgradeModal';
-import Footer from '../components/Footer';
+import FooterScroll from '../components/FooterScroll';
 import { supabase } from '../services/supabase';
 import { getOwnerSlug, getSettings as getTierSettings } from '../services/tierSettingsService';
 import { useAuth } from '../contexts/AuthContext';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
+import PreviewLayout from '../components/PreviewLayout';
 
 const StudiesPageScroll = () => {
   const [studies, setStudies] = useState([]);
@@ -93,7 +94,7 @@ const StudiesPageScroll = () => {
   };
 
   return (
-    <>
+    <PreviewLayout>
       <ScrollBackground>
         <ScrollWrap className="max-w-6xl mx-auto">
           {/* Header */}
@@ -233,14 +234,14 @@ const StudiesPageScroll = () => {
         </ScrollWrap>
       </ScrollBackground>
 
-      <Footer />
+      <FooterScroll />
 
       <UpgradeModal
         isOpen={showUpgrade}
         onClose={() => setShowUpgrade(false)}
         message="Upgrade to access premium Bible studies led by biblical characters."
       />
-    </>
+    </PreviewLayout>
   );
 };
 

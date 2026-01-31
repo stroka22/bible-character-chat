@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { characterRepository } from '../repositories/characterRepository';
 import { useRoundtable } from '../contexts/RoundtableContext';
-import Footer from '../components/Footer';
+import FooterScroll from '../components/FooterScroll';
 import { usePremium } from '../hooks/usePremium';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import { getSettings as getTierSettings } from '../services/tierSettingsService';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
+import PreviewLayout from '../components/PreviewLayout';
 
 const RoundtableSetupScroll = () => {
   const navigate = useNavigate();
@@ -131,7 +132,7 @@ const RoundtableSetupScroll = () => {
   }
   
   return (
-    <>
+    <PreviewLayout>
       <ScrollBackground>
         <ScrollWrap className="max-w-4xl mx-auto">
           <Link
@@ -341,7 +342,7 @@ const RoundtableSetupScroll = () => {
         </ScrollWrap>
       </ScrollBackground>
 
-      <Footer />
+      <FooterScroll />
       
       <UpgradeModal 
         isOpen={showUpgrade} 
@@ -349,7 +350,7 @@ const RoundtableSetupScroll = () => {
         limitType="roundtable" 
         featureName="Roundtables" 
       />
-    </>
+    </PreviewLayout>
   );
 };
 
