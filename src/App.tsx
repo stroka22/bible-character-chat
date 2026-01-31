@@ -65,13 +65,30 @@ import LeadCaptureBanner from './components/LeadCaptureBanner';
 import LeadCaptureModal from './components/LeadCaptureModal';
 
 // ---------------------------------------------------------------------------
-// Helper Component
+// Helper Components
 // ---------------------------------------------------------------------------
+
+// Check if current route is a preview route (uses scroll theme with its own header)
+function useIsPreviewRoute(): boolean {
+  const location = useLocation();
+  return location.pathname === '/preview' || 
+         location.pathname.endsWith('/preview') ||
+         location.pathname.includes('/preview/');
+}
+
+// Conditionally render the default Header (hide on preview routes)
+function ConditionalHeader(): JSX.Element | null {
+  const isPreview = useIsPreviewRoute();
+  if (isPreview) return null;
+  return <Header />;
+}
+
 // Renders the mobile LeadCaptureBanner only when NOT on an /admin route.
 function MobileLeadBannerGate(): JSX.Element | null {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
   const isRoundtable = location.pathname.startsWith('/roundtable');
+  const isPreview = useIsPreviewRoute();
   // Hide banner on shared/public views to avoid layout overlap and distraction
   let isShared = false;
   try {
@@ -81,13 +98,19 @@ function MobileLeadBannerGate(): JSX.Element | null {
     // ensure non-empty catch for linting; treat as not shared
     isShared = false;
   }
-  // Hide on Roundtable to prevent any overlap and keep focus on discussion
-  if (isAdminPath || isShared || isRoundtable) return null;
+  // Hide on Roundtable and preview pages to prevent any overlap
+  if (isAdminPath || isShared || isRoundtable || isPreview) return null;
   return (
     <div className="md:hidden">
       <LeadCaptureBanner />
     </div>
   );
+}
+
+// Get main content class - no padding on preview routes
+function useMainClass(): string {
+  const isPreview = useIsPreviewRoute();
+  return isPreview ? 'flex-1' : 'flex-1 px-4 md:px-6';
 }
 
 interface ErrorBoundaryProps {
@@ -310,14 +333,21 @@ function App(): JSX.Element {
     );
   }
 
-  return (<ErrorBoundary><Providers><>
+  return (<ErrorBoundary><Providers><AppContent /></Providers></ErrorBoundary>);
+}
+
+// Separate component so we can use hooks for route detection
+function AppContent() {
+  const mainClass = useMainClass();
+  
+  return (<>
     <div className="flex flex-col min-h-screen">
-      <Header />
+      <ConditionalHeader />
       {/* Mobile-only banner */}
       <MobileLeadBannerGate />
       {/* Desktop modal (self-managed triggers) */}
       <LeadCaptureModal />
-      <main className="flex-1 px-4 md:px-6"><Routes>
+      <main className={mainClass}><Routes>
     {/* Public routes */}
     <Route path="/" element={<HomePage />} />
     <Route path="/preview" element={<HomePageScroll />} />
@@ -392,7 +422,7 @@ function App(): JSX.Element {
     {/* Fallback route */}
     <Route path="*" element={<Navigate to="/" replace={true} />} />
     </Routes></main></div>
-  </></Providers></ErrorBoundary>);
+  </>);
 }
 
 export default App;
