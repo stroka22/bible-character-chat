@@ -15,7 +15,7 @@ const generateFallbackAvatar = (name) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
 // Character Card Component with scroll theme
-const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured }) => {
+const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured, isFavorite, onToggleFavorite, onSetFeatured }) => {
   const [showInfo, setShowInfo] = useState(false);
   
   const handleInfoClick = (e) => {
@@ -26,6 +26,16 @@ const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured }) => 
   const handleChatClick = (e) => {
     e.stopPropagation();
     onSelect(character);
+  };
+  
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    if (onToggleFavorite) onToggleFavorite(character);
+  };
+  
+  const handleFeaturedClick = (e) => {
+    e.stopPropagation();
+    if (onSetFeatured) onSetFeatured(character);
   };
 
   return (
@@ -71,11 +81,42 @@ const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured }) => 
             {character.description || character.scriptural_context || 'Biblical figure'}
           </p>
           
-          {/* Action buttons row */}
-          <div className="flex items-center justify-center gap-2 mb-3">
+          {/* Action buttons row - Favorite, Featured, Info */}
+          <div className="flex items-center justify-center gap-1 mb-3">
+            {/* Favorite button */}
+            <button
+              onClick={handleFavoriteClick}
+              className={`p-2 rounded-full transition-colors ${
+                isFavorite 
+                  ? 'bg-amber-200 text-amber-600' 
+                  : 'bg-amber-100 hover:bg-amber-200 text-amber-500'
+              }`}
+              title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+            >
+              <svg className="w-5 h-5" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isFavorite ? "0" : "1.5"} viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </button>
+            
+            {/* Featured/Bookmark button */}
+            <button
+              onClick={handleFeaturedClick}
+              className={`p-2 rounded-full transition-colors ${
+                isFeatured 
+                  ? 'bg-amber-200 text-amber-600' 
+                  : 'bg-amber-100 hover:bg-amber-200 text-amber-500'
+              }`}
+              title={isFeatured ? "Currently Featured" : "Set as Featured"}
+            >
+              <svg className="w-5 h-5" fill={isFeatured ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isFeatured ? "0" : "1.5"} viewBox="0 0 20 20">
+                <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+              </svg>
+            </button>
+            
+            {/* Info button */}
             <button
               onClick={handleInfoClick}
-              className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-700 transition-colors"
+              className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-600 transition-colors"
               title="More Info"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -263,6 +304,7 @@ const ChatPageScroll = () => {
 
   const [characters, setCharacters] = useState([]);
   const [featuredCharacter, setFeaturedCharacter] = useState(null);
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [testament, setTestament] = useState('all');
   const [tierSettings, setTierSettings] = useState(null);
@@ -333,6 +375,21 @@ const ChatPageScroll = () => {
     selectCharacter(char);
   };
 
+  // Handle toggling favorite
+  const handleToggleFavorite = (char) => {
+    setFavoriteIds(prev => {
+      if (prev.includes(char.id)) {
+        return prev.filter(id => id !== char.id);
+      }
+      return [...prev, char.id];
+    });
+  };
+
+  // Handle setting featured character
+  const handleSetFeatured = (char) => {
+    setFeaturedCharacter(char);
+  };
+
   // Handle send message
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -385,6 +442,9 @@ const ChatPageScroll = () => {
             onSelect={handleSelectCharacter}
             isPremiumLocked={!isPremium && !isCharacterFree(featuredCharacter, tierSettings)}
             isFeatured
+            isFavorite={favoriteIds.includes(featuredCharacter?.id)}
+            onToggleFavorite={handleToggleFavorite}
+            onSetFeatured={handleSetFeatured}
           />
         </div>
       )}
@@ -439,6 +499,10 @@ const ChatPageScroll = () => {
                 character={char}
                 onSelect={handleSelectCharacter}
                 isPremiumLocked={!isPremium && !isCharacterFree(char, tierSettings)}
+                isFeatured={featuredCharacter?.id === char.id}
+                isFavorite={favoriteIds.includes(char.id)}
+                onToggleFavorite={handleToggleFavorite}
+                onSetFeatured={handleSetFeatured}
               />
             ))}
         </div>
