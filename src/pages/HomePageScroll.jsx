@@ -383,7 +383,7 @@ const HomePageScroll = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Chat */}
               <Link 
-                to="/chat" 
+                to="/" 
                 className="group text-center p-4 bg-white/50 rounded-xl border border-amber-200/50
                          hover:bg-white/80 hover:shadow-md transition-all"
               >
@@ -395,7 +395,7 @@ const HomePageScroll = () => {
                   </svg>
                 </div>
                 <h3 className="font-serif font-semibold text-amber-900 text-sm mb-1">Character Chat</h3>
-                <p className="text-xs text-amber-700/70">1-on-1 conversations</p>
+                <p className="text-xs text-amber-700/70">90+ Bible figures</p>
               </Link>
 
               {/* Roundtable */}
@@ -429,7 +429,7 @@ const HomePageScroll = () => {
                   </svg>
                 </div>
                 <h3 className="font-serif font-semibold text-amber-900 text-sm mb-1">Bible Studies</h3>
-                <p className="text-xs text-amber-700/70">36 guided lessons</p>
+                <p className="text-xs text-amber-700/70">30+ guided studies</p>
               </Link>
 
               {/* Reading Plans */}
@@ -446,7 +446,7 @@ const HomePageScroll = () => {
                   </svg>
                 </div>
                 <h3 className="font-serif font-semibold text-amber-900 text-sm mb-1">Reading Plans</h3>
-                <p className="text-xs text-amber-700/70">148 daily plans</p>
+                <p className="text-xs text-amber-700/70">140+ daily plans</p>
               </Link>
             </div>
           </div>
