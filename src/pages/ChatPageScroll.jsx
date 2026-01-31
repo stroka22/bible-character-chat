@@ -16,64 +16,195 @@ const generateFallbackAvatar = (name) =>
 
 // Character Card Component with scroll theme
 const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured }) => {
+  const [showInfo, setShowInfo] = useState(false);
+  
+  const handleInfoClick = (e) => {
+    e.stopPropagation();
+    setShowInfo(true);
+  };
+  
+  const handleChatClick = (e) => {
+    e.stopPropagation();
+    onSelect(character);
+  };
+
   return (
-    <button
-      onClick={() => onSelect(character)}
-      className={`
-        relative w-full text-left rounded-xl overflow-hidden transition-all duration-300
-        ${isFeatured 
-          ? 'bg-gradient-to-br from-amber-100 to-amber-200 border-2 border-amber-400 shadow-lg' 
-          : 'bg-white/80 border border-amber-200 hover:bg-white hover:shadow-md hover:-translate-y-1'
-        }
-        ${isPremiumLocked ? 'opacity-75' : ''}
-      `}
-    >
-      <div className="p-4 flex items-center gap-4">
-        {/* Avatar */}
-        <div className={`
-          relative flex-shrink-0 w-16 h-16 rounded-full overflow-hidden
-          ${isFeatured ? 'ring-4 ring-amber-400 ring-offset-2' : 'ring-2 ring-amber-300'}
-        `}>
-          <img
-            src={character.avatar_url || generateFallbackAvatar(character.name)}
-            alt={character.name}
-            className="w-full h-full object-cover object-[center_20%]"
-            onError={(e) => { e.target.src = generateFallbackAvatar(character.name); }}
-          />
-          {isFeatured && (
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            </div>
-          )}
-        </div>
-        
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-amber-900 text-lg truncate" style={{ fontFamily: 'Cinzel, serif' }}>
+    <>
+      <div
+        className={`
+          relative rounded-xl overflow-hidden transition-all duration-300 flex flex-col
+          ${isFeatured 
+            ? 'bg-gradient-to-br from-amber-100 to-amber-200 border-2 border-amber-400 shadow-lg' 
+            : 'bg-white/80 border border-amber-200 hover:bg-white hover:shadow-md hover:-translate-y-1'
+          }
+          ${isPremiumLocked ? 'opacity-80' : ''}
+        `}
+      >
+        <div className="p-4 flex flex-col items-center text-center">
+          {/* Avatar */}
+          <div className={`
+            relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden mb-3
+            ${isFeatured ? 'ring-4 ring-amber-400 ring-offset-2' : 'ring-2 ring-amber-300'}
+          `}>
+            <img
+              src={character.avatar_url || generateFallbackAvatar(character.name)}
+              alt={character.name}
+              className="w-full h-full object-cover object-[center_20%]"
+              onError={(e) => { e.target.src = generateFallbackAvatar(character.name); }}
+            />
+            {isFeatured && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </div>
+            )}
+          </div>
+          
+          {/* Name */}
+          <h3 className="font-bold text-amber-900 text-lg mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
             {character.name}
           </h3>
-          <p className="text-amber-700/80 text-sm line-clamp-2">
+          
+          {/* Description - fixed height with overflow hidden */}
+          <p className="text-amber-700/80 text-sm line-clamp-2 mb-3 h-10 overflow-hidden">
             {character.description || character.scriptural_context || 'Biblical figure'}
           </p>
+          
+          {/* Action buttons row */}
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <button
+              onClick={handleInfoClick}
+              className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-700 transition-colors"
+              title="More Info"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Chat button */}
+          <button
+            onClick={handleChatClick}
+            disabled={isPremiumLocked}
+            className={`
+              w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2
+              ${isPremiumLocked 
+                ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                : 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'
+              }
+            `}
+          >
+            {isPremiumLocked ? (
+              <>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zM8 6a2 2 0 114 0v2H8V6z" />
+                </svg>
+                Premium
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+                </svg>
+                Chat Now
+              </>
+            )}
+          </button>
         </div>
-        
-        {/* Arrow */}
-        <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
       </div>
       
-      {/* Premium Lock Overlay */}
-      {isPremiumLocked && (
-        <div className="absolute inset-0 bg-amber-900/30 backdrop-blur-[2px] flex items-center justify-center">
-          <span className="px-3 py-1.5 bg-amber-600 text-white text-sm font-medium rounded-full shadow">
-            Premium
-          </span>
+      {/* Info Modal */}
+      {showInfo && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setShowInfo(false)}
+        >
+          <div 
+            className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 max-w-sm w-full shadow-2xl border-2 border-amber-400"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowInfo(false)}
+              className="absolute top-3 right-3 p-1 rounded-full bg-amber-200 hover:bg-amber-300 text-amber-800"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Avatar */}
+            <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden ring-4 ring-amber-400">
+              <img
+                src={character.avatar_url || generateFallbackAvatar(character.name)}
+                alt={character.name}
+                className="w-full h-full object-cover object-[center_20%]"
+              />
+            </div>
+            
+            {/* Name */}
+            <h2 className="text-xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+              {character.name}
+            </h2>
+            
+            {/* Divider */}
+            <div className="h-0.5 w-16 bg-amber-400 rounded-full mx-auto mb-3" />
+            
+            {/* Scripture reference if available */}
+            {character.bible_book && (
+              <div className="bg-amber-200/50 rounded-lg p-3 mb-3">
+                <h3 className="text-sm font-semibold text-amber-800 mb-1 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                  </svg>
+                  Scripture
+                </h3>
+                <div className="flex flex-wrap gap-1">
+                  {character.bible_book.split(',').map((book, i) => (
+                    <span key={i} className="bg-amber-600 text-white px-2 py-0.5 rounded-full text-xs">
+                      {book.trim()}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Description */}
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-amber-800 mb-1 flex items-center gap-1">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                About
+              </h3>
+              <p className="text-amber-900/80 text-sm leading-relaxed">
+                {character.description || 'A figure from biblical history.'}
+              </p>
+            </div>
+            
+            {/* Chat button */}
+            <button
+              onClick={() => { setShowInfo(false); onSelect(character); }}
+              disabled={isPremiumLocked}
+              className={`
+                w-full py-2.5 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2
+                ${isPremiumLocked 
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                  : 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'
+                }
+              `}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+              </svg>
+              Chat with {character.name}
+            </button>
+          </div>
         </div>
       )}
-    </button>
+    </>
   );
 };
 
