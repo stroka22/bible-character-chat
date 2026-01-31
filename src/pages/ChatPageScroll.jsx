@@ -198,7 +198,8 @@ const ChatPageScroll = () => {
       setShowUpgrade(true);
       return;
     }
-    await selectCharacter(char.id);
+    // Pass the full character object, not just the ID
+    selectCharacter(char);
   };
 
   // Handle send message
