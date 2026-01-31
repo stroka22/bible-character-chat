@@ -311,6 +311,8 @@ const ChatPageScroll = () => {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [loadingChars, setLoadingChars] = useState(true);
   const [inputValue, setInputValue] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 8;
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -363,6 +365,19 @@ const ChatPageScroll = () => {
     if (testament === 'new' && c.testament?.toLowerCase() !== 'new') return false;
     return true;
   });
+
+  // Pagination - exclude featured from count
+  const charactersWithoutFeatured = filteredCharacters.filter(c => c.id !== featuredCharacter?.id);
+  const totalPages = Math.ceil(charactersWithoutFeatured.length / ITEMS_PER_PAGE);
+  const paginatedCharacters = charactersWithoutFeatured.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, testament]);
 
   // Handle character selection
   const handleSelectCharacter = async (char) => {
@@ -491,21 +506,94 @@ const ChatPageScroll = () => {
       {/* Character Grid */}
       {!loadingChars && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filteredCharacters
-            .filter(c => c.id !== featuredCharacter?.id)
-            .map((char) => (
-              <CharacterCard
-                key={char.id}
-                character={char}
-                onSelect={handleSelectCharacter}
-                isPremiumLocked={!isPremium && !isCharacterFree(char, tierSettings)}
-                isFeatured={featuredCharacter?.id === char.id}
-                isFavorite={favoriteIds.includes(char.id)}
-                onToggleFavorite={handleToggleFavorite}
-                onSetFeatured={handleSetFeatured}
-              />
-            ))}
+          {paginatedCharacters.map((char) => (
+            <CharacterCard
+              key={char.id}
+              character={char}
+              onSelect={handleSelectCharacter}
+              isPremiumLocked={!isPremium && !isCharacterFree(char, tierSettings)}
+              isFeatured={featuredCharacter?.id === char.id}
+              isFavorite={favoriteIds.includes(char.id)}
+              onToggleFavorite={handleToggleFavorite}
+              onSetFeatured={handleSetFeatured}
+            />
+          ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {!loadingChars && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          {/* Previous button */}
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className={`p-2 rounded-lg border transition-colors ${
+              currentPage === 1
+                ? 'border-amber-200 text-amber-300 cursor-not-allowed'
+                : 'border-amber-400 text-amber-700 hover:bg-amber-100'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          
+          {/* Page numbers */}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+              // Show first, last, current, and adjacent pages
+              if (
+                page === 1 ||
+                page === totalPages ||
+                (page >= currentPage - 1 && page <= currentPage + 1)
+              ) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-9 h-9 rounded-lg font-medium transition-colors ${
+                      page === currentPage
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                    }`}
+                    style={{ fontFamily: 'Cinzel, serif' }}
+                  >
+                    {page}
+                  </button>
+                );
+              } else if (
+                (page === currentPage - 2 && currentPage > 3) ||
+                (page === currentPage + 2 && currentPage < totalPages - 2)
+              ) {
+                return <span key={page} className="text-amber-400 px-1">...</span>;
+              }
+              return null;
+            })}
+          </div>
+          
+          {/* Next button */}
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className={`p-2 rounded-lg border transition-colors ${
+              currentPage === totalPages
+                ? 'border-amber-200 text-amber-300 cursor-not-allowed'
+                : 'border-amber-400 text-amber-700 hover:bg-amber-100'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Results count */}
+      {!loadingChars && charactersWithoutFeatured.length > 0 && (
+        <p className="text-center text-amber-600 text-sm mt-4" style={{ fontFamily: 'Georgia, serif' }}>
+          Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, charactersWithoutFeatured.length)} of {charactersWithoutFeatured.length} characters
+        </p>
       )}
 
       {!loadingChars && filteredCharacters.length === 0 && (
