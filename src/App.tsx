@@ -58,6 +58,7 @@ import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import StudiesPageScroll from './pages/StudiesPageScroll.jsx';
 const ReadingPlansPageScroll = lazy(() => import('./pages/ReadingPlansPageScroll.jsx'));
 import RoundtableSetupScroll from './pages/RoundtableSetupScroll.jsx';
+import ChatPageScroll from './pages/ChatPageScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -321,6 +322,7 @@ function App(): JSX.Element {
     <Route path="/" element={<HomePage />} />
     <Route path="/preview" element={<HomePageScroll />} />
     {/* Preview routes with scroll theme */}
+    <Route path="/chat/preview" element={<ChatPageScroll />} />
     <Route path="/studies/preview" element={<StudiesPageScroll />} />
     <Route path="/reading-plans/preview" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPageScroll /></Suspense>} />
     <Route path="/roundtable/setup/preview" element={<RoundtableSetupScroll />} />

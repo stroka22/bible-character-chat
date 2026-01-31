@@ -385,7 +385,7 @@ const HomePageScroll = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Chat */}
               <Link 
-                to="/" 
+                to="/chat/preview" 
                 className="group text-center p-4 bg-white/50 rounded-xl border border-amber-200/50
                          hover:bg-white/80 hover:shadow-md transition-all"
               >
