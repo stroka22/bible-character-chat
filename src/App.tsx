@@ -54,6 +54,10 @@ const ReadingPlanDetail = lazy(() => import('./pages/ReadingPlanDetail.jsx'));
 import RoundtableSetup from './pages/RoundtableSetup.jsx';
 import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
+// Scroll-themed preview pages
+import StudiesPageScroll from './pages/StudiesPageScroll.jsx';
+const ReadingPlansPageScroll = lazy(() => import('./pages/ReadingPlansPageScroll.jsx'));
+import RoundtableSetupScroll from './pages/RoundtableSetupScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -316,6 +320,10 @@ function App(): JSX.Element {
     {/* Public routes */}
     <Route path="/" element={<HomePage />} />
     <Route path="/preview" element={<HomePageScroll />} />
+    {/* Preview routes with scroll theme */}
+    <Route path="/studies/preview" element={<StudiesPageScroll />} />
+    <Route path="/reading-plans/preview" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPageScroll /></Suspense>} />
+    <Route path="/roundtable/setup/preview" element={<RoundtableSetupScroll />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />
