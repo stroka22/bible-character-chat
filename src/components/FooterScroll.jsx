@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BibleIcon } from './FaithLogo';
 
 /**
  * Nostalgic Footer Component for Preview Pages
@@ -63,9 +64,7 @@ const FooterScroll = () => {
           {/* Brand Column */}
           <div className="col-span-1 md:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <svg className="w-10 h-10 text-amber-300" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-              </svg>
+              <BibleIcon size={40} variant="dark" />
               <span 
                 className="text-2xl font-bold text-amber-200"
                 style={{ fontFamily: 'Cinzel, serif', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
