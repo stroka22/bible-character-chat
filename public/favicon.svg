@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bookCover" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#451a03" />
+      <stop offset="15%" stop-color="#78350f" />
+      <stop offset="85%" stop-color="#78350f" />
+      <stop offset="100%" stop-color="#451a03" />
+    </linearGradient>
+    <linearGradient id="pageEdges" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#d4d4d4" />
+      <stop offset="50%" stop-color="#fafafa" />
+      <stop offset="100%" stop-color="#d4d4d4" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Book shadow -->
+  <ellipse cx="52" cy="92" rx="35" ry="6" fill="rgba(0,0,0,0.2)" />
+  
+  <!-- Back cover -->
+  <path 
+    d="M15 12 L15 82 Q15 88 21 88 L79 88 Q85 88 85 82 L85 12 Q85 6 79 6 L21 6 Q15 6 15 12 Z"
+    fill="#451a03"
+  />
+  
+  <!-- Page block -->
+  <rect x="20" y="78" width="60" height="8" rx="1" fill="url(#pageEdges)" />
+  
+  <!-- Front cover -->
+  <path 
+    d="M12 10 L12 80 Q12 86 18 86 L82 86 Q88 86 88 80 L88 10 Q88 4 82 4 L18 4 Q12 4 12 10 Z"
+    fill="url(#bookCover)"
+  />
+  
+  <!-- Spine detail -->
+  <rect x="12" y="4" width="8" height="82" rx="2" fill="#451a03" opacity="0.5" />
+  
+  <!-- Cover border -->
+  <rect x="22" y="12" width="56" height="66" rx="2" fill="none" stroke="#FACC15" stroke-width="2" opacity="0.6" />
+  
+  <!-- Cross on cover -->
+  <rect x="46" y="22" width="8" height="46" rx="1" fill="#FACC15" />
+  <rect x="32" y="32" width="36" height="8" rx="1" fill="#FACC15" />
+  <rect x="46" y="22" width="8" height="46" rx="1" fill="white" opacity="0.3" />
+  <rect x="32" y="32" width="36" height="8" rx="1" fill="white" opacity="0.3" />
+  
+  <!-- Ribbon bookmark -->
+  <path d="M70 4 L70 25 L74 20 L78 25 L78 4" fill="#dc2626" />
+  
+  <!-- Page edges on right -->
+  <path d="M88 15 L90 15 L90 75 L88 75" fill="#e5e5e5" stroke="#d4d4d4" stroke-width="0.5" />
+</svg>
