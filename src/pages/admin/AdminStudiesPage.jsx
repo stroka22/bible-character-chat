@@ -81,27 +81,32 @@ const CategoryManager = ({ categories, onUpdate, onDelete, onCreate }) => {
             })
           ]
         }) : _jsxs("div", {
-          className: "flex items-center gap-3",
+          className: "flex items-center gap-2 flex-wrap",
           children: [
-            _jsx("span", { className: "text-xl w-8", children: cat.icon }),
+            _jsx("span", { className: "text-xl w-8 flex-shrink-0", children: cat.icon }),
             _jsxs("div", {
-              className: "flex-1",
+              className: "flex-1 min-w-0",
               children: [
                 _jsx("span", { className: "font-medium", children: cat.name }),
                 _jsxs("span", { className: "text-gray-500 text-sm ml-2", children: ["(", cat.slug, ")"] }),
-                cat.description && _jsx("p", { className: "text-sm text-gray-500", children: cat.description })
+                cat.description && _jsx("p", { className: "text-sm text-gray-500 truncate", children: cat.description })
               ]
             }),
-            _jsxs("span", { className: "text-sm text-gray-400", children: ["Order: ", cat.display_order] }),
-            _jsx("button", {
-              onClick: () => handleEdit(cat),
-              className: "p-1 text-blue-600 hover:bg-blue-100 rounded",
-              children: _jsx("svg", { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" }) })
-            }),
-            _jsx("button", {
-              onClick: () => onDelete(cat.id),
-              className: "p-1 text-red-600 hover:bg-red-100 rounded",
-              children: _jsx("svg", { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" }) })
+            _jsxs("div", {
+              className: "flex items-center gap-1 flex-shrink-0",
+              children: [
+                _jsxs("span", { className: "text-xs text-gray-400 mr-1", children: ["#", cat.display_order] }),
+                _jsx("button", {
+                  onClick: () => handleEdit(cat),
+                  className: "p-1 text-blue-600 hover:bg-blue-100 rounded",
+                  children: _jsx("svg", { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" }) })
+                }),
+                _jsx("button", {
+                  onClick: () => onDelete(cat.id),
+                  className: "p-1 text-red-600 hover:bg-red-100 rounded",
+                  children: _jsx("svg", { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" }) })
+                })
+              ]
             })
           ]
         })
