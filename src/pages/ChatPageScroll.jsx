@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext.jsx';
 import { useConversation } from '../contexts/ConversationContext.jsx';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,6 +15,7 @@ import UpgradeModal from '../components/modals/UpgradeModal';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
+import { createChatInvite } from '../services/chatInvitesService';
 
 // Bible books for filtering
 const BIBLE_BOOKS = {
@@ -406,7 +407,9 @@ const ChatBubble = ({ message, character }) => {
 // Main Chat Page Component
 const ChatPageScroll = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
+  const { conversationId } = useParams();
+  const { user, isAuthenticated } = useAuth();
   const { isPremium } = usePremium();
   const {
     character,
@@ -421,10 +424,11 @@ const ChatPageScroll = () => {
     saveChat,
     toggleFavorite,
     isFavorite: isChatFavorite,
+    hydrateFromConversation,
   } = useChat();
   
-  // Conversation context for sharing
-  const { shareConversation } = useConversation();
+  // Conversation context for sharing and fetching
+  const { shareConversation, fetchConversationWithMessages } = useConversation();
 
   // Character data
   const [characters, setCharacters] = useState([]);
@@ -453,9 +457,45 @@ const ChatPageScroll = () => {
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
+  
+  // Load conversation from URL if conversationId or character param exists
+  useEffect(() => {
+    const loadFromUrl = async () => {
+      const params = new URLSearchParams(location.search);
+      const charParam = params.get('character');
+      
+      // If there's a conversationId in URL, load that conversation
+      if (conversationId && fetchConversationWithMessages && hydrateFromConversation) {
+        try {
+          const conv = await fetchConversationWithMessages(conversationId);
+          if (conv) {
+            await hydrateFromConversation(conv);
+          }
+        } catch (err) {
+          console.error('Failed to load conversation:', err);
+        }
+      }
+      // If there's a character param, select that character
+      else if (charParam && characters.length > 0) {
+        const char = characters.find(c => 
+          String(c.id) === charParam || 
+          c.name.toLowerCase() === charParam.toLowerCase()
+        );
+        if (char) {
+          const canChat = isPremium || isCharacterFree(char, tierSettings);
+          if (canChat) {
+            selectCharacter(char);
+          }
+        }
+      }
+    };
+    loadFromUrl();
+  }, [conversationId, location.search, characters, tierSettings, isPremium]);
 
   // Load characters
   useEffect(() => {
@@ -799,6 +839,61 @@ const ChatPageScroll = () => {
     }
     setShowActionsMenu(false);
   };
+
+  // Handle invite to chat
+  const handleInviteToChat = async () => {
+    try {
+      let id = chatId;
+      // Save first if not saved
+      if (!id && isAuthenticated && messages.length > 0) {
+        const ok = await saveChat();
+        if (!ok) {
+          showActionMessage('Please save the conversation first', 'error');
+          return;
+        }
+        // Wait for state to update
+        await new Promise(r => setTimeout(r, 600));
+        id = chatId || window.__lastChatId;
+      }
+      if (!id) {
+        showActionMessage('Please start a conversation first', 'error');
+        return;
+      }
+      const { data, error } = await createChatInvite(id);
+      if (error || !data?.code) {
+        showActionMessage('Failed to create invite', 'error');
+        return;
+      }
+      const url = `${window.location.origin}/join/${data.code}`;
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Join my chat',
+          text: `Join my chat with ${character?.name}`,
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showActionMessage('Invite link copied!');
+      }
+    } catch (err) {
+      console.error('Failed to create invite:', err);
+      showActionMessage('Failed to create invite', 'error');
+    }
+    setShowActionsMenu(false);
+  };
+
+  // Scroll to bottom smoothly without jumping
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, []);
+
+  // Scroll on new messages (with slight delay to avoid jump)
+  useEffect(() => {
+    const timer = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timer);
+  }, [messages.length, isTyping, scrollToBottom]);
 
   // Render alphabetical navigation (horizontal)
   const renderAlphaNav = () => (
@@ -1166,8 +1261,108 @@ const ChatPageScroll = () => {
   );
 
   // Render chat view
+  // Render Character Insights panel
+  const renderInsightsPanel = () => {
+    if (!showInsights || !character) return null;
+    
+    let relationships = {};
+    if (character.relationships) {
+      try {
+        relationships = typeof character.relationships === 'string' 
+          ? JSON.parse(character.relationships) 
+          : character.relationships;
+      } catch {}
+    }
+    
+    return (
+      <>
+        {/* Backdrop */}
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setShowInsights(false)}
+        />
+        {/* Panel */}
+        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg p-5">
+          <button
+            onClick={() => setShowInsights(false)}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-amber-600/20 border border-amber-600 text-amber-800 font-bold flex items-center justify-center hover:bg-amber-600 hover:text-white transition-colors"
+          >
+            ×
+          </button>
+          
+          <img
+            src={character.avatar_url || generateFallbackAvatar(character.name)}
+            alt={character.name}
+            className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-4"
+          />
+          
+          <h3 className="text-2xl font-bold text-amber-900 mb-5 text-center" style={{ fontFamily: 'Cinzel, serif' }}>
+            Character Insights
+          </h3>
+          
+          {/* Historical Context */}
+          <section className="mb-4 bg-white/50 rounded-lg p-4 border border-amber-200">
+            <h4 className="text-lg text-amber-800 font-bold mb-2 border-b border-amber-200 pb-1">Historical Context</h4>
+            <p className="text-amber-900 text-sm mb-2"><strong>Time Period:</strong> {character.timeline_period || "Unknown"}</p>
+            <p className="text-amber-900 text-sm mb-2"><strong>Location:</strong> {character.geographic_location || "Unknown"}</p>
+            <p className="text-amber-800 text-sm">{character.historical_context || "No historical context available."}</p>
+          </section>
+          
+          {/* Key Scripture */}
+          <section className="mb-4 bg-white/50 rounded-lg p-4 border border-amber-200">
+            <h4 className="text-lg text-amber-800 font-bold mb-2 border-b border-amber-200 pb-1">Key Scripture References</h4>
+            {character.key_scripture_references ? (
+              <ul className="text-amber-800 text-sm list-disc pl-4 space-y-1">
+                {character.key_scripture_references.split(/[;,]/).map((ref, i) => (
+                  <li key={i}>{ref.trim()}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-amber-700 text-sm">No key scripture references available.</p>
+            )}
+          </section>
+          
+          {/* Theological Significance */}
+          <section className="mb-4 bg-white/50 rounded-lg p-4 border border-amber-200">
+            <h4 className="text-lg text-amber-800 font-bold mb-2 border-b border-amber-200 pb-1">Theological Significance</h4>
+            <p className="text-amber-800 text-sm">{character.theological_significance || "No theological significance provided."}</p>
+          </section>
+          
+          {/* Relationships */}
+          {Object.keys(relationships).length > 0 && (
+            <section className="mb-4 bg-white/50 rounded-lg p-4 border border-amber-200">
+              <h4 className="text-lg text-amber-800 font-bold mb-2 border-b border-amber-200 pb-1">Relationships</h4>
+              {Object.entries(relationships).map(([type, members]) => (
+                <div key={type} className="mb-2">
+                  <h5 className="font-semibold text-amber-700 text-sm mb-1">{type.charAt(0).toUpperCase() + type.slice(1)}</h5>
+                  <div className="flex flex-wrap gap-1">
+                    {(Array.isArray(members) ? members : [members]).map((name, i) => (
+                      <span key={i} className="bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded-full">{name}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+          
+          {/* Study Questions */}
+          {character.study_questions && (
+            <section className="mb-4 bg-white/50 rounded-lg p-4 border border-amber-200">
+              <h4 className="text-lg text-amber-800 font-bold mb-2 border-b border-amber-200 pb-1">Study Questions</h4>
+              <ul className="text-amber-800 text-sm list-disc pl-4 space-y-1">
+                {character.study_questions.split('\n').map((q, i) => q.trim() && (
+                  <li key={i}>{q.trim()}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+      </>
+    );
+  };
+
   const renderChatView = () => (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="max-w-4xl mx-auto px-4 flex flex-col h-[calc(100vh-8rem)]">
       {/* Action message toast */}
       {actionMessage && (
         <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg ${
@@ -1177,13 +1372,16 @@ const ChatPageScroll = () => {
         </div>
       )}
 
+      {/* Character Insights Panel */}
+      {renderInsightsPanel()}
+
       {/* Chat Header with Actions */}
-      <div className="sticky top-16 z-20 py-3">
+      <div className="sticky top-0 z-20 py-3 bg-amber-50/95 backdrop-blur-sm">
         <div className="bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl border border-amber-200 shadow-md px-4 py-3">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={handleBackToCharacters}
-              className="p-2 hover:bg-amber-200/50 rounded-full transition-colors"
+              className="p-2 hover:bg-amber-200/50 rounded-full transition-colors flex-shrink-0"
               title="Back to characters"
             >
               <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1191,7 +1389,7 @@ const ChatPageScroll = () => {
               </svg>
             </button>
             
-            <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-amber-400">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden ring-2 ring-amber-400 flex-shrink-0">
               <img
                 src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
                 alt={character?.name}
@@ -1200,22 +1398,46 @@ const ChatPageScroll = () => {
             </div>
             
             <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-amber-900 truncate" style={{ fontFamily: 'Cinzel, serif' }}>
+              <h2 className="font-bold text-amber-900 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
                 {character?.name}
               </h2>
-              <p className="text-amber-600 text-sm">
+              <p className="text-amber-600 text-xs sm:text-sm">
                 {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
               </p>
             </div>
             
-            {/* Action buttons */}
-            {messages.length > 0 && (
-              <div className="flex items-center gap-1">
-                {/* Save button */}
+            {/* Action buttons - scrollable on mobile */}
+            <div className="flex items-center gap-1 overflow-x-auto flex-shrink-0">
+              {/* Insights button */}
+              <button
+                onClick={() => setShowInsights(true)}
+                className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                title="Character Insights"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </button>
+              
+              {/* Invite button */}
+              {messages.length > 0 && (
+                <button
+                  onClick={handleInviteToChat}
+                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                  title="Invite to chat"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Save button */}
+              {messages.length > 0 && (
                 <button
                   onClick={handleSaveChat}
                   disabled={isSaving || isChatSaved}
-                  className={`p-2 rounded-full transition-colors ${
+                  className={`p-2 rounded-full transition-colors flex-shrink-0 ${
                     isChatSaved 
                       ? 'bg-green-100 text-green-600' 
                       : 'hover:bg-amber-200/50 text-amber-700'
@@ -1233,33 +1455,39 @@ const ChatPageScroll = () => {
                     </svg>
                   )}
                 </button>
-                
-                {/* Copy button */}
+              )}
+              
+              {/* Copy button */}
+              {messages.length > 0 && (
                 <button
                   onClick={handleCopyTranscript}
-                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700"
+                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
                   title="Copy transcript"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </button>
-                
-                {/* Share button */}
+              )}
+              
+              {/* Share button */}
+              {messages.length > 0 && (
                 <button
                   onClick={handleShareConversation}
-                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700"
+                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
                   title="Share conversation"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
                 </button>
-                
-                {/* Favorite button */}
+              )}
+              
+              {/* Favorite button */}
+              {messages.length > 0 && (
                 <button
                   onClick={handleToggleChatFavorite}
-                  className={`p-2 rounded-full transition-colors ${
+                  className={`p-2 rounded-full transition-colors flex-shrink-0 ${
                     isChatFavorite 
                       ? 'bg-amber-200 text-amber-700' 
                       : 'hover:bg-amber-200/50 text-amber-700'
@@ -1270,14 +1498,17 @@ const ChatPageScroll = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                   </svg>
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="py-6 space-y-4 min-h-[50vh]">
+      {/* Messages - scrollable area */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto py-4 space-y-4"
+      >
         {messages.map((msg, idx) => {
           const isUser = msg.role === 'user';
           return (
@@ -1332,8 +1563,8 @@ const ChatPageScroll = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="sticky bottom-0 py-4 bg-gradient-to-t from-amber-50 via-amber-50/95 to-transparent">
+      {/* Input Area - fixed at bottom */}
+      <div className="py-4 bg-amber-50/95 backdrop-blur-sm border-t border-amber-200">
         <div className="flex gap-3">
           <textarea
             ref={inputRef}
@@ -1353,7 +1584,7 @@ const ChatPageScroll = () => {
           <button
             onClick={handleSend}
             disabled={!inputValue.trim() || isLoading}
-            className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl font-medium transition-colors shadow-md"
+            className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl font-medium transition-colors shadow-md flex-shrink-0"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
