@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext.jsx';
+import { useConversation } from '../contexts/ConversationContext.jsx';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
 import { groupRepository } from '../repositories/groupRepository';
@@ -415,7 +416,15 @@ const ChatPageScroll = () => {
     sendMessage,
     selectCharacter,
     resetChat,
+    chatId,
+    isChatSaved,
+    saveChat,
+    toggleFavorite,
+    isFavorite: isChatFavorite,
   } = useChat();
+  
+  // Conversation context for sharing
+  const { shareConversation } = useConversation();
 
   // Character data
   const [characters, setCharacters] = useState([]);
@@ -441,6 +450,9 @@ const ChatPageScroll = () => {
   // UI state
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [actionMessage, setActionMessage] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -693,6 +705,99 @@ const ChatPageScroll = () => {
   // Handle back to characters
   const handleBackToCharacters = () => {
     resetChat();
+  };
+
+  // Show action message helper
+  const showActionMessage = (text, type = 'success') => {
+    setActionMessage({ text, type });
+    setTimeout(() => setActionMessage(null), 3000);
+  };
+
+  // Format conversation for copying
+  const formatConversationAsText = () => {
+    if (!character || messages.length === 0) return '';
+    const title = `Conversation with ${character.name}\n`;
+    const date = `Date: ${new Date().toLocaleDateString()}\n\n`;
+    const formatted = messages.map(m => {
+      const speaker = m.role === 'user' ? 'You' : character.name;
+      return `${speaker}:\n${m.content}\n`;
+    }).join('\n');
+    return `${title}${date}${formatted}`;
+  };
+
+  // Handle save chat
+  const handleSaveChat = async () => {
+    if (!character || messages.length === 0) return;
+    setIsSaving(true);
+    try {
+      const success = await saveChat();
+      if (success) {
+        showActionMessage('Conversation saved!');
+      } else {
+        showActionMessage('Failed to save conversation', 'error');
+      }
+    } catch (err) {
+      showActionMessage('Failed to save conversation', 'error');
+    } finally {
+      setIsSaving(false);
+      setShowActionsMenu(false);
+    }
+  };
+
+  // Handle copy transcript
+  const handleCopyTranscript = async () => {
+    try {
+      const text = formatConversationAsText();
+      await navigator.clipboard.writeText(text);
+      showActionMessage('Copied to clipboard!');
+    } catch (err) {
+      showActionMessage('Failed to copy', 'error');
+    }
+    setShowActionsMenu(false);
+  };
+
+  // Handle share conversation
+  const handleShareConversation = async () => {
+    try {
+      // Save first if not saved
+      if (!chatId) {
+        const ok = await saveChat();
+        if (!ok) {
+          showActionMessage('Please save the conversation first', 'error');
+          return;
+        }
+      }
+      const code = await shareConversation(chatId || window.__lastChatId || '');
+      if (!code) {
+        showActionMessage('Failed to generate share link', 'error');
+        return;
+      }
+      const url = `${window.location.origin}/shared/${code}`;
+      if (navigator.share) {
+        await navigator.share({
+          title: 'FaithTalk AI Conversation',
+          text: `Chat with ${character?.name}`,
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showActionMessage('Share link copied!');
+      }
+    } catch (err) {
+      showActionMessage('Failed to share', 'error');
+    }
+    setShowActionsMenu(false);
+  };
+
+  // Handle toggle chat favorite
+  const handleToggleChatFavorite = async () => {
+    try {
+      await toggleFavorite();
+      showActionMessage(isChatFavorite ? 'Removed from favorites' : 'Added to favorites!');
+    } catch (err) {
+      showActionMessage('Failed to update favorite', 'error');
+    }
+    setShowActionsMenu(false);
   };
 
   // Render alphabetical navigation (horizontal)
@@ -1063,40 +1168,146 @@ const ChatPageScroll = () => {
   // Render chat view
   const renderChatView = () => (
     <div className="max-w-4xl mx-auto px-4">
-      {/* Chat Header */}
+      {/* Action message toast */}
+      {actionMessage && (
+        <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg ${
+          actionMessage.type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+        }`}>
+          {actionMessage.text}
+        </div>
+      )}
+
+      {/* Chat Header with Actions */}
       <div className="sticky top-16 z-20 py-3">
-        <div className="bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl border border-amber-200 shadow-md px-4 py-3 flex items-center gap-4">
-          <button
-            onClick={handleBackToCharacters}
-            className="p-2 hover:bg-amber-200/50 rounded-full transition-colors"
-          >
-            <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-amber-400">
-            <img
-              src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
-              alt={character?.name}
-              className="w-full h-full object-cover object-[center_20%]"
-            />
-          </div>
-          
-          <div className="flex-1">
-            <h2 className="font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
-              {character?.name}
-            </h2>
-            <p className="text-amber-600 text-sm">Biblical Character</p>
+        <div className="bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl border border-amber-200 shadow-md px-4 py-3">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBackToCharacters}
+              className="p-2 hover:bg-amber-200/50 rounded-full transition-colors"
+              title="Back to characters"
+            >
+              <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            
+            <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-amber-400">
+              <img
+                src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
+                alt={character?.name}
+                className="w-full h-full object-cover object-[center_20%]"
+              />
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-amber-900 truncate" style={{ fontFamily: 'Cinzel, serif' }}>
+                {character?.name}
+              </h2>
+              <p className="text-amber-600 text-sm">
+                {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
+              </p>
+            </div>
+            
+            {/* Action buttons */}
+            {messages.length > 0 && (
+              <div className="flex items-center gap-1">
+                {/* Save button */}
+                <button
+                  onClick={handleSaveChat}
+                  disabled={isSaving || isChatSaved}
+                  className={`p-2 rounded-full transition-colors ${
+                    isChatSaved 
+                      ? 'bg-green-100 text-green-600' 
+                      : 'hover:bg-amber-200/50 text-amber-700'
+                  }`}
+                  title={isChatSaved ? 'Saved' : 'Save conversation'}
+                >
+                  {isSaving ? (
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill={isChatSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  )}
+                </button>
+                
+                {/* Copy button */}
+                <button
+                  onClick={handleCopyTranscript}
+                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700"
+                  title="Copy transcript"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+                
+                {/* Share button */}
+                <button
+                  onClick={handleShareConversation}
+                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700"
+                  title="Share conversation"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </button>
+                
+                {/* Favorite button */}
+                <button
+                  onClick={handleToggleChatFavorite}
+                  className={`p-2 rounded-full transition-colors ${
+                    isChatFavorite 
+                      ? 'bg-amber-200 text-amber-700' 
+                      : 'hover:bg-amber-200/50 text-amber-700'
+                  }`}
+                  title={isChatFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <svg className="w-5 h-5" fill={isChatFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Messages */}
       <div className="py-6 space-y-4 min-h-[50vh]">
-        {messages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg} character={character} />
-        ))}
+        {messages.map((msg, idx) => {
+          const isUser = msg.role === 'user';
+          return (
+            <div key={msg.id || idx} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+              <div className={`flex max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
+                {!isUser && (
+                  <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-amber-300 flex-shrink-0">
+                    <img
+                      src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
+                      alt={character?.name}
+                      className="w-full h-full object-cover object-[center_20%]"
+                    />
+                  </div>
+                )}
+                <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+                  {!isUser && (
+                    <span className="text-amber-700 text-sm font-medium mb-1 ml-1">{character?.name}</span>
+                  )}
+                  <div className={`rounded-2xl px-4 py-3 ${
+                    isUser 
+                      ? 'bg-amber-600 text-white rounded-br-md' 
+                      : 'bg-white/90 border border-amber-200 text-amber-900 rounded-bl-md'
+                  }`} style={{ fontFamily: 'Georgia, serif' }}>
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
         
         {/* Typing indicator */}
         {isTyping && (
