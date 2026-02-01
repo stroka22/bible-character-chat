@@ -130,8 +130,8 @@ const HeaderScroll = () => {
               { to: '/bible', label: 'Bible' },
               { to: '/reading-plans/preview', label: 'Reading Plans' },
               { to: '/studies/preview', label: 'Studies' },
-              { to: '/how-it-works', label: 'How It Works' },
-              { to: '/pricing', label: 'Pricing' },
+              { to: '/how-it-works/preview', label: 'How It Works' },
+              { to: '/pricing/preview', label: 'Pricing' },
             ].map(({ to, label }) => (
               <Link 
                 key={to}
@@ -155,7 +155,7 @@ const HeaderScroll = () => {
             ) : isAuthenticated ? (
               <div className="flex items-center space-x-2">
                 <Link
-                  to="/my-walk"
+                  to="/my-walk/preview"
                   className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-amber-200 text-amber-900 hover:bg-amber-100 transition-colors shadow"
                   style={{ fontFamily: 'Georgia, serif' }}
                 >
@@ -184,8 +184,8 @@ const HeaderScroll = () => {
                   style={{ background: 'linear-gradient(to bottom, #fef3c7, #fde68a)' }}
                   >
                     <div className="py-1">
-                      <Link to="/profile" className="block px-4 py-2 text-sm text-amber-900 hover:bg-amber-200/50">Profile</Link>
-                      <Link to="/settings" className="block px-4 py-2 text-sm text-amber-900 hover:bg-amber-200/50">Settings</Link>
+                      <Link to="/profile/preview" className="block px-4 py-2 text-sm text-amber-900 hover:bg-amber-200/50">Profile</Link>
+                      <Link to="/settings/preview" className="block px-4 py-2 text-sm text-amber-900 hover:bg-amber-200/50">Settings</Link>
                       {shouldShowAdminLink && (
                         <Link to="/admin" className="block px-4 py-2 text-sm text-amber-900 hover:bg-amber-200/50">Admin Panel</Link>
                       )}
@@ -255,8 +255,8 @@ const HeaderScroll = () => {
               { to: '/bible', label: 'Bible' },
               { to: '/reading-plans/preview', label: 'Reading Plans' },
               { to: '/studies/preview', label: 'Studies' },
-              { to: '/how-it-works', label: 'How It Works' },
-              { to: '/pricing', label: 'Pricing' },
+              { to: '/how-it-works/preview', label: 'How It Works' },
+              { to: '/pricing/preview', label: 'Pricing' },
             ].map(({ to, label }) => (
               <Link 
                 key={to}
@@ -283,12 +283,12 @@ const HeaderScroll = () => {
                   </div>
                   <span className="text-amber-100 text-sm">{user?.email || 'User'}</span>
                 </div>
-                <Link to="/my-walk" className="block w-full px-4 py-2 text-sm font-semibold text-center bg-amber-200 text-amber-900 rounded-lg">
+                <Link to="/my-walk/preview" className="block w-full px-4 py-2 text-sm font-semibold text-center bg-amber-200 text-amber-900 rounded-lg">
                   My Walk
                 </Link>
                 <div className="grid grid-cols-2 gap-2">
-                  <Link to="/profile" className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-800/50 rounded-lg">Profile</Link>
-                  <Link to="/settings" className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-800/50 rounded-lg">Settings</Link>
+                  <Link to="/profile/preview" className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-800/50 rounded-lg">Profile</Link>
+                  <Link to="/settings/preview" className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-800/50 rounded-lg">Settings</Link>
                 </div>
                 {shouldShowAdminLink && (
                   <Link to="/admin" className="block w-full px-3 py-2 text-sm text-center text-amber-100 bg-amber-700/50 rounded-lg">Admin</Link>
@@ -297,8 +297,8 @@ const HeaderScroll = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                <Link to="/login" className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-800/50 rounded-lg">Log In</Link>
-                <Link to="/signup" className="px-3 py-2 text-sm text-center text-amber-900 bg-amber-200 rounded-lg">Sign Up</Link>
+                <Link to="/login/preview" className="px-3 py-2 text-sm text-center text-amber-100 bg-amber-800/50 rounded-lg">Log In</Link>
+                <Link to="/signup/preview" className="px-3 py-2 text-sm text-center text-amber-900 bg-amber-200 rounded-lg">Sign Up</Link>
               </div>
             )}
           </div>
