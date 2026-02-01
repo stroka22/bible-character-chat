@@ -1364,7 +1364,7 @@ const ChatPageScroll = () => {
           <div className="flex justify-end p-3">
             <button
               onClick={() => setShowInsights(false)}
-              className="w-12 h-12 rounded-full bg-red-500 text-white font-bold text-3xl flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg border-2 border-white"
+              className="w-12 h-12 rounded-full bg-black text-white font-bold text-3xl flex items-center justify-center hover:bg-gray-800 transition-colors shadow-lg"
             >
               ×
             </button>
@@ -1380,11 +1380,11 @@ const ChatPageScroll = () => {
               />
             </div>
             
-            <h3 className="text-2xl font-bold text-center mb-1" style={{ fontFamily: 'Cinzel, serif', color: '#fef9c3' }}>
+            <h3 className="text-2xl font-extrabold text-amber-200 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
               {character.name}
             </h3>
             {(character.title || character.role) && (
-              <p className="text-center text-sm mb-4" style={{ color: '#fef08a' }}>{character.title || character.role}</p>
+              <p className="text-amber-300 text-center text-sm mb-4">{character.title || character.role}</p>
             )}
           
           {/* Historical Context */}
@@ -1484,10 +1484,10 @@ const ChatPageScroll = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif', color: '#fef9c3' }}>
+          <h2 className="font-extrabold text-amber-200 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
             {character?.name}
           </h2>
-          <p className="text-xs" style={{ color: '#fef08a' }}>
+          <p className="text-amber-300 text-xs">
             {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
           </p>
         </div>
@@ -1776,7 +1776,7 @@ const ChatPageScroll = () => {
                 )}
                 <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                   {!isUser && (
-                    <span className="text-sm font-semibold mb-1 ml-1" style={{ color: '#fef9c3' }}>{character?.name}</span>
+                    <span className="text-amber-200 text-sm font-bold mb-1 ml-1">{character?.name}</span>
                   )}
                   <div className={`rounded-2xl px-4 py-3 ${
                     isUser 
