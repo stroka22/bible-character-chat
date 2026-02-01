@@ -1380,11 +1380,11 @@ const ChatPageScroll = () => {
               />
             </div>
             
-            <h3 className="text-2xl font-extrabold text-amber-200 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h3 className="text-2xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
               {character.name}
             </h3>
             {(character.title || character.role) && (
-              <p className="text-amber-300 text-center text-sm mb-4">{character.title || character.role}</p>
+              <p className="text-amber-700 text-center text-sm mb-4">{character.title || character.role}</p>
             )}
           
           {/* Historical Context */}
