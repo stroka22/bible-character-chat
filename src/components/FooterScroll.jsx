@@ -95,12 +95,12 @@ const FooterScroll = () => {
               Explore
             </h3>
             <ul className="space-y-2" style={{ fontFamily: 'Georgia, serif' }}>
-              <li><Link to="/how-it-works" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> How it Works</Link></li>
+              <li><Link to="/how-it-works/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> How it Works</Link></li>
               <li><Link to="/bible" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Bible</Link></li>
               <li><Link to="/reading-plans/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Reading Plans</Link></li>
               <li><Link to="/studies/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Bible Studies</Link></li>
-              <li><Link to="/pricing" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Pricing</Link></li>
-              <li><Link to="/faq" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> FAQ</Link></li>
+              <li><Link to="/pricing/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Pricing</Link></li>
+              <li><Link to="/faq/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> FAQ</Link></li>
             </ul>
           </div>
           
@@ -113,10 +113,10 @@ const FooterScroll = () => {
               About
             </h3>
             <ul className="space-y-2" style={{ fontFamily: 'Georgia, serif' }}>
-              <li><Link to="/about" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Our Story</Link></li>
-              <li><Link to="/contact" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Contact</Link></li>
-              <li><Link to="/press-kit" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Press Kit</Link></li>
-              <li><Link to="/careers" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Careers</Link></li>
+              <li><Link to="/about/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Our Story</Link></li>
+              <li><Link to="/contact/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Contact</Link></li>
+              <li><Link to="/press-kit/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Press Kit</Link></li>
+              <li><Link to="/careers/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Careers</Link></li>
             </ul>
           </div>
           
@@ -129,9 +129,9 @@ const FooterScroll = () => {
               Legal
             </h3>
             <ul className="space-y-2" style={{ fontFamily: 'Georgia, serif' }}>
-              <li><Link to="/terms" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Terms of Service</Link></li>
-              <li><Link to="/privacy" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Privacy Policy</Link></li>
-              <li><Link to="/cookies" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Cookie Policy</Link></li>
+              <li><Link to="/terms/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Terms of Service</Link></li>
+              <li><Link to="/privacy/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Privacy Policy</Link></li>
+              <li><Link to="/cookies/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Cookie Policy</Link></li>
             </ul>
           </div>
           

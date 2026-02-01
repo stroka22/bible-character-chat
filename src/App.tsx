@@ -69,6 +69,12 @@ import HowItWorksPageScroll from './pages/HowItWorksPageScroll.jsx';
 import FavoritesPageScroll from './pages/FavoritesPageScroll.jsx';
 import ProfilePageScroll from './pages/ProfilePageScroll.jsx';
 import SettingsPageScroll from './pages/SettingsPageScroll.jsx';
+import FAQPageScroll from './pages/FAQPageScroll.jsx';
+import TermsPageScroll from './pages/TermsPageScroll.jsx';
+import PrivacyPageScroll from './pages/PrivacyPageScroll.jsx';
+import CookiePolicyPageScroll from './pages/CookiePolicyPageScroll.jsx';
+import PressKitPageScroll from './pages/PressKitPageScroll.jsx';
+import CareersPageScroll from './pages/CareersPageScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -377,6 +383,12 @@ function AppContent() {
     <Route path="/favorites/preview" element={<FavoritesPageScroll />} />
     <Route path="/profile/preview" element={<ProfilePageScroll />} />
     <Route path="/settings/preview" element={<SettingsPageScroll />} />
+    <Route path="/faq/preview" element={<FAQPageScroll />} />
+    <Route path="/terms/preview" element={<TermsPageScroll />} />
+    <Route path="/privacy/preview" element={<PrivacyPageScroll />} />
+    <Route path="/cookies/preview" element={<CookiePolicyPageScroll />} />
+    <Route path="/press-kit/preview" element={<PressKitPageScroll />} />
+    <Route path="/careers/preview" element={<CareersPageScroll />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />
