@@ -497,6 +497,15 @@ const ChatPageScroll = () => {
     loadFromUrl();
   }, [conversationId, location.search, characters, tierSettings, isPremium]);
 
+  // Update URL when chat is saved (so refresh will reload conversation)
+  useEffect(() => {
+    if (chatId && character && !conversationId) {
+      // Chat was saved, update URL to include conversation ID
+      const newUrl = `/chat/preview/${chatId}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  }, [chatId, character, conversationId]);
+
   // Load characters
   useEffect(() => {
     const loadCharacters = async () => {
@@ -814,16 +823,27 @@ const ChatPageScroll = () => {
       }
       const url = `${window.location.origin}/shared/${code}`;
       if (navigator.share) {
-        await navigator.share({
-          title: 'FaithTalk AI Conversation',
-          text: `Chat with ${character?.name}`,
-          url,
-        });
+        try {
+          await navigator.share({
+            title: 'FaithTalk AI Conversation',
+            text: `Chat with ${character?.name}`,
+            url,
+          });
+          showActionMessage('Shared successfully!');
+        } catch (shareErr) {
+          // User cancelled share - not an error, just copy to clipboard
+          if (shareErr.name !== 'AbortError') {
+            await navigator.clipboard.writeText(url);
+            showActionMessage('Share link copied!');
+          }
+          // If user cancelled (AbortError), don't show any message
+        }
       } else {
         await navigator.clipboard.writeText(url);
         showActionMessage('Share link copied!');
       }
     } catch (err) {
+      console.error('Share error:', err);
       showActionMessage('Failed to share', 'error');
     }
     setShowActionsMenu(false);
@@ -865,14 +885,25 @@ const ChatPageScroll = () => {
         return;
       }
       const url = `${window.location.origin}/join/${data.code}`;
+      const inviteText = `You are being invited to join a Bible Chat on Faith Talk AI!\n\nJoin my conversation with ${character?.name}:\n${url}`;
+      
       if (navigator.share) {
-        await navigator.share({
-          title: 'Join my chat',
-          text: `Join my chat with ${character?.name}`,
-          url,
-        });
+        try {
+          await navigator.share({
+            title: 'Join my Bible Chat on Faith Talk AI',
+            text: inviteText,
+            url,
+          });
+          showActionMessage('Invite shared!');
+        } catch (shareErr) {
+          // User cancelled or share failed - try clipboard
+          if (shareErr.name !== 'AbortError') {
+            await navigator.clipboard.writeText(inviteText);
+            showActionMessage('Invite link copied!');
+          }
+        }
       } else {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(inviteText);
         showActionMessage('Invite link copied!');
       }
     } catch (err) {
@@ -1282,10 +1313,10 @@ const ChatPageScroll = () => {
           onClick={() => setShowInsights(false)}
         />
         {/* Panel */}
-        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg p-5">
+        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg p-5 pt-12">
           <button
             onClick={() => setShowInsights(false)}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-amber-600/20 border border-amber-600 text-amber-800 font-bold flex items-center justify-center hover:bg-amber-600 hover:text-white transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-amber-600/20 border border-amber-600 text-amber-800 font-bold flex items-center justify-center hover:bg-amber-600 hover:text-white transition-colors z-10"
           >
             ×
           </button>
@@ -1293,7 +1324,7 @@ const ChatPageScroll = () => {
           <img
             src={character.avatar_url || generateFallbackAvatar(character.name)}
             alt={character.name}
-            className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-4"
+            className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-4 mt-2"
           />
           
           <h3 className="text-2xl font-bold text-amber-900 mb-5 text-center" style={{ fontFamily: 'Cinzel, serif' }}>
@@ -1507,15 +1538,15 @@ const ChatPageScroll = () => {
       {/* Messages - scrollable area */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto py-4 space-y-4"
+        className="flex-1 overflow-y-auto py-4 space-y-4 px-1"
       >
         {messages.map((msg, idx) => {
           const isUser = msg.role === 'user';
           return (
-            <div key={msg.id || idx} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+            <div key={msg.id || idx} className={`flex ${isUser ? 'justify-end' : 'justify-start'} pl-1`}>
               <div className={`flex max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'} gap-3`}>
                 {!isUser && (
-                  <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-amber-300 flex-shrink-0">
+                  <div className="w-10 h-10 min-w-[2.5rem] rounded-full overflow-hidden ring-2 ring-amber-300 flex-shrink-0">
                     <img
                       src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
                       alt={character?.name}
@@ -1542,8 +1573,8 @@ const ChatPageScroll = () => {
         
         {/* Typing indicator */}
         {isTyping && (
-          <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-amber-300 flex-shrink-0">
+          <div className="flex gap-3 pl-1">
+            <div className="w-10 h-10 min-w-[2.5rem] rounded-full overflow-hidden ring-2 ring-amber-300 flex-shrink-0">
               <img
                 src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
                 alt={character?.name}

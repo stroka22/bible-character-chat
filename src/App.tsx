@@ -363,6 +363,7 @@ function AppContent() {
     <Route path="/preview" element={<HomePageScroll />} />
     {/* Preview routes with scroll theme */}
     <Route path="/chat/preview" element={<ChatPageScroll />} />
+    <Route path="/chat/preview/:conversationId" element={<ChatPageScroll />} />
     <Route path="/studies/preview" element={<StudiesPageScroll />} />
     <Route path="/reading-plans/preview" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPageScroll /></Suspense>} />
     <Route path="/roundtable/setup/preview" element={<RoundtableSetupScroll />} />
