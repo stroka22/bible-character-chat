@@ -96,11 +96,11 @@ If you believe we have collected information from a child under 13, please conta
 
           <div className="mt-10 text-center">
             <p className="text-amber-700 mb-4">Questions about your privacy?</p>
-            <Link to="/contact/preview" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Contact Us</Link>
+            <Link to="/contact" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Contact Us</Link>
           </div>
 
           <div className="mt-8 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
       </ScrollBackground>

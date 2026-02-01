@@ -112,10 +112,10 @@ const AboutPageScroll = () => {
           <div className="text-center">
             <h2 className="text-2xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Ready to Begin?</h2>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/chat/preview" className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors">
+              <Link to="/chat" className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors">
                 Start Chatting
               </Link>
-              <Link to="/preview" className="px-6 py-3 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors border border-amber-300">
+              <Link to="/" className="px-6 py-3 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors border border-amber-300">
                 Back to Home
               </Link>
             </div>

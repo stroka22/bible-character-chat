@@ -45,7 +45,7 @@ const ContactPageScroll = () => {
               </div>
               <h2 className="text-2xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Message Sent!</h2>
               <p className="text-amber-700 mb-6">Thank you for reaching out. We'll get back to you soon.</p>
-              <Link to="/preview" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">
+              <Link to="/" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">
                 Back to Home
               </Link>
             </div>
@@ -170,7 +170,7 @@ const ContactPageScroll = () => {
           )}
 
           <div className="mt-10 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
       </ScrollBackground>

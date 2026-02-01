@@ -41,7 +41,7 @@ function linkInline(text, charMap) {
     if (used.has(name)) continue;
     const re = new RegExp(`\\b(${name.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')})\\b`, 'i');
     if (re.test(linked)) {
-      linked = linked.replace(re, `<a href="/chat/preview?character=${c.id}" class="text-amber-700 underline hover:no-underline font-medium" target="_blank" rel="noopener noreferrer">$1</a>`);
+      linked = linked.replace(re, `<a href="/chat?character=${c.id}" class="text-amber-700 underline hover:no-underline font-medium" target="_blank" rel="noopener noreferrer">$1</a>`);
       used.add(name);
     }
   }
@@ -90,15 +90,15 @@ export default function BibleReaderScroll() {
   }, [translation, book, chapter]);
 
   const goToChapter = (newChapter) => {
-    navigate(`/bible/preview/${translation}/${book}/${newChapter}`);
+    navigate(`/bible/${translation}/${book}/${newChapter}`);
   };
 
   const goToBook = (newBook) => {
-    navigate(`/bible/preview/${translation}/${newBook}/1`);
+    navigate(`/bible/${translation}/${newBook}/1`);
   };
 
   const goToTranslation = (newTranslation) => {
-    navigate(`/bible/preview/${newTranslation}/${book}/${chapter}`);
+    navigate(`/bible/${newTranslation}/${book}/${chapter}`);
   };
 
   const prevChapter = () => {
@@ -117,7 +117,7 @@ export default function BibleReaderScroll() {
         <ScrollWrap className="max-w-6xl mx-auto">
           {/* Back Link */}
           <Link
-            to="/preview"
+            to="/"
             className="inline-flex items-center text-amber-700 hover:text-amber-900 text-sm mb-4"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -291,7 +291,7 @@ export default function BibleReaderScroll() {
                           Author
                         </span>
                         <a 
-                          href={`/chat/preview?character=${authorChar.id}`} 
+                          href={`/chat?character=${authorChar.id}`} 
                           className="text-amber-700 hover:text-amber-900 underline"
                           target="_blank" 
                           rel="noopener noreferrer"
@@ -327,7 +327,7 @@ export default function BibleReaderScroll() {
                       ))}
                     </div>
                     <Link 
-                      to="/reading-plans/preview" 
+                      to="/reading-plans" 
                       className="block mt-3 text-sm text-amber-700 hover:text-amber-900 font-medium"
                     >
                       View all plans →

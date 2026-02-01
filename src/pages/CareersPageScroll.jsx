@@ -104,7 +104,7 @@ const CareersPageScroll = () => {
           </section>
 
           <div className="mt-8 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
       </ScrollBackground>

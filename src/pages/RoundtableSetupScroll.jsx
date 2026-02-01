@@ -136,7 +136,7 @@ const RoundtableSetupScroll = () => {
       <ScrollBackground>
         <ScrollWrap className="max-w-4xl mx-auto">
           <Link
-            to="/preview"
+            to="/"
             className="inline-flex items-center text-amber-700 hover:text-amber-900 text-sm mb-4"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">

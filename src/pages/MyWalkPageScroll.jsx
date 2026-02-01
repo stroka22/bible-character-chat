@@ -337,7 +337,7 @@ const MyWalkPageScroll = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>My Faith Journey</h1>
-            <Link to="/preview" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Back to Home</Link>
+            <Link to="/" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Back to Home</Link>
           </div>
 
           {/* Favorite Characters */}
@@ -363,7 +363,7 @@ const MyWalkPageScroll = () => {
               <h2 className="text-xl font-bold text-amber-800 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Favorite Characters</h2>
               <div className="bg-amber-50/50 rounded-xl p-6 text-center border border-amber-200">
                 <p className="text-amber-700 mb-4">You haven't added any characters to your favorites yet.</p>
-                <Link to="/chat/preview" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Browse Characters</Link>
+                <Link to="/chat" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Browse Characters</Link>
               </div>
             </section>
           )}
@@ -422,7 +422,7 @@ const MyWalkPageScroll = () => {
                 {regularChats.length === 0 ? (
                   <div className="bg-amber-50/50 rounded-xl p-6 text-center border border-amber-200">
                     <p className="text-amber-700 mb-4">No saved conversations yet. Start chatting!</p>
-                    <Link to="/chat/preview" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Start a Conversation</Link>
+                    <Link to="/chat" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Start a Conversation</Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -506,7 +506,7 @@ const MyWalkPageScroll = () => {
                 {roundtables.length === 0 ? (
                   <div className="bg-amber-50/50 rounded-xl p-6 text-center border border-amber-200">
                     <p className="text-amber-700 mb-4">No roundtable discussions yet.</p>
-                    <Link to="/roundtable/setup/preview" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Start a Roundtable</Link>
+                    <Link to="/roundtable/setup" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Start a Roundtable</Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -578,7 +578,7 @@ const MyWalkPageScroll = () => {
                 ) : userStudies.length === 0 ? (
                   <div className="bg-amber-50/50 rounded-xl p-6 text-center border border-amber-200">
                     <p className="text-amber-700 mb-4">No Bible studies in progress.</p>
-                    <Link to="/studies/preview" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Browse Bible Studies</Link>
+                    <Link to="/studies" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Browse Bible Studies</Link>
                   </div>
                 ) : (
                   <div className="space-y-3">

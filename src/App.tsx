@@ -85,38 +85,48 @@ import LeadCaptureModal from './components/LeadCaptureModal';
 // Helper Components
 // ---------------------------------------------------------------------------
 
-// Check if current route is a preview route (uses scroll theme with its own header)
-function useIsPreviewRoute(): boolean {
+// Check if current route uses the scroll theme (has its own header)
+// Scroll theme is now the default; classic theme is at /classic/*
+function useIsScrollThemeRoute(): boolean {
   const location = useLocation();
-  return location.pathname === '/preview' || 
-         location.pathname.endsWith('/preview') ||
-         location.pathname.includes('/preview/');
+  // Classic routes use the old blue header
+  if (location.pathname.startsWith('/classic')) return false;
+  // Admin routes use the old header
+  if (location.pathname.startsWith('/admin')) return false;
+  // Account/billing uses old header
+  if (location.pathname === '/account') return false;
+  // Invite/join routes
+  if (location.pathname.startsWith('/invite') || location.pathname.startsWith('/join')) return false;
+  // Reset password
+  if (location.pathname === '/reset-password') return false;
+  // Debug route
+  if (location.pathname === '/debug') return false;
+  // Everything else uses scroll theme
+  return true;
 }
 
-// Conditionally render the default Header (hide on preview routes)
+// Conditionally render the default Header (hide on scroll theme routes)
 function ConditionalHeader(): JSX.Element | null {
-  const isPreview = useIsPreviewRoute();
-  if (isPreview) return null;
+  const isScrollTheme = useIsScrollThemeRoute();
+  if (isScrollTheme) return null;
   return <Header />;
 }
 
-// Renders the mobile LeadCaptureBanner only when NOT on an /admin route.
+// Renders the mobile LeadCaptureBanner only on classic theme routes
 function MobileLeadBannerGate(): JSX.Element | null {
   const location = useLocation();
+  const isScrollTheme = useIsScrollThemeRoute();
   const isAdminPath = location.pathname.startsWith('/admin');
-  const isRoundtable = location.pathname.startsWith('/roundtable');
-  const isPreview = useIsPreviewRoute();
   // Hide banner on shared/public views to avoid layout overlap and distraction
   let isShared = false;
   try {
     const params = new URLSearchParams(location.search);
     isShared = params.get('shared') === '1' || location.pathname.startsWith('/shared/');
   } catch {
-    // ensure non-empty catch for linting; treat as not shared
     isShared = false;
   }
-  // Hide on Roundtable and preview pages to prevent any overlap
-  if (isAdminPath || isShared || isRoundtable || isPreview) return null;
+  // Hide on scroll theme pages and admin
+  if (isScrollTheme || isAdminPath || isShared) return null;
   return (
     <div className="md:hidden">
       <LeadCaptureBanner />
@@ -124,10 +134,10 @@ function MobileLeadBannerGate(): JSX.Element | null {
   );
 }
 
-// Get main content class - no padding on preview routes
+// Get main content class - no padding on scroll theme routes
 function useMainClass(): string {
-  const isPreview = useIsPreviewRoute();
-  return isPreview ? 'flex-1' : 'flex-1 px-4 md:px-6';
+  const isScrollTheme = useIsScrollThemeRoute();
+  return isScrollTheme ? 'flex-1' : 'flex-1 px-4 md:px-6';
 }
 
 interface ErrorBoundaryProps {
@@ -365,79 +375,82 @@ function AppContent() {
       {/* Desktop modal (self-managed triggers) */}
       <LeadCaptureModal />
       <main className={mainClass}><Routes>
-    {/* Public routes */}
-    <Route path="/" element={<HomePage />} />
-    <Route path="/preview" element={<HomePageScroll />} />
-    {/* Preview routes with scroll theme */}
-    <Route path="/chat/preview" element={<ChatPageScroll />} />
-    <Route path="/chat/preview/:conversationId" element={<ChatPageScroll />} />
-    <Route path="/studies/preview" element={<StudiesPageScroll />} />
-    <Route path="/reading-plans/preview" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPageScroll /></Suspense>} />
-    <Route path="/roundtable/setup/preview" element={<RoundtableSetupScroll />} />
-    <Route path="/my-walk/preview" element={<MyWalkPageScroll />} />
-    <Route path="/login/preview" element={<LoginPageScroll />} />
-    <Route path="/signup/preview" element={<SignupPageScroll />} />
-    <Route path="/pricing/preview" element={<PricingPageScroll />} />
-    <Route path="/about/preview" element={<AboutPageScroll />} />
-    <Route path="/contact/preview" element={<ContactPageScroll />} />
-    <Route path="/how-it-works/preview" element={<HowItWorksPageScroll />} />
-    <Route path="/favorites/preview" element={<FavoritesPageScroll />} />
-    <Route path="/profile/preview" element={<ProfilePageScroll />} />
-    <Route path="/settings/preview" element={<SettingsPageScroll />} />
-    <Route path="/faq/preview" element={<FAQPageScroll />} />
-    <Route path="/terms/preview" element={<TermsPageScroll />} />
-    <Route path="/privacy/preview" element={<PrivacyPageScroll />} />
-    <Route path="/cookies/preview" element={<CookiePolicyPageScroll />} />
-    <Route path="/press-kit/preview" element={<PressKitPageScroll />} />
-    <Route path="/careers/preview" element={<CareersPageScroll />} />
-    <Route path="/bible/preview" element={<BibleReaderScroll />} />
-    <Route path="/bible/preview/:translation" element={<BibleReaderScroll />} />
-    <Route path="/bible/preview/:translation/:book" element={<BibleReaderScroll />} />
-    <Route path="/bible/preview/:translation/:book/:chapter" element={<BibleReaderScroll />} />
-    <Route path="/login" element={<LoginPage />} />
-    <Route path="/signup" element={<SignupPage />} />
-    <Route path="/reset-password" element={<ResetPasswordPage />} />
-    <Route path="/pricing" element={<PricingPage />} />
-    <Route path="/leaders" element={<PastorsPage />} />
-    <Route path="/account" element={<AccountBilling />} />
-    {/* Invite links (org + chat): allow first-time users to click and join */}
-    <Route path="/invite/:code" element={<InviteAccept />} />
-    <Route path="/join/:code" element={<JoinChat />} />
-    <Route path="/how-it-works" element={<HowItWorksPage />} />
-    <Route path="/about" element={<AboutPage />} />
-    <Route path="/contact" element={<ContactPage />} />
-    <Route path="/pastors" element={<PastorsPage />} />
-    <Route path="/sales" element={<SalesPage />} />
-    <Route path="/terms" element={<TermsPage />} />
-    <Route path="/privacy" element={<PrivacyPage />} />
-    <Route path="/cookies" element={<CookiePolicyPage />} />
-    <Route path="/press-kit" element={<PressKitPage />} />
-    {/* -------- Roundtable (public) ----------------------------- */}
-    <Route path="/roundtable/setup" element={<RoundtableSetup />} />
-    <Route path="/roundtable" element={<RoundtableChat />} />
-    <Route path="/careers" element={<CareersPage />} />
-    <Route path="/faq" element={<FAQPage />} />
-    {/* -------- Bible Studies (public) ------------------------- */}
-    <Route path="/studies" element={<StudiesPage />} />
+    {/* ============================================================
+        SCROLL THEME (Default) - Main routes
+       ============================================================ */}
+    <Route path="/" element={<HomePageScroll />} />
+    <Route path="/chat" element={<ChatPageScroll />} />
+    <Route path="/chat/:conversationId" element={<ChatPageScroll />} />
+    <Route path="/studies" element={<StudiesPageScroll />} />
     <Route path="/studies/:id" element={<StudyDetails />} />
     <Route path="/studies/:id/lesson/:lessonIndex" element={<StudyLesson />} />
-    {/* -------- Bible Reader (public) -------------------------- */}
-    <Route path="/bible" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
-    <Route path="/bible/:translation/:book/:chapter" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
-    {/* -------- Reading Plans ------------------------------------ */}
-    <Route path="/reading-plans" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPage /></Suspense>} />
+    <Route path="/reading-plans" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPageScroll /></Suspense>} />
     <Route path="/reading-plans/:slug" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlanDetail /></Suspense>} />
-    <Route path="/debug" element={<div className="min-h-screen bg-slate-800 text-white p-4"><h1 className="text-2xl mb-4">Debug Tools</h1><DebugPanel /></div>} />
+    <Route path="/roundtable/setup" element={<RoundtableSetupScroll />} />
+    <Route path="/roundtable" element={<RoundtableChat />} />
+    <Route path="/bible" element={<BibleReaderScroll />} />
+    <Route path="/bible/:translation" element={<BibleReaderScroll />} />
+    <Route path="/bible/:translation/:book" element={<BibleReaderScroll />} />
+    <Route path="/bible/:translation/:book/:chapter" element={<BibleReaderScroll />} />
+    <Route path="/login" element={<LoginPageScroll />} />
+    <Route path="/signup" element={<SignupPageScroll />} />
+    <Route path="/pricing" element={<PricingPageScroll />} />
+    <Route path="/about" element={<AboutPageScroll />} />
+    <Route path="/contact" element={<ContactPageScroll />} />
+    <Route path="/how-it-works" element={<HowItWorksPageScroll />} />
+    <Route path="/faq" element={<FAQPageScroll />} />
+    <Route path="/terms" element={<TermsPageScroll />} />
+    <Route path="/privacy" element={<PrivacyPageScroll />} />
+    <Route path="/cookies" element={<CookiePolicyPageScroll />} />
+    <Route path="/press-kit" element={<PressKitPageScroll />} />
+    <Route path="/careers" element={<CareersPageScroll />} />
+    <Route path="/my-walk" element={<MyWalkPageScroll />} />
+    <Route path="/favorites" element={<FavoritesPageScroll />} />
+    <Route path="/profile" element={<ProfilePageScroll />} />
+    <Route path="/settings" element={<SettingsPageScroll />} />
     
-    {/* Chat & Shared conversation routes */}
-    <Route path="/chat" element={<SimpleChatWithHistory />} />
-    {/* Require login to view saved conversations by ID */}
-    <Route element={<ProtectedRoute redirectPath="/login" />}>
-      <Route path="/chat/:conversationId" element={<SimpleChatWithHistory />} />
-    </Route>
+    {/* ============================================================
+        CLASSIC THEME (Blue) - Fallback at /classic/*
+       ============================================================ */}
+    <Route path="/classic" element={<HomePage />} />
+    <Route path="/classic/chat" element={<SimpleChatWithHistory />} />
+    <Route path="/classic/chat/:conversationId" element={<SimpleChatWithHistory />} />
+    <Route path="/classic/studies" element={<StudiesPage />} />
+    <Route path="/classic/reading-plans" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPage /></Suspense>} />
+    <Route path="/classic/roundtable/setup" element={<RoundtableSetup />} />
+    <Route path="/classic/bible" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
+    <Route path="/classic/bible/:translation/:book/:chapter" element={<Suspense fallback={<div className="p-6">Loading…</div>}><BibleReader /></Suspense>} />
+    <Route path="/classic/login" element={<LoginPage />} />
+    <Route path="/classic/signup" element={<SignupPage />} />
+    <Route path="/classic/pricing" element={<PricingPage />} />
+    <Route path="/classic/about" element={<AboutPage />} />
+    <Route path="/classic/contact" element={<ContactPage />} />
+    <Route path="/classic/how-it-works" element={<HowItWorksPage />} />
+    <Route path="/classic/faq" element={<FAQPage />} />
+    <Route path="/classic/terms" element={<TermsPage />} />
+    <Route path="/classic/privacy" element={<PrivacyPage />} />
+    <Route path="/classic/cookies" element={<CookiePolicyPage />} />
+    <Route path="/classic/press-kit" element={<PressKitPage />} />
+    <Route path="/classic/careers" element={<CareersPage />} />
+    <Route path="/classic/my-walk" element={<MyWalkPage />} />
+    <Route path="/classic/favorites" element={<FavoritesPage />} />
+    <Route path="/classic/profile" element={<ProfilePage />} />
+    <Route path="/classic/settings" element={<SettingsPage />} />
+    
+    {/* ============================================================
+        SHARED ROUTES (Theme-agnostic)
+       ============================================================ */}
+    <Route path="/reset-password" element={<ResetPasswordPage />} />
+    <Route path="/account" element={<AccountBilling />} />
+    <Route path="/leaders" element={<PastorsPage />} />
+    <Route path="/pastors" element={<PastorsPage />} />
+    <Route path="/sales" element={<SalesPage />} />
+    <Route path="/invite/:code" element={<InviteAccept />} />
+    <Route path="/join/:code" element={<JoinChat />} />
     <Route path="/shared/:shareCode" element={<SimpleChatWithHistory isSharedView={true} />} />
+    <Route path="/debug" element={<div className="min-h-screen bg-slate-800 text-white p-4"><h1 className="text-2xl mb-4">Debug Tools</h1><DebugPanel /></div>} />
 
-    {/* Protected routes */}
+    {/* Protected routes - Admin (uses classic theme) */}
     <Route element={<ProtectedRoute redirectPath="/login" />}>
       <Route element={<AdminRoute redirectPath="/login" />}>
         <Route path="/admin" element={<AdminPage />} />
@@ -447,14 +460,9 @@ function AppContent() {
         <Route path="/admin/users" element={<SuperadminUsersPage />} />
         <Route path="/admin/studies" element={<AdminStudiesPage />} />
         <Route path="/admin/leads" element={<AdminLeadsPage />} />
-        {/* Private presenter guide (not in nav) */}
         <Route path="/present/features" element={<PresentationGuide />} />
       </Route>
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/settings" element={<SettingsPage />} />
       <Route path="/conversations" element={<ConversationsPage />} />
-      <Route path="/favorites" element={<FavoritesPage />} />
-      <Route path="/my-walk" element={<MyWalkPage />} />
     </Route>
     
     {/* Fallback route */}

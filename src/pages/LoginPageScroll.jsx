@@ -76,7 +76,7 @@ const LoginPageScroll = () => {
             {!isResettingPassword && (
               <p className="text-amber-700 mt-2">
                 Don't have an account?{' '}
-                <Link to="/signup/preview" className="text-amber-600 font-medium hover:text-amber-800">Sign up</Link>
+                <Link to="/signup" className="text-amber-600 font-medium hover:text-amber-800">Sign up</Link>
               </p>
             )}
           </div>
@@ -164,7 +164,7 @@ const LoginPageScroll = () => {
           )}
 
           <div className="mt-8 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">
               ← Back to Home
             </Link>
           </div>

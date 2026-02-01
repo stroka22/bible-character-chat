@@ -66,7 +66,7 @@ const FavoritesPageScroll = () => {
           <ScrollWrap className="max-w-2xl mx-auto text-center">
             <h1 className="text-3xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Login Required</h1>
             <p className="text-amber-700 mb-6">Please log in to view your favorite characters.</p>
-            <Link to="/login/preview" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Log In</Link>
+            <Link to="/login" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Log In</Link>
           </ScrollWrap>
         </ScrollBackground>
         <FooterScroll />
@@ -81,7 +81,7 @@ const FavoritesPageScroll = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>Favorite Characters</h1>
-            <Link to="/chat/preview" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Browse All</Link>
+            <Link to="/chat" className="px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Browse All</Link>
           </div>
 
           <ScrollDivider />
@@ -98,7 +98,7 @@ const FavoritesPageScroll = () => {
               </svg>
               <h2 className="text-xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>No Favorites Yet</h2>
               <p className="text-amber-700 mb-6">Start chatting with characters and add them to your favorites!</p>
-              <Link to="/chat/preview" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">
+              <Link to="/chat" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">
                 Browse Characters
               </Link>
             </div>
@@ -157,7 +157,7 @@ const FavoritesPageScroll = () => {
           )}
 
           <div className="mt-10 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
       </ScrollBackground>

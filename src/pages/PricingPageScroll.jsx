@@ -159,7 +159,7 @@ const PricingPageScroll = () => {
               <div className="text-3xl font-bold text-amber-800 mb-4">$0 <span className="text-base font-normal text-amber-600">/forever</span></div>
               <p className="text-amber-700 mb-6">Perfect for exploring biblical conversations.</p>
               <Link
-                to="/chat/preview"
+                to="/chat"
                 className="block w-full py-3 text-center bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition-colors"
               >
                 Get Started Free
@@ -261,7 +261,7 @@ const PricingPageScroll = () => {
           </div>
 
           <div className="mt-8 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
       </ScrollBackground>

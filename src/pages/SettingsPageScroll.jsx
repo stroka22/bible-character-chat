@@ -109,7 +109,7 @@ const SettingsPageScroll = () => {
           <ScrollWrap className="max-w-2xl mx-auto text-center">
             <h1 className="text-3xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Login Required</h1>
             <p className="text-amber-700 mb-6">Please log in to view settings.</p>
-            <Link to="/login/preview" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Log In</Link>
+            <Link to="/login" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Log In</Link>
           </ScrollWrap>
         </ScrollBackground>
         <FooterScroll />
@@ -124,7 +124,7 @@ const SettingsPageScroll = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>Settings</h1>
-            <Link to="/profile/preview" className="px-4 py-2 bg-amber-100 text-amber-800 rounded-lg font-medium hover:bg-amber-200 border border-amber-300">
+            <Link to="/profile" className="px-4 py-2 bg-amber-100 text-amber-800 rounded-lg font-medium hover:bg-amber-200 border border-amber-300">
               Profile
             </Link>
           </div>
@@ -257,7 +257,7 @@ const SettingsPageScroll = () => {
           </section>
 
           <div className="mt-8 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
       </ScrollBackground>

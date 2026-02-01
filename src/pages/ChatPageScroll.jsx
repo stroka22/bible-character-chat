@@ -1066,7 +1066,7 @@ const ChatPageScroll = () => {
       {/* Quick Action Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mb-6">
         <Link
-          to="/roundtable/setup/preview"
+          to="/roundtable/setup"
           className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-medium transition-colors shadow-md"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -1075,7 +1075,7 @@ const ChatPageScroll = () => {
           Roundtable Discussion
         </Link>
         <Link
-          to="/studies/preview"
+          to="/studies"
           className="flex items-center gap-2 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-full font-medium transition-colors border border-amber-300"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

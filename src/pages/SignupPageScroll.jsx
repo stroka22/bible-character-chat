@@ -66,7 +66,7 @@ const SignupPageScroll = () => {
             </div>
             <h1 className="text-2xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Check Your Email</h1>
             <p className="text-amber-700 mb-6">We've sent a confirmation link to your email. Please verify your account to continue.</p>
-            <Link to="/login/preview" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Go to Login</Link>
+            <Link to="/login" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Go to Login</Link>
           </ScrollWrap>
         </ScrollBackground>
         <FooterScroll />
@@ -82,7 +82,7 @@ const SignupPageScroll = () => {
             <h1 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>Create Account</h1>
             <p className="text-amber-700 mt-2">
               Already have an account?{' '}
-              <Link to="/login/preview" className="text-amber-600 font-medium hover:text-amber-800">Sign in</Link>
+              <Link to="/login" className="text-amber-600 font-medium hover:text-amber-800">Sign in</Link>
             </p>
           </div>
 
@@ -169,7 +169,7 @@ const SignupPageScroll = () => {
           </p>
 
           <div className="mt-6 text-center">
-            <Link to="/preview" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
+            <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
       </ScrollBackground>
