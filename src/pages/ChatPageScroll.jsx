@@ -422,6 +422,8 @@ const ChatPageScroll = () => {
     chatId,
     isChatSaved,
     saveChat,
+    saveChatTitle,
+    deleteCurrentChat,
     toggleFavorite,
     isFavorite: isChatFavorite,
     hydrateFromConversation,
@@ -458,6 +460,9 @@ const ChatPageScroll = () => {
   const [actionMessage, setActionMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
   
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -822,24 +827,25 @@ const ChatPageScroll = () => {
         return;
       }
       const url = `${window.location.origin}/shared/${code}`;
+      const shareText = `You are being invited to join a Bible Chat on Faith Talk AI!\n\nView my conversation with ${character?.name}:\n${url}`;
+      
       if (navigator.share) {
         try {
           await navigator.share({
-            title: 'FaithTalk AI Conversation',
-            text: `Chat with ${character?.name}`,
+            title: 'Bible Chat on Faith Talk AI',
+            text: shareText,
             url,
           });
           showActionMessage('Shared successfully!');
         } catch (shareErr) {
           // User cancelled share - not an error, just copy to clipboard
           if (shareErr.name !== 'AbortError') {
-            await navigator.clipboard.writeText(url);
+            await navigator.clipboard.writeText(shareText);
             showActionMessage('Share link copied!');
           }
-          // If user cancelled (AbortError), don't show any message
         }
       } else {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText(shareText);
         showActionMessage('Share link copied!');
       }
     } catch (err) {
@@ -858,6 +864,33 @@ const ChatPageScroll = () => {
       showActionMessage('Failed to update favorite', 'error');
     }
     setShowActionsMenu(false);
+  };
+
+  // Handle rename conversation
+  const handleRenameChat = async () => {
+    if (!chatId || !renameValue.trim()) return;
+    try {
+      await saveChatTitle(renameValue.trim());
+      showActionMessage('Conversation renamed!');
+      setShowRenameModal(false);
+      setRenameValue('');
+    } catch (err) {
+      showActionMessage('Failed to rename conversation', 'error');
+    }
+  };
+
+  // Handle delete conversation
+  const handleDeleteChat = async () => {
+    if (!chatId) return;
+    try {
+      await deleteCurrentChat();
+      showActionMessage('Conversation deleted');
+      setShowDeleteConfirm(false);
+      // Go back to character selection
+      resetChat();
+    } catch (err) {
+      showActionMessage('Failed to delete conversation', 'error');
+    }
   };
 
   // Handle invite to chat
@@ -1307,16 +1340,16 @@ const ChatPageScroll = () => {
     
     return (
       <>
-        {/* Backdrop */}
+        {/* Backdrop - click to close on all screens */}
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40"
           onClick={() => setShowInsights(false)}
         />
         {/* Panel */}
-        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg p-5 pt-12">
+        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg px-5 pt-16 pb-5">
           <button
             onClick={() => setShowInsights(false)}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-amber-600/20 border border-amber-600 text-amber-800 font-bold flex items-center justify-center hover:bg-amber-600 hover:text-white transition-colors z-10"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-amber-600 text-white font-bold text-xl flex items-center justify-center hover:bg-amber-700 transition-colors z-10 shadow-md"
           >
             ×
           </button>
@@ -1324,7 +1357,7 @@ const ChatPageScroll = () => {
           <img
             src={character.avatar_url || generateFallbackAvatar(character.name)}
             alt={character.name}
-            className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-4 mt-2"
+            className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-4"
           />
           
           <h3 className="text-2xl font-bold text-amber-900 mb-5 text-center" style={{ fontFamily: 'Cinzel, serif' }}>
@@ -1530,10 +1563,92 @@ const ChatPageScroll = () => {
                   </svg>
                 </button>
               )}
+              
+              {/* Rename button (only for saved chats) */}
+              {isChatSaved && (
+                <button
+                  onClick={() => setShowRenameModal(true)}
+                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                  title="Rename conversation"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Delete button (only for saved chats) */}
+              {isChatSaved && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-600 flex-shrink-0"
+                  title="Delete conversation"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Rename Modal */}
+      {showRenameModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowRenameModal(false)}>
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Rename Conversation</h3>
+            <input
+              type="text"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              placeholder="Enter new name..."
+              className="w-full px-4 py-3 rounded-lg border border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setShowRenameModal(false); setRenameValue(''); }}
+                className="px-4 py-2 text-amber-700 hover:bg-amber-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRenameChat}
+                disabled={!renameValue.trim()}
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:bg-amber-300 transition-colors"
+              >
+                Rename
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Delete Conversation?</h3>
+            <p className="text-amber-700 mb-4">This action cannot be undone. Are you sure you want to delete this conversation?</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-amber-700 hover:bg-amber-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteChat}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Messages - scrollable area */}
       <div 
