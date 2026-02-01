@@ -42,34 +42,46 @@ const CategoryManager = ({ categories, onUpdate, onDelete, onCreate }) => {
     children: [
       ...categories.map(cat => _jsx("div", {
         key: cat.id,
-        className: "flex items-center gap-3 p-3 bg-gray-50 rounded-lg",
-        children: editingId === cat.id ? _jsxs(_Fragment, {
+        className: "p-3 bg-gray-50 rounded-lg",
+        children: editingId === cat.id ? _jsxs("div", {
+          className: "space-y-2",
           children: [
-            _jsx("input", {
-              type: "text",
-              value: editForm.icon,
-              onChange: (e) => setEditForm({ ...editForm, icon: e.target.value }),
-              className: "w-12 text-center border border-gray-300 rounded px-2 py-1",
-              placeholder: "Icon"
-            }),
-            _jsx("input", {
-              type: "text",
-              value: editForm.name,
-              onChange: (e) => setEditForm({ ...editForm, name: e.target.value }),
-              className: "flex-1 border border-gray-300 rounded px-2 py-1",
-              placeholder: "Name"
+            _jsxs("div", {
+              className: "flex gap-2",
+              children: [
+                _jsx("input", {
+                  type: "text",
+                  value: editForm.icon,
+                  onChange: (e) => setEditForm({ ...editForm, icon: e.target.value }),
+                  className: "w-16 text-center border border-gray-300 rounded px-2 py-1 text-sm",
+                  placeholder: "Icon"
+                }),
+                _jsx("input", {
+                  type: "text",
+                  value: editForm.name,
+                  onChange: (e) => setEditForm({ ...editForm, name: e.target.value }),
+                  className: "flex-1 border border-gray-300 rounded px-2 py-1 text-sm",
+                  placeholder: "Name"
+                })
+              ]
             }),
             _jsx("input", {
               type: "text",
               value: editForm.description,
               onChange: (e) => setEditForm({ ...editForm, description: e.target.value }),
-              className: "flex-1 border border-gray-300 rounded px-2 py-1",
+              className: "w-full border border-gray-300 rounded px-2 py-1 text-sm",
               placeholder: "Description"
             }),
-            _jsx("button", { onClick: () => handleSave(cat.id), className: "px-3 py-1 bg-green-600 text-white rounded text-sm", children: "Save" }),
-            _jsx("button", { onClick: () => setEditingId(null), className: "px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm", children: "Cancel" })
+            _jsxs("div", {
+              className: "flex gap-2",
+              children: [
+                _jsx("button", { onClick: () => handleSave(cat.id), className: "px-3 py-1 bg-green-600 text-white rounded text-sm", children: "Save" }),
+                _jsx("button", { onClick: () => setEditingId(null), className: "px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm", children: "Cancel" })
+              ]
+            })
           ]
-        }) : _jsxs(_Fragment, {
+        }) : _jsxs("div", {
+          className: "flex items-center gap-3",
           children: [
             _jsx("span", { className: "text-xl w-8", children: cat.icon }),
             _jsxs("div", {
@@ -95,31 +107,41 @@ const CategoryManager = ({ categories, onUpdate, onDelete, onCreate }) => {
         })
       })),
       showNew ? _jsxs("div", {
-        className: "flex items-center gap-3 p-3 bg-blue-50 rounded-lg border-2 border-dashed border-blue-300",
+        className: "p-3 bg-blue-50 rounded-lg border-2 border-dashed border-blue-300 space-y-2",
         children: [
-          _jsx("input", {
-            type: "text",
-            value: newForm.icon,
-            onChange: (e) => setNewForm({ ...newForm, icon: e.target.value }),
-            className: "w-12 text-center border border-gray-300 rounded px-2 py-1",
-            placeholder: "Icon"
+          _jsxs("div", {
+            className: "flex gap-2",
+            children: [
+              _jsx("input", {
+                type: "text",
+                value: newForm.icon,
+                onChange: (e) => setNewForm({ ...newForm, icon: e.target.value }),
+                className: "w-16 text-center border border-gray-300 rounded px-2 py-1 text-sm",
+                placeholder: "Icon"
+              }),
+              _jsx("input", {
+                type: "text",
+                value: newForm.name,
+                onChange: (e) => setNewForm({ ...newForm, name: e.target.value }),
+                className: "flex-1 border border-gray-300 rounded px-2 py-1 text-sm",
+                placeholder: "Category Name"
+              }),
+              _jsx("input", {
+                type: "text",
+                value: newForm.slug,
+                onChange: (e) => setNewForm({ ...newForm, slug: e.target.value }),
+                className: "w-24 border border-gray-300 rounded px-2 py-1 text-sm",
+                placeholder: "slug"
+              })
+            ]
           }),
-          _jsx("input", {
-            type: "text",
-            value: newForm.name,
-            onChange: (e) => setNewForm({ ...newForm, name: e.target.value }),
-            className: "flex-1 border border-gray-300 rounded px-2 py-1",
-            placeholder: "Category Name"
-          }),
-          _jsx("input", {
-            type: "text",
-            value: newForm.slug,
-            onChange: (e) => setNewForm({ ...newForm, slug: e.target.value }),
-            className: "w-32 border border-gray-300 rounded px-2 py-1",
-            placeholder: "slug"
-          }),
-          _jsx("button", { onClick: handleCreate, className: "px-3 py-1 bg-green-600 text-white rounded text-sm", children: "Create" }),
-          _jsx("button", { onClick: () => setShowNew(false), className: "px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm", children: "Cancel" })
+          _jsxs("div", {
+            className: "flex gap-2",
+            children: [
+              _jsx("button", { onClick: handleCreate, className: "px-3 py-1 bg-green-600 text-white rounded text-sm", children: "Create" }),
+              _jsx("button", { onClick: () => setShowNew(false), className: "px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm", children: "Cancel" })
+            ]
+          })
         ]
       }) : _jsx("button", {
         onClick: () => setShowNew(true),
