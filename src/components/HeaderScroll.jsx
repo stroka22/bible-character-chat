@@ -127,7 +127,7 @@ const HeaderScroll = () => {
           <nav className="hidden md:flex items-center space-x-1">
             {[
               { to: '/preview', label: 'Home' },
-              { to: '/bible', label: 'Bible' },
+              { to: '/bible/preview', label: 'Bible' },
               { to: '/reading-plans/preview', label: 'Reading Plans' },
               { to: '/studies/preview', label: 'Studies' },
               { to: '/how-it-works/preview', label: 'How It Works' },
@@ -252,7 +252,7 @@ const HeaderScroll = () => {
           <nav className="flex flex-col space-y-2 mb-4">
             {[
               { to: '/preview', label: 'Home' },
-              { to: '/bible', label: 'Bible' },
+              { to: '/bible/preview', label: 'Bible' },
               { to: '/reading-plans/preview', label: 'Reading Plans' },
               { to: '/studies/preview', label: 'Studies' },
               { to: '/how-it-works/preview', label: 'How It Works' },

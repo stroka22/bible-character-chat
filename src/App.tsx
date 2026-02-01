@@ -75,6 +75,7 @@ import PrivacyPageScroll from './pages/PrivacyPageScroll.jsx';
 import CookiePolicyPageScroll from './pages/CookiePolicyPageScroll.jsx';
 import PressKitPageScroll from './pages/PressKitPageScroll.jsx';
 import CareersPageScroll from './pages/CareersPageScroll.jsx';
+import BibleReaderScroll from './pages/BibleReaderScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -389,6 +390,10 @@ function AppContent() {
     <Route path="/cookies/preview" element={<CookiePolicyPageScroll />} />
     <Route path="/press-kit/preview" element={<PressKitPageScroll />} />
     <Route path="/careers/preview" element={<CareersPageScroll />} />
+    <Route path="/bible/preview" element={<BibleReaderScroll />} />
+    <Route path="/bible/preview/:translation" element={<BibleReaderScroll />} />
+    <Route path="/bible/preview/:translation/:book" element={<BibleReaderScroll />} />
+    <Route path="/bible/preview/:translation/:book/:chapter" element={<BibleReaderScroll />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />

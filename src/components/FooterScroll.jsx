@@ -96,7 +96,7 @@ const FooterScroll = () => {
             </h3>
             <ul className="space-y-2" style={{ fontFamily: 'Georgia, serif' }}>
               <li><Link to="/how-it-works/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> How it Works</Link></li>
-              <li><Link to="/bible" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Bible</Link></li>
+              <li><Link to="/bible/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Bible</Link></li>
               <li><Link to="/reading-plans/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Reading Plans</Link></li>
               <li><Link to="/studies/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Bible Studies</Link></li>
               <li><Link to="/pricing/preview" className="text-amber-200/80 hover:text-amber-200 transition-colors text-sm flex items-center gap-2"><span className="text-amber-500">&#8226;</span> Pricing</Link></li>
