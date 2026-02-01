@@ -76,6 +76,9 @@ import CookiePolicyPageScroll from './pages/CookiePolicyPageScroll.jsx';
 import PressKitPageScroll from './pages/PressKitPageScroll.jsx';
 import CareersPageScroll from './pages/CareersPageScroll.jsx';
 import BibleReaderScroll from './pages/BibleReaderScroll.jsx';
+import RoundtableChatScroll from './pages/RoundtableChatScroll.jsx';
+import StudyDetailsScroll from './pages/StudyDetailsScroll.jsx';
+import StudyLessonScroll from './pages/StudyLessonScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -382,12 +385,12 @@ function AppContent() {
     <Route path="/chat" element={<ChatPageScroll />} />
     <Route path="/chat/:conversationId" element={<ChatPageScroll />} />
     <Route path="/studies" element={<StudiesPageScroll />} />
-    <Route path="/studies/:id" element={<StudyDetails />} />
-    <Route path="/studies/:id/lesson/:lessonIndex" element={<StudyLesson />} />
+    <Route path="/studies/:id" element={<StudyDetailsScroll />} />
+    <Route path="/studies/:id/lesson/:lessonIndex" element={<StudyLessonScroll />} />
     <Route path="/reading-plans" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPageScroll /></Suspense>} />
     <Route path="/reading-plans/:slug" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlanDetail /></Suspense>} />
     <Route path="/roundtable/setup" element={<RoundtableSetupScroll />} />
-    <Route path="/roundtable" element={<RoundtableChat />} />
+    <Route path="/roundtable" element={<RoundtableChatScroll />} />
     <Route path="/bible" element={<BibleReaderScroll />} />
     <Route path="/bible/:translation" element={<BibleReaderScroll />} />
     <Route path="/bible/:translation/:book" element={<BibleReaderScroll />} />
