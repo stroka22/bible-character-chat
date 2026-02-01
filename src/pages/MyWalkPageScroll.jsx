@@ -475,7 +475,7 @@ const MyWalkPageScroll = () => {
                             <p className="text-amber-700/70 text-sm truncate">{conv.last_message_preview || 'No messages'}</p>
                             <p className="text-amber-600/50 text-xs mt-1">{formatDate(conv.updated_at)}</p>
                           </div>
-                          <Link to={`/chat/${conv.id}`} className="text-amber-600 hover:text-amber-800 text-sm font-medium">Continue →</Link>
+                          <Link to={`/chat/preview/${conv.id}`} className="text-amber-600 hover:text-amber-800 text-sm font-medium">Continue →</Link>
                         </div>
                       </div>
                     ))}
