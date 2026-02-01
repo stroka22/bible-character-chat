@@ -67,6 +67,8 @@ import AboutPageScroll from './pages/AboutPageScroll.jsx';
 import ContactPageScroll from './pages/ContactPageScroll.jsx';
 import HowItWorksPageScroll from './pages/HowItWorksPageScroll.jsx';
 import FavoritesPageScroll from './pages/FavoritesPageScroll.jsx';
+import ProfilePageScroll from './pages/ProfilePageScroll.jsx';
+import SettingsPageScroll from './pages/SettingsPageScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -372,6 +374,8 @@ function AppContent() {
     <Route path="/contact/preview" element={<ContactPageScroll />} />
     <Route path="/how-it-works/preview" element={<HowItWorksPageScroll />} />
     <Route path="/favorites/preview" element={<FavoritesPageScroll />} />
+    <Route path="/profile/preview" element={<ProfilePageScroll />} />
+    <Route path="/settings/preview" element={<SettingsPageScroll />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />
