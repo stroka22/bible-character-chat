@@ -127,9 +127,8 @@ const HeaderScroll = () => {
           <nav className="hidden md:flex items-center space-x-1">
             {[
               { to: '/', label: 'Home' },
-              { to: '/bible', label: 'Bible' },
-              { to: '/reading-plans', label: 'Reading Plans' },
-              { to: '/studies', label: 'Studies' },
+              { to: '/reading-plans', label: 'Bible Reading Plans' },
+              { to: '/studies', label: 'Chat Guided Studies' },
               { to: '/how-it-works', label: 'How It Works' },
               { to: '/pricing', label: 'Pricing' },
             ].map(({ to, label }) => (
@@ -252,9 +251,8 @@ const HeaderScroll = () => {
           <nav className="flex flex-col space-y-2 mb-4">
             {[
               { to: '/', label: 'Home' },
-              { to: '/bible', label: 'Bible' },
-              { to: '/reading-plans', label: 'Reading Plans' },
-              { to: '/studies', label: 'Studies' },
+              { to: '/reading-plans', label: 'Bible Reading Plans' },
+              { to: '/studies', label: 'Chat Guided Studies' },
               { to: '/how-it-works', label: 'How It Works' },
               { to: '/pricing', label: 'Pricing' },
             ].map(({ to, label }) => (

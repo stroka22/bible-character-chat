@@ -1359,27 +1359,28 @@ const ChatPageScroll = () => {
           onClick={() => setShowInsights(false)}
         />
         {/* Panel */}
-        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg px-5 pt-4 pb-5">
-          {/* Close button - prominent at top */}
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-amber-700 font-medium">Character Info</span>
+        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg">
+          {/* Sticky header with close button */}
+          <div className="sticky top-0 z-10 bg-amber-800 px-4 py-3 flex items-center justify-between shadow-md">
+            <h3 className="text-lg font-bold text-amber-100" style={{ fontFamily: 'Cinzel, serif' }}>
+              {character.name}
+            </h3>
             <button
               onClick={() => setShowInsights(false)}
-              className="w-10 h-10 rounded-full bg-amber-600 text-white font-bold text-xl flex items-center justify-center hover:bg-amber-700 transition-colors shadow-md"
+              className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 font-bold text-xl flex items-center justify-center hover:bg-white transition-colors"
             >
               ×
             </button>
           </div>
           
-          <img
-            src={character.avatar_url || generateFallbackAvatar(character.name)}
-            alt={character.name}
-            className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-4"
-          />
-          
-          <h3 className="text-2xl font-bold text-amber-900 mb-5 text-center" style={{ fontFamily: 'Cinzel, serif' }}>
-            Character Insights
-          </h3>
+          <div className="px-5 pt-4 pb-5">
+            <img
+              src={character.avatar_url || generateFallbackAvatar(character.name)}
+              alt={character.name}
+              className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-3"
+            />
+            
+            <p className="text-amber-700 text-center text-sm mb-4">{character.title || character.role || 'Biblical Figure'}</p>
           
           {/* Historical Context */}
           <section className="mb-4 bg-white/50 rounded-lg p-4 border border-amber-200">
@@ -1437,6 +1438,7 @@ const ChatPageScroll = () => {
               </ul>
             </section>
           )}
+          </div>
         </div>
       </>
     );
@@ -1477,10 +1479,10 @@ const ChatPageScroll = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-amber-900 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="font-bold text-amber-700 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
             {character?.name}
           </h2>
-          <p className="text-amber-600 text-xs">
+          <p className="text-amber-500 text-xs">
             {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
           </p>
         </div>
