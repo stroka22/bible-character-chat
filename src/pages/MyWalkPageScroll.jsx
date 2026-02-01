@@ -78,8 +78,15 @@ const MyWalkPageScroll = () => {
   const [userStudies, setUserStudies] = useState([]);
   const [studiesLoading, setStudiesLoading] = useState(false);
   
-  // UI State
-  const [activeTab, setActiveTab] = useState('chats');
+  // UI State - check URL for initial tab
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && ['chats', 'roundtables', 'studies'].includes(tab)) return tab;
+    } catch {}
+    return 'chats';
+  });
   const [sortMode, setSortMode] = useState('recent');
   const [renamingId, setRenamingId] = useState(null);
   const [newTitle, setNewTitle] = useState('');

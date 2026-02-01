@@ -468,7 +468,7 @@ const HomePageScroll = () => {
               />
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link 
-                  to="/conversations" 
+                  to="/my-walk?tab=chats" 
                   className="flex items-center gap-4 p-4 bg-white/50 rounded-lg border border-amber-200/50
                            hover:bg-white/80 transition-all group"
                 >
@@ -497,12 +497,12 @@ const HomePageScroll = () => {
                   </div>
                   <div>
                     <h3 className="font-serif font-semibold text-amber-900 group-hover:text-amber-700">Reading Plans</h3>
-                    <p className="text-sm text-amber-700/70">Continue your studies</p>
+                    <p className="text-sm text-amber-700/70">Daily Scripture reading</p>
                   </div>
                 </Link>
 
                 <Link 
-                  to="/my-walk" 
+                  to="/my-walk?tab=studies" 
                   className="flex items-center gap-4 p-4 bg-white/50 rounded-lg border border-amber-200/50
                            hover:bg-white/80 transition-all group"
                 >
@@ -513,7 +513,7 @@ const HomePageScroll = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-serif font-semibold text-amber-900 group-hover:text-amber-700">My Walk</h3>
+                    <h3 className="font-serif font-semibold text-amber-900 group-hover:text-amber-700">Bible Studies</h3>
                     <p className="text-sm text-amber-700/70">Track your progress</p>
                   </div>
                 </Link>
