@@ -1360,27 +1360,26 @@ const ChatPageScroll = () => {
         />
         {/* Panel */}
         <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg">
-          {/* Sticky header with close button */}
-          <div className="sticky top-0 z-10 bg-amber-800 px-4 py-3 flex items-center justify-between shadow-md">
-            <h3 className="text-lg font-bold text-amber-100" style={{ fontFamily: 'Cinzel, serif' }}>
-              {character.name}
-            </h3>
-            <button
-              onClick={() => setShowInsights(false)}
-              className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 font-bold text-xl flex items-center justify-center hover:bg-white transition-colors"
-            >
-              ×
-            </button>
-          </div>
-          
-          <div className="px-5 pt-4 pb-5">
-            <img
-              src={character.avatar_url || generateFallbackAvatar(character.name)}
-              alt={character.name}
-              className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-3"
-            />
+          <div className="px-5 pt-5 pb-5">
+            {/* Avatar and X button row */}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1" /> {/* Spacer */}
+              <img
+                src={character.avatar_url || generateFallbackAvatar(character.name)}
+                alt={character.name}
+                className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500"
+              />
+              <div className="flex-1 flex justify-end">
+                <button
+                  onClick={() => setShowInsights(false)}
+                  className="w-10 h-10 rounded-full bg-amber-700 text-white font-bold text-2xl flex items-center justify-center hover:bg-amber-800 transition-colors shadow-lg"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
             
-            <h3 className="text-2xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h3 className="text-2xl font-bold text-amber-800 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
               {character.name}
             </h3>
             {(character.title || character.role) && (
@@ -1484,10 +1483,10 @@ const ChatPageScroll = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-amber-950 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="font-bold text-amber-800 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
             {character?.name}
           </h2>
-          <p className="text-amber-600 text-xs">
+          <p className="text-amber-500 text-xs">
             {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
           </p>
         </div>
@@ -1497,7 +1496,7 @@ const ChatPageScroll = () => {
           {/* Info button */}
           <button
             onClick={() => setShowInsights(true)}
-            className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+            className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
             title="Character Insights"
           >
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -1513,7 +1512,7 @@ const ChatPageScroll = () => {
               className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${
                 isChatSaved 
                   ? 'bg-green-100 text-green-600' 
-                  : 'hover:bg-amber-100 text-amber-700'
+                  : 'hover:bg-amber-100 text-amber-500'
               }`}
               title={isChatSaved ? 'Saved' : 'Save conversation'}
             >
@@ -1535,7 +1534,7 @@ const ChatPageScroll = () => {
             <div className="relative sm:hidden">
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="p-1.5 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                className="p-1.5 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
                 title="More options"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -1619,7 +1618,7 @@ const ChatPageScroll = () => {
             {messages.length > 0 && (
               <button
                 onClick={handleInviteToChat}
-                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
                 title="Invite to chat"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1632,7 +1631,7 @@ const ChatPageScroll = () => {
             {messages.length > 0 && (
               <button
                 onClick={handleShareConversation}
-                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
                 title="Share conversation"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1644,7 +1643,7 @@ const ChatPageScroll = () => {
             {messages.length > 0 && (
               <button
                 onClick={handleCopyTranscript}
-                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
                 title="Copy transcript"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1659,8 +1658,8 @@ const ChatPageScroll = () => {
                 onClick={handleToggleChatFavorite}
                 className={`p-2 rounded-full transition-colors flex-shrink-0 ${
                   isChatFavorite 
-                    ? 'bg-amber-200 text-amber-700' 
-                    : 'hover:bg-amber-100 text-amber-700'
+                    ? 'bg-amber-200 text-amber-600' 
+                    : 'hover:bg-amber-100 text-amber-500'
                 }`}
                 title={isChatFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
@@ -1674,7 +1673,7 @@ const ChatPageScroll = () => {
             {isChatSaved && (
               <button
                 onClick={() => setShowRenameModal(true)}
-                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
                 title="Rename conversation"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1687,7 +1686,7 @@ const ChatPageScroll = () => {
             {isChatSaved && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-600 flex-shrink-0"
+                className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-400 flex-shrink-0"
                 title="Delete conversation"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1776,7 +1775,7 @@ const ChatPageScroll = () => {
                 )}
                 <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                   {!isUser && (
-                    <span className="text-amber-950 text-sm font-semibold mb-1 ml-1">{character?.name}</span>
+                    <span className="text-amber-800 text-sm font-semibold mb-1 ml-1">{character?.name}</span>
                   )}
                   <div className={`rounded-2xl px-4 py-3 ${
                     isUser 
@@ -1860,8 +1859,7 @@ const ChatPageScroll = () => {
         message="This character is premium. Upgrade to unlock all characters and features."
       />
       
-      {/* Hide footer during active chat for more message space */}
-      {!character && <FooterScroll />}
+      <FooterScroll />
     </PreviewLayout>
   );
 };
