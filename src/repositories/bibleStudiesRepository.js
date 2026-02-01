@@ -2,7 +2,7 @@ import { supabase } from '../services/supabase';
 import { getOwnerSlug } from '../services/tierSettingsService';
 
 export const bibleStudiesRepository = {
-  async listStudies({ ownerSlug, includePrivate = false, allOwners = false } = {}) {
+  async listStudies({ ownerSlug, includePrivate = false, allOwners = false, includeHidden = false } = {}) {
     try {
       const org = (ownerSlug || getOwnerSlug() || '').trim();
       const wantAll = allOwners || org === '__ALL__' || org === '*';
@@ -10,6 +10,7 @@ export const bibleStudiesRepository = {
       let query = supabase
         .from('bible_studies')
         .select('*')
+        .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
       
       if (!wantAll) {
@@ -18,6 +19,11 @@ export const bibleStudiesRepository = {
       
       if (!includePrivate) {
         query = query.eq('visibility', 'public');
+      }
+      
+      // Filter out hidden studies unless admin is viewing
+      if (!includeHidden) {
+        query = query.neq('is_visible', false);
       }
       
       const { data, error } = await query;
@@ -727,3 +733,135 @@ export async function cloneStudyToOwners(studyId, targetOwnerSlugs, options = {}
     return { ok: false, error: err?.message || String(err), results };
   }
 }
+
+// ============================================
+// ADMIN: Category Management for Bible Studies
+// ============================================
+
+export const bibleStudyCategoriesRepository = {
+  async getCategories() {
+    const { data, error } = await supabase
+      .from('bible_study_categories')
+      .select('*')
+      .order('display_order', { ascending: true });
+    
+    if (error) {
+      console.error('[bibleStudyCategoriesRepository] Error fetching categories:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async createCategory(category) {
+    const { data, error } = await supabase
+      .from('bible_study_categories')
+      .insert(category)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateCategory(id, updates) {
+    const { data, error } = await supabase
+      .from('bible_study_categories')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteCategory(id) {
+    const { error } = await supabase
+      .from('bible_study_categories')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  },
+
+  async updateCategoryOrder(categories) {
+    // Update display_order for multiple categories
+    for (let i = 0; i < categories.length; i++) {
+      const { error } = await supabase
+        .from('bible_study_categories')
+        .update({ display_order: i })
+        .eq('id', categories[i].id);
+      
+      if (error) throw error;
+    }
+    return true;
+  }
+};
+
+// ============================================
+// ADMIN: Study visibility, featured, category, ordering
+// ============================================
+
+export const bibleStudiesAdminRepository = {
+  async toggleFeatured(studyId, isFeatured) {
+    const { data, error } = await supabase
+      .from('bible_studies')
+      .update({ is_featured: isFeatured })
+      .eq('id', studyId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async toggleVisible(studyId, isVisible) {
+    const { data, error } = await supabase
+      .from('bible_studies')
+      .update({ is_visible: isVisible })
+      .eq('id', studyId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateStudyCategory(studyId, category) {
+    const { data, error } = await supabase
+      .from('bible_studies')
+      .update({ category })
+      .eq('id', studyId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateDisplayOrder(studyId, displayOrder) {
+    const { data, error } = await supabase
+      .from('bible_studies')
+      .update({ display_order: displayOrder })
+      .eq('id', studyId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateStudiesOrder(studies) {
+    // Update display_order for multiple studies
+    for (let i = 0; i < studies.length; i++) {
+      const { error } = await supabase
+        .from('bible_studies')
+        .update({ display_order: i })
+        .eq('id', studies[i].id);
+      
+      if (error) throw error;
+    }
+    return true;
+  }
+};

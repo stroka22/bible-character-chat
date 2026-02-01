@@ -26,7 +26,7 @@ function DraggablePlanItem({ plan, index, onDragStart, onDragOver, onDrop, onEdi
             <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded">Featured</span>
           )}
           {!plan.is_active && (
-            <span className="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded">Inactive</span>
+            <span className="px-2 py-0.5 text-xs bg-red-100 text-red-800 rounded">Hidden</span>
           )}
         </div>
         <p className="text-sm text-gray-500 truncate">{plan.description}</p>
@@ -306,7 +306,7 @@ function PlanEditModal({ plan, categories, onSave, onClose }) {
                 onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
                 className="rounded"
               />
-              <span className="text-sm">Active</span>
+              <span className="text-sm">Visible</span>
             </label>
           </div>
 

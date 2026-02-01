@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import React, { useState, useEffect } from 'react';
-import { bibleStudiesRepository } from '../../repositories/bibleStudiesRepository';
+import React, { useState, useEffect, useCallback } from 'react';
+import { bibleStudiesRepository, bibleStudyCategoriesRepository, bibleStudiesAdminRepository } from '../../repositories/bibleStudiesRepository';
 import { characterRepository } from '../../repositories/characterRepository';
 import { getOwnerSlug, listOwnerSlugs } from '../../services/tierSettingsService';
 import { supabase } from '../../services/supabase';
@@ -43,6 +43,13 @@ const AdminStudiesPage = ({ embedded = false }) => {
   const [importPreview, setImportPreview] = useState({ studies: [], lessons: [], errors: [] });
   const [importBusy, setImportBusy] = useState(false);
   
+  // Category management state
+  const [categories, setCategories] = useState([]);
+  const [activeTab, setActiveTab] = useState('studies'); // 'studies' | 'categories'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [dragIndex, setDragIndex] = useState(null);
+  
   // Form states
   const [studyForm, setStudyForm] = useState({
     id: null,
@@ -55,7 +62,11 @@ const AdminStudiesPage = ({ embedded = false }) => {
     cover_image_url: '',
     study_type: 'standalone',
     visibility: 'public',
-    is_premium: false
+    is_premium: false,
+    is_featured: false,
+    is_visible: true,
+    category: '',
+    display_order: 0
   });
   
   const [lessonForm, setLessonForm] = useState({
@@ -74,7 +85,18 @@ const AdminStudiesPage = ({ embedded = false }) => {
     fetchStudies();
     fetchCharacters();
     fetchOwnerOptions();
+    fetchCategories();
   }, []);
+  
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const data = await bibleStudyCategoriesRepository.getCategories();
+      setCategories(data || []);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
 
   // Load canonical org list for distribution
   useEffect(() => {
@@ -104,6 +126,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
         ownerSlug: slugOverride || ownerSlug, 
         includePrivate: true,
         allOwners: wantAll,
+        includeHidden: true, // Admin sees all studies
       });
       // Extra safety: when viewing all owners, dedupe by normalized title (strip -N suffix)
       if (wantAll && Array.isArray(data)) {
@@ -616,7 +639,120 @@ const AdminStudiesPage = ({ embedded = false }) => {
       cover_image_url: '',
       study_type: 'standalone',
       visibility: 'public',
-      is_premium: false
+      is_premium: false,
+      is_featured: false,
+      is_visible: true,
+      category: '',
+      display_order: 0
+    });
+  };
+  
+  // ============================================
+  // Category, Featured, Visible, Drag-Drop handlers
+  // ============================================
+  
+  const handleToggleFeatured = async (studyId, isFeatured) => {
+    try {
+      await bibleStudiesAdminRepository.toggleFeatured(studyId, isFeatured);
+      setStudies(studies.map(s => s.id === studyId ? { ...s, is_featured: isFeatured } : s));
+    } catch (err) {
+      console.error('Error toggling featured:', err);
+      setError('Failed to update featured status');
+    }
+  };
+
+  const handleToggleVisible = async (studyId, isVisible) => {
+    try {
+      await bibleStudiesAdminRepository.toggleVisible(studyId, isVisible);
+      setStudies(studies.map(s => s.id === studyId ? { ...s, is_visible: isVisible } : s));
+    } catch (err) {
+      console.error('Error toggling visibility:', err);
+      setError('Failed to update visibility');
+    }
+  };
+
+  const handleChangeCategory = async (studyId, category) => {
+    try {
+      await bibleStudiesAdminRepository.updateStudyCategory(studyId, category);
+      setStudies(studies.map(s => s.id === studyId ? { ...s, category } : s));
+    } catch (err) {
+      console.error('Error updating category:', err);
+      setError('Failed to update category');
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e, index) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, dropIndex) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === dropIndex) return;
+
+    const filteredStudies = getFilteredStudies();
+    const newOrder = [...filteredStudies];
+    const [removed] = newOrder.splice(dragIndex, 1);
+    newOrder.splice(dropIndex, 0, removed);
+
+    // Update display_order for all reordered studies
+    try {
+      await bibleStudiesAdminRepository.updateStudiesOrder(newOrder);
+      await fetchStudies();
+    } catch (err) {
+      console.error('Error updating order:', err);
+      setError('Failed to update order');
+    }
+
+    setDragIndex(null);
+  };
+
+  // Category CRUD handlers
+  const handleCreateCategory = async (category) => {
+    try {
+      await bibleStudyCategoriesRepository.createCategory(category);
+      await fetchCategories();
+    } catch (err) {
+      console.error('Error creating category:', err);
+      setError('Failed to create category');
+    }
+  };
+
+  const handleUpdateCategory = async (id, updates) => {
+    try {
+      await bibleStudyCategoriesRepository.updateCategory(id, updates);
+      await fetchCategories();
+    } catch (err) {
+      console.error('Error updating category:', err);
+      setError('Failed to update category');
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm('Delete this category? Studies in this category will become uncategorized.')) return;
+    try {
+      await bibleStudyCategoriesRepository.deleteCategory(id);
+      await fetchCategories();
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      setError('Failed to delete category');
+    }
+  };
+
+  // Filter studies by search and category
+  const getFilteredStudies = () => {
+    return studies.filter(s => {
+      const matchesSearch = !searchQuery || 
+        s.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !filterCategory || s.category === filterCategory;
+      return matchesSearch && matchesCategory;
     });
   };
   
@@ -641,7 +777,11 @@ const AdminStudiesPage = ({ embedded = false }) => {
       subject: study.subject || '',
       character_instructions: study.character_instructions || '',
       study_type: study.study_type || 'standalone',
-      is_premium: study.is_premium ? 'true' : 'false'
+      is_premium: study.is_premium ? 'true' : 'false',
+      is_featured: study.is_featured || false,
+      is_visible: study.is_visible !== false, // default to true if undefined
+      category: study.category || '',
+      display_order: study.display_order || 0
     });
     setShowStudyForm(true);
   };
