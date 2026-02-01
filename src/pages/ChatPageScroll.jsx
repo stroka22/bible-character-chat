@@ -506,7 +506,7 @@ const ChatPageScroll = () => {
   useEffect(() => {
     if (chatId && character && !conversationId) {
       // Chat was saved, update URL to include conversation ID
-      const newUrl = `/chat/preview/${chatId}`;
+      const newUrl = `/chat/${chatId}`;
       window.history.replaceState(null, '', newUrl);
     }
   }, [chatId, character, conversationId]);
@@ -603,10 +603,7 @@ const ChatPageScroll = () => {
     })();
   }, [user?.id]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  // Removed duplicate scroll effect - handled by scrollToBottom callback below
 
   // Focus input when character selected
   useEffect(() => {
@@ -948,15 +945,29 @@ const ChatPageScroll = () => {
 
   // Scroll to bottom smoothly without jumping
   const scrollToBottom = useCallback(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (messagesContainerRef.current) {
+      // Use scrollTop instead of scrollIntoView to prevent page-level jumps
+      const container = messagesContainerRef.current;
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   }, []);
 
-  // Scroll on new messages (with slight delay to avoid jump)
+  // Track previous message count to only scroll on new messages
+  const prevMessageCount = useRef(messages.length);
+  
+  // Scroll on new messages only (not on every render)
   useEffect(() => {
-    const timer = setTimeout(scrollToBottom, 100);
-    return () => clearTimeout(timer);
+    // Only scroll if messages were added (not on initial load hydration)
+    if (messages.length > prevMessageCount.current || isTyping) {
+      // Small delay to let DOM update
+      const timer = setTimeout(scrollToBottom, 50);
+      prevMessageCount.current = messages.length;
+      return () => clearTimeout(timer);
+    }
+    prevMessageCount.current = messages.length;
   }, [messages.length, isTyping, scrollToBottom]);
 
   // Render alphabetical navigation (horizontal)
