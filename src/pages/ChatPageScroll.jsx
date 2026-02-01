@@ -1358,21 +1358,20 @@ const ChatPageScroll = () => {
           className="fixed inset-0 bg-black/50 z-40"
           onClick={() => setShowInsights(false)}
         />
-        {/* Panel */}
-        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg">
-          {/* Close button - sticky header bar with extra top padding for mobile header */}
-          <div className="sticky top-0 z-10 bg-amber-900 pt-16 sm:pt-3 pb-3 px-3 flex justify-between items-center">
-            <span className="text-amber-100 font-medium text-sm">Character Insights</span>
+        {/* Panel - starts below header on mobile */}
+        <div className="fixed right-0 top-16 sm:top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg">
+          {/* Close button row */}
+          <div className="flex justify-end p-3">
             <button
               onClick={() => setShowInsights(false)}
-              className="w-10 h-10 rounded-full bg-white text-amber-900 font-bold text-2xl flex items-center justify-center hover:bg-amber-100 transition-colors shadow-md"
+              className="w-12 h-12 rounded-full bg-red-500 text-white font-bold text-3xl flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg border-2 border-white"
             >
               ×
             </button>
           </div>
           
-          <div className="px-5 pt-4 pb-5">
-            {/* Avatar - centered, with padding to show full image */}
+          <div className="px-5 pb-5">
+            {/* Avatar - centered */}
             <div className="flex justify-center mb-4">
               <img
                 src={character.avatar_url || generateFallbackAvatar(character.name)}
@@ -1381,11 +1380,11 @@ const ChatPageScroll = () => {
               />
             </div>
             
-            <h3 className="text-2xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h3 className="text-2xl font-bold text-center mb-1" style={{ fontFamily: 'Cinzel, serif', color: '#fef9c3' }}>
               {character.name}
             </h3>
             {(character.title || character.role) && (
-              <p className="text-amber-800 text-center text-sm mb-4">{character.title || character.role}</p>
+              <p className="text-center text-sm mb-4" style={{ color: '#fef08a' }}>{character.title || character.role}</p>
             )}
           
           {/* Historical Context */}
@@ -1485,10 +1484,10 @@ const ChatPageScroll = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-amber-900 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="font-bold truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif', color: '#fef9c3' }}>
             {character?.name}
           </h2>
-          <p className="text-amber-700 text-xs">
+          <p className="text-xs" style={{ color: '#fef08a' }}>
             {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
           </p>
         </div>
@@ -1777,7 +1776,7 @@ const ChatPageScroll = () => {
                 )}
                 <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                   {!isUser && (
-                    <span className="text-amber-900 text-sm font-semibold mb-1 ml-1">{character?.name}</span>
+                    <span className="text-sm font-semibold mb-1 ml-1" style={{ color: '#fef9c3' }}>{character?.name}</span>
                   )}
                   <div className={`rounded-2xl px-4 py-3 ${
                     isUser 
