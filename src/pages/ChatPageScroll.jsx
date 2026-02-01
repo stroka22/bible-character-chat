@@ -896,14 +896,15 @@ const ChatPageScroll = () => {
       let id = chatId;
       // Save first if not saved
       if (!id && isAuthenticated && messages.length > 0) {
-        const ok = await saveChat();
-        if (!ok) {
+        const savedId = await saveChat();
+        if (!savedId) {
           showActionMessage('Please save the conversation first', 'error');
           return;
         }
-        // Wait for state to update
-        await new Promise(r => setTimeout(r, 600));
-        id = chatId || window.__lastChatId;
+        // Use the returned ID directly instead of waiting for state
+        id = typeof savedId === 'string' ? savedId : chatId;
+        // Small delay to ensure DB write completes
+        await new Promise(r => setTimeout(r, 200));
       }
       if (!id) {
         showActionMessage('Please start a conversation first', 'error');
@@ -1437,7 +1438,7 @@ const ChatPageScroll = () => {
   };
 
   const renderChatView = () => (
-    <div className="max-w-4xl mx-auto px-4 flex flex-col h-[calc(100vh-8rem)]">
+    <div className="max-w-4xl mx-auto px-2 sm:px-4 flex flex-col h-[100dvh] sm:h-[calc(100vh-4rem)]">
       {/* Action message toast */}
       {actionMessage && (
         <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg ${
@@ -1450,157 +1451,157 @@ const ChatPageScroll = () => {
       {/* Character Insights Panel */}
       {renderInsightsPanel()}
 
-      {/* Chat Header with Actions */}
-      <div className="sticky top-0 z-20 py-3 bg-amber-50/95 backdrop-blur-sm">
-        <div className="bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 rounded-xl border border-amber-200 shadow-md px-4 py-3">
-          <div className="flex items-center gap-2 sm:gap-4">
+      {/* Chat Header with Actions - clean minimal styling */}
+      <div className="flex items-center gap-2 sm:gap-3 py-2 sm:py-3 border-b border-amber-200/30">
+        <button
+          onClick={handleBackToCharacters}
+          className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors flex-shrink-0"
+          title="Back to characters"
+        >
+          <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden ring-2 ring-amber-300 flex-shrink-0">
+          <img
+            src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
+            alt={character?.name}
+            className="w-full h-full object-cover object-[center_20%]"
+          />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <h2 className="font-bold text-amber-900 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
+            {character?.name}
+          </h2>
+          <p className="text-amber-600 text-xs">
+            {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
+          </p>
+        </div>
+        
+        {/* Action buttons */}
+        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+              {/* Insights button */}
+          {/* Info button */}
+          <button
+            onClick={() => setShowInsights(true)}
+            className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+            title="Character Insights"
+          >
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {/* Save button */}
+          {messages.length > 0 && (
             <button
-              onClick={handleBackToCharacters}
-              className="p-2 hover:bg-amber-200/50 rounded-full transition-colors flex-shrink-0"
-              title="Back to characters"
+              onClick={handleSaveChat}
+              disabled={isSaving || isChatSaved}
+              className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${
+                isChatSaved 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'hover:bg-amber-100 text-amber-700'
+              }`}
+              title={isChatSaved ? 'Saved' : 'Save conversation'}
             >
-              <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              {isSaving ? (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill={isChatSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+              )}
+            </button>
+          )}
+          
+          {/* Invite button */}
+          {messages.length > 0 && (
+            <button
+              onClick={handleInviteToChat}
+              className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+              title="Invite to chat"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
               </svg>
             </button>
-            
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden ring-2 ring-amber-400 flex-shrink-0">
-              <img
-                src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
-                alt={character?.name}
-                className="w-full h-full object-cover object-[center_20%]"
-              />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <h2 className="font-bold text-amber-900 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
-                {character?.name}
-              </h2>
-              <p className="text-amber-600 text-xs sm:text-sm">
-                {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
-              </p>
-            </div>
-            
-            {/* Action buttons - scrollable on mobile */}
-            <div className="flex items-center gap-1 overflow-x-auto flex-shrink-0">
-              {/* Insights button */}
+          )}
+          
+          {/* Share button */}
+          {messages.length > 0 && (
+            <button
+              onClick={handleShareConversation}
+              className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+              title="Share conversation"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+            </button>
+          )}
+          
+          {/* More options - hidden on mobile, shown on desktop */}
+          <div className="hidden sm:flex items-center gap-1">
+            {/* Copy button */}
+            {messages.length > 0 && (
               <button
-                onClick={() => setShowInsights(true)}
-                className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
-                title="Character Insights"
+                onClick={handleCopyTranscript}
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                title="Copy transcript"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </button>
-              
-              {/* Invite button */}
-              {messages.length > 0 && (
-                <button
-                  onClick={handleInviteToChat}
-                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
-                  title="Invite to chat"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Save button */}
-              {messages.length > 0 && (
-                <button
-                  onClick={handleSaveChat}
-                  disabled={isSaving || isChatSaved}
-                  className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-                    isChatSaved 
-                      ? 'bg-green-100 text-green-600' 
-                      : 'hover:bg-amber-200/50 text-amber-700'
-                  }`}
-                  title={isChatSaved ? 'Saved' : 'Save conversation'}
-                >
-                  {isSaving ? (
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill={isChatSaved ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  )}
-                </button>
-              )}
-              
-              {/* Copy button */}
-              {messages.length > 0 && (
-                <button
-                  onClick={handleCopyTranscript}
-                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
-                  title="Copy transcript"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Share button */}
-              {messages.length > 0 && (
-                <button
-                  onClick={handleShareConversation}
-                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
-                  title="Share conversation"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Favorite button */}
-              {messages.length > 0 && (
-                <button
-                  onClick={handleToggleChatFavorite}
-                  className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-                    isChatFavorite 
-                      ? 'bg-amber-200 text-amber-700' 
-                      : 'hover:bg-amber-200/50 text-amber-700'
-                  }`}
-                  title={isChatFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                >
-                  <svg className="w-5 h-5" fill={isChatFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Rename button (only for saved chats) */}
-              {isChatSaved && (
-                <button
-                  onClick={() => setShowRenameModal(true)}
-                  className="p-2 hover:bg-amber-200/50 rounded-full transition-colors text-amber-700 flex-shrink-0"
-                  title="Rename conversation"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Delete button (only for saved chats) */}
-              {isChatSaved && (
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-600 flex-shrink-0"
-                  title="Delete conversation"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              )}
-            </div>
+            )}
+            
+            {/* Favorite button */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleToggleChatFavorite}
+                className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+                  isChatFavorite 
+                    ? 'bg-amber-200 text-amber-700' 
+                    : 'hover:bg-amber-100 text-amber-700'
+                }`}
+                title={isChatFavorite ? 'Remove from favorites' : 'Add to favorites'}
+              >
+                <svg className="w-5 h-5" fill={isChatFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Rename button (only for saved chats) */}
+            {isChatSaved && (
+              <button
+                onClick={() => setShowRenameModal(true)}
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                title="Rename conversation"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Delete button (only for saved chats) */}
+            {isChatSaved && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="p-2 hover:bg-red-100 rounded-full transition-colors text-red-600 flex-shrink-0"
+                title="Delete conversation"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1720,9 +1721,9 @@ const ChatPageScroll = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area - fixed at bottom */}
-      <div className="py-4 bg-amber-50/95 backdrop-blur-sm border-t border-amber-200">
-        <div className="flex gap-3">
+      {/* Input Area - minimal styling */}
+      <div className="py-2 sm:py-3 pb-safe">
+        <div className="flex gap-2 sm:gap-3">
           <textarea
             ref={inputRef}
             value={inputValue}
@@ -1735,13 +1736,13 @@ const ChatPageScroll = () => {
             }}
             placeholder={`Message ${character?.name}...`}
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-amber-300 bg-white px-4 py-3 text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="flex-1 resize-none rounded-xl border border-amber-300 bg-white px-3 sm:px-4 py-2 sm:py-3 text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 text-base"
             style={{ fontFamily: 'Georgia, serif' }}
           />
           <button
             onClick={handleSend}
             disabled={!inputValue.trim() || isLoading}
-            className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl font-medium transition-colors shadow-md flex-shrink-0"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl font-medium transition-colors flex-shrink-0"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
@@ -1754,7 +1755,7 @@ const ChatPageScroll = () => {
 
   return (
     <PreviewLayout>
-      <ScrollBackground className="min-h-screen py-6 px-4">
+      <ScrollBackground className={character ? "h-screen overflow-hidden" : "min-h-screen py-6 px-4"}>
         {character ? renderChatView() : renderCharacterSelection()}
       </ScrollBackground>
       
@@ -1766,7 +1767,8 @@ const ChatPageScroll = () => {
         message="This character is premium. Upgrade to unlock all characters and features."
       />
       
-      <FooterScroll />
+      {/* Hide footer during active chat for more message space */}
+      {!character && <FooterScroll />}
     </PreviewLayout>
   );
 };
