@@ -457,6 +457,7 @@ const ChatPageScroll = () => {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [actionMessage, setActionMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
@@ -1358,13 +1359,17 @@ const ChatPageScroll = () => {
           onClick={() => setShowInsights(false)}
         />
         {/* Panel */}
-        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg px-5 pt-16 pb-5">
-          <button
-            onClick={() => setShowInsights(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-amber-600 text-white font-bold text-xl flex items-center justify-center hover:bg-amber-700 transition-colors z-10 shadow-md"
-          >
-            ×
-          </button>
+        <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg px-5 pt-4 pb-5">
+          {/* Close button - prominent at top */}
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-amber-700 font-medium">Character Info</span>
+            <button
+              onClick={() => setShowInsights(false)}
+              className="w-10 h-10 rounded-full bg-amber-600 text-white font-bold text-xl flex items-center justify-center hover:bg-amber-700 transition-colors shadow-md"
+            >
+              ×
+            </button>
+          </div>
           
           <img
             src={character.avatar_url || generateFallbackAvatar(character.name)}
@@ -1482,7 +1487,6 @@ const ChatPageScroll = () => {
         
         {/* Action buttons */}
         <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-              {/* Insights button */}
           {/* Info button */}
           <button
             onClick={() => setShowInsights(true)}
@@ -1519,34 +1523,116 @@ const ChatPageScroll = () => {
             </button>
           )}
           
-          {/* Invite button */}
+          {/* Mobile: More options button */}
           {messages.length > 0 && (
-            <button
-              onClick={handleInviteToChat}
-              className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
-              title="Invite to chat"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-            </button>
+            <div className="relative sm:hidden">
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="p-1.5 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                title="More options"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </button>
+              
+              {/* Mobile dropdown menu */}
+              {showMobileMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-amber-200 py-1 z-50 min-w-[160px]">
+                    <button
+                      onClick={() => { handleInviteToChat(); setShowMobileMenu(false); }}
+                      className="w-full px-4 py-2 text-left text-amber-800 hover:bg-amber-50 flex items-center gap-2 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                      Invite
+                    </button>
+                    <button
+                      onClick={() => { handleShareConversation(); setShowMobileMenu(false); }}
+                      className="w-full px-4 py-2 text-left text-amber-800 hover:bg-amber-50 flex items-center gap-2 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                      Share
+                    </button>
+                    <button
+                      onClick={() => { handleCopyTranscript(); setShowMobileMenu(false); }}
+                      className="w-full px-4 py-2 text-left text-amber-800 hover:bg-amber-50 flex items-center gap-2 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy
+                    </button>
+                    <button
+                      onClick={() => { handleToggleChatFavorite(); setShowMobileMenu(false); }}
+                      className="w-full px-4 py-2 text-left text-amber-800 hover:bg-amber-50 flex items-center gap-2 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill={isChatFavorite ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                      {isChatFavorite ? 'Unfavorite' : 'Favorite'}
+                    </button>
+                    {isChatSaved && (
+                      <>
+                        <div className="border-t border-amber-100 my-1" />
+                        <button
+                          onClick={() => { setShowRenameModal(true); setShowMobileMenu(false); }}
+                          className="w-full px-4 py-2 text-left text-amber-800 hover:bg-amber-50 flex items-center gap-2 text-sm"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Rename
+                        </button>
+                        <button
+                          onClick={() => { setShowDeleteConfirm(true); setShowMobileMenu(false); }}
+                          className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 text-sm"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           )}
           
-          {/* Share button */}
-          {messages.length > 0 && (
-            <button
-              onClick={handleShareConversation}
-              className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
-              title="Share conversation"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
-          )}
-          
-          {/* More options - hidden on mobile, shown on desktop */}
+          {/* Desktop: Show all buttons inline */}
           <div className="hidden sm:flex items-center gap-1">
+            {/* Invite button */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleInviteToChat}
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                title="Invite to chat"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Share button */}
+            {messages.length > 0 && (
+              <button
+                onClick={handleShareConversation}
+                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-700 flex-shrink-0"
+                title="Share conversation"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+            )}
             {/* Copy button */}
             {messages.length > 0 && (
               <button
