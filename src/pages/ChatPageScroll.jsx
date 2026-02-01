@@ -695,13 +695,13 @@ const ChatPageScroll = () => {
     resetChat();
   };
 
-  // Render alphabetical navigation sidebar
+  // Render alphabetical navigation (horizontal)
   const renderAlphaNav = () => (
-    <div className="fixed right-2 top-1/2 transform -translate-y-1/2 bg-amber-100/90 backdrop-blur-sm rounded-full py-2 px-1.5 hidden lg:flex flex-col gap-0.5 border border-amber-300 shadow-lg z-30">
+    <div className="flex flex-wrap items-center justify-center gap-1 mb-4 p-3 bg-amber-50/80 rounded-xl border border-amber-200">
       <button
         onClick={() => { setCurrentLetter('all'); setCurrentPage(1); }}
-        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
-          currentLetter === 'all' ? 'bg-amber-600 text-white' : 'text-amber-700 hover:bg-amber-200'
+        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+          currentLetter === 'all' ? 'bg-amber-600 text-white' : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
         }`}
       >
         All
@@ -710,8 +710,8 @@ const ChatPageScroll = () => {
         <button
           key={letter}
           onClick={() => { setCurrentLetter(letter); setCurrentPage(1); }}
-          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
-            currentLetter === letter ? 'bg-amber-600 text-white' : 'text-amber-700 hover:bg-amber-200'
+          className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+            currentLetter === letter ? 'bg-amber-600 text-white' : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
           }`}
         >
           {letter}
@@ -789,9 +789,6 @@ const ChatPageScroll = () => {
   // Render character selection view
   const renderCharacterSelection = () => (
     <ScrollWrap className="max-w-6xl mx-auto">
-      {/* Alphabetical Navigation */}
-      {renderAlphaNav()}
-      
       {/* Header */}
       <div className="text-center mb-6">
         <h1 className="text-3xl md:text-4xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
@@ -1005,6 +1002,9 @@ const ChatPageScroll = () => {
           </button>
         </div>
       )}
+
+      {/* Alphabetical Navigation (horizontal) */}
+      {renderAlphaNav()}
 
       {/* Results count */}
       <div className="text-center text-amber-600 text-sm mb-4">
