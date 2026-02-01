@@ -52,13 +52,17 @@ CREATE INDEX IF NOT EXISTS idx_bible_study_categories_display_order ON bible_stu
 ALTER TABLE bible_study_categories ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for bible_study_categories
+-- Drop existing policies first to avoid conflicts
+DROP POLICY IF EXISTS "Anyone can read bible study categories" ON bible_study_categories;
+DROP POLICY IF EXISTS "Admins can manage bible study categories" ON bible_study_categories;
+
 -- Anyone can read categories
-CREATE POLICY IF NOT EXISTS "Anyone can read bible study categories"
+CREATE POLICY "Anyone can read bible study categories"
   ON bible_study_categories FOR SELECT
   USING (true);
 
 -- Only admins can manage categories (insert, update, delete)
-CREATE POLICY IF NOT EXISTS "Admins can manage bible study categories"
+CREATE POLICY "Admins can manage bible study categories"
   ON bible_study_categories FOR ALL
   USING (
     EXISTS (
