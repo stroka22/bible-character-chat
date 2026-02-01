@@ -1,21 +1,47 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useChat } from '../contexts/ChatContext.jsx';
 import { useAuth } from '../contexts/AuthContext';
 import { characterRepository } from '../repositories/characterRepository';
+import { groupRepository } from '../repositories/groupRepository';
 import { usePremium } from '../hooks/usePremium';
 import { isCharacterFree } from '../utils/accountTier';
-import { getSettings as getTierSettings } from '../services/tierSettingsService';
+import { getSettings as getTierSettings, getOwnerSlug } from '../services/tierSettingsService';
+import { userSettingsRepository } from '../repositories/userSettingsRepository';
+import userFavoritesRepository from '../repositories/userFavoritesRepository';
+import siteSettingsRepository from '../repositories/siteSettingsRepository';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
 
+// Bible books for filtering
+const BIBLE_BOOKS = {
+  oldTestament: [
+    'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy',
+    'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings',
+    '1 Chronicles', '2 Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job',
+    'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon', 'Isaiah',
+    'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel',
+    'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah',
+    'Haggai', 'Zechariah', 'Malachi'
+  ],
+  newTestament: [
+    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', '1 Corinthians',
+    '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians',
+    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus',
+    'Philemon', 'Hebrews', 'James', '1 Peter', '2 Peter', '1 John', '2 John',
+    '3 John', 'Jude', 'Revelation'
+  ]
+};
+
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
 const generateFallbackAvatar = (name) => 
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
 // Character Card Component with scroll theme
-const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured, isFavorite, onToggleFavorite, onSetFeatured }) => {
+const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured, isFavorite, onToggleFavorite, onSetFeatured, isSelected, viewMode }) => {
   const [showInfo, setShowInfo] = useState(false);
   
   const handleInfoClick = (e) => {
@@ -25,7 +51,7 @@ const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured, isFav
   
   const handleChatClick = (e) => {
     e.stopPropagation();
-    onSelect(character);
+    if (!isPremiumLocked) onSelect(character);
   };
   
   const handleFavoriteClick = (e) => {
@@ -38,14 +64,98 @@ const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured, isFav
     if (onSetFeatured) onSetFeatured(character);
   };
 
+  // List view layout
+  if (viewMode === 'list') {
+    return (
+      <>
+        <div
+          onClick={handleChatClick}
+          className={`
+            flex items-center gap-4 p-4 rounded-xl transition-all duration-300 cursor-pointer
+            ${isSelected 
+              ? 'bg-amber-200 border-2 border-amber-500' 
+              : 'bg-white/80 border border-amber-200 hover:bg-amber-50'
+            }
+            ${isPremiumLocked ? 'opacity-70' : ''}
+          `}
+        >
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-amber-300">
+              <img
+                src={character.avatar_url || generateFallbackAvatar(character.name)}
+                alt={character.name}
+                className="w-full h-full object-cover object-[center_20%]"
+                onError={(e) => { e.target.src = generateFallbackAvatar(character.name); }}
+              />
+            </div>
+            {isFavorite && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </div>
+            )}
+          </div>
+          
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-amber-900 text-lg" style={{ fontFamily: 'Cinzel, serif' }}>
+              {character.name}
+            </h3>
+            <p className="text-amber-700/80 text-sm line-clamp-2">
+              {character.description || 'Biblical figure'}
+            </p>
+            {character.bible_book && (
+              <p className="text-amber-600/60 text-xs mt-1">{character.bible_book}</p>
+            )}
+          </div>
+          
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <button onClick={handleFavoriteClick} className={`p-2 rounded-full transition-colors ${isFavorite ? 'bg-amber-200 text-amber-600' : 'bg-amber-100 text-amber-400 hover:bg-amber-200'}`} title="Favorite">
+              <svg className="w-5 h-5" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </button>
+            <button onClick={handleInfoClick} className="p-2 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors" title="Info">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <button
+              onClick={handleChatClick}
+              disabled={isPremiumLocked}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                isPremiumLocked 
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+                  : isSelected
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-amber-500 hover:bg-amber-600 text-white'
+              }`}
+            >
+              {isPremiumLocked ? 'Premium' : isSelected ? 'Continue' : 'Chat'}
+            </button>
+          </div>
+        </div>
+        
+        {/* Info Modal */}
+        {showInfo && <CharacterInfoModal character={character} onClose={() => setShowInfo(false)} onSelect={onSelect} isPremiumLocked={isPremiumLocked} />}
+      </>
+    );
+  }
+
+  // Grid view layout (default)
   return (
     <>
       <div
         className={`
-          relative rounded-xl overflow-hidden transition-all duration-300 flex flex-col
+          relative rounded-xl overflow-visible transition-all duration-300 flex flex-col
           ${isFeatured 
             ? 'bg-gradient-to-br from-amber-100 to-amber-200 border-2 border-amber-400 shadow-lg' 
-            : 'bg-white/80 border border-amber-200 hover:bg-white hover:shadow-md hover:-translate-y-1'
+            : isSelected
+              ? 'bg-amber-100 border-2 border-amber-500 shadow-lg'
+              : 'bg-white/80 border border-amber-200 hover:bg-white hover:shadow-md hover:-translate-y-1'
           }
           ${isPremiumLocked ? 'opacity-80' : ''}
         `}
@@ -159,97 +269,100 @@ const CharacterCard = ({ character, onSelect, isPremiumLocked, isFeatured, isFav
       </div>
       
       {/* Info Modal */}
-      {showInfo && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
-          onClick={() => setShowInfo(false)}
-        >
-          <div 
-            className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 max-w-sm w-full shadow-2xl border-2 border-amber-400"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setShowInfo(false)}
-              className="absolute top-3 right-3 p-1 rounded-full bg-amber-200 hover:bg-amber-300 text-amber-800"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            {/* Avatar */}
-            <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden ring-4 ring-amber-400">
-              <img
-                src={character.avatar_url || generateFallbackAvatar(character.name)}
-                alt={character.name}
-                className="w-full h-full object-cover object-[center_20%]"
-              />
-            </div>
-            
-            {/* Name */}
-            <h2 className="text-xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
-              {character.name}
-            </h2>
-            
-            {/* Divider */}
-            <div className="h-0.5 w-16 bg-amber-400 rounded-full mx-auto mb-3" />
-            
-            {/* Scripture reference if available */}
-            {character.bible_book && (
-              <div className="bg-amber-200/50 rounded-lg p-3 mb-3">
-                <h3 className="text-sm font-semibold text-amber-800 mb-1 flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                  </svg>
-                  Scripture
-                </h3>
-                <div className="flex flex-wrap gap-1">
-                  {character.bible_book.split(',').map((book, i) => (
-                    <span key={i} className="bg-amber-600 text-white px-2 py-0.5 rounded-full text-xs">
-                      {book.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Description */}
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-amber-800 mb-1 flex items-center gap-1">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                About
-              </h3>
-              <p className="text-amber-900/80 text-sm leading-relaxed">
-                {character.description || 'A figure from biblical history.'}
-              </p>
-            </div>
-            
-            {/* Chat button */}
-            <button
-              onClick={() => { setShowInfo(false); onSelect(character); }}
-              disabled={isPremiumLocked}
-              className={`
-                w-full py-2.5 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2
-                ${isPremiumLocked 
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
-                  : 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'
-                }
-              `}
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
-              </svg>
-              Chat with {character.name}
-            </button>
-          </div>
-        </div>
-      )}
+      {showInfo && <CharacterInfoModal character={character} onClose={() => setShowInfo(false)} onSelect={onSelect} isPremiumLocked={isPremiumLocked} />}
     </>
   );
 };
+
+// Character Info Modal Component
+const CharacterInfoModal = ({ character, onClose, onSelect, isPremiumLocked }) => (
+  <div 
+    className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+    onClick={onClose}
+  >
+    <div 
+      className="relative bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-5 max-w-sm w-full shadow-2xl border-2 border-amber-400"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 p-1 rounded-full bg-amber-200 hover:bg-amber-300 text-amber-800"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      {/* Avatar */}
+      <div className="w-20 h-20 mx-auto mb-3 rounded-full overflow-hidden ring-4 ring-amber-400">
+        <img
+          src={character.avatar_url || generateFallbackAvatar(character.name)}
+          alt={character.name}
+          className="w-full h-full object-cover object-[center_20%]"
+        />
+      </div>
+      
+      {/* Name */}
+      <h2 className="text-xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+        {character.name}
+      </h2>
+      
+      {/* Divider */}
+      <div className="h-0.5 w-16 bg-amber-400 rounded-full mx-auto mb-3" />
+      
+      {/* Scripture reference if available */}
+      {character.bible_book && (
+        <div className="bg-amber-200/50 rounded-lg p-3 mb-3">
+          <h3 className="text-sm font-semibold text-amber-800 mb-1 flex items-center gap-1">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+            </svg>
+            Scripture
+          </h3>
+          <div className="flex flex-wrap gap-1">
+            {character.bible_book.split(',').map((book, i) => (
+              <span key={i} className="bg-amber-600 text-white px-2 py-0.5 rounded-full text-xs">
+                {book.trim()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Description */}
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-amber-800 mb-1 flex items-center gap-1">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          About
+        </h3>
+        <p className="text-amber-900/80 text-sm leading-relaxed">
+          {character.description || 'A figure from biblical history.'}
+        </p>
+      </div>
+      
+      {/* Chat button */}
+      <button
+        onClick={() => { onClose(); onSelect(character); }}
+        disabled={isPremiumLocked}
+        className={`
+          w-full py-2.5 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2
+          ${isPremiumLocked 
+            ? 'bg-gray-300 text-gray-600 cursor-not-allowed' 
+            : 'bg-amber-600 hover:bg-amber-700 text-white shadow-md'
+          }
+        `}
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+        </svg>
+        Chat with {character.name}
+      </button>
+    </div>
+  </div>
+);
 
 // Chat Message Bubble with scroll theme
 const ChatBubble = ({ message, character }) => {
@@ -304,17 +417,30 @@ const ChatPageScroll = () => {
     resetChat,
   } = useChat();
 
+  // Character data
   const [characters, setCharacters] = useState([]);
   const [featuredCharacter, setFeaturedCharacter] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [tierSettings, setTierSettings] = useState(null);
+  const [loadingChars, setLoadingChars] = useState(true);
+  
+  // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [testament, setTestament] = useState('all');
-  const [tierSettings, setTierSettings] = useState(null);
-  const [showUpgrade, setShowUpgrade] = useState(false);
-  const [loadingChars, setLoadingChars] = useState(true);
-  const [inputValue, setInputValue] = useState('');
+  const [bookFilter, setBookFilter] = useState('all');
+  const [groupFilter, setGroupFilter] = useState('all');
+  const [currentLetter, setCurrentLetter] = useState('all');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  
+  // View options
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 12;
+  
+  // UI state
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [inputValue, setInputValue] = useState('');
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -327,7 +453,47 @@ const ChatPageScroll = () => {
         const data = await characterRepository.getAll(false);
         setCharacters(data);
         
-        // Set featured character (Jesus or first)
+        // Resolve featured character
+        const params = new URLSearchParams(window.location.search);
+        const featuredParam = params.get('featured');
+        
+        if (featuredParam) {
+          const byName = data.find(c => c.name.toLowerCase() === featuredParam.toLowerCase());
+          const byId = data.find(c => String(c.id) === String(featuredParam));
+          if (byName || byId) {
+            setFeaturedCharacter(byName || byId);
+            return;
+          }
+        }
+        
+        // Try site settings
+        const owner = getOwnerSlug();
+        try {
+          const settings = await siteSettingsRepository.getSettings(owner);
+          if (settings?.defaultId) {
+            const c = data.find(c => String(c.id) === String(settings.defaultId));
+            if (c) {
+              setFeaturedCharacter(c);
+              return;
+            }
+          }
+        } catch {}
+        
+        // Try user preference
+        if (user?.id) {
+          try {
+            const userFeaturedId = await userSettingsRepository.getFeaturedCharacterId(user.id);
+            if (userFeaturedId) {
+              const c = data.find(c => String(c.id) === String(userFeaturedId));
+              if (c) {
+                setFeaturedCharacter(c);
+                return;
+              }
+            }
+          } catch {}
+        }
+        
+        // Fallback to Jesus or first
         const jesus = data.find(c => c.name?.toLowerCase().includes('jesus'));
         setFeaturedCharacter(jesus || data[0] || null);
         
@@ -341,7 +507,35 @@ const ChatPageScroll = () => {
       }
     };
     loadCharacters();
+  }, [user?.id]);
+
+  // Load groups
+  useEffect(() => {
+    (async () => {
+      try {
+        const all = await groupRepository.getAllGroups();
+        setGroups(all);
+      } catch (e) {
+        console.error('Failed to fetch character groups:', e);
+      }
+    })();
   }, []);
+
+  // Load favorites
+  useEffect(() => {
+    (async () => {
+      if (!user?.id) {
+        setFavoriteIds([]);
+        return;
+      }
+      try {
+        const ids = await userFavoritesRepository.getFavoriteIds(user.id);
+        setFavoriteIds(ids || []);
+      } catch {
+        setFavoriteIds([]);
+      }
+    })();
+  }, [user?.id]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -356,30 +550,106 @@ const ChatPageScroll = () => {
   }, [character]);
 
   // Filter characters
-  const filteredCharacters = characters.filter(c => {
-    if (searchQuery) {
+  const filteredCharacters = useMemo(() => {
+    let result = [...characters];
+    
+    // Search filter
+    if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      if (!c.name?.toLowerCase().includes(q) && !c.description?.toLowerCase().includes(q)) {
-        return false;
-      }
+      result = result.filter(c =>
+        c.name?.toLowerCase().includes(q) ||
+        (c.description || '').toLowerCase().includes(q)
+      );
     }
-    if (testament === 'old' && c.testament?.toLowerCase() !== 'old') return false;
-    if (testament === 'new' && c.testament?.toLowerCase() !== 'new') return false;
-    return true;
-  });
+    
+    // Testament filter
+    if (testament !== 'all') {
+      result = result.filter(c => {
+        const text = `${c.description || ''} ${c.bible_book || ''} ${c.scriptural_context || ''}`.toLowerCase();
+        return testament === 'old'
+          ? /(genesis|exodus|leviticus|numbers|deuteronomy|joshua|judges|ruth|samuel|kings|chronicles|ezra|nehemiah|esther|job|psalms|proverbs|ecclesiastes|song of solomon|isaiah|jeremiah|lamentations|ezekiel|daniel|hosea|joel|amos|obadiah|jonah|micah|nahum|habakkuk|zephaniah|haggai|zechariah|malachi|old testament)/i.test(text)
+          : /(matthew|mark|luke|john|acts|romans|corinthians|galatians|ephesians|philippians|colossians|thessalonians|timothy|titus|philemon|hebrews|james|peter|john|jude|revelation|new testament)/i.test(text);
+      });
+    }
+    
+    // Book filter
+    if (bookFilter !== 'all') {
+      result = result.filter(c => {
+        const text = `${c.description || ''} ${c.bible_book || ''} ${c.scriptural_context || ''}`.toLowerCase();
+        return text.includes(bookFilter.toLowerCase());
+      });
+    }
+    
+    // Group filter
+    if (groupFilter !== 'all') {
+      result = result.filter(c => {
+        const text = `${c.description || ''}`.toLowerCase();
+        return text.includes(groupFilter.toLowerCase());
+      });
+    }
+    
+    // Alphabetical filter
+    if (currentLetter !== 'all') {
+      result = result.filter(c => c.name?.toUpperCase().startsWith(currentLetter));
+    }
+    
+    // Favorites only
+    if (showFavoritesOnly) {
+      result = result.filter(c => favoriteIds.includes(c.id));
+    }
+    
+    // Sort alphabetically
+    result.sort((a, b) => a.name.localeCompare(b.name));
+    
+    return result;
+  }, [characters, searchQuery, testament, bookFilter, groupFilter, currentLetter, showFavoritesOnly, favoriteIds]);
 
-  // Pagination - exclude featured from count
-  const charactersWithoutFeatured = filteredCharacters.filter(c => c.id !== featuredCharacter?.id);
-  const totalPages = Math.ceil(charactersWithoutFeatured.length / ITEMS_PER_PAGE);
-  const paginatedCharacters = charactersWithoutFeatured.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  // Pagination
+  const totalPages = Math.ceil(filteredCharacters.length / ITEMS_PER_PAGE);
+  const paginatedCharacters = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredCharacters.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredCharacters, currentPage]);
 
-  // Reset to page 1 when filters change
+  // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, testament]);
+  }, [searchQuery, testament, bookFilter, groupFilter, currentLetter, showFavoritesOnly]);
+
+  // Active filters for display
+  const activeFilters = useMemo(() => {
+    const filters = [];
+    if (testament !== 'all') filters.push({ type: 'testament', value: testament === 'old' ? 'Old Testament' : 'New Testament' });
+    if (bookFilter !== 'all') filters.push({ type: 'book', value: bookFilter });
+    if (groupFilter !== 'all') filters.push({ type: 'group', value: groupFilter });
+    if (searchQuery) filters.push({ type: 'search', value: `"${searchQuery}"` });
+    if (currentLetter !== 'all') filters.push({ type: 'letter', value: `Letter "${currentLetter}"` });
+    if (showFavoritesOnly) filters.push({ type: 'favorites', value: 'Favorites Only' });
+    return filters;
+  }, [testament, bookFilter, groupFilter, searchQuery, currentLetter, showFavoritesOnly]);
+
+  // Remove filter
+  const removeFilter = (type) => {
+    switch(type) {
+      case 'testament': setTestament('all'); break;
+      case 'book': setBookFilter('all'); break;
+      case 'group': setGroupFilter('all'); break;
+      case 'search': setSearchQuery(''); break;
+      case 'letter': setCurrentLetter('all'); break;
+      case 'favorites': setShowFavoritesOnly(false); break;
+    }
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setTestament('all');
+    setBookFilter('all');
+    setGroupFilter('all');
+    setSearchQuery('');
+    setCurrentLetter('all');
+    setShowFavoritesOnly(false);
+    setCurrentPage(1);
+  };
 
   // Handle character selection
   const handleSelectCharacter = async (char) => {
@@ -388,23 +658,28 @@ const ChatPageScroll = () => {
       setShowUpgrade(true);
       return;
     }
-    // Pass the full character object, not just the ID
     selectCharacter(char);
   };
 
   // Handle toggling favorite
-  const handleToggleFavorite = (char) => {
-    setFavoriteIds(prev => {
-      if (prev.includes(char.id)) {
-        return prev.filter(id => id !== char.id);
-      }
-      return [...prev, char.id];
-    });
+  const handleToggleFavorite = async (char) => {
+    if (!user?.id) return;
+    const isFav = favoriteIds.includes(char.id);
+    await userFavoritesRepository.setFavorite(user.id, char.id, !isFav);
+    try {
+      const ids = await userFavoritesRepository.getFavoriteIds(user.id);
+      setFavoriteIds(ids || []);
+    } catch {}
   };
 
   // Handle setting featured character
-  const handleSetFeatured = (char) => {
+  const handleSetFeatured = async (char) => {
     setFeaturedCharacter(char);
+    if (user?.id) {
+      try {
+        await userSettingsRepository.setFeaturedCharacterId(user.id, char.id);
+      } catch {}
+    }
   };
 
   // Handle send message
@@ -420,94 +695,349 @@ const ChatPageScroll = () => {
     resetChat();
   };
 
+  // Render alphabetical navigation sidebar
+  const renderAlphaNav = () => (
+    <div className="fixed right-2 top-1/2 transform -translate-y-1/2 bg-amber-100/90 backdrop-blur-sm rounded-full py-2 px-1.5 hidden lg:flex flex-col gap-0.5 border border-amber-300 shadow-lg z-30">
+      <button
+        onClick={() => { setCurrentLetter('all'); setCurrentPage(1); }}
+        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+          currentLetter === 'all' ? 'bg-amber-600 text-white' : 'text-amber-700 hover:bg-amber-200'
+        }`}
+      >
+        All
+      </button>
+      {ALPHABET.map(letter => (
+        <button
+          key={letter}
+          onClick={() => { setCurrentLetter(letter); setCurrentPage(1); }}
+          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+            currentLetter === letter ? 'bg-amber-600 text-white' : 'text-amber-700 hover:bg-amber-200'
+          }`}
+        >
+          {letter}
+        </button>
+      ))}
+    </div>
+  );
+
+  // Render pagination
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage + 1 < maxVisible) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    return (
+      <div className="flex items-center justify-center gap-2 mt-6">
+        <button
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+            currentPage === 1 ? 'bg-amber-100 text-amber-300 cursor-not-allowed' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+          }`}
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+        
+        {startPage > 1 && (
+          <>
+            <button onClick={() => setCurrentPage(1)} className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200">1</button>
+            {startPage > 2 && <span className="text-amber-400">...</span>}
+          </>
+        )}
+        
+        {Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i).map(page => (
+          <button
+            key={page}
+            onClick={() => setCurrentPage(page)}
+            className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+              currentPage === page ? 'bg-amber-600 text-white' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+            }`}
+          >
+            {page}
+          </button>
+        ))}
+        
+        {endPage < totalPages && (
+          <>
+            {endPage < totalPages - 1 && <span className="text-amber-400">...</span>}
+            <button onClick={() => setCurrentPage(totalPages)} className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200">{totalPages}</button>
+          </>
+        )}
+        
+        <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+            currentPage === totalPages ? 'bg-amber-100 text-amber-300 cursor-not-allowed' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+          }`}
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    );
+  };
+
   // Render character selection view
   const renderCharacterSelection = () => (
-    <ScrollWrap className="max-w-5xl mx-auto">
+    <ScrollWrap className="max-w-6xl mx-auto">
+      {/* Alphabetical Navigation */}
+      {renderAlphaNav()}
+      
       {/* Header */}
       <div className="text-center mb-6">
-        <Link
-          to="/preview"
-          className="inline-flex items-center text-amber-700 hover:text-amber-900 text-sm mb-4"
-        >
-          <svg className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-          </svg>
-          Home
-        </Link>
-        
         <h1 className="text-3xl md:text-4xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
           Choose Your Biblical Guide
         </h1>
-        <p className="text-amber-700/80 max-w-xl mx-auto">
-          Select a character from Scripture to begin a conversation. Ask questions, seek wisdom, and explore their story.
+        <p className="text-amber-700" style={{ fontFamily: 'Georgia, serif' }}>
+          Select a character to begin your conversation
         </p>
       </div>
 
-      <ScrollDivider className="my-4" />
+      {/* Quick Action Buttons */}
+      <div className="flex flex-wrap justify-center gap-3 mb-6">
+        <Link
+          to="/roundtable/setup/preview"
+          className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-full font-medium transition-colors shadow-md"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+          </svg>
+          Roundtable Discussion
+        </Link>
+        <Link
+          to="/studies/preview"
+          className="flex items-center gap-2 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-full font-medium transition-colors border border-amber-300"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+          </svg>
+          Guided Bible Studies
+        </Link>
+      </div>
+
+      <ScrollDivider />
 
       {/* Featured Character */}
-      {featuredCharacter && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-amber-800 mb-3 flex items-center gap-2">
+      {featuredCharacter && !showFavoritesOnly && activeFilters.length === 0 && (
+        <div className="mb-8 text-center">
+          <h2 className="flex items-center justify-center gap-2 text-xl font-bold text-amber-800 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
             <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
             Featured Guide
           </h2>
-          <CharacterCard 
-            character={featuredCharacter} 
-            onSelect={handleSelectCharacter}
-            isPremiumLocked={!isPremium && !isCharacterFree(featuredCharacter, tierSettings)}
-            isFeatured
-            isFavorite={favoriteIds.includes(featuredCharacter?.id)}
-            onToggleFavorite={handleToggleFavorite}
-            onSetFeatured={handleSetFeatured}
-          />
+          
+          <div className="inline-block">
+            <div className="relative mb-4">
+              <div className="absolute -inset-4 rounded-full bg-amber-300 blur-xl opacity-30"></div>
+              <div className="relative w-28 h-28 mx-auto rounded-full overflow-hidden ring-4 ring-amber-400 shadow-xl">
+                <img
+                  src={featuredCharacter.avatar_url || generateFallbackAvatar(featuredCharacter.name)}
+                  alt={featuredCharacter.name}
+                  className="w-full h-full object-cover object-[center_20%]"
+                />
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              {featuredCharacter.name}
+            </h3>
+            <p className="text-amber-700/80 max-w-md mx-auto mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+              {featuredCharacter.description}
+            </p>
+            <button
+              onClick={() => handleSelectCharacter(featuredCharacter)}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all hover:scale-105"
+            >
+              Chat with {featuredCharacter.name}
+            </button>
+          </div>
+          
+          <p className="mt-6 text-amber-600 text-sm">Or select another character below</p>
         </div>
       )}
 
-      {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            placeholder="Search characters..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white/80 border border-amber-300 rounded-full text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
-          <svg className="absolute left-3.5 top-3 w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-        
-        <div className="flex gap-2">
-          {['all', 'old', 'new'].map((t) => (
+      {/* Filters Section */}
+      <div className="bg-amber-50/80 rounded-xl p-4 mb-6 border border-amber-200">
+        <div className="flex flex-col gap-4">
+          {/* Row 1: Search + Testament */}
+          <div className="flex flex-col md:flex-row gap-3">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search characters..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-amber-300 rounded-full text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+              <svg className="absolute left-3.5 top-3 w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            
+            {/* Testament filter */}
+            <div className="flex gap-2">
+              {['all', 'old', 'new'].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTestament(t)}
+                  className={`px-4 py-2 rounded-full font-medium transition-colors ${
+                    testament === t
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  {t === 'all' ? 'All' : t === 'old' ? 'Old' : 'New'}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Row 2: Book, Group, Favorites, View Toggle */}
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Book filter */}
+            <select
+              value={bookFilter}
+              onChange={(e) => setBookFilter(e.target.value)}
+              className="bg-white border border-amber-300 rounded-full py-2 px-4 text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="all">All Books</option>
+              <optgroup label="Old Testament">
+                {BIBLE_BOOKS.oldTestament.map(book => (
+                  <option key={book} value={book}>{book}</option>
+                ))}
+              </optgroup>
+              <optgroup label="New Testament">
+                {BIBLE_BOOKS.newTestament.map(book => (
+                  <option key={book} value={book}>{book}</option>
+                ))}
+              </optgroup>
+            </select>
+            
+            {/* Group filter */}
+            <select
+              value={groupFilter}
+              onChange={(e) => setGroupFilter(e.target.value)}
+              className="bg-white border border-amber-300 rounded-full py-2 px-4 text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="all">All Groups</option>
+              <option value="Prophets">Prophets</option>
+              <option value="Apostles">Apostles</option>
+              <option value="Kings">Kings</option>
+              <option value="Women">Women of the Bible</option>
+              {groups.map(group => (
+                <option key={group.id} value={group.name}>{group.name}</option>
+              ))}
+            </select>
+            
+            {/* Favorites toggle */}
             <button
-              key={t}
-              onClick={() => setTestament(t)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                testament === t
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-colors ${
+                showFavoritesOnly
                   ? 'bg-amber-600 text-white'
-                  : 'bg-white/60 text-amber-800 border border-amber-300 hover:bg-amber-100'
+                  : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
               }`}
             >
-              {t === 'all' ? 'All' : t === 'old' ? 'Old Testament' : 'New Testament'}
+              <svg className="w-5 h-5" fill={showFavoritesOnly ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              Favorites
             </button>
-          ))}
+            
+            {/* Spacer */}
+            <div className="flex-1" />
+            
+            {/* View toggle */}
+            <div className="flex gap-1 bg-white rounded-lg p-1 border border-amber-300">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
+                  viewMode === 'grid' ? 'bg-amber-600 text-white' : 'text-amber-600 hover:bg-amber-100'
+                }`}
+                title="Grid view"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`w-9 h-9 rounded-md flex items-center justify-center transition-colors ${
+                  viewMode === 'list' ? 'bg-amber-600 text-white' : 'text-amber-600 hover:bg-amber-100'
+                }`}
+                title="List view"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Active Filters */}
+      {activeFilters.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-amber-100/50 rounded-lg">
+          <span className="text-amber-700 text-sm font-medium">Active Filters:</span>
+          {activeFilters.map((filter, i) => (
+            <div key={i} className="flex items-center gap-1 bg-amber-200 text-amber-800 px-3 py-1 rounded-full text-sm">
+              <span>{filter.value}</span>
+              <button onClick={() => removeFilter(filter.type)} className="w-4 h-4 rounded-full bg-amber-300 hover:bg-amber-400 flex items-center justify-center">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
+          <button onClick={clearAllFilters} className="text-amber-600 hover:text-amber-800 text-sm font-medium ml-auto">
+            Clear All
+          </button>
+        </div>
+      )}
+
+      {/* Results count */}
+      <div className="text-center text-amber-600 text-sm mb-4">
+        Showing {paginatedCharacters.length} of {filteredCharacters.length} characters
       </div>
 
       {/* Loading */}
       {loadingChars && (
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-700" />
+        <div className="text-center py-12">
+          <div className="inline-block w-12 h-12 border-4 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+          <p className="mt-4 text-amber-700" style={{ fontFamily: 'Cinzel, serif' }}>Loading characters...</p>
         </div>
       )}
 
-      {/* Character Grid */}
-      {!loadingChars && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* No results */}
+      {!loadingChars && filteredCharacters.length === 0 && (
+        <div className="text-center py-12 bg-amber-50/50 rounded-xl">
+          <svg className="w-16 h-16 mx-auto text-amber-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <p className="text-xl text-amber-700 mb-4">No characters found matching your criteria.</p>
+          <button onClick={clearAllFilters} className="text-amber-600 hover:text-amber-800 font-medium">
+            Clear all filters
+          </button>
+        </div>
+      )}
+
+      {/* Character Grid/List */}
+      {!loadingChars && filteredCharacters.length > 0 && (
+        <div className={viewMode === 'grid' 
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
+          : 'flex flex-col gap-3'
+        }>
           {paginatedCharacters.map((char) => (
             <CharacterCard
               key={char.id}
@@ -518,91 +1048,15 @@ const ChatPageScroll = () => {
               isFavorite={favoriteIds.includes(char.id)}
               onToggleFavorite={handleToggleFavorite}
               onSetFeatured={handleSetFeatured}
+              isSelected={character?.id === char.id}
+              viewMode={viewMode}
             />
           ))}
         </div>
       )}
 
       {/* Pagination */}
-      {!loadingChars && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          {/* Previous button */}
-          <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className={`p-2 rounded-lg border transition-colors ${
-              currentPage === 1
-                ? 'border-amber-200 text-amber-300 cursor-not-allowed'
-                : 'border-amber-400 text-amber-700 hover:bg-amber-100'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          {/* Page numbers */}
-          <div className="flex items-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-              // Show first, last, current, and adjacent pages
-              if (
-                page === 1 ||
-                page === totalPages ||
-                (page >= currentPage - 1 && page <= currentPage + 1)
-              ) {
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`w-9 h-9 rounded-lg font-medium transition-colors ${
-                      page === currentPage
-                        ? 'bg-amber-600 text-white'
-                        : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                    }`}
-                    style={{ fontFamily: 'Cinzel, serif' }}
-                  >
-                    {page}
-                  </button>
-                );
-              } else if (
-                (page === currentPage - 2 && currentPage > 3) ||
-                (page === currentPage + 2 && currentPage < totalPages - 2)
-              ) {
-                return <span key={page} className="text-amber-400 px-1">...</span>;
-              }
-              return null;
-            })}
-          </div>
-          
-          {/* Next button */}
-          <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className={`p-2 rounded-lg border transition-colors ${
-              currentPage === totalPages
-                ? 'border-amber-200 text-amber-300 cursor-not-allowed'
-                : 'border-amber-400 text-amber-700 hover:bg-amber-100'
-            }`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      {/* Results count */}
-      {!loadingChars && charactersWithoutFeatured.length > 0 && (
-        <p className="text-center text-amber-600 text-sm mt-4" style={{ fontFamily: 'Georgia, serif' }}>
-          Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, charactersWithoutFeatured.length)} of {charactersWithoutFeatured.length} characters
-        </p>
-      )}
-
-      {!loadingChars && filteredCharacters.length === 0 && (
-        <div className="text-center py-12 text-amber-700">
-          No characters found matching your search.
-        </div>
-      )}
+      {renderPagination()}
     </ScrollWrap>
   );
 
@@ -633,80 +1087,67 @@ const ChatPageScroll = () => {
             <h2 className="font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
               {character?.name}
             </h2>
-            <p className="text-amber-600 text-sm truncate">
-              {character?.description || 'Biblical Guide'}
-            </p>
+            <p className="text-amber-600 text-sm">Biblical Character</p>
           </div>
         </div>
       </div>
 
-      {/* Messages Container */}
-      <ScrollWrap className="mt-4 mb-24">
-        <div className="space-y-4 py-4">
-          {messages.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-amber-700 italic" style={{ fontFamily: 'Georgia, serif' }}>
-                Begin your conversation with {character?.name}. Ask about their life, seek wisdom, or explore Scripture together.
-              </p>
+      {/* Messages */}
+      <div className="py-6 space-y-4 min-h-[50vh]">
+        {messages.map((msg) => (
+          <ChatBubble key={msg.id} message={msg} character={character} />
+        ))}
+        
+        {/* Typing indicator */}
+        {isTyping && (
+          <div className="flex gap-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-amber-300 flex-shrink-0">
+              <img
+                src={character?.avatar_url || generateFallbackAvatar(character?.name || 'Guide')}
+                alt={character?.name}
+                className="w-full h-full object-cover object-[center_20%]"
+              />
             </div>
-          )}
-          
-          {messages.map((msg, idx) => (
-            <ChatBubble key={idx} message={msg} character={character} />
-          ))}
-          
-          {isTyping && (
-            <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-amber-300">
-                <img
-                  src={character?.avatar_url || generateFallbackAvatar(character?.name)}
-                  alt={character?.name}
-                  className="w-full h-full object-cover object-[center_20%]"
-                />
-              </div>
-              <div className="bg-white/90 border border-amber-200 rounded-2xl rounded-bl-md px-4 py-3">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
+            <div className="bg-white/90 border border-amber-200 rounded-2xl rounded-bl-md px-4 py-3">
+              <div className="flex gap-1">
+                <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollWrap>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
 
       {/* Input Area */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-amber-900 via-amber-900/95 to-transparent pt-8 pb-4 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex gap-3 items-end">
-            <textarea
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              placeholder={`Message ${character?.name}...`}
-              rows={1}
-              className="flex-1 resize-none bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 max-h-32"
-              style={{ fontFamily: 'Georgia, serif' }}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!inputValue.trim() || isLoading}
-              className="flex-shrink-0 w-12 h-12 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-300 text-white rounded-xl flex items-center justify-center transition-colors shadow-lg"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </button>
-          </div>
+      <div className="sticky bottom-0 py-4 bg-gradient-to-t from-amber-50 via-amber-50/95 to-transparent">
+        <div className="flex gap-3">
+          <textarea
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder={`Message ${character?.name}...`}
+            rows={1}
+            className="flex-1 resize-none rounded-xl border border-amber-300 bg-white px-4 py-3 text-amber-900 placeholder-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            style={{ fontFamily: 'Georgia, serif' }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!inputValue.trim() || isLoading}
+            className="px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl font-medium transition-colors shadow-md"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -714,18 +1155,19 @@ const ChatPageScroll = () => {
 
   return (
     <PreviewLayout>
-      <ScrollBackground>
+      <ScrollBackground className="min-h-screen py-6 px-4">
         {character ? renderChatView() : renderCharacterSelection()}
       </ScrollBackground>
       
-      {!character && <FooterScroll />}
-      
+      {/* Upgrade Modal */}
       <UpgradeModal
-        isOpen={showUpgrade}
+        open={showUpgrade}
         onClose={() => setShowUpgrade(false)}
-        limitType="character"
-        featureName="Premium Characters"
+        title="Upgrade to chat with premium characters"
+        message="This character is premium. Upgrade to unlock all characters and features."
       />
+      
+      <FooterScroll />
     </PreviewLayout>
   );
 };
