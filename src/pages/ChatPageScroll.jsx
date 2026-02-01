@@ -697,10 +697,10 @@ const ChatPageScroll = () => {
 
   // Render alphabetical navigation (horizontal)
   const renderAlphaNav = () => (
-    <div className="flex flex-wrap items-center justify-center gap-1 mb-4 p-3 bg-amber-50/80 rounded-xl border border-amber-200">
+    <div className="flex items-center justify-center gap-0.5 mb-4 p-2 bg-amber-50/80 rounded-xl border border-amber-200 overflow-x-auto">
       <button
         onClick={() => { setCurrentLetter('all'); setCurrentPage(1); }}
-        className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+        className={`px-2 py-1 rounded text-xs font-medium transition-colors flex-shrink-0 ${
           currentLetter === 'all' ? 'bg-amber-600 text-white' : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
         }`}
       >
@@ -710,7 +710,7 @@ const ChatPageScroll = () => {
         <button
           key={letter}
           onClick={() => { setCurrentLetter(letter); setCurrentPage(1); }}
-          className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
+          className={`w-7 h-7 rounded text-xs font-medium transition-colors flex-shrink-0 ${
             currentLetter === letter ? 'bg-amber-600 text-white' : 'bg-white text-amber-700 border border-amber-300 hover:bg-amber-100'
           }`}
         >
