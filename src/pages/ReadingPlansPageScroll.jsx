@@ -290,21 +290,49 @@ export default function ReadingPlansPageScroll() {
               Home
             </Link>
             
+            {/* The Bible - Hero Card */}
+            <Link
+              to="/bible"
+              className="block mb-6 group"
+            >
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-900 via-amber-800 to-amber-900 p-6 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 border-amber-600">
+                {/* Decorative cross pattern */}
+                <div className="absolute inset-0 opacity-10">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-48 border-4 border-amber-200" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-16 border-4 border-amber-200" style={{ marginTop: '-2rem' }} />
+                </div>
+                {/* Light rays effect */}
+                <div className="absolute -top-20 -right-20 w-40 h-40 bg-amber-400/20 rounded-full blur-3xl group-hover:bg-amber-400/30 transition-all" />
+                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-300/10 rounded-full blur-2xl" />
+                
+                <div className="relative flex items-center gap-4">
+                  {/* Book icon */}
+                  <div className="flex-shrink-0 w-16 h-20 bg-amber-100 rounded-lg shadow-lg flex items-center justify-center border-2 border-amber-300 group-hover:scale-105 transition-transform">
+                    <svg className="w-10 h-12 text-amber-800" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"/>
+                      <path d="M8 12h8v2H8zm0 4h5v2H8z" opacity=".5"/>
+                    </svg>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <p className="text-amber-300 text-xs uppercase tracking-wider mb-1">Read Freely</p>
+                    <h2 className="text-2xl md:text-3xl font-bold text-amber-100 mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+                      THE Bible
+                    </h2>
+                    <p className="text-amber-200/80 text-sm">Browse and read without following a plan</p>
+                  </div>
+                  
+                  <svg className="w-8 h-8 text-amber-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+            
             <h1 className="text-2xl md:text-3xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
               Bible Reading Plans
             </h1>
-            <p className="text-amber-700/80 mb-3">Explore {plans.length} plans to guide your daily Bible reading</p>
-            
-            {/* Read Bible Without Plans Link */}
-            <Link
-              to="/bible"
-              className="inline-flex items-center gap-2 px-4 py-2 mb-4 bg-amber-800 text-amber-100 rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              Read the Bible Without a Plan
-            </Link>
+            <p className="text-amber-700/80 mb-4">Explore {plans.length} plans to guide your daily Bible reading</p>
             
             {/* Search */}
             <div className="relative max-w-sm">

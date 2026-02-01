@@ -1380,7 +1380,12 @@ const ChatPageScroll = () => {
               className="w-[120px] h-[120px] rounded-full object-cover object-[center_20%] border-4 border-amber-500 mx-auto mb-3"
             />
             
-            <p className="text-amber-700 text-center text-sm mb-4">{character.title || character.role || 'Biblical Figure'}</p>
+            <h3 className="text-2xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+              {character.name}
+            </h3>
+            {(character.title || character.role) && (
+              <p className="text-amber-600 text-center text-sm mb-4">{character.title || character.role}</p>
+            )}
           
           {/* Historical Context */}
           <section className="mb-4 bg-white/50 rounded-lg p-4 border border-amber-200">
@@ -1479,10 +1484,10 @@ const ChatPageScroll = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-amber-700 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="font-bold text-amber-950 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
             {character?.name}
           </h2>
-          <p className="text-amber-500 text-xs">
+          <p className="text-amber-600 text-xs">
             {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
           </p>
         </div>
@@ -1771,7 +1776,7 @@ const ChatPageScroll = () => {
                 )}
                 <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                   {!isUser && (
-                    <span className="text-amber-700 text-sm font-medium mb-1 ml-1">{character?.name}</span>
+                    <span className="text-amber-950 text-sm font-semibold mb-1 ml-1">{character?.name}</span>
                   )}
                   <div className={`rounded-2xl px-4 py-3 ${
                     isUser 
