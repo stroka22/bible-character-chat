@@ -364,10 +364,27 @@ const AdminPage: React.FC = () => {
   const startIdx = (currentPage - 1) * pageSize;
   const paginatedCharacters = filteredCharacters.slice(startIdx, startIdx + pageSize);
 
+  // Dynamic title and description based on active tab
+  const getTabInfo = () => {
+    switch (activeTab) {
+      case 'overview': return { title: 'Admin Panel - Overview', desc: 'Welcome, Admin! View your dashboard and quick stats.' };
+      case 'characters': return { title: 'Admin Panel - Characters', desc: 'Manage Bible characters, their profiles, and settings.' };
+      case 'groups': return { title: 'Admin Panel - Groups', desc: 'Organize characters into groups for better management.' };
+      case 'featured': return { title: 'Admin Panel - Featured Character', desc: 'Set which character appears as featured on the home page.' };
+      case 'studies': return { title: 'Admin Panel - Bible Studies', desc: 'Manage Bible studies, lessons, categories, and visibility.' };
+      case 'readingPlans': return { title: 'Admin Panel - Reading Plans', desc: 'Manage reading plans, categories, and featured plans.' };
+      case 'faq': return { title: 'Admin Panel - FAQ', desc: 'Manage frequently asked questions and answers.' };
+      case 'roundtable': return { title: 'Admin Panel - Roundtable', desc: 'Manage roundtable discussion settings.' };
+      case 'accountTiers': return { title: 'Admin Panel - Account Tiers', desc: 'Manage subscription tiers and pricing.' };
+      default: return { title: 'Admin Panel', desc: 'Welcome, Admin!' };
+    }
+  };
+  const tabInfo = getTabInfo();
+
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 md:pl-72">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Panel - Character Management</h1>
-      <p className="text-gray-700 mb-4">Welcome, Admin! Here you can manage Bible characters.</p>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">{tabInfo.title}</h1>
+      <p className="text-gray-700 mb-4">{tabInfo.desc}</p>
 
       {/* Desktop left sidebar navigation (matches legacy layout) */}
       <div className="hidden md:block">

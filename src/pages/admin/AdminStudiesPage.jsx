@@ -9,6 +9,128 @@ import { toCsv, parseCsv, download } from '../../utils/csv';
 import { cloneStudyToOwners } from '../../repositories/bibleStudiesRepository';
 
 /**
+ * Category Manager Component for Bible Studies
+ */
+const CategoryManager = ({ categories, onUpdate, onDelete, onCreate }) => {
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', icon: '', description: '' });
+  const [showNew, setShowNew] = useState(false);
+  const [newForm, setNewForm] = useState({ name: '', slug: '', icon: '', description: '' });
+
+  const handleEdit = (cat) => {
+    setEditingId(cat.id);
+    setEditForm({ name: cat.name, icon: cat.icon || '', description: cat.description || '' });
+  };
+
+  const handleSave = async (id) => {
+    await onUpdate(id, editForm);
+    setEditingId(null);
+  };
+
+  const handleCreate = async () => {
+    if (!newForm.name || !newForm.slug) return;
+    await onCreate({
+      ...newForm,
+      slug: newForm.slug.toLowerCase().replace(/\s+/g, '-'),
+    });
+    setNewForm({ name: '', slug: '', icon: '', description: '' });
+    setShowNew(false);
+  };
+
+  return _jsxs("div", {
+    className: "space-y-3",
+    children: [
+      ...categories.map(cat => _jsx("div", {
+        key: cat.id,
+        className: "flex items-center gap-3 p-3 bg-gray-50 rounded-lg",
+        children: editingId === cat.id ? _jsxs(_Fragment, {
+          children: [
+            _jsx("input", {
+              type: "text",
+              value: editForm.icon,
+              onChange: (e) => setEditForm({ ...editForm, icon: e.target.value }),
+              className: "w-12 text-center border border-gray-300 rounded px-2 py-1",
+              placeholder: "Icon"
+            }),
+            _jsx("input", {
+              type: "text",
+              value: editForm.name,
+              onChange: (e) => setEditForm({ ...editForm, name: e.target.value }),
+              className: "flex-1 border border-gray-300 rounded px-2 py-1",
+              placeholder: "Name"
+            }),
+            _jsx("input", {
+              type: "text",
+              value: editForm.description,
+              onChange: (e) => setEditForm({ ...editForm, description: e.target.value }),
+              className: "flex-1 border border-gray-300 rounded px-2 py-1",
+              placeholder: "Description"
+            }),
+            _jsx("button", { onClick: () => handleSave(cat.id), className: "px-3 py-1 bg-green-600 text-white rounded text-sm", children: "Save" }),
+            _jsx("button", { onClick: () => setEditingId(null), className: "px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm", children: "Cancel" })
+          ]
+        }) : _jsxs(_Fragment, {
+          children: [
+            _jsx("span", { className: "text-xl w-8", children: cat.icon }),
+            _jsxs("div", {
+              className: "flex-1",
+              children: [
+                _jsx("span", { className: "font-medium", children: cat.name }),
+                _jsxs("span", { className: "text-gray-500 text-sm ml-2", children: ["(", cat.slug, ")"] }),
+                cat.description && _jsx("p", { className: "text-sm text-gray-500", children: cat.description })
+              ]
+            }),
+            _jsxs("span", { className: "text-sm text-gray-400", children: ["Order: ", cat.display_order] }),
+            _jsx("button", {
+              onClick: () => handleEdit(cat),
+              className: "p-1 text-blue-600 hover:bg-blue-100 rounded",
+              children: _jsx("svg", { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" }) })
+            }),
+            _jsx("button", {
+              onClick: () => onDelete(cat.id),
+              className: "p-1 text-red-600 hover:bg-red-100 rounded",
+              children: _jsx("svg", { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: _jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" }) })
+            })
+          ]
+        })
+      })),
+      showNew ? _jsxs("div", {
+        className: "flex items-center gap-3 p-3 bg-blue-50 rounded-lg border-2 border-dashed border-blue-300",
+        children: [
+          _jsx("input", {
+            type: "text",
+            value: newForm.icon,
+            onChange: (e) => setNewForm({ ...newForm, icon: e.target.value }),
+            className: "w-12 text-center border border-gray-300 rounded px-2 py-1",
+            placeholder: "Icon"
+          }),
+          _jsx("input", {
+            type: "text",
+            value: newForm.name,
+            onChange: (e) => setNewForm({ ...newForm, name: e.target.value }),
+            className: "flex-1 border border-gray-300 rounded px-2 py-1",
+            placeholder: "Category Name"
+          }),
+          _jsx("input", {
+            type: "text",
+            value: newForm.slug,
+            onChange: (e) => setNewForm({ ...newForm, slug: e.target.value }),
+            className: "w-32 border border-gray-300 rounded px-2 py-1",
+            placeholder: "slug"
+          }),
+          _jsx("button", { onClick: handleCreate, className: "px-3 py-1 bg-green-600 text-white rounded text-sm", children: "Create" }),
+          _jsx("button", { onClick: () => setShowNew(false), className: "px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm", children: "Cancel" })
+        ]
+      }) : _jsx("button", {
+        onClick: () => setShowNew(true),
+        className: "w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors",
+        children: "+ Add Category"
+      })
+    ]
+  });
+};
+
+/**
  * AdminStudiesPage
  *
  * Renders Bible-study administration UI.  When used inside the main
@@ -937,47 +1059,122 @@ const AdminStudiesPage = ({ embedded = false }) => {
             _jsxs("div", {
               className: embedded ? "bg-white rounded-lg p-6 border border-gray-200 shadow-md" : "bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/15 shadow-lg",
               children: [
+                /* Tabs for Studies vs Categories */
                 _jsxs("div", {
-                  className: "flex justify-between items-center mb-4",
+                  className: "flex gap-2 mb-4 border-b border-gray-200",
                   children: [
-                    _jsx("h2", {
-                      className: `text-xl font-bold ${embedded ? 'text-gray-800' : 'text-yellow-400'}`,
-                      children: "Bible Studies"
+                    _jsx("button", {
+                      onClick: () => setActiveTab('studies'),
+                      className: `px-4 py-2 text-sm font-medium border-b-2 ${
+                        activeTab === 'studies' 
+                          ? 'border-blue-500 text-blue-600' 
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`,
+                      children: "Studies"
                     }),
-                    _jsxs("div", { className: "flex gap-2", children: [
-                      _jsx("button", {
-                        onClick: handleExportCsv,
-                        className: `${embedded ? 'bg-primary-50 border border-primary-300 text-primary-700 hover:bg-primary-100' : 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30'} px-3 py-1 rounded-lg text-sm`,
-                        children: "Export CSV"
-                      }),
-                      _jsx("button", {
-                        onClick: () => setShowImportModal(true),
-                        className: `${embedded ? 'bg-primary-50 border border-primary-300 text-primary-700 hover:bg-primary-100' : 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30'} px-3 py-1 rounded-lg text-sm`,
-                        children: "Import CSV"
-                      }),
-                      _jsx("button", {
-                        onClick: handleNewStudy,
-                        className: `${embedded ? 'bg-primary-600 hover:bg-primary-700' : 'bg-green-600 hover:bg-green-700'} text-white px-3 py-1 rounded-lg text-sm flex items-center`,
-                        children: _jsxs(_Fragment, {
-                          children: [
-                            _jsx("svg", {
-                              xmlns: "http://www.w3.org/2000/svg",
-                              className: "h-4 w-4 mr-1",
-                              viewBox: "0 0 20 20",
-                              fill: "currentColor",
-                              children: _jsx("path", {
-                                fillRule: "evenodd",
-                                d: "M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z",
-                                clipRule: "evenodd"
-                              })
-                            }),
-                            "New Study"
-                          ]
-                        })
-                      })
-                    ] })
+                    _jsx("button", {
+                      onClick: () => setActiveTab('categories'),
+                      className: `px-4 py-2 text-sm font-medium border-b-2 ${
+                        activeTab === 'categories' 
+                          ? 'border-blue-500 text-blue-600' 
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`,
+                      children: "Categories"
+                    })
                   ]
                 }),
+                
+                /* Categories Tab Content */
+                activeTab === 'categories' ? (
+                  _jsxs("div", {
+                    children: [
+                      _jsx("h3", {
+                        className: `text-lg font-bold mb-4 ${embedded ? 'text-gray-800' : 'text-yellow-400'}`,
+                        children: "Manage Categories"
+                      }),
+                      _jsx(CategoryManager, {
+                        categories: categories,
+                        onUpdate: handleUpdateCategory,
+                        onDelete: handleDeleteCategory,
+                        onCreate: handleCreateCategory
+                      })
+                    ]
+                  })
+                ) : (
+                  _jsxs(_Fragment, {
+                    children: [
+                      _jsxs("div", {
+                        className: "flex justify-between items-center mb-4",
+                        children: [
+                          _jsx("h2", {
+                            className: `text-xl font-bold ${embedded ? 'text-gray-800' : 'text-yellow-400'}`,
+                            children: "Bible Studies"
+                          }),
+                          _jsxs("div", { className: "flex gap-2", children: [
+                            _jsx("button", {
+                              onClick: handleExportCsv,
+                              className: `${embedded ? 'bg-primary-50 border border-primary-300 text-primary-700 hover:bg-primary-100' : 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30'} px-3 py-1 rounded-lg text-sm`,
+                              children: "Export CSV"
+                            }),
+                            _jsx("button", {
+                              onClick: () => setShowImportModal(true),
+                              className: `${embedded ? 'bg-primary-50 border border-primary-300 text-primary-700 hover:bg-primary-100' : 'bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30'} px-3 py-1 rounded-lg text-sm`,
+                              children: "Import CSV"
+                            }),
+                            _jsx("button", {
+                              onClick: handleNewStudy,
+                              className: `${embedded ? 'bg-primary-600 hover:bg-primary-700' : 'bg-green-600 hover:bg-green-700'} text-white px-3 py-1 rounded-lg text-sm flex items-center`,
+                              children: _jsxs(_Fragment, {
+                                children: [
+                                  _jsx("svg", {
+                                    xmlns: "http://www.w3.org/2000/svg",
+                                    className: "h-4 w-4 mr-1",
+                                    viewBox: "0 0 20 20",
+                                    fill: "currentColor",
+                                    children: _jsx("path", {
+                                      fillRule: "evenodd",
+                                      d: "M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z",
+                                      clipRule: "evenodd"
+                                    })
+                                  }),
+                                  "New Study"
+                                ]
+                              })
+                            })
+                          ] })
+                        ]
+                      }),
+                      
+                      /* Search and filter */
+                      _jsxs("div", {
+                        className: "flex gap-2 mb-4",
+                        children: [
+                          _jsx("input", {
+                            type: "text",
+                            placeholder: "Search studies...",
+                            value: searchQuery,
+                            onChange: (e) => setSearchQuery(e.target.value),
+                            className: `flex-1 px-3 py-2 text-sm border rounded-lg ${
+                              embedded 
+                                ? 'bg-white border-gray-300 text-gray-900' 
+                                : 'bg-white/10 border-white/20 text-white placeholder-gray-400'
+                            }`
+                          }),
+                          categories.length > 0 && _jsx("select", {
+                            value: filterCategory,
+                            onChange: (e) => setFilterCategory(e.target.value),
+                            className: `px-3 py-2 text-sm border rounded-lg ${
+                              embedded 
+                                ? 'bg-white border-gray-300 text-gray-900' 
+                                : 'bg-white/10 border-white/20 text-white'
+                            }`,
+                            children: [
+                              _jsx("option", { value: '', children: 'All Categories' }),
+                              ...categories.map(cat => _jsx("option", { key: cat.id, value: cat.slug, children: cat.name }))
+                            ]
+                          })
+                        ]
+                      }),
                 
                 /* Studies list */
                 isLoading ? (
@@ -995,7 +1192,7 @@ const AdminStudiesPage = ({ embedded = false }) => {
                 ) : (
                   _jsx("div", {
                     className: "space-y-3 max-h-[60vh] overflow-y-auto pr-2",
-                    children: studies.map(study => (
+                    children: getFilteredStudies().map(study => (
                       _jsxs("div", {
                         className: `
                           p-4 rounded-lg border transition-all cursor-pointer
@@ -1101,12 +1298,94 @@ const AdminStudiesPage = ({ embedded = false }) => {
                                   }`,
                                   children: "Premium"
                                 })
+                              ),
+                              study.is_featured && (
+                                _jsx("span", {
+                                  className: `text-xs px-2 py-0.5 rounded-full ${
+                                    embedded 
+                                      ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' 
+                                      : 'bg-yellow-500/30 text-yellow-200 border border-yellow-400/40'
+                                  }`,
+                                  children: "Featured"
+                                })
+                              ),
+                              study.is_visible === false && (
+                                _jsx("span", {
+                                  className: `text-xs px-2 py-0.5 rounded-full ${
+                                    embedded 
+                                      ? 'bg-red-100 text-red-800 border border-red-200' 
+                                      : 'bg-red-500/30 text-red-200 border border-red-400/40'
+                                  }`,
+                                  children: "Hidden"
+                                })
+                              ),
+                              study.category && (
+                                _jsx("span", {
+                                  className: `text-xs px-2 py-0.5 rounded-full ${
+                                    embedded 
+                                      ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                                      : 'bg-purple-500/30 text-purple-200 border border-purple-400/40'
+                                  }`,
+                                  children: study.category
+                                })
                               )
+                            ]
+                          }),
+                          /* Quick action buttons for organizing */
+                          _jsxs("div", {
+                            className: "flex items-center gap-2 mt-2 pt-2 border-t border-gray-200/20",
+                            children: [
+                              _jsx("button", {
+                                onClick: (e) => {
+                                  e.stopPropagation();
+                                  handleToggleFeatured(study.id, !study.is_featured);
+                                },
+                                className: `text-xs px-2 py-1 rounded ${
+                                  study.is_featured 
+                                    ? 'bg-yellow-500 text-white' 
+                                    : embedded ? 'bg-gray-100 text-gray-600 hover:bg-yellow-100' : 'bg-white/10 text-gray-300 hover:bg-yellow-500/30'
+                                }`,
+                                title: study.is_featured ? 'Remove from Featured' : 'Mark as Featured',
+                                children: study.is_featured ? '★ Featured' : '☆ Feature'
+                              }),
+                              _jsx("button", {
+                                onClick: (e) => {
+                                  e.stopPropagation();
+                                  handleToggleVisible(study.id, study.is_visible === false);
+                                },
+                                className: `text-xs px-2 py-1 rounded ${
+                                  study.is_visible === false 
+                                    ? 'bg-red-500 text-white' 
+                                    : embedded ? 'bg-gray-100 text-gray-600 hover:bg-green-100' : 'bg-white/10 text-gray-300 hover:bg-green-500/30'
+                                }`,
+                                title: study.is_visible === false ? 'Make Visible' : 'Hide',
+                                children: study.is_visible === false ? '👁 Show' : '👁 Visible'
+                              }),
+                              categories.length > 0 && _jsx("select", {
+                                value: study.category || '',
+                                onClick: (e) => e.stopPropagation(),
+                                onChange: (e) => {
+                                  e.stopPropagation();
+                                  handleChangeCategory(study.id, e.target.value);
+                                },
+                                className: `text-xs px-2 py-1 rounded border ${
+                                  embedded 
+                                    ? 'bg-white border-gray-300 text-gray-700' 
+                                    : 'bg-white/10 border-white/20 text-gray-200'
+                                }`,
+                                children: [
+                                  _jsx("option", { value: '', children: 'No Category' }),
+                                  ...categories.map(cat => _jsx("option", { key: cat.id, value: cat.slug, children: cat.name }))
+                                ]
+                              })
                             ]
                           })
                         ]
                       }, study.id)
                     ))
+                  })
+                )
+                    ]
                   })
                 )
               ]
