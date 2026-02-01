@@ -59,6 +59,14 @@ import StudiesPageScroll from './pages/StudiesPageScroll.jsx';
 const ReadingPlansPageScroll = lazy(() => import('./pages/ReadingPlansPageScroll.jsx'));
 import RoundtableSetupScroll from './pages/RoundtableSetupScroll.jsx';
 import ChatPageScroll from './pages/ChatPageScroll.jsx';
+import MyWalkPageScroll from './pages/MyWalkPageScroll.jsx';
+import LoginPageScroll from './pages/LoginPageScroll.jsx';
+import SignupPageScroll from './pages/SignupPageScroll.jsx';
+import PricingPageScroll from './pages/PricingPageScroll.jsx';
+import AboutPageScroll from './pages/AboutPageScroll.jsx';
+import ContactPageScroll from './pages/ContactPageScroll.jsx';
+import HowItWorksPageScroll from './pages/HowItWorksPageScroll.jsx';
+import FavoritesPageScroll from './pages/FavoritesPageScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -356,6 +364,14 @@ function AppContent() {
     <Route path="/studies/preview" element={<StudiesPageScroll />} />
     <Route path="/reading-plans/preview" element={<Suspense fallback={<div className="p-6">Loading…</div>}><ReadingPlansPageScroll /></Suspense>} />
     <Route path="/roundtable/setup/preview" element={<RoundtableSetupScroll />} />
+    <Route path="/my-walk/preview" element={<MyWalkPageScroll />} />
+    <Route path="/login/preview" element={<LoginPageScroll />} />
+    <Route path="/signup/preview" element={<SignupPageScroll />} />
+    <Route path="/pricing/preview" element={<PricingPageScroll />} />
+    <Route path="/about/preview" element={<AboutPageScroll />} />
+    <Route path="/contact/preview" element={<ContactPageScroll />} />
+    <Route path="/how-it-works/preview" element={<HowItWorksPageScroll />} />
+    <Route path="/favorites/preview" element={<FavoritesPageScroll />} />
     <Route path="/login" element={<LoginPage />} />
     <Route path="/signup" element={<SignupPage />} />
     <Route path="/reset-password" element={<ResetPasswordPage />} />
