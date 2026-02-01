@@ -1360,8 +1360,8 @@ const ChatPageScroll = () => {
         />
         {/* Panel */}
         <div className="fixed right-0 top-0 bottom-0 w-full sm:w-[350px] z-50 overflow-y-auto bg-gradient-to-b from-amber-100 to-amber-200 border-l border-amber-300 shadow-lg">
-          {/* Close button - sticky header bar */}
-          <div className="sticky top-0 z-10 bg-amber-900 p-3 flex justify-between items-center">
+          {/* Close button - sticky header bar with extra top padding for mobile header */}
+          <div className="sticky top-0 z-10 bg-amber-900 pt-16 sm:pt-3 pb-3 px-3 flex justify-between items-center">
             <span className="text-amber-100 font-medium text-sm">Character Insights</span>
             <button
               onClick={() => setShowInsights(false)}
@@ -1381,11 +1381,11 @@ const ChatPageScroll = () => {
               />
             </div>
             
-            <h3 className="text-2xl font-bold text-yellow-800 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h3 className="text-2xl font-bold text-amber-900 text-center mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
               {character.name}
             </h3>
             {(character.title || character.role) && (
-              <p className="text-yellow-700 text-center text-sm mb-4">{character.title || character.role}</p>
+              <p className="text-amber-800 text-center text-sm mb-4">{character.title || character.role}</p>
             )}
           
           {/* Historical Context */}
@@ -1485,10 +1485,10 @@ const ChatPageScroll = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h2 className="font-bold text-yellow-800 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
+          <h2 className="font-bold text-amber-900 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
             {character?.name}
           </h2>
-          <p className="text-yellow-700/70 text-xs">
+          <p className="text-amber-700 text-xs">
             {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
           </p>
         </div>
@@ -1777,7 +1777,7 @@ const ChatPageScroll = () => {
                 )}
                 <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
                   {!isUser && (
-                    <span className="text-yellow-800 text-sm font-semibold mb-1 ml-1">{character?.name}</span>
+                    <span className="text-amber-900 text-sm font-semibold mb-1 ml-1">{character?.name}</span>
                   )}
                   <div className={`rounded-2xl px-4 py-3 ${
                     isUser 
