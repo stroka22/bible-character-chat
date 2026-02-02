@@ -129,49 +129,52 @@ export default function LeadCaptureModal() {
     <div className="fixed inset-0 z-[60]">
       <div className="absolute inset-0 bg-black/60" aria-hidden="true" onClick={closeAndRemember} />
       <div className="relative w-full h-full flex items-center justify-center p-4">
-        <div role="dialog" aria-modal="true" aria-labelledby="lead-modal-title" className="w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl">
-          <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white px-6 py-4">
+        <div role="dialog" aria-modal="true" aria-labelledby="lead-modal-title" className="w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl border-2 border-amber-400">
+          {/* Header - scroll/parchment theme */}
+          <div className="bg-gradient-to-r from-amber-800 to-amber-700 text-white px-6 py-4">
             <div className="flex items-start">
               <div className="flex-1">
-                <h2 id="lead-modal-title" className="text-xl font-semibold">Get ministry updates and resources</h2>
-                <p className="text-sm text-white/80">Opt-out anytime — we respect your inbox.</p>
+                <h2 id="lead-modal-title" className="text-xl font-semibold" style={{ fontFamily: 'Cinzel, serif' }}>Stay Connected</h2>
+                <p className="text-sm text-amber-100">Get updates on new characters, studies, and features.</p>
               </div>
-              <button onClick={closeAndRemember} aria-label="Close" className="ml-3 text-white/80 hover:text-white">
+              <button onClick={closeAndRemember} aria-label="Close" className="ml-3 text-amber-200 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
               </button>
             </div>
           </div>
           {success ? (
-            <div className="bg-white px-6 py-8 text-blue-900 text-center">
+            <div className="bg-gradient-to-b from-amber-50 to-amber-100 px-6 py-8 text-amber-900 text-center">
+              <div className="text-4xl mb-3">✨</div>
               <p className="text-lg font-semibold mb-4">{success}</p>
               <button
                 onClick={closeAndRemember}
-                className="mt-2 px-5 py-2 rounded-full bg-yellow-400 text-blue-900 font-semibold shadow hover:bg-yellow-300"
+                className="mt-2 px-5 py-2 rounded-lg bg-amber-600 text-white font-semibold shadow hover:bg-amber-700 transition-colors"
               >
                 Close
               </button>
             </div>
           ) : (
-          <form onSubmit={onSubmit} className="bg-white px-6 py-5 text-blue-900">
+          <form onSubmit={onSubmit} className="bg-gradient-to-b from-amber-50 to-amber-100 px-6 py-5 text-amber-900">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input value={name} onChange={(e)=>setName(e.target.value)} className="px-3 py-2 rounded-full bg-white border border-blue-200 focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Name" />
-              <input value={email} onChange={(e)=>setEmail(e.target.value)} className="px-3 py-2 rounded-full bg-white border border-blue-200 focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Email*" />
-              <input value={phone} onChange={(e)=>setPhone(e.target.value)} className="px-3 py-2 rounded-full bg-white border border-blue-200 focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Phone" />
-              <select value={role} onChange={(e)=>setRole(e.target.value)} className="px-3 py-2 rounded-full bg-white border border-blue-200 focus:outline-none focus:ring-2 focus:ring-yellow-400">
-                <option value="user">User</option>
-                <option value="pastor">Pastor</option>
-                <option value="leader">Leader</option>
+              <input value={name} onChange={(e)=>setName(e.target.value)} className="px-4 py-2 rounded-lg bg-white border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 text-amber-900 placeholder-amber-400" placeholder="Name" />
+              <input value={email} onChange={(e)=>setEmail(e.target.value)} className="px-4 py-2 rounded-lg bg-white border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 text-amber-900 placeholder-amber-400" placeholder="Email*" />
+              <input value={phone} onChange={(e)=>setPhone(e.target.value)} className="px-4 py-2 rounded-lg bg-white border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 text-amber-900 placeholder-amber-400" placeholder="Phone (optional)" />
+              <select value={role} onChange={(e)=>setRole(e.target.value)} className="px-4 py-2 rounded-lg bg-white border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-400 text-amber-900">
+                <option value="user">I'm exploring my faith</option>
+                <option value="pastor">I'm a pastor</option>
+                <option value="leader">I'm a ministry leader</option>
                 <option value="other">Other</option>
               </select>
             </div>
-            <div className="mt-4 flex items-center gap-4 text-sm">
-              <label className="flex items-center gap-1"><input type="checkbox" checked={consentEmail} onChange={(e)=>setConsentEmail(e.target.checked)} /> Email OK</label>
-              <label className="flex items-center gap-1"><input type="checkbox" checked={consentSms} onChange={(e)=>setConsentSms(e.target.checked)} /> SMS OK</label>
+            <div className="mt-4 flex items-center gap-4 text-sm text-amber-700">
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={consentEmail} onChange={(e)=>setConsentEmail(e.target.checked)} className="rounded border-amber-300 text-amber-600 focus:ring-amber-400" /> Email updates</label>
+              <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={consentSms} onChange={(e)=>setConsentSms(e.target.checked)} className="rounded border-amber-300 text-amber-600 focus:ring-amber-400" /> SMS updates</label>
             </div>
-            {error && <div className="mt-3 text-sm text-red-600">{error}</div>}
-            <div className="mt-5 flex justify-end">
-              <button type="button" onClick={closeAndRemember} className="mr-3 px-4 py-2 rounded-full border border-blue-200 text-blue-900 hover:bg-blue-50">Not now</button>
-              <button disabled={submitting} className="px-5 py-2 rounded-full bg-yellow-400 text-blue-900 font-semibold shadow hover:bg-yellow-300 disabled:bg-gray-400">{submitting ? 'Submitting...' : 'Keep me updated'}</button>
+            <p className="mt-2 text-xs text-amber-500">Opt-out anytime. We respect your inbox.</p>
+            {error && <div className="mt-3 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</div>}
+            <div className="mt-5 flex justify-end gap-3">
+              <button type="button" onClick={closeAndRemember} className="px-4 py-2 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-50 transition-colors">Not now</button>
+              <button disabled={submitting} className="px-5 py-2 rounded-lg bg-amber-600 text-white font-semibold shadow hover:bg-amber-700 disabled:bg-gray-400 transition-colors">{submitting ? 'Submitting...' : 'Keep me updated'}</button>
             </div>
           </form>
           )}
