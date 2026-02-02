@@ -78,6 +78,7 @@ import CareersPageScroll from './pages/CareersPageScroll.jsx';
 import BibleReaderScroll from './pages/BibleReaderScroll.jsx';
 import RoundtableChatScroll from './pages/RoundtableChatScroll.jsx';
 import StudyDetailsScroll from './pages/StudyDetailsScroll.jsx';
+import InfluencerLandingPage from './pages/InfluencerLandingPage.jsx';
 import StudyLessonScroll from './pages/StudyLessonScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
@@ -407,6 +408,7 @@ function AppContent() {
     <Route path="/cookies" element={<CookiePolicyPageScroll />} />
     <Route path="/press-kit" element={<PressKitPageScroll />} />
     <Route path="/careers" element={<CareersPageScroll />} />
+    <Route path="/partner/:slug" element={<InfluencerLandingPage />} />
     <Route path="/my-walk" element={<MyWalkPageScroll />} />
     <Route path="/favorites" element={<FavoritesPageScroll />} />
     <Route path="/profile" element={<ProfilePageScroll />} />
