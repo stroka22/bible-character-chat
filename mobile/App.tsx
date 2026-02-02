@@ -100,6 +100,9 @@ function HomeScreen({ navigation }: any) {
         <TouchableOpacity onPress={() => navigation.navigate('Studies')} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Browse Bible Studies</Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Plans')} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>Reading Plans</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>

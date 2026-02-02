@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, Linking } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, Linking, Image, Share, Clipboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
@@ -260,8 +260,8 @@ export default function RoundtableChat({ route }: any) {
     if (item.role === 'user') {
       return (
         <View style={{ alignItems: 'flex-end', marginVertical: 6 }}>
-          <View style={{ backgroundColor: '#2563eb', padding: 10, borderRadius: 12 }}>
-            <Text style={{ color: 'white' }}>{item.content}</Text>
+          <View style={{ backgroundColor: theme.colors.primary, padding: 10, borderRadius: 12 }}>
+            <Text style={{ color: theme.colors.primaryText }}>{item.content}</Text>
           </View>
         </View>
       );
@@ -274,13 +274,17 @@ export default function RoundtableChat({ route }: any) {
           onPress={() => {
             if (sp?.name) setInput(prev => prev?.startsWith('@') ? prev : `@${sp.name} `);
           }}
-          style={{ flexDirection: 'row', gap: 8, marginVertical: 6 }}>
-          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#374151', alignItems: 'center', justifyContent: 'center' }}>
-            <Text style={{ color: 'white', fontSize: 12 }}>{sp?.name?.[0] || '?'}</Text>
-          </View>
+          style={{ flexDirection: 'row', gap: 8, marginVertical: 6, backgroundColor: theme.colors.card, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border }}>
+          {sp?.avatar_url ? (
+            <Image source={{ uri: sp.avatar_url }} style={{ width: 36, height: 36, borderRadius: 18 }} />
+          ) : (
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: theme.colors.primaryText, fontSize: 14, fontWeight: '700' }}>{sp?.name?.[0] || '?'}</Text>
+            </View>
+          )}
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fde68a', fontWeight: '600', marginBottom: 4 }}>{sp?.name || 'Character'}</Text>
-            <Text style={{ color: 'white' }}>{item.content}</Text>
+            <Text style={{ color: theme.colors.accent, fontWeight: '700', marginBottom: 4 }}>{sp?.name || 'Character'}</Text>
+            <Text style={{ color: theme.colors.text }}>{item.content}</Text>
           </View>
         </TouchableOpacity>
       );
@@ -328,6 +332,34 @@ export default function RoundtableChat({ route }: any) {
     });
   };
 
+  const copyConversation = () => {
+    const text = messages
+      .filter(m => m.role !== 'system')
+      .map(m => {
+        if (m.role === 'user') return `You: ${m.content}`;
+        const sp = participants.find(p => String(p.id) === String(m.speakerId));
+        return `${sp?.name || 'Character'}: ${m.content}`;
+      })
+      .join('\n\n');
+    Clipboard.setString(text);
+    Alert.alert('Copied!', 'Conversation copied to clipboard.');
+  };
+
+  const shareConversation = async () => {
+    const text = messages
+      .filter(m => m.role !== 'system')
+      .map(m => {
+        if (m.role === 'user') return `You: ${m.content}`;
+        const sp = participants.find(p => String(p.id) === String(m.speakerId));
+        return `${sp?.name || 'Character'}: ${m.content}`;
+      })
+      .join('\n\n');
+    const shareText = `Roundtable Discussion: ${topic}\n\nParticipants: ${participants.map(p => p.name).join(', ')}\n\n${text}\n\n— via Faith Talk AI`;
+    try {
+      await Share.share({ message: shareText, title: `Roundtable: ${topic}` });
+    } catch {}
+  };
+
 
 
 
@@ -337,8 +369,16 @@ export default function RoundtableChat({ route }: any) {
         <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
         <Text style={{ color: theme.colors.text }}>{topic}</Text>
         <View style={{ marginTop: 8, flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-          <TouchableOpacity onPress={saveToMyWalk} style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
-            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>Save to My Walk</Text>
+          <TouchableOpacity onPress={saveToMyWalk} style={{ backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>💾 Save</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={shareConversation} style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📤 Share</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={copyConversation} style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
           </TouchableOpacity>
 
           {savedConversationId && (
@@ -347,9 +387,9 @@ export default function RoundtableChat({ route }: any) {
                 const { error } = await inviteFriendToChat(savedConversationId, `Roundtable: ${topic}`);
                 if (error) Alert.alert('Error', error);
               }} 
-              style={{ alignSelf: 'flex-start', backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}
+              style={{ backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}
             >
-              <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>Invite Friend</Text>
+              <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
             </TouchableOpacity>
           )}
         </View>

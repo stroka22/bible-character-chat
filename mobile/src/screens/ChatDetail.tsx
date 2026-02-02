@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Alert, Share, Clipboard, ScrollView, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -36,6 +36,11 @@ export default function ChatDetail() {
   const [markingComplete, setMarkingComplete] = React.useState(false);
   const [isIntroduction, setIsIntroduction] = React.useState(false);
   const [nextLesson, setNextLesson] = React.useState<{ id: string; title: string; order_index: number; character_id?: string | null } | null>(null);
+  
+  // Action bar state
+  const [showInsights, setShowInsights] = React.useState(false);
+  const [insights, setInsights] = React.useState<string | null>(null);
+  const [loadingInsights, setLoadingInsights] = React.useState(false);
 
   React.useEffect(() => {
     (async () => {
@@ -397,9 +402,141 @@ export default function ChatDetail() {
     return 'Save Progress';
   };
 
+  // Copy conversation to clipboard
+  const copyConversation = () => {
+    const text = messages
+      .filter(m => m.role !== 'system')
+      .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Guide'}: ${m.content}`)
+      .join('\n\n');
+    Clipboard.setString(text);
+    Alert.alert('Copied!', 'Conversation copied to clipboard.');
+  };
+
+  // Share conversation
+  const shareConversation = async () => {
+    const text = messages
+      .filter(m => m.role !== 'system')
+      .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Guide'}: ${m.content}`)
+      .join('\n\n');
+    const shareText = `${title}\n\n${text}\n\n— via Faith Talk AI`;
+    try {
+      await Share.share({ message: shareText, title });
+    } catch {}
+  };
+
+  // Generate insights
+  const generateInsights = async () => {
+    if (messages.filter(m => m.role !== 'system').length < 2) {
+      Alert.alert('Not enough conversation', 'Have a longer conversation first to get insights.');
+      return;
+    }
+    setShowInsights(true);
+    setLoadingInsights(true);
+    setInsights(null);
+    
+    try {
+      const conversationText = messages
+        .filter(m => m.role !== 'system')
+        .map(m => m.role === 'user' ? `User: ${m.content}` : `${character?.name || 'Guide'}: ${m.content}`)
+        .join('\n');
+      
+      const insightPrompt = `Analyze this conversation and provide spiritual insights:
+
+${conversationText}
+
+Provide:
+1. KEY THEMES: Main spiritual themes discussed
+2. SCRIPTURE CONNECTIONS: Relevant Bible verses that relate to this conversation  
+3. REFLECTION QUESTIONS: 2-3 questions for deeper personal reflection
+4. GROWTH OPPORTUNITY: One actionable step for spiritual growth
+
+Keep each section brief and practical.`;
+
+      const result = await generateCharacterResponse(
+        'Spiritual Advisor',
+        'You are a wise spiritual advisor who provides thoughtful biblical insights.',
+        [{ role: 'user', content: insightPrompt }]
+      );
+      setInsights(result);
+    } catch (e) {
+      setInsights('Unable to generate insights at this time. Please try again later.');
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        {/* Action Bar */}
+        <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, gap: 8, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
+          <TouchableOpacity 
+            onPress={generateInsights}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
+          >
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>💡 Insights</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={shareConversation}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
+          >
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📤 Share</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={copyConversation}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
+          >
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
+          </TouchableOpacity>
+          
+          {!studyId && (
+            <TouchableOpacity 
+              onPress={async () => {
+                await requirePremiumOrPrompt({
+                  userId: user?.id,
+                  feature: 'save',
+                  onUpgrade: () => navigation.navigate('Paywall'),
+                  onAllowed: async () => {
+                    await chat.toggleFavorite(chatId, !isFav);
+                    setIsFav(!isFav);
+                  }
+                });
+              }}
+              style={{ backgroundColor: isFav ? theme.colors.primary : theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isFav ? theme.colors.primary : theme.colors.border }}
+            >
+              <Text style={{ color: isFav ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 12 }}>
+                {isFav ? '★ Saved' : '☆ Save'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Insights Modal */}
+        <Modal visible={showInsights} animationType="slide" transparent>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+            <View style={{ backgroundColor: theme.colors.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', paddingBottom: 40 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold' }}>Conversation Insights</Text>
+                <TouchableOpacity onPress={() => setShowInsights(false)}>
+                  <Text style={{ color: theme.colors.primary, fontSize: 16, fontWeight: '600' }}>Close</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={{ padding: 16 }}>
+                {loadingInsights ? (
+                  <View style={{ alignItems: 'center', paddingVertical: 40 }}>
+                    <ActivityIndicator color={theme.colors.primary} size="large" />
+                    <Text style={{ color: theme.colors.muted, marginTop: 12 }}>Generating insights...</Text>
+                  </View>
+                ) : insights ? (
+                  <Text style={{ color: theme.colors.text, lineHeight: 22 }}>{insights}</Text>
+                ) : null}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
         <FlatList
           data={messages.filter((m) => m.role !== 'system')}
           keyExtractor={(m) => m.id}
@@ -411,7 +548,9 @@ export default function ChatDetail() {
               padding: 10,
               borderRadius: 12,
               marginBottom: 8,
-              maxWidth: '85%'
+              maxWidth: '85%',
+              borderWidth: item.role === 'user' ? 0 : 1,
+              borderColor: theme.colors.border
             }}>
               <Text style={{ color: item.role === 'user' ? theme.colors.primaryText : theme.colors.text }}>{item.content}</Text>
             </View>

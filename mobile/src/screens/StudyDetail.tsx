@@ -409,7 +409,9 @@ export default function StudyDetail({ route, navigation }: any) {
             {guide.avatar_url ? (
               <Image source={{ uri: guide.avatar_url }} style={{ width: 28, height: 28, borderRadius: 14 }} />
             ) : (
-              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.surface }} />
+              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 12 }}>{guide?.name?.[0] || '?'}</Text>
+              </View>
             )}
             <Text style={{ color: theme.colors.muted }}>Guide: <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{guide.name}</Text></Text>
           </View>
@@ -468,7 +470,9 @@ export default function StudyDetail({ route, navigation }: any) {
                           {lessonChar.avatar_url ? (
                             <Image source={{ uri: lessonChar.avatar_url }} style={{ width: 16, height: 16, borderRadius: 8 }} />
                           ) : (
-                            <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: theme.colors.surface }} />
+                            <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
+                              <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 8 }}>{lessonChar?.name?.[0] || '?'}</Text>
+                            </View>
                           )}
                           <Text style={{ color: theme.colors.muted, fontSize: 12 }}>Guide: {lessonChar.name}</Text>
                         </View>
