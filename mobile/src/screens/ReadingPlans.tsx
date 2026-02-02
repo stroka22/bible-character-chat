@@ -250,9 +250,17 @@ export default function ReadingPlans() {
           <RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} tintColor={theme.colors.primary} />
         }
       >
-        <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.accent, marginBottom: 4, fontFamily: theme.fonts?.heading }}>
-          Reading Plans
-        </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.accent, fontFamily: theme.fonts?.heading }}>
+            Reading Plans
+          </Text>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Bible')}
+            style={{ backgroundColor: theme.colors.primary, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
+          >
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>📖 Bible</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={{ color: theme.colors.muted, marginBottom: 12 }}>
           {plans.length} plans to guide your daily Bible reading
         </Text>
