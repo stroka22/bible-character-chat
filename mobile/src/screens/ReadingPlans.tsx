@@ -250,7 +250,7 @@ export default function ReadingPlans() {
           <RefreshControl refreshing={refreshing} onRefresh={() => loadData(true)} tintColor={theme.colors.primary} />
         }
       >
-        <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.accent, marginBottom: 4 }}>
+        <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.accent, marginBottom: 4, fontFamily: theme.fonts?.heading }}>
           Reading Plans
         </Text>
         <Text style={{ color: theme.colors.muted, marginBottom: 12 }}>

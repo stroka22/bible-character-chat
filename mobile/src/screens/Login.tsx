@@ -4,6 +4,7 @@ import { SafeAreaView, Text, TextInput, TouchableOpacity, View, ScrollView, useW
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Wordmark from '../components/Wordmark';
 import { useAuth } from '../contexts/AuthContext';
+import { theme } from '../theme';
 
 export default function Login() {
   const navigation = useNavigation<any>();
@@ -30,13 +31,13 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#0f172a' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }} keyboardShouldPersistTaps="handled">
         <View style={{ alignItems: 'center', marginBottom: 16, justifyContent: 'center', minHeight: 160 }}>
           <Wordmark width={logoWidth} variant="stacked" />
         </View>
       {!!error && (
-        <View style={{ backgroundColor: '#991b1b', padding: 10, borderRadius: 8, marginBottom: 12 }}>
+        <View style={{ backgroundColor: theme.colors.error, padding: 10, borderRadius: 8, marginBottom: 12 }}>
           <Text style={{ color: 'white' }}>{error}</Text>
         </View>
       )}
@@ -46,26 +47,26 @@ export default function Login() {
         value={email}
         onChangeText={setEmail}
         placeholder="Email"
-        placeholderTextColor="#9ca3af"
-        style={{ backgroundColor: '#111827', color: 'white', padding: 12, borderRadius: 8, marginBottom: 12 }}
+        placeholderTextColor={theme.colors.muted}
+        style={{ backgroundColor: theme.colors.card, color: theme.colors.text, padding: 12, borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: theme.colors.border }}
       />
       <TextInput
         secureTextEntry
         value={password}
         onChangeText={setPassword}
         placeholder="Password"
-        placeholderTextColor="#9ca3af"
-        style={{ backgroundColor: '#111827', color: 'white', padding: 12, borderRadius: 8, marginBottom: 12 }}
+        placeholderTextColor={theme.colors.muted}
+        style={{ backgroundColor: theme.colors.card, color: theme.colors.text, padding: 12, borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: theme.colors.border }}
       />
-      <TouchableOpacity onPress={onSubmit} disabled={loading || !email.trim() || !password} style={{ backgroundColor: (!email.trim() || !password) ? '#9ca3af' : '#facc15', padding: 16, borderRadius: 12, alignItems: 'center' }}>
-        <Text style={{ fontWeight: '800', fontSize: 16, color: '#0f172a' }}>{loading ? 'Signing in...' : 'Sign In'}</Text>
+      <TouchableOpacity onPress={onSubmit} disabled={loading || !email.trim() || !password} style={{ backgroundColor: (!email.trim() || !password) ? theme.colors.muted : theme.colors.primary, padding: 16, borderRadius: 12, alignItems: 'center' }}>
+        <Text style={{ fontWeight: '800', fontSize: 16, color: theme.colors.primaryText }}>{loading ? 'Signing in...' : 'Sign In'}</Text>
       </TouchableOpacity>
         <View style={{ marginTop: 12, alignItems: 'center', gap: 8 }}>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-            <Text style={{ color: '#fde68a', textDecorationLine: 'underline', fontWeight: '700' }}>Create account</Text>
+            <Text style={{ color: theme.colors.accent, textDecorationLine: 'underline', fontWeight: '700' }}>Create account</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
-            <Text style={{ color: '#9ca3af', textDecorationLine: 'underline' }}>Forgot password?</Text>
+            <Text style={{ color: theme.colors.muted, textDecorationLine: 'underline' }}>Forgot password?</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

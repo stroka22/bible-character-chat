@@ -298,7 +298,7 @@ export default function MyWalk() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent }}>My Walk</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold' }}>My Walk</Text>
         <Text style={{ color: theme.colors.muted, marginTop: 4 }}>Favorite Characters <Text style={{ fontSize: 11 }}>(hold to remove)</Text></Text>
       </View>
       <FlatList

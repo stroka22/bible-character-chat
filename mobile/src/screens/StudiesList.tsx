@@ -103,7 +103,7 @@ export default function StudiesList() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
-        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8 }}>Bible Studies</Text>
+        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8, fontFamily: 'Cinzel_700Bold' }}>Bible Studies</Text>
         {loading ? (
           <ActivityIndicator color={theme.colors.primary} />
         ) : (

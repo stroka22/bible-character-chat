@@ -27,7 +27,7 @@ export default function ResetPassword() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ alignSelf: 'flex-start', paddingVertical: 8, paddingRight: 16 }}>
           <Text style={{ color: theme.colors.muted, fontSize: 16 }}>← Back</Text>
         </TouchableOpacity>
-        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800' }}>Reset Password</Text>
+        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', fontFamily: 'Cinzel_700Bold' }}>Reset Password</Text>
         <TextInput
           autoCapitalize='none'
           keyboardType='email-address'

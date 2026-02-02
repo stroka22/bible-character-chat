@@ -43,7 +43,7 @@ export default function SignUp() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 16, paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
         <View style={{ gap: 12 }}>
-          <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800' }}>Create Account</Text>
+          <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', fontFamily: 'Cinzel_700Bold' }}>Create Account</Text>
           
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TextInput

@@ -45,7 +45,7 @@ export default function Profile() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
-        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 12 }}>Profile</Text>
+        <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 12, fontFamily: 'Cinzel_700Bold' }}>Profile</Text>
         <View style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 12, marginBottom: 12 }}>
           <Text style={{ color: theme.colors.muted, marginBottom: 4 }}>Email</Text>
           <Text style={{ color: theme.colors.text, fontWeight: '600' }}>{email}</Text>

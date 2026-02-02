@@ -8,6 +8,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView, Text, TouchableOpacity, View, Alert, useWindowDimensions, KeyboardAvoidingView, Platform } from 'react-native';
 import Wordmark from './src/components/Wordmark';
 import { useFonts, Inter_700Bold } from '@expo-google-fonts/inter';
+import { Cinzel_700Bold } from '@expo-google-fonts/cinzel';
 import ChatList from './src/screens/ChatList';
 import ChatNew from './src/screens/ChatNew';
 import ChatDetail from './src/screens/ChatDetail';
@@ -79,7 +80,7 @@ function HomeScreen({ navigation }: any) {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
         <View style={{ alignItems: 'center', marginBottom: 16 }}>
           <Wordmark width={logoWidth} variant="stacked" />
-          <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Study the Bible with guided conversations</Text>
+          <Text style={{ fontSize: 14, color: theme.colors.muted, marginTop: 8, textAlign: 'center' }}>Conversations with Biblical Characters</Text>
         </View>
         <View style={{ gap: 10, width: '86%' }}>
           {/* Ensure Chat tab opens on the ChatNew composer instead of a previously open ChatDetail */}
@@ -103,7 +104,7 @@ function HomeScreen({ navigation }: any) {
           <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
       </View>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -147,9 +148,9 @@ function AppInner() {
 
   return (
     <NavigationContainer linking={linking} theme={{
-      ...DarkTheme,
+      ...DefaultTheme,
       colors: {
-        ...DarkTheme.colors,
+        ...DefaultTheme.colors,
         primary: theme.colors.primary,
         background: theme.colors.background,
         card: theme.colors.card,
@@ -241,7 +242,7 @@ function MainTabs() {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({ Inter_700Bold });
+  const [fontsLoaded] = useFonts({ Inter_700Bold, Cinzel_700Bold });
   if (!fontsLoaded) return null;
   return (
     <AuthProvider>

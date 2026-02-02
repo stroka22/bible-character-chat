@@ -231,7 +231,7 @@ export default function BibleReader() {
         </View>
       ) : (
         <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
-          <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '700', marginBottom: 16 }}>
+          <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '700', marginBottom: 16, fontFamily: 'Cinzel_700Bold' }}>
             {book} {chapter}
           </Text>
 
