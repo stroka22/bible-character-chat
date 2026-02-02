@@ -1,7 +1,155 @@
-# Mobile App Update Checklist
+# Mobile App Audit Report
 
-## Current Mobile App Status (as of Feb 2026)
-The mobile app has most features but needs verification that everything works like the desktop version.
+## Audit Date: February 2, 2026
+
+## Summary
+The mobile app is **fairly feature-complete** but has some gaps compared to the web version. Most core functionality exists. Primary focus should be on testing/verification and a few missing features.
+
+---
+
+## FEATURE COMPARISON: Mobile vs Web
+
+### Core Features - PRESENT IN MOBILE
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Chat with characters | ✅ Complete | Save, invite friend buttons work |
+| Roundtable discussions | ✅ Complete | Save, invite, topic-based |
+| Bible Reader | ✅ Complete | 9 translations, chat about verses |
+| Bible Studies | ✅ Complete | Progress tracking, lesson completion |
+| Reading Plans | ✅ Complete | Start, progress, complete days |
+| My Walk | ✅ Complete | Chats, roundtables, studies tabs |
+| Profile | ✅ Complete | Email, org, status, upgrade, delete |
+| Premium/Paywall | ✅ Complete | In-app purchase integration |
+| Invite to chat | ✅ Complete | Creates link, native share sheet |
+| Save conversations | ✅ Complete | Toggle favorite |
+| Deep linking | ✅ Complete | /join/:code works |
+
+### Features - NEED VERIFICATION
+| Feature | Web Status | Mobile Status | Action |
+|---------|------------|---------------|--------|
+| Share conversation link | ✅ Web | ❓ Untested | Test share generates public link |
+| 90+ characters load | ✅ Web | ❓ Untested | Verify all characters appear |
+| 35+ studies load | ✅ Web | ❓ Untested | Verify count matches web |
+| 140+ plans load | ✅ Web | ❓ Untested | Verify count matches web |
+| Category filters (plans) | ✅ Web (10 categories) | ❌ Missing | Plans screen shows no category filter |
+| Featured/visibility filters | ✅ Web | ✅ Partial | Featured shown, but no visibility toggle |
+
+### Features - MISSING FROM MOBILE
+| Feature | Priority | Notes |
+|---------|----------|-------|
+| Reading Plan Categories | HIGH | Web has 10 categories, mobile shows flat list |
+| Share conversation (public link) | MEDIUM | Invite exists, but not "share read-only link" |
+| Netflix-style plan layout | LOW | Web has horizontal scroll by category |
+| Insights panel in chat | LOW | Web shows character insights sidebar |
+| Favorites page | LOW | My Walk has favorites, but no dedicated page |
+
+---
+
+## DETAILED SCREEN AUDIT
+
+### 1. Home Screen (HomeScreen)
+- ✅ Logo and tagline
+- ✅ Start a Chat button
+- ✅ Start a Roundtable button (premium gated)
+- ✅ Browse Bible Studies button
+- ✅ My Walk button
+- ❌ Missing: Quick stats (90+ characters, etc.)
+- ❌ Missing: Featured characters carousel
+
+### 2. Chat (ChatNew → ChatDetail)
+- ✅ Character selection
+- ✅ Message sending/receiving
+- ✅ Save conversation (toggle favorite)
+- ✅ Invite friend (creates invite, native share)
+- ✅ Study-specific buttons (Save to My Walk, Lesson Complete)
+- ✅ Character avatar in header
+- ❌ Missing: Share public read-only link
+- ❌ Missing: Insights panel (character wisdom sidebar)
+
+### 3. Bible Reader
+- ✅ 9 translations available
+- ✅ Book/chapter navigation
+- ✅ Verse selection
+- ✅ "Chat about this" feature
+- ✅ Caching for offline use
+
+### 4. Reading Plans (ReadingPlans → ReadingPlanDetail)
+- ✅ List all plans
+- ✅ Featured plans section
+- ✅ Active plans section
+- ✅ Start/continue plan
+- ✅ Day-by-day progress
+- ✅ Mark day complete
+- ✅ Difficulty badges
+- ❌ Missing: Category filters (10 categories on web)
+- ❌ Missing: Netflix-style horizontal scroll by category
+
+### 5. Studies (StudiesList → StudyDetail)
+- ✅ List all studies
+- ✅ Progress percentage display
+- ✅ Lesson count
+- ✅ Premium gating
+- ✅ Organization filtering (owner_slug)
+- ❌ Missing: Category filters
+- ❌ Missing: Featured studies section
+
+### 6. My Walk
+- ✅ Three tabs: Chats, Roundtables, Studies
+- ✅ Saved conversations list
+- ✅ Favorite characters section
+- ✅ Add favorite character modal
+- ✅ Study progress with percentage
+- ✅ Delete/rename study progress
+- ❌ Missing: Reading plan progress section
+
+### 7. Profile
+- ✅ Email display
+- ✅ Organization display
+- ✅ Premium status
+- ✅ Daily message counter (free users)
+- ✅ Upgrade button
+- ✅ Sign out
+- ✅ Delete account
+
+### 8. Roundtable (RoundtableSetup → RoundtableChat)
+- ✅ Topic input
+- ✅ Character selection (2-5)
+- ✅ Multi-character responses
+- ✅ Save roundtable
+- ✅ Invite friend
+- ✅ Resume existing roundtable
+- ✅ Round tracking
+
+---
+
+## RECOMMENDATIONS
+
+### Priority 1: Add Reading Plan Categories
+The web has 10 categories with Netflix-style browsing. Mobile shows a flat list.
+**File:** `mobile/src/screens/ReadingPlans.tsx`
+**Effort:** Medium (2-3 hours)
+
+### Priority 2: Add My Walk - Reading Plans Tab
+My Walk shows Chats, Roundtables, Studies but not Reading Plans progress.
+**File:** `mobile/src/screens/MyWalk.tsx`
+**Effort:** Low (1-2 hours)
+
+### Priority 3: Verify Content Counts
+Test that mobile loads:
+- All 90+ characters
+- All 35+ studies
+- All 140+ reading plans
+- All 9 Bible translations
+
+### Priority 4: Test Complete User Flows
+1. Signup → Chat → Save → Share → Invite → Friend joins
+2. Start study → Complete lessons → Track progress
+3. Start reading plan → Complete days → Track progress
+4. Bible reader → Select verses → Chat about them
+
+---
+
+## CURRENT APP STATUS
 
 ---
 
