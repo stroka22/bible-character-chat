@@ -364,7 +364,7 @@ const HomePageScroll = () => {
                 <WaxSealButton href="/chat" variant="primary" className="!px-5 !py-2.5 !text-sm">
                   Start a Conversation
                 </WaxSealButton>
-                <WaxSealButton href="/getting-started" variant="secondary" className="!px-5 !py-2.5 !text-sm">
+                <WaxSealButton href="/how-it-works" variant="secondary" className="!px-5 !py-2.5 !text-sm">
                   See How It Works
                 </WaxSealButton>
               </div>

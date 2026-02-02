@@ -17,13 +17,13 @@ const HowItWorksPageScroll = () => {
   const content = {
     chat: {
       title: 'One-on-One Character Conversations',
-      description: 'Have meaningful conversations with over 30 biblical characters. Ask questions, seek wisdom, and explore their stories in a personal way.',
+      description: 'Have meaningful conversations with over 90 biblical characters. Ask questions, seek wisdom, and explore their stories in a personal way.',
       steps: [
         { title: 'Choose a Character', desc: 'Browse our library of biblical figures from both Old and New Testaments' },
         { title: 'Start a Conversation', desc: 'Ask questions, discuss life situations, or explore their biblical stories' },
-        { title: 'Save & Continue', desc: 'Save conversations to revisit later and continue your discussions' },
+        { title: 'Save & Share', desc: 'Save conversations, share insights, and invite friends to join your discussions' },
       ],
-      cta: { label: 'Start Chatting', link: '/chat/preview' },
+      cta: { label: 'Start Chatting', link: '/chat' },
     },
     roundtable: {
       title: 'Multi-Character Discussions',
@@ -33,17 +33,17 @@ const HowItWorksPageScroll = () => {
         { title: 'Select Characters', desc: 'Pick 2-5 biblical figures to participate in the discussion' },
         { title: 'Watch the Discussion', desc: 'Characters share their perspectives based on their biblical experiences' },
       ],
-      cta: { label: 'Start a Roundtable', link: '/roundtable/setup/preview' },
+      cta: { label: 'Start a Roundtable', link: '/roundtable/setup' },
     },
     studies: {
       title: 'Character-Guided Bible Studies',
       description: 'Go through structured Bible studies with a biblical character as your guide. Learn Scripture in context with interactive lessons.',
       steps: [
-        { title: 'Browse Studies', desc: 'Choose from 90+ studies on various books, topics, and themes' },
+        { title: 'Browse Studies', desc: 'Choose from 35+ studies on various books, topics, and themes' },
         { title: 'Meet Your Guide', desc: 'Each study features a character narrator who lived the story' },
         { title: 'Complete Lessons', desc: 'Work through lessons at your own pace, tracking your progress' },
       ],
-      cta: { label: 'Browse Studies', link: '/studies/preview' },
+      cta: { label: 'Browse Studies', link: '/studies' },
     },
     plans: {
       title: 'Structured Reading Plans',
@@ -53,7 +53,7 @@ const HowItWorksPageScroll = () => {
         { title: 'Daily Readings', desc: 'Get your daily Scripture passages with educational context' },
         { title: 'Track Progress', desc: 'Mark readings complete and see your journey through the plan' },
       ],
-      cta: { label: 'Explore Plans', link: '/reading-plans/preview' },
+      cta: { label: 'Explore Plans', link: '/reading-plans' },
     },
   };
 
@@ -131,12 +131,53 @@ const HowItWorksPageScroll = () => {
 
           <ScrollDivider />
 
+          {/* Share the Journey Feature */}
+          <div className="mt-10 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 md:p-8 border border-amber-200">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                Share the Journey
+              </h2>
+              <p className="text-amber-700">Faith is better together. FaithTalkAI makes it easy to grow with others.</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-amber-900 mb-1">Save Conversations</h3>
+                <p className="text-amber-700 text-sm">Keep meaningful discussions to revisit and reflect on later</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-amber-900 mb-1">Share Insights</h3>
+                <p className="text-amber-700 text-sm">Share powerful conversations and wisdom with friends and family</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-amber-900 mb-1">Invite Friends</h3>
+                <p className="text-amber-700 text-sm">Invite others to join your conversations for group discussions</p>
+              </div>
+            </div>
+          </div>
+
+          <ScrollDivider />
+
           {/* Quick Stats */}
           <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             {[
-              { num: '30+', label: 'Biblical Characters' },
-              { num: '90+', label: 'Bible Studies' },
-              { num: '140+', label: 'Reading Plans' },
+              { num: '90+', label: 'Biblical Characters' },
+              { num: '35+', label: 'Character-Led Bible Studies' },
+              { num: '140+', label: 'Bible Reading Plans' },
               { num: '9', label: 'Bible Translations' },
             ].map((stat, i) => (
               <div key={i} className="bg-amber-100/50 rounded-xl p-4 border border-amber-200">
