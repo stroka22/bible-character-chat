@@ -1,7 +1,7 @@
 # Mobile App Update Checklist
 
-## Current Mobile App Status (as of Jan 2026)
-The mobile app is significantly behind the web version. Here's what needs to be added/updated:
+## Current Mobile App Status (as of Feb 2026)
+The mobile app has most features but needs verification that everything works like the desktop version.
 
 ---
 
@@ -75,41 +75,38 @@ The mobile app is significantly behind the web version. Here's what needs to be 
 
 ---
 
-## 3. NEW FEATURES TO ADD
+## 3. FEATURE PARITY VERIFICATION
 
-### A. Save/Share/Invite System (HIGH PRIORITY)
-**Files needed:**
-- Update `ChatDetail.tsx` - Add save, share, invite buttons
-- Update `RoundtableChat.tsx` - Add save, share functionality
-- Create share modal/sheet component
-- Create invite link generation
-- Handle deep links for `/join/:code`
+### A. Save/Share/Invite System
+**Exists - needs testing:**
+- [ ] Save conversation works and persists
+- [ ] Share generates correct link
+- [ ] Share link opens correctly on recipient's device
+- [ ] Invite sends notification/link
+- [ ] Join via invite link works
+- [ ] Deep links handled: `/join/:code`, `/invite/:code`, `/shared/:code`
 
-### B. Favorites/Bookmarks Screen
-**Currently missing from mobile**
-- Create `Favorites.tsx` screen
-- Show saved conversations
-- Show bookmarked verses
-- Show saved studies
+### B. My Walk Page
+**Exists - verify matches desktop:**
+- [ ] Shows Bible reading progress
+- [ ] Shows study completion progress
+- [ ] Shows reading plan progress
+- [ ] Progress syncs between mobile and desktop
+- [ ] All stats display correctly
 
 ### C. Conversation History
-**Partially exists but needs updates**
-- `ChatList.tsx` - Verify shows saved conversations
-- Add filtering/search
-- Add delete functionality
+**Verify functionality:**
+- [ ] `ChatList.tsx` shows all saved conversations
+- [ ] Can resume previous conversations
+- [ ] Delete conversation works
+- [ ] Conversations sync with desktop
 
-### D. Settings Screen
-**May need creation/updates**
-- Theme preferences
-- Notification settings
-- Account management
-- Translation preferences
-
-### E. How It Works / Onboarding
-**Could add for new users**
-- Onboarding flow screens
-- Feature highlights
-- Tutorial tips
+### D. Settings/Profile
+**Verify functionality:**
+- [ ] Account info displays correctly
+- [ ] Can change settings
+- [ ] Premium status shows correctly
+- [ ] Logout works
 
 ---
 
@@ -166,22 +163,22 @@ The mobile app is significantly behind the web version. Here's what needs to be 
 ## 7. PRIORITY ORDER
 
 ### Phase 1 (Critical)
-1. Fix SSL certificate issue
-2. Verify Bible Reader with all 9 translations
-3. Add Save/Share/Invite to chat
-4. Update study and plan counts
+1. Fix SSL certificate issue (Vercel dashboard)
+2. Test full user flow: signup → chat → save → share → invite
+3. Verify Bible Reader with all 9 translations
+4. Verify My Walk shows all progress correctly
 
-### Phase 2 (Important)
-5. Add Favorites screen
-6. Update navigation
-7. Verify progress tracking
-8. Polish UI to match web
+### Phase 2 (Important)  
+5. Test all 90+ characters load and respond
+6. Test all 35+ studies and progress tracking
+7. Test all 140+ reading plans and categories
+8. Verify premium gating works correctly
 
-### Phase 3 (Nice to Have)
-9. Onboarding flow
-10. Offline support
-11. Push notifications
-12. Widget support
+### Phase 3 (Polish)
+9. Compare UI side-by-side with desktop
+10. Fix any visual inconsistencies
+11. Test offline behavior
+12. Update app store screenshots/description
 
 ---
 
