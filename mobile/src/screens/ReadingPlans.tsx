@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   SafeAreaView,
   View,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  FlatList,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +19,20 @@ import {
   getUserPlans,
   startPlan,
 } from '../lib/readingPlans';
+
+// Category definitions with icons
+const CATEGORIES = [
+  { key: 'all', label: 'All Plans', icon: '📚' },
+  { key: 'active', label: 'My Active', icon: '▶️' },
+  { key: 'foundational', label: 'Foundational', icon: '🏛️' },
+  { key: 'book', label: 'Book Studies', icon: '📖' },
+  { key: 'topical', label: 'Topical', icon: '💡' },
+  { key: 'character', label: 'Character', icon: '👤' },
+  { key: 'life', label: 'Life & Growth', icon: '🌱' },
+  { key: 'seasonal', label: 'Seasonal', icon: '🗓️' },
+  { key: 'quick', label: 'Quick (≤7 days)', icon: '⚡' },
+  { key: 'deep', label: 'Deep Dive (30+)', icon: '🔍' },
+];
 
 function PlanCard({ 
   plan, 
@@ -129,6 +144,7 @@ export default function ReadingPlans() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const loadData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -180,8 +196,42 @@ export default function ReadingPlans() {
   };
 
   const activePlans = userProgress.filter(p => !p.is_completed);
-  const featuredPlans = plans.filter(p => p.is_featured);
-  const otherPlans = plans.filter(p => !p.is_featured);
+  const activePlanIds = new Set(activePlans.map(p => p.plan_id));
+
+  // Filter plans based on selected category
+  const filteredPlans = useMemo(() => {
+    switch (selectedCategory) {
+      case 'all':
+        return plans;
+      case 'active':
+        return plans.filter(p => activePlanIds.has(p.id));
+      case 'quick':
+        return plans.filter(p => p.duration_days <= 7);
+      case 'deep':
+        return plans.filter(p => p.duration_days >= 30);
+      default:
+        return plans.filter(p => p.category === selectedCategory);
+    }
+  }, [plans, selectedCategory, activePlanIds]);
+
+  const featuredPlans = filteredPlans.filter(p => p.is_featured);
+  const otherPlans = filteredPlans.filter(p => !p.is_featured);
+  
+  // Get count for each category
+  const getCategoryCount = (key: string) => {
+    switch (key) {
+      case 'all':
+        return plans.length;
+      case 'active':
+        return activePlans.length;
+      case 'quick':
+        return plans.filter(p => p.duration_days <= 7).length;
+      case 'deep':
+        return plans.filter(p => p.duration_days >= 30).length;
+      default:
+        return plans.filter(p => p.category === key).length;
+    }
+  };
 
   if (loading) {
     return (
@@ -203,9 +253,55 @@ export default function ReadingPlans() {
         <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.accent, marginBottom: 4 }}>
           Reading Plans
         </Text>
-        <Text style={{ color: theme.colors.muted, marginBottom: 20 }}>
-          Structured plans to guide your daily Bible reading
+        <Text style={{ color: theme.colors.muted, marginBottom: 12 }}>
+          {plans.length} plans to guide your daily Bible reading
         </Text>
+
+        {/* Category Filter Tabs */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={{ marginBottom: 16, marginHorizontal: -16 }}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+        >
+          {CATEGORIES.map(cat => {
+            const count = getCategoryCount(cat.key);
+            const isActive = selectedCategory === cat.key;
+            if (count === 0 && cat.key !== 'all' && cat.key !== 'active') return null;
+            return (
+              <TouchableOpacity
+                key={cat.key}
+                onPress={() => setSelectedCategory(cat.key)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 12,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: isActive ? theme.colors.primary : theme.colors.surface,
+                  borderWidth: 1,
+                  borderColor: isActive ? theme.colors.primary : theme.colors.border,
+                  gap: 4,
+                }}
+              >
+                <Text style={{ fontSize: 14 }}>{cat.icon}</Text>
+                <Text style={{ 
+                  color: isActive ? theme.colors.primaryText : theme.colors.text, 
+                  fontWeight: isActive ? '600' : '400',
+                  fontSize: 13,
+                }}>
+                  {cat.label}
+                </Text>
+                <Text style={{ 
+                  color: isActive ? theme.colors.primaryText : theme.colors.muted,
+                  fontSize: 11,
+                }}>
+                  ({count})
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
         {error ? (
           <View style={{ backgroundColor: '#fee2e2', padding: 12, borderRadius: 8, marginBottom: 16 }}>
@@ -213,11 +309,11 @@ export default function ReadingPlans() {
           </View>
         ) : null}
 
-        {/* Active Plans */}
-        {activePlans.length > 0 && (
+        {/* Active Plans - Show at top only when viewing 'all' */}
+        {selectedCategory === 'all' && activePlans.length > 0 && (
           <View style={{ marginBottom: 24 }}>
             <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginBottom: 12 }}>
-              Your Active Plans
+              ▶️ Continue Reading
             </Text>
             {activePlans.map(progress => (
               <PlanCard
@@ -235,7 +331,7 @@ export default function ReadingPlans() {
         {featuredPlans.length > 0 && (
           <View style={{ marginBottom: 24 }}>
             <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginBottom: 12 }}>
-              Featured Plans
+              ⭐ Featured
             </Text>
             {featuredPlans.map(plan => (
               <PlanCard
@@ -252,9 +348,11 @@ export default function ReadingPlans() {
         {/* Other Plans */}
         {otherPlans.length > 0 && (
           <View style={{ marginBottom: 24 }}>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginBottom: 12 }}>
-              More Plans
-            </Text>
+            {featuredPlans.length > 0 && (
+              <Text style={{ fontSize: 18, fontWeight: '600', color: theme.colors.text, marginBottom: 12 }}>
+                📚 More Plans
+              </Text>
+            )}
             {otherPlans.map(plan => (
               <PlanCard
                 key={plan.id}
@@ -267,9 +365,13 @@ export default function ReadingPlans() {
           </View>
         )}
 
-        {plans.length === 0 && (
+        {filteredPlans.length === 0 && (
           <View style={{ alignItems: 'center', paddingVertical: 40 }}>
-            <Text style={{ color: theme.colors.muted }}>No reading plans available yet.</Text>
+            <Text style={{ color: theme.colors.muted }}>
+              {selectedCategory === 'active' 
+                ? "You haven't started any plans yet. Browse and start one!"
+                : "No plans found in this category."}
+            </Text>
           </View>
         )}
       </ScrollView>

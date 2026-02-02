@@ -6,9 +6,10 @@ import { useNavigation } from '@react-navigation/native';
 import { theme } from '../theme';
 import { listFavoriteCharacters, setFavoriteCharacter } from '../lib/favorites';
 import { getUserStudiesWithProgress, deleteProgress, updateProgressLabel, saveStudyProgress, getProgressPercent, type StudyWithProgress } from '../lib/studyProgress';
+import { getUserPlans, leavePlan, type UserPlanProgress } from '../lib/readingPlans';
 import { supabase } from '../lib/supabase';
 
-type TabType = 'chats' | 'roundtables' | 'studies';
+type TabType = 'chats' | 'roundtables' | 'studies' | 'plans';
 
 const PAGE_SIZE = 25;
 
@@ -23,6 +24,8 @@ export default function MyWalk() {
   const [activeTab, setActiveTab] = React.useState<TabType>('chats');
   const [userStudies, setUserStudies] = React.useState<StudyWithProgress[]>([]);
   const [studiesLoading, setStudiesLoading] = React.useState(false);
+  const [userPlans, setUserPlans] = React.useState<UserPlanProgress[]>([]);
+  const [plansLoading, setPlansLoading] = React.useState(false);
   
   // Add favorites modal state
   const [showAddFavorite, setShowAddFavorite] = React.useState(false);
@@ -80,13 +83,27 @@ export default function MyWalk() {
     }
   }, [user?.id]);
 
+  const loadPlans = React.useCallback(async () => {
+    if (!user?.id) return;
+    setPlansLoading(true);
+    try {
+      const plans = await getUserPlans(user.id);
+      setUserPlans(plans);
+    } catch (err) {
+      console.warn('[MyWalk] Error loading plans:', err);
+    } finally {
+      setPlansLoading(false);
+    }
+  }, [user?.id]);
+
   // Refresh when screen comes into focus to reflect latest favorites immediately
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { useFocusEffect } = require('@react-navigation/native');
   useFocusEffect(React.useCallback(() => {
     load();
     loadStudies();
-  }, [load, loadStudies]));
+    loadPlans();
+  }, [load, loadStudies, loadPlans]));
 
   async function toggleFavorite(c: Chat) {
     await chat.toggleFavorite(c.id, !c.is_favorite);
@@ -402,32 +419,45 @@ export default function MyWalk() {
       </Modal>
       
       {/* Tab selector */}
-      <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: theme.colors.surface, marginTop: 16 }}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={{ borderBottomWidth: 1, borderBottomColor: theme.colors.surface, marginTop: 16, flexGrow: 0 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
         <TouchableOpacity 
           onPress={() => setActiveTab('chats')}
-          style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: activeTab === 'chats' ? theme.colors.accent : 'transparent' }}
+          style={{ flex: 1, minWidth: 80, paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 2, borderBottomColor: activeTab === 'chats' ? theme.colors.accent : 'transparent' }}
         >
-          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'chats' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 13 }}>
+          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'chats' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>
             Chats ({regularChats.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => setActiveTab('roundtables')}
-          style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: activeTab === 'roundtables' ? theme.colors.accent : 'transparent' }}
+          style={{ flex: 1, minWidth: 80, paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 2, borderBottomColor: activeTab === 'roundtables' ? theme.colors.accent : 'transparent' }}
         >
-          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'roundtables' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 13 }}>
+          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'roundtables' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>
             Roundtables ({roundtables.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => setActiveTab('studies')}
-          style={{ flex: 1, paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: activeTab === 'studies' ? theme.colors.accent : 'transparent' }}
+          style={{ flex: 1, minWidth: 80, paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 2, borderBottomColor: activeTab === 'studies' ? theme.colors.accent : 'transparent' }}
         >
-          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'studies' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 13 }}>
+          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'studies' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>
             Studies ({userStudies.length})
           </Text>
         </TouchableOpacity>
-      </View>
+        <TouchableOpacity 
+          onPress={() => setActiveTab('plans')}
+          style={{ flex: 1, minWidth: 80, paddingVertical: 12, paddingHorizontal: 8, borderBottomWidth: 2, borderBottomColor: activeTab === 'plans' ? theme.colors.accent : 'transparent' }}
+        >
+          <Text numberOfLines={1} style={{ textAlign: 'center', color: activeTab === 'plans' ? theme.colors.accent : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>
+            Plans ({userPlans.length})
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       {/* Bible Studies Tab */}
       {activeTab === 'studies' && (
@@ -543,8 +573,115 @@ export default function MyWalk() {
         />
       )}
 
+      {/* Reading Plans Tab */}
+      {activeTab === 'plans' && (
+        <FlatList
+          data={userPlans}
+          keyExtractor={(i) => i.id}
+          onRefresh={loadPlans}
+          refreshing={plansLoading}
+          contentContainerStyle={{ padding: 12 }}
+          renderItem={({ item: progress }) => {
+            const plan = progress.plan;
+            if (!plan) return null;
+            
+            const completedCount = progress.completed_days?.length || 0;
+            const progressPercent = Math.round((completedCount / plan.duration_days) * 100);
+            
+            return (
+              <View style={{ padding: 12, borderRadius: 10, backgroundColor: theme.colors.card, marginBottom: 8 }}>
+                <TouchableOpacity 
+                  onPress={() => nav.navigate('ReadingPlanDetail', { planId: plan.id, slug: plan.slug })}
+                >
+                  <Text style={{ fontWeight: '700', color: theme.colors.text, fontSize: 16 }}>
+                    {plan.title}
+                  </Text>
+                  
+                  {/* Progress bar */}
+                  <View style={{ marginTop: 8 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
+                        Day {progress.current_day} of {plan.duration_days}
+                      </Text>
+                      <Text style={{ 
+                        color: progressPercent === 100 ? '#22c55e' : theme.colors.primary, 
+                        fontSize: 12, 
+                        fontWeight: '700' 
+                      }}>
+                        {progressPercent}%
+                      </Text>
+                    </View>
+                    <View style={{ height: 4, backgroundColor: theme.colors.surface, borderRadius: 2, overflow: 'hidden' }}>
+                      <View style={{ 
+                        height: '100%', 
+                        width: `${progressPercent}%`, 
+                        backgroundColor: progressPercent === 100 ? '#22c55e' : theme.colors.primary,
+                        borderRadius: 2 
+                      }} />
+                    </View>
+                  </View>
+                  
+                  <Text style={{ color: theme.colors.muted, fontSize: 11, marginTop: 6 }}>
+                    Last activity: {new Date(progress.last_activity_at).toLocaleDateString()}
+                  </Text>
+                </TouchableOpacity>
+                
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
+                  <TouchableOpacity 
+                    onPress={() => nav.navigate('ReadingPlanDetail', { planId: plan.id, slug: plan.slug })}
+                    style={{ paddingVertical: 6, paddingHorizontal: 12, backgroundColor: theme.colors.primary, borderRadius: 6 }}
+                  >
+                    <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>
+                      Continue →
+                    </Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    onPress={() => {
+                      Alert.alert(
+                        'Leave Plan',
+                        `Leave "${plan.title}"? Your progress will be deleted.`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          {
+                            text: 'Leave',
+                            style: 'destructive',
+                            onPress: async () => {
+                              try {
+                                await leavePlan(user!.id, plan.id);
+                                loadPlans();
+                              } catch {
+                                Alert.alert('Error', 'Failed to leave plan');
+                              }
+                            }
+                          }
+                        ]
+                      );
+                    }}
+                    style={{ paddingVertical: 6, paddingHorizontal: 8, backgroundColor: theme.colors.surface, borderRadius: 6 }}
+                  >
+                    <Text style={{ color: '#ef4444', fontSize: 12 }}>🗑</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            );
+          }}
+          ListEmptyComponent={!plansLoading ? (
+            <View style={{ alignItems: 'center', marginTop: 64 }}>
+              <Text style={{ color: theme.colors.text, marginBottom: 8 }}>No reading plans in progress</Text>
+              <TouchableOpacity 
+                onPress={() => nav.navigate('Plans')}
+                style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: theme.colors.primary, borderRadius: 8 }}
+              >
+                <Text style={{ color: theme.colors.primaryText, fontWeight: '600' }}>Browse Plans</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        />
+      )}
+
       {/* Chats and Roundtables Tabs */}
-      {activeTab !== 'studies' && (
+      {(activeTab === 'chats' || activeTab === 'roundtables') && (
         <FlatList
           data={currentChatItems}
           keyExtractor={(i) => i.id}
