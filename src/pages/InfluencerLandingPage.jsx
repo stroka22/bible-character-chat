@@ -16,6 +16,10 @@ const influencers = {
     bio: "Joshua Wright has been guiding hundreds of thousands of believers in their faith journey through powerful biblical content and authentic conversations about walking with Christ.",
     photoUrl: null, // Can add later
     customColor: 'amber', // amber, blue, emerald, etc.
+    // Custom features for this influencer
+    hasCustomCharacters: true,
+    customCharacterExamples: ['Real Jesus', 'Fake Jesus', 'The Seeker'],
+    controlsTiers: true, // They decide what's free vs premium
   },
   // Add more influencers here as needed
   // 'another-influencer': { ... }
@@ -69,12 +73,32 @@ const InfluencerLandingPage = () => {
     },
   ];
 
+  // Exclusive features available through this partner
+  const exclusiveFeatures = influencer.hasCustomCharacters ? [
+    {
+      icon: '⭐',
+      title: 'Exclusive Custom Characters',
+      description: `Access unique characters created by ${influencer.name} - only available to this community.`,
+      examples: influencer.customCharacterExamples,
+    },
+    {
+      icon: '🎯',
+      title: 'Curated Experience',
+      description: `${influencer.name} has hand-picked the best studies, plans, and features for your spiritual growth.`,
+    },
+    {
+      icon: '👨‍👩‍👧‍👦',
+      title: 'Community Access',
+      description: 'Join a faith community of like-minded believers on the same journey.',
+    },
+  ] : [];
+
   const comingSoon = [
     {
       icon: '🎥',
       title: 'Video Conversations',
       description: 'Face-to-face video meetings with biblical characters using cutting-edge AI avatar technology.',
-      status: 'Coming 2025',
+      status: 'Coming 2026',
     },
     {
       icon: '🎧',
@@ -157,13 +181,52 @@ const InfluencerLandingPage = () => {
           </ScrollWrap>
         </section>
 
+        {/* Exclusive Features Section - Only show if influencer has custom characters */}
+        {exclusiveFeatures.length > 0 && (
+          <section className="py-12 px-4">
+            <div className="max-w-4xl mx-auto">
+              <ScrollWrap>
+                <div className="py-8">
+                  <div className="text-center mb-8">
+                    <span className="inline-block bg-gradient-to-r from-amber-600 to-orange-500 text-white text-sm font-bold px-4 py-1 rounded-full mb-4">
+                      EXCLUSIVE TO THIS COMMUNITY
+                    </span>
+                    <h2 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
+                      Only Available Through {influencer.name}
+                    </h2>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-6">
+                    {exclusiveFeatures.map((feature, i) => (
+                      <div key={i} className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl p-6 border-2 border-amber-400 relative">
+                        <div className="text-3xl mb-3">{feature.icon}</div>
+                        <h3 className="font-bold text-amber-900 mb-2">{feature.title}</h3>
+                        <p className="text-amber-700 text-sm mb-3">{feature.description}</p>
+                        {feature.examples && (
+                          <div className="flex flex-wrap gap-2">
+                            {feature.examples.map((ex, j) => (
+                              <span key={j} className="text-xs bg-amber-600/20 text-amber-800 px-2 py-1 rounded-full border border-amber-300">
+                                {ex}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </ScrollWrap>
+            </div>
+          </section>
+        )}
+
         {/* Features Section */}
         <section className="py-12 px-4">
           <div className="max-w-5xl mx-auto">
             <ScrollWrap>
               <div className="py-8">
                 <h2 className="text-3xl font-bold text-amber-900 text-center mb-8" style={{ fontFamily: 'Cinzel, serif' }}>
-                  Everything You Need to Grow in Faith
+                  Plus Everything in FaithTalkAI
                 </h2>
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -223,7 +286,9 @@ const InfluencerLandingPage = () => {
                 <div className="grid md:grid-cols-3 gap-6">
                   {[
                     { step: '1', title: 'Create Your Account', desc: 'Sign up free in seconds with just your email' },
-                    { step: '2', title: 'Choose a Character', desc: 'Browse 90+ biblical figures and pick who to talk with' },
+                    { step: '2', title: 'Choose a Character', desc: influencer.hasCustomCharacters 
+                      ? `Talk to exclusive characters from ${influencer.name} or 90+ biblical figures`
+                      : 'Browse 90+ biblical figures and pick who to talk with' },
                     { step: '3', title: 'Start Talking', desc: 'Ask questions, explore stories, and grow in your faith' },
                   ].map((item, i) => (
                     <div key={i} className="text-center">
@@ -245,9 +310,14 @@ const InfluencerLandingPage = () => {
           <div className="max-w-4xl mx-auto">
             <ScrollWrap>
               <div className="py-8">
-                <h2 className="text-2xl font-bold text-amber-900 text-center mb-8" style={{ fontFamily: 'Cinzel, serif' }}>
+                <h2 className="text-2xl font-bold text-amber-900 text-center mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
                   Simple, Honest Pricing
                 </h2>
+                {influencer.controlsTiers && (
+                  <p className="text-amber-600 text-center mb-8 text-sm">
+                    Curated tiers selected by {influencer.name} for this community
+                  </p>
+                )}
                 
                 <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                   {/* Free Tier */}
@@ -255,9 +325,9 @@ const InfluencerLandingPage = () => {
                     <h3 className="font-bold text-amber-900 text-lg mb-2">Free</h3>
                     <p className="text-3xl font-bold text-amber-800 mb-4">$0<span className="text-sm font-normal">/month</span></p>
                     <ul className="text-amber-700 text-sm space-y-2 mb-6">
-                      <li>✓ Access to all characters</li>
+                      <li>✓ Access to select characters</li>
                       <li>✓ Limited daily messages</li>
-                      <li>✓ Basic Bible studies</li>
+                      <li>✓ Intro Bible studies</li>
                       <li>✓ Community features</li>
                     </ul>
                     <Link
@@ -271,18 +341,20 @@ const InfluencerLandingPage = () => {
                   {/* Premium Tier */}
                   <div className="bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl p-6 border-2 border-amber-400 relative">
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                      MOST POPULAR
+                      FULL ACCESS
                     </div>
                     <h3 className="font-bold text-amber-900 text-lg mb-2">Premium</h3>
                     <p className="text-3xl font-bold text-amber-800 mb-1">$6.99<span className="text-sm font-normal">/month</span></p>
                     <p className="text-amber-600 text-sm mb-4">or $49.99/year (save 40%)</p>
                     <ul className="text-amber-700 text-sm space-y-2 mb-6">
                       <li>✓ <strong>Unlimited</strong> conversations</li>
+                      {influencer.hasCustomCharacters && (
+                        <li>✓ <strong>All exclusive characters</strong></li>
+                      )}
                       <li>✓ All 35+ Bible studies</li>
                       <li>✓ All 140+ reading plans</li>
-                      <li>✓ Priority response times</li>
                       <li>✓ Roundtable discussions</li>
-                      <li>✓ Save unlimited conversations</li>
+                      <li>✓ Save & share conversations</li>
                     </ul>
                     <Link
                       to="/signup"
