@@ -67,8 +67,9 @@ const LoginPageScroll = () => {
 
   return (
     <PreviewLayout>
-      <ScrollBackground className="min-h-screen flex items-center justify-center py-12 px-4">
-        <ScrollWrap className="w-full max-w-md">
+      <ScrollBackground>
+        <div className="flex items-center justify-center px-4 py-8">
+          <ScrollWrap className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
               {isResettingPassword ? 'Reset Password' : 'Welcome Back'}
@@ -169,6 +170,7 @@ const LoginPageScroll = () => {
             </Link>
           </div>
         </ScrollWrap>
+        </div>
       </ScrollBackground>
       <FooterScroll />
     </PreviewLayout>

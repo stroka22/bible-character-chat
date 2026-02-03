@@ -57,8 +57,9 @@ const SignupPageScroll = () => {
   if (success) {
     return (
       <PreviewLayout>
-        <ScrollBackground className="min-h-screen flex items-center justify-center py-12 px-4">
-          <ScrollWrap className="w-full max-w-md text-center">
+        <ScrollBackground>
+          <div className="flex items-center justify-center px-4 py-8">
+            <ScrollWrap className="w-full max-w-md mx-auto text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -68,6 +69,7 @@ const SignupPageScroll = () => {
             <p className="text-amber-700 mb-6">We've sent a confirmation link to your email. Please verify your account to continue.</p>
             <Link to="/login" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Go to Login</Link>
           </ScrollWrap>
+          </div>
         </ScrollBackground>
         <FooterScroll />
       </PreviewLayout>
@@ -76,8 +78,9 @@ const SignupPageScroll = () => {
 
   return (
     <PreviewLayout>
-      <ScrollBackground className="min-h-screen flex items-center justify-center py-12 px-4">
-        <ScrollWrap className="w-full max-w-md">
+      <ScrollBackground>
+        <div className="flex items-center justify-center px-4 py-8">
+          <ScrollWrap className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>Create Account</h1>
             <p className="text-amber-700 mt-2">
@@ -172,6 +175,7 @@ const SignupPageScroll = () => {
             <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
+        </div>
       </ScrollBackground>
       <FooterScroll />
     </PreviewLayout>
