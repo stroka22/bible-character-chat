@@ -421,10 +421,7 @@ Keep each section concise but informative. This is for someone about to have a c
         {/* Back to Reading Plan */}
         {fromPlan && (
           <TouchableOpacity 
-            onPress={() => navigation.navigate('MainTabs', { 
-              screen: 'Walk', 
-              params: { screen: 'ReadingPlanDetail', params: { slug: fromPlan.slug } }
-            })}
+            onPress={() => navigation.navigate('ReadingPlanDetail', { slug: fromPlan.slug })}
             style={{ paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
           >
             <Text style={{ color: theme.colors.primary, fontSize: 14 }}>← Back to {fromPlan.title} (Day {fromPlan.dayNumber})</Text>
