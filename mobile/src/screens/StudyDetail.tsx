@@ -327,51 +327,6 @@ export default function StudyDetail({ route, navigation }: any) {
     }
   }
 
-  async function startGuidedChat() {
-    if (!user || starting) return;
-    if (!studyMeta?.character_id) {
-      alert('No guide is set for this study.');
-      return;
-    }
-    setStarting(true);
-    try {
-      // Fetch character name/persona for intro
-      const { data: char } = await supabase
-        .from('characters')
-        .select('id,name,persona_prompt')
-        .eq('id', studyMeta.character_id)
-        .maybeSingle();
-      const newChat = await chat.createChat(user.id, String(studyMeta.character_id), title, { studyId });
-      const prompt = String(studyMeta?.character_instructions || '').trim();
-      if (prompt) {
-        await chat.addMessage(newChat.id, `[Guiding Prompt]\n${prompt}`, 'system');
-      }
-      // Generate a short intro
-      try {
-        const history = prompt ? [{ role: 'system' as const, content: `[Guiding Prompt]\n${prompt}` }] : [];
-        const displayName = char?.name || guide?.name || 'Guide';
-        const intro = await generateCharacterResponse(displayName, char?.persona_prompt || guide?.persona_prompt || '', [
-          ...history,
-          { role: 'user', content: `Greet me as ${displayName}, briefly introduce this study in 2 short sentences, and end with a friendly question to begin.` }
-        ]);
-        if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
-      } catch {}
-      // Navigate immediately even if intro generation fails
-      // Must target nested nav: MainTabs -> Chat (stack) -> ChatDetail
-      navigation.navigate('MainTabs', {
-        screen: 'Chat',
-        params: {
-          screen: 'ChatDetail',
-          params: { chatId: newChat.id, character: { name: char?.name, persona_prompt: char?.persona_prompt } }
-        }
-      } as any);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unable to start this study right now.';
-      alert(msg);
-    } finally {
-      setStarting(false);
-    }
-  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -417,9 +372,6 @@ export default function StudyDetail({ route, navigation }: any) {
           </View>
         )}
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-          <TouchableOpacity disabled={starting} onPress={startGuidedChat} style={{ backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}>
-            <Text style={{ fontWeight: '600', fontSize: 13, color: theme.colors.primaryText }}>{starting ? 'Starting…' : 'Start Guided Chat'}</Text>
-          </TouchableOpacity>
           <TouchableOpacity 
             onPress={async () => {
               const url = `https://faithtalkai.com/studies/${studyId}`;
@@ -430,7 +382,7 @@ export default function StudyDetail({ route, navigation }: any) {
             }} 
             style={{ backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
           >
-            <Text style={{ fontWeight: '600', fontSize: 13, color: theme.colors.primaryText }}>Invite Friend</Text>
+            <Text style={{ fontWeight: '600', fontSize: 13, color: theme.colors.primaryText }}>📤 Invite Friend</Text>
           </TouchableOpacity>
         </View>
         {loading ? (

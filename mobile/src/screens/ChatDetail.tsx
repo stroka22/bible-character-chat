@@ -34,8 +34,7 @@ export default function ChatDetail() {
   const [lessonIndex, setLessonIndex] = React.useState<number>(0);
   const [isLessonComplete, setIsLessonComplete] = React.useState(false);
   const [markingComplete, setMarkingComplete] = React.useState(false);
-  const [isIntroduction, setIsIntroduction] = React.useState(false);
-  const [nextLesson, setNextLesson] = React.useState<{ id: string; title: string; order_index: number; character_id?: string | null } | null>(null);
+
   
   // Action bar state
   const [showInsights, setShowInsights] = React.useState(false);
@@ -79,32 +78,9 @@ export default function ChatDetail() {
                 lessonTitle = lessonData.title || '';
                 console.log('[ChatDetail] Got lesson order_index from DB:', idx, 'title:', lessonTitle);
               }
-              // Not introduction - it's a specific lesson
-              setIsIntroduction(false);
+
             } catch (e) {
               console.warn('[ChatDetail] Failed to fetch lesson order_index:', e);
-            }
-          } else if (meta.study_id) {
-            // No lesson_id = this is the Introduction/overview chat
-            console.log('[ChatDetail] No lesson_id - this is Introduction');
-            
-            // Get the first lesson to show "Start Lesson 1" button
-            try {
-              const { data: firstLessonData } = await supabase
-                .from('bible_study_lessons')
-                .select('id, title, order_index, character_id')
-                .eq('study_id', meta.study_id)
-                .order('order_index', { ascending: true })
-                .limit(1)
-                .maybeSingle();
-                
-              if (firstLessonData) {
-                setIsIntroduction(true);
-                setNextLesson(firstLessonData);
-                console.log('[ChatDetail] First lesson:', firstLessonData);
-              }
-            } catch (e) {
-              console.warn('[ChatDetail] Failed to fetch first lesson:', e);
             }
           }
           setLessonIndex(idx);
@@ -527,7 +503,7 @@ Keep each section concise but informative. This is for someone about to have a c
           )}
         />
         {/* Save/Complete buttons for Bible Studies (not for Introduction) */}
-        {studyId && !isIntroduction && (
+        {studyId && (
           <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 6, gap: 6 }}>
             {/* Save Progress button */}
             <TouchableOpacity 
@@ -573,7 +549,7 @@ Keep each section concise but informative. This is for someone about to have a c
           </View>
         )}
         
-        <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: isIntroduction ? 6 : 12 + Math.max(insets.bottom, 6) }}>
+        <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: 12 + Math.max(insets.bottom, 6) }}>
           <TextInput
             value={input}
             onChangeText={setInput}
@@ -587,116 +563,7 @@ Keep each section concise but informative. This is for someone about to have a c
           </TouchableOpacity>
         </View>
         
-        {/* Start Next Lesson button for Introduction - below input */}
-        {isIntroduction && nextLesson && (
-          <View style={{ paddingHorizontal: 12, paddingBottom: 12 + Math.max(insets.bottom, 6) }}>
-            <TouchableOpacity 
-              onPress={async () => {
-                // Navigate to Lesson 1
-                try {
-                  const { supabase } = await import('../lib/supabase');
-                  
-                  // Get study meta for character and study instructions
-                  const { data: studyData } = await supabase
-                    .from('bible_studies')
-                    .select('character_id, character_instructions')
-                    .eq('id', studyId)
-                    .maybeSingle();
-                  
-                  // Get or use existing progress
-                  const currentProgressId = progressId;
-                  
-                  // Get character info
-                  let charInfo = character;
-                  const charId = nextLesson.character_id || studyData?.character_id;
-                  if (charId && (!charInfo || charInfo.id !== charId)) {
-                    const { data: c } = await supabase
-                      .from('characters')
-                      .select('id,name,avatar_url,persona_prompt')
-                      .eq('id', charId)
-                      .maybeSingle();
-                    if (c) charInfo = c;
-                  }
-                  
-                  // Get lesson details for prompts
-                  const { data: lessonData } = await supabase
-                    .from('bible_study_lessons')
-                    .select('title, summary, scripture_refs, prompts')
-                    .eq('id', nextLesson.id)
-                    .maybeSingle();
-                  
-                  // Create chat for lesson 1
-                  const chatTitle = `${studyTitle} - Lesson ${nextLesson.order_index}: ${nextLesson.title}`;
-                  const newChat = await chat.createChat(user!.id, charInfo?.id || '', chatTitle, {
-                    studyId: studyId!,
-                    lessonId: nextLesson.id,
-                    progressId: currentProgressId || undefined
-                  });
-                  
-                  // Build lesson prompt
-                  // Handle prompts as array, JSON string, or plain text
-                  let lessonPromptsText = '';
-                  if (lessonData?.prompts) {
-                    if (Array.isArray(lessonData.prompts)) {
-                      lessonPromptsText = lessonData.prompts.map((p: any) => typeof p === 'string' ? p : p?.text || '').filter(Boolean).join('\n\n');
-                    } else if (typeof lessonData.prompts === 'string') {
-                      lessonPromptsText = lessonData.prompts;
-                    }
-                  }
-                  const studyInstructions = studyData?.character_instructions || '';
-                  
-                  // Lesson prompt comes FIRST - this is the primary instruction
-                  const lessonPrompt = [
-                    lessonPromptsText ? `=== YOUR INSTRUCTIONS ===\n${lessonPromptsText}\n=== END INSTRUCTIONS ===` : '',
-                    studyInstructions ? `=== STUDY CONTEXT ===\n${studyInstructions}\n=== END STUDY CONTEXT ===` : '',
-                    `Study: ${studyTitle}`,
-                    `Lesson: ${lessonData?.title || nextLesson.title}`,
-                    Array.isArray(lessonData?.scripture_refs) && lessonData.scripture_refs.length > 0 
-                      ? `Scripture: ${lessonData.scripture_refs.join(', ')}` 
-                      : '',
-                    lessonData?.summary ? `Summary: ${lessonData.summary}` : ''
-                  ].filter(Boolean).join('\n\n');
-                  
-                  // Add system message
-                  await chat.addMessage(newChat.id, lessonPrompt, 'system');
-                  
-                  // Generate intro message following the study prompt structure
-                  try {
-                    const intro = await generateCharacterResponse(
-                      charInfo?.name || 'Guide',
-                      charInfo?.persona_prompt || '',
-                      [
-                        { role: 'system', content: lessonPrompt },
-                        { role: 'user', content: 'Begin this Bible study session now. IMPORTANT: Follow the MANDATORY STRUCTURE in the Study Prompt exactly - if it says to open with prayer, you MUST start with a prayer. Do not skip or reorder any required steps.' }
-                      ]
-                    );
-                    if (intro) await chat.addMessage(newChat.id, intro, 'assistant');
-                  } catch (e) {
-                    console.warn('[ChatDetail] Failed to generate intro:', e);
-                  }
-                  
-                  // Navigate to the new chat
-                  navigation.replace('ChatDetail', { chatId: newChat.id, character: charInfo });
-                } catch (e) {
-                  console.warn('[ChatDetail] Error starting next lesson:', e);
-                  Alert.alert('Error', 'Failed to start lesson');
-                }
-              }}
-              style={{ 
-                height: 44, 
-                backgroundColor: theme.colors.primary,
-                borderRadius: 8, 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                paddingHorizontal: 16,
-              }}
-            >
-              <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 14 }} numberOfLines={1}>
-                Start Lesson 1: {nextLesson.title}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
+
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
