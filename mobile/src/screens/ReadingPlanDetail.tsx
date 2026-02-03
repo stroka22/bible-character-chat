@@ -22,6 +22,9 @@ import {
   startPlan,
   completeDay,
 } from '../lib/readingPlans';
+import { supabase } from '../lib/supabase';
+import { chat } from '../lib/chat';
+import { getBestCharacterName } from '../utils/characterSuggestions';
 
 interface RouteParams {
   planId?: string;
@@ -118,6 +121,60 @@ export default function ReadingPlanDetail() {
     } catch (e: any) {
       console.error('Error completing day:', e);
       Alert.alert('Error', 'Failed to mark day complete');
+    }
+  };
+
+  // Start chat with a suggested character based on today's reading
+  const startCharacterChat = async () => {
+    if (!user || !selectedDay || !plan) {
+      navigation.navigate('MainTabs', { screen: 'Chat', params: { screen: 'ChatNew' } });
+      return;
+    }
+    
+    try {
+      // Get suggested character name based on readings
+      const readings = selectedDay.readings || [];
+      const characterName = getBestCharacterName(readings, plan.title);
+      
+      // Find the character in the database
+      const { data: charData } = await supabase
+        .from('characters')
+        .select('id,name,avatar_url,persona_prompt,opening_line')
+        .ilike('name', `%${characterName}%`)
+        .limit(1)
+        .maybeSingle();
+      
+      if (!charData) {
+        // Fallback to chat selection if character not found
+        navigation.navigate('MainTabs', { screen: 'Chat', params: { screen: 'ChatNew' } });
+        return;
+      }
+      
+      // Create chat with context about today's reading
+      const readingsStr = readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ');
+      const chatTitle = `${plan.title} - Day ${selectedDay.day_number}`;
+      
+      const newChat = await chat.createChat(user.id, charData.id, chatTitle);
+      
+      // Add context as system message
+      const contextMsg = `The user is reading "${plan.title}" - Day ${selectedDay.day_number}: ${selectedDay.title || ''}. Today's passages: ${readingsStr}. ${selectedDay.reflection_prompt ? `Reflection: ${selectedDay.reflection_prompt}` : ''}`;
+      await chat.addMessage(newChat.id, contextMsg, 'system');
+      
+      // Add opening line
+      if (charData.opening_line) {
+        await chat.addMessage(newChat.id, charData.opening_line, 'assistant');
+      }
+      
+      // Navigate to chat with plan context for back navigation
+      navigation.navigate('ChatDetail', { 
+        chatId: newChat.id, 
+        character: charData,
+        returnTo: 'ReadingPlanDetail',
+        returnParams: { planId: plan.id, slug: plan.slug }
+      });
+    } catch (e) {
+      console.error('Error starting character chat:', e);
+      navigation.navigate('MainTabs', { screen: 'Chat', params: { screen: 'ChatNew' } });
     }
   };
 
@@ -231,12 +288,7 @@ export default function ReadingPlanDetail() {
               </TouchableOpacity>
               
               <TouchableOpacity
-                onPress={() => {
-                  navigation.navigate('MainTabs', {
-                    screen: 'Chat',
-                    params: { screen: 'ChatNew' }
-                  });
-                }}
+                onPress={startCharacterChat}
                 style={{
                   backgroundColor: theme.colors.primary,
                   paddingVertical: 14,
@@ -244,7 +296,9 @@ export default function ReadingPlanDetail() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>💬 Discuss with a Character</Text>
+                <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>
+                  💬 Discuss with {selectedDay?.readings?.[0]?.book ? getBestCharacterName(selectedDay.readings, plan?.title || '') : 'a Character'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

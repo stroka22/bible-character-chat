@@ -152,27 +152,30 @@ export default function StudiesList() {
         <Text style={{ color: theme.colors.muted, marginBottom: 12 }}>{studies.length} studies to deepen your faith</Text>
         
         {/* Category Filters */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
-          {CATEGORIES.map(cat => {
-            const isActive = selectedCategory === cat.key;
-            return (
-              <TouchableOpacity
-                key={cat.key}
-                onPress={() => setSelectedCategory(cat.key)}
-                style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  borderRadius: 16,
-                  backgroundColor: isActive ? theme.colors.primary : theme.colors.card,
-                  borderWidth: isActive ? 0 : 1,
-                  borderColor: theme.colors.border,
-                }}
-              >
-                <Text style={{ color: isActive ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{cat.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        <View style={{ height: 40, marginBottom: 12, marginHorizontal: -16 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8, alignItems: 'center' }}>
+            {CATEGORIES.map(cat => {
+              const isActive = selectedCategory === cat.key;
+              return (
+                <TouchableOpacity
+                  key={cat.key}
+                  onPress={() => setSelectedCategory(cat.key)}
+                  style={{
+                    height: 32,
+                    paddingHorizontal: 14,
+                    justifyContent: 'center',
+                    borderRadius: 16,
+                    backgroundColor: isActive ? theme.colors.primary : theme.colors.card,
+                    borderWidth: isActive ? 0 : 1,
+                    borderColor: theme.colors.border,
+                  }}
+                >
+                  <Text style={{ color: isActive ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{cat.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
         
         {loading ? (
           <ActivityIndicator color={theme.colors.primary} />
@@ -213,7 +216,7 @@ export default function StudiesList() {
                       <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>Guide: {item.character.name}</Text>
                     )}
                     {item.description && (
-                      <Text numberOfLines={2} style={{ color: theme.colors.muted, fontSize: 13, marginTop: 4, lineHeight: 18 }}>{item.description}</Text>
+                      <Text numberOfLines={3} style={{ color: theme.colors.muted, fontSize: 13, marginTop: 4, lineHeight: 18 }}>{item.description}</Text>
                     )}
                   </View>
                 </View>

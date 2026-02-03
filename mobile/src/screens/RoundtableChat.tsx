@@ -381,17 +381,19 @@ export default function RoundtableChat({ route }: any) {
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
           </TouchableOpacity>
 
-          {savedConversationId && (
-            <TouchableOpacity 
-              onPress={async () => {
-                const { error } = await inviteFriendToChat(savedConversationId, `Roundtable: ${topic}`);
-                if (error) Alert.alert('Error', error);
-              }} 
-              style={{ backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}
-            >
-              <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity 
+            onPress={async () => {
+              if (!savedConversationId) {
+                Alert.alert('Save First', 'Please save this roundtable first to invite friends.');
+                return;
+              }
+              const { error } = await inviteFriendToChat(savedConversationId, `Roundtable: ${topic}`);
+              if (error) Alert.alert('Error', error);
+            }} 
+            style={{ backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}
+          >
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
+          </TouchableOpacity>
         </View>
       </View>
       <FlatList

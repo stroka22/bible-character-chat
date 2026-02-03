@@ -142,12 +142,7 @@ export default function ChatNew() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
-        <View style={{ position: 'absolute', right: 16, top: 16 }}>
-          <TouchableOpacity onPress={() => nav.navigate('MainTabs', { screen: 'Home' })} style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 16, backgroundColor: theme.colors.card }}>
-            <Text style={{ color: theme.colors.text, fontWeight: '700' }}>Back</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 12, color: theme.colors.accent }}>New Chat</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 12, color: theme.colors.accent, fontFamily: 'Cinzel_700Bold' }}>New Chat</Text>
         <TextInput
           value={title}
           onChangeText={setTitle}
@@ -163,33 +158,24 @@ export default function ChatNew() {
           style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
-      {/* Main filter row */}
+      {/* Filter row */}
       <View style={{ height: 44, justifyContent: 'center' }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
-          <TouchableOpacity onPress={() => { setFilterMode('all'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'all' && !activeLetter ? theme.colors.primary : theme.colors.card }}>
+          <TouchableOpacity onPress={() => { setFilterMode('all'); setActiveLetter(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'all' && !activeLetter ? theme.colors.primary : theme.colors.card }}>
             <Text style={{ color: (filterMode === 'all' && !activeLetter) ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>All</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setFilterMode('favorites'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'favorites' ? theme.colors.primary : theme.colors.card }}>
+          <TouchableOpacity onPress={() => { setFilterMode('favorites'); setActiveLetter(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'favorites' ? theme.colors.primary : theme.colors.card }}>
             <Text style={{ color: filterMode === 'favorites' ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>⭐ Favorites</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setFilterMode('ot'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'ot' ? theme.colors.primary : theme.colors.card }}>
+          <TouchableOpacity onPress={() => { setFilterMode('ot'); setActiveLetter(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'ot' ? theme.colors.primary : theme.colors.card }}>
             <Text style={{ color: filterMode === 'ot' ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>Old Testament</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setFilterMode('nt'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'nt' ? theme.colors.primary : theme.colors.card }}>
+          <TouchableOpacity onPress={() => { setFilterMode('nt'); setActiveLetter(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'nt' ? theme.colors.primary : theme.colors.card }}>
             <Text style={{ color: filterMode === 'nt' ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>New Testament</Text>
           </TouchableOpacity>
-          {CURATED_BOOKS.map((book) => (
-            <TouchableOpacity key={book} onPress={() => { setFilterMode('group'); setSelectedGroup(book); setActiveLetter(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'group' && selectedGroup === book ? theme.colors.primary : theme.colors.card }}>
-              <Text style={{ color: (filterMode === 'group' && selectedGroup === book) ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>{book}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-      {/* A-Z row */}
-      <View style={{ height: 40, justifyContent: 'center' }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 4 }}>
+          {/* A-Z letters inline */}
           {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-            <TouchableOpacity key={ltr} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); setSelectedGroup(''); }} style={{ width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.surface }}>
+            <TouchableOpacity key={ltr} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); }} style={{ width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.surface }}>
               <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{ltr}</Text>
             </TouchableOpacity>
           ))}

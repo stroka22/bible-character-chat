@@ -171,39 +171,17 @@ export default function ChatDetail() {
         </View>
       ),
       headerRight: () => (
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          {/* Invite Friend button */}
-          <TouchableOpacity 
-            onPress={async () => {
-              const { success, error } = await inviteFriendToChat(chatId, title);
-              if (error) {
-                Alert.alert('Error', error);
-              }
-            }} 
-            style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: theme.colors.primary, borderRadius: 6 }}
-          >
-            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>Invite Friend</Text>
-          </TouchableOpacity>
-          
-          {/* Save button - only for non-study chats */}
-          {!studyId && (
-            <TouchableOpacity onPress={async () => {
-              await requirePremiumOrPrompt({
-                userId: (user as any)?.id,
-                feature: 'save',
-                onUpgrade: () => { try { (navigation as any).navigate('Paywall'); } catch {} },
-                onAllowed: async () => {
-                  try {
-                    await chat.toggleFavorite(chatId, !isFav);
-                    setIsFav(!isFav);
-                  } catch {}
-                }
-              });
-            }} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: theme.colors.surface, borderRadius: 6 }}>
-              <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>{isFav ? 'Unsave' : 'Save'}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <TouchableOpacity 
+          onPress={async () => {
+            const { success, error } = await inviteFriendToChat(chatId, title);
+            if (error) {
+              Alert.alert('Error', error);
+            }
+          }} 
+          style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: theme.colors.primary, borderRadius: 6 }}
+        >
+          <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
+        </TouchableOpacity>
       )
     });
   }, [navigation, isFav, title, chatId, character, studyId]);
@@ -424,42 +402,34 @@ export default function ChatDetail() {
     } catch {}
   };
 
-  // Generate insights
+  // Show character insights/bio
   const generateInsights = async () => {
-    if (messages.filter(m => m.role !== 'system').length < 2) {
-      Alert.alert('Not enough conversation', 'Have a longer conversation first to get insights.');
-      return;
-    }
     setShowInsights(true);
     setLoadingInsights(true);
     setInsights(null);
     
     try {
-      const conversationText = messages
-        .filter(m => m.role !== 'system')
-        .map(m => m.role === 'user' ? `User: ${m.content}` : `${character?.name || 'Guide'}: ${m.content}`)
-        .join('\n');
+      const charName = character?.name || 'this character';
+      const charPersona = character?.persona_prompt || '';
       
-      const insightPrompt = `Analyze this conversation and provide spiritual insights:
+      const insightPrompt = `Provide a brief but comprehensive overview of ${charName} as a biblical figure. Include:
 
-${conversationText}
+1. BIBLICAL BACKGROUND: Who ${charName} was, their role in the Bible, and key events they were part of
+2. KEY SCRIPTURE: 2-3 important Bible verses where ${charName} appears or that relate to them
+3. CHARACTER TRAITS: What qualities and characteristics defined ${charName}
+4. LIFE LESSONS: What we can learn from ${charName}'s story today
+5. CONVERSATION STARTERS: 2-3 interesting questions to ask ${charName}
 
-Provide:
-1. KEY THEMES: Main spiritual themes discussed
-2. SCRIPTURE CONNECTIONS: Relevant Bible verses that relate to this conversation  
-3. REFLECTION QUESTIONS: 2-3 questions for deeper personal reflection
-4. GROWTH OPPORTUNITY: One actionable step for spiritual growth
-
-Keep each section brief and practical.`;
+Keep each section concise but informative. This is for someone about to have a conversation with ${charName}.`;
 
       const result = await generateCharacterResponse(
-        'Spiritual Advisor',
-        'You are a wise spiritual advisor who provides thoughtful biblical insights.',
+        charName,
+        charPersona,
         [{ role: 'user', content: insightPrompt }]
       );
       setInsights(result);
     } catch (e) {
-      setInsights('Unable to generate insights at this time. Please try again later.');
+      setInsights('Unable to load character insights at this time. Please try again later.');
     } finally {
       setLoadingInsights(false);
     }
@@ -518,7 +488,7 @@ Keep each section brief and practical.`;
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
             <View style={{ backgroundColor: theme.colors.background, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', paddingBottom: 40 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
-                <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold' }}>Conversation Insights</Text>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold' }}>About {character?.name || 'Character'}</Text>
                 <TouchableOpacity onPress={() => setShowInsights(false)}>
                   <Text style={{ color: theme.colors.primary, fontSize: 16, fontWeight: '600' }}>Close</Text>
                 </TouchableOpacity>
