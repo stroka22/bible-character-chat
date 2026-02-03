@@ -366,9 +366,17 @@ export default function RoundtableChat({ route }: any) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16, paddingBottom: 8 }}>
-        <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
-        <Text style={{ color: theme.colors.text }}>{topic}</Text>
-        <View style={{ marginTop: 8, flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: '700' }}>Biblical Roundtable</Text>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('RoundtableSetup')}
+            style={{ backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8 }}
+          >
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>+ New</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={{ color: theme.colors.text, marginTop: 4 }}>{topic}</Text>
+        <View style={{ marginTop: 8, flexDirection: 'row', gap: 8 }}>
           <TouchableOpacity onPress={saveToMyWalk} style={{ backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}>
             <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>💾 Save</Text>
           </TouchableOpacity>
@@ -393,13 +401,6 @@ export default function RoundtableChat({ route }: any) {
             style={{ backgroundColor: theme.colors.primary, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 }}
           >
             <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('RoundtableSetup')}
-            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
-          >
-            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>🔄 New</Text>
           </TouchableOpacity>
         </View>
       </View>

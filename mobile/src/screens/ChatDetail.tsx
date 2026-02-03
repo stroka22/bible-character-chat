@@ -34,6 +34,9 @@ export default function ChatDetail() {
   const [lessonIndex, setLessonIndex] = React.useState<number>(0);
   const [isLessonComplete, setIsLessonComplete] = React.useState(false);
   const [markingComplete, setMarkingComplete] = React.useState(false);
+  
+  // Reading Plan context (for back navigation)
+  const fromPlan = route.params?.fromPlan as { slug: string; title: string; dayNumber: number } | undefined;
 
   
   // Action bar state
@@ -415,6 +418,19 @@ Keep each section concise but informative. This is for someone about to have a c
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
         {/* Action Bar */}
+        {/* Back to Reading Plan */}
+        {fromPlan && (
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('MainTabs', { 
+              screen: 'Walk', 
+              params: { screen: 'ReadingPlanDetail', params: { slug: fromPlan.slug } }
+            })}
+            style={{ paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}
+          >
+            <Text style={{ color: theme.colors.primary, fontSize: 14 }}>← Back to {fromPlan.title} (Day {fromPlan.dayNumber})</Text>
+          </TouchableOpacity>
+        )}
+
         <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, gap: 8, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
           <TouchableOpacity 
             onPress={generateInsights}

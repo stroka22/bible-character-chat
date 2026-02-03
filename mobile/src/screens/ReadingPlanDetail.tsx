@@ -165,12 +165,16 @@ export default function ReadingPlanDetail() {
         await chat.addMessage(newChat.id, charData.opening_line, 'assistant');
       }
       
-      // Navigate to chat
+      // Navigate to chat with plan context for back button
       navigation.navigate('MainTabs', { 
         screen: 'Chat', 
         params: { 
           screen: 'ChatDetail', 
-          params: { chatId: newChat.id, character: charData }
+          params: { 
+            chatId: newChat.id, 
+            character: charData,
+            fromPlan: { slug: plan.slug, title: plan.title, dayNumber: selectedDay.day_number }
+          }
         }
       });
     } catch (e) {
