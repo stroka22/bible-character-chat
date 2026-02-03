@@ -201,25 +201,10 @@ export default function StudiesList() {
                   navigation.navigate('StudyDetail', { studyId: item.id, title: item.title });
                 }
               }} style={{ paddingVertical: 12, paddingHorizontal: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: theme.colors.border }}>
-                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
-                  {/* Avatar */}
-                  {item.character?.avatar_url ? (
-                    <Image source={{ uri: item.character.avatar_url }} style={{ width: 48, height: 48, borderRadius: 24 }} />
-                  ) : (
-                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 18 }}>{item.title?.[0] || '?'}</Text>
-                    </View>
-                  )}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}>{item.title}</Text>
-                    {item.character?.name && (
-                      <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>Guide: {item.character.name}</Text>
-                    )}
-                    {item.description && (
-                      <Text numberOfLines={3} style={{ color: theme.colors.muted, fontSize: 13, marginTop: 4, lineHeight: 18 }}>{item.description}</Text>
-                    )}
-                  </View>
-                </View>
+                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}>{item.title}</Text>
+                {item.description && (
+                  <Text style={{ color: theme.colors.muted, fontSize: 13, marginTop: 6, lineHeight: 18 }}>{item.description}</Text>
+                )}
                 {!!item.lessonCount && item.lessonCount > 0 && (
                   <View style={{ marginTop: 10 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>

@@ -394,6 +394,13 @@ export default function RoundtableChat({ route }: any) {
           >
             <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('RoundtableSetup')}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
+          >
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>🔄 New</Text>
+          </TouchableOpacity>
         </View>
       </View>
       <FlatList

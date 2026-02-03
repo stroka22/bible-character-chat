@@ -165,16 +165,17 @@ export default function ReadingPlanDetail() {
         await chat.addMessage(newChat.id, charData.opening_line, 'assistant');
       }
       
-      // Navigate to chat with plan context for back navigation
-      navigation.navigate('ChatDetail', { 
-        chatId: newChat.id, 
-        character: charData,
-        returnTo: 'ReadingPlanDetail',
-        returnParams: { planId: plan.id, slug: plan.slug }
+      // Navigate to chat
+      navigation.navigate('MainTabs', { 
+        screen: 'Chat', 
+        params: { 
+          screen: 'ChatDetail', 
+          params: { chatId: newChat.id, character: charData }
+        }
       });
     } catch (e) {
       console.error('Error starting character chat:', e);
-      navigation.navigate('MainTabs', { screen: 'Chat', params: { screen: 'ChatNew' } });
+      Alert.alert('Error', 'Failed to start chat. Please try again.');
     }
   };
 
