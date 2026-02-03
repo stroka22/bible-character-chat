@@ -23,7 +23,8 @@ export default function ChatNew() {
   const [loading, setLoading] = React.useState(false);
   const [characters, setCharacters] = React.useState<any[]>([]);
   const [activeLetter, setActiveLetter] = React.useState<string>('');
-  const [filterMode, setFilterMode] = React.useState<'all' | 'favorites'>('all');
+  const [filterMode, setFilterMode] = React.useState<'all' | 'favorites' | 'ot' | 'nt' | 'group'>('all');
+  const [selectedGroup, setSelectedGroup] = React.useState<string>('');
   const [favIds, setFavIds] = React.useState<Set<string>>(new Set());
   const [siteSettings, setSiteSettings] = React.useState<{ defaultFeaturedCharacterId: string | null; enforceAdminDefault: boolean }>({ defaultFeaturedCharacterId: null, enforceAdminDefault: false });
   // Categories row removed for clarity and speed
@@ -61,7 +62,7 @@ export default function ChatNew() {
       try {
         let query = supabase
           .from('characters')
-          .select('id,name,description,avatar_url,opening_line,persona_prompt,is_visible')
+          .select('id,name,description,avatar_url,opening_line,persona_prompt,is_visible,bible_book')
           .or('is_visible.is.null,is_visible.eq.true');
         if (search && search.trim()) {
           query = query.or(
@@ -85,12 +86,22 @@ export default function ChatNew() {
         if (filterMode === 'favorites' && user) {
           const ids = favIds;
           out = out.filter((c: any) => ids.has(String(c.id)));
+        } else if (filterMode === 'ot') {
+          // Old Testament characters
+          const otBooks = ['Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', '1 Kings', '2 Kings', '1 Chronicles', '2 Chronicles', 'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon', 'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 'Obadiah', 'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah', 'Malachi'];
+          out = out.filter((c: any) => c.bible_book && otBooks.some(b => c.bible_book?.toLowerCase().includes(b.toLowerCase())));
+        } else if (filterMode === 'nt') {
+          // New Testament characters
+          const ntBooks = ['Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', 'Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians', 'Thessalonians', 'Timothy', 'Titus', 'Philemon', 'Hebrews', 'James', 'Peter', 'Jude', 'Revelation', 'Gospel', 'Gospels'];
+          out = out.filter((c: any) => c.bible_book && ntBooks.some(b => c.bible_book?.toLowerCase().includes(b.toLowerCase())));
+        } else if (filterMode === 'group' && selectedGroup) {
+          out = out.filter((c: any) => c.bible_book?.toLowerCase().includes(selectedGroup.toLowerCase()));
         }
         if (active) setCharacters(out);
       } catch {}
     })();
     return () => { active = false; };
-  }, [search, activeLetter, filterMode, user, favIds, siteSettings.defaultFeaturedCharacterId, siteSettings.enforceAdminDefault]);
+  }, [search, activeLetter, filterMode, selectedGroup, user, favIds, siteSettings.defaultFeaturedCharacterId, siteSettings.enforceAdminDefault]);
 
   // Categories kept small and curated for speed and legibility
 
@@ -152,17 +163,34 @@ export default function ChatNew() {
           style={{ borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, height: 44 }}
         />
       </View>
-      <View style={{ height: 52, justifyContent: 'center' }}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-          <TouchableOpacity onPress={() => setFilterMode('favorites')} style={{ height: 36, alignSelf: 'center', paddingHorizontal: 16, marginRight: 8, borderRadius: 18, justifyContent: 'center', backgroundColor: filterMode === 'favorites' ? theme.colors.primary : theme.colors.card }}>
-            <Text style={{ color: filterMode === 'favorites' ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 16 }}>Favorites</Text>
+      {/* Main filter row */}
+      <View style={{ height: 44, justifyContent: 'center' }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+          <TouchableOpacity onPress={() => { setFilterMode('all'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'all' && !activeLetter ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: (filterMode === 'all' && !activeLetter) ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>All</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { setFilterMode('all'); setActiveLetter(''); }} style={{ height: 36, alignSelf: 'center', paddingHorizontal: 16, marginRight: 8, borderRadius: 18, justifyContent: 'center', backgroundColor: filterMode === 'all' && !activeLetter ? theme.colors.primary : theme.colors.card }}>
-            <Text style={{ color: (filterMode === 'all' && !activeLetter) ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 16 }}>All</Text>
+          <TouchableOpacity onPress={() => { setFilterMode('favorites'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'favorites' ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: filterMode === 'favorites' ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>⭐ Favorites</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => { setFilterMode('ot'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'ot' ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: filterMode === 'ot' ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>Old Testament</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => { setFilterMode('nt'); setActiveLetter(''); setSelectedGroup(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'nt' ? theme.colors.primary : theme.colors.card }}>
+            <Text style={{ color: filterMode === 'nt' ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>New Testament</Text>
+          </TouchableOpacity>
+          {CURATED_BOOKS.map((book) => (
+            <TouchableOpacity key={book} onPress={() => { setFilterMode('group'); setSelectedGroup(book); setActiveLetter(''); }} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, justifyContent: 'center', backgroundColor: filterMode === 'group' && selectedGroup === book ? theme.colors.primary : theme.colors.card }}>
+              <Text style={{ color: (filterMode === 'group' && selectedGroup === book) ? theme.colors.primaryText : theme.colors.text, fontWeight: '700', fontSize: 14 }}>{book}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+      {/* A-Z row */}
+      <View style={{ height: 40, justifyContent: 'center' }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 4 }}>
           {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((ltr) => (
-            <TouchableOpacity key={ltr} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); }} style={{ height: 36, alignSelf: 'center', paddingHorizontal: 16, marginRight: 8, borderRadius: 18, justifyContent: 'center', backgroundColor: activeLetter === ltr && filterMode === 'all' ? theme.colors.primary : theme.colors.card }}>
-              <Text style={{ color: (activeLetter === ltr && filterMode === 'all') ? theme.colors.primaryText : theme.colors.text, fontWeight: '900', fontSize: 16 }}>{ltr}</Text>
+            <TouchableOpacity key={ltr} onPress={() => { setFilterMode('all'); setActiveLetter(ltr); setSelectedGroup(''); }} style={{ width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', backgroundColor: activeLetter === ltr ? theme.colors.primary : theme.colors.surface }}>
+              <Text style={{ color: activeLetter === ltr ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{ltr}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

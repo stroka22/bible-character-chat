@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,11 +10,24 @@ import { theme } from '../theme';
 type Study = {
   id: string;
   title: string;
+  description?: string | null;
   owner_slug?: string | null;
   visibility?: string | null;
   cover_image_url?: string | null;
   lessonCount?: number;
+  character_id?: string | null;
+  character?: { id: string; name: string; avatar_url?: string | null } | null;
+  category?: string | null;
 };
+
+const CATEGORIES = [
+  { key: 'all', label: 'All Studies' },
+  { key: 'active', label: 'My Active' },
+  { key: 'book', label: 'Book Studies' },
+  { key: 'topical', label: 'Topical' },
+  { key: 'character', label: 'Character' },
+  { key: 'life', label: 'Life & Growth' },
+];
 
 type StudyWithProgress = Study & {
   progress?: StudyProgress | null;
@@ -26,6 +39,7 @@ export default function StudiesList() {
   const { user } = useAuth();
   const [studies, setStudies] = useState<StudyWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const loadStudies = async () => {
     setLoading(true);
@@ -37,11 +51,31 @@ export default function StudiesList() {
       // Fetch studies for user's organization (or default)
       const { data: studiesData } = await supabase
         ?.from('bible_studies')
-        .select('id,title,owner_slug,visibility,cover_image_url')
+        .select('id,title,description,owner_slug,visibility,cover_image_url,character_id,category')
         .eq('visibility', 'public')
         .or(`owner_slug.eq.${userSlug},owner_slug.is.null`)
         .order('created_at', { ascending: false }) as any;
       const rows: Study[] = studiesData || [];
+      
+      // Fetch character info for studies that have character_id
+      const charIds = [...new Set(rows.filter(s => s.character_id).map(s => s.character_id))];
+      let charMap: Record<string, { id: string; name: string; avatar_url?: string | null }> = {};
+      if (charIds.length > 0) {
+        const { data: chars } = await supabase
+          .from('characters')
+          .select('id,name,avatar_url')
+          .in('id', charIds);
+        if (chars) {
+          chars.forEach((c: any) => { charMap[c.id] = c; });
+        }
+      }
+      
+      // Attach character info to studies
+      rows.forEach(s => {
+        if (s.character_id && charMap[s.character_id]) {
+          s.character = charMap[s.character_id];
+        }
+      });
       console.log('[StudiesList] Found', rows.length, 'studies');
       
       // Deduplicate by normalized title (prefer user's org over null)
@@ -100,15 +134,51 @@ export default function StudiesList() {
     }, [user?.id])
   );
 
+  // Filter studies based on category
+  const filteredStudies = studies.filter(s => {
+    if (selectedCategory === 'all') return true;
+    if (selectedCategory === 'active') return s.progress && s.progressPercent > 0 && s.progressPercent < 100;
+    if (selectedCategory === 'book') return s.category?.toLowerCase().includes('book');
+    if (selectedCategory === 'topical') return s.category?.toLowerCase().includes('topical');
+    if (selectedCategory === 'character') return s.category?.toLowerCase().includes('character');
+    if (selectedCategory === 'life') return s.category?.toLowerCase().includes('life') || s.category?.toLowerCase().includes('growth');
+    return true;
+  });
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <View style={{ padding: 16 }}>
+      <View style={{ padding: 16, flex: 1 }}>
         <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 8, fontFamily: 'Cinzel_700Bold' }}>Bible Studies</Text>
+        <Text style={{ color: theme.colors.muted, marginBottom: 12 }}>{studies.length} studies to deepen your faith</Text>
+        
+        {/* Category Filters */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}>
+          {CATEGORIES.map(cat => {
+            const isActive = selectedCategory === cat.key;
+            return (
+              <TouchableOpacity
+                key={cat.key}
+                onPress={() => setSelectedCategory(cat.key)}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: 16,
+                  backgroundColor: isActive ? theme.colors.primary : theme.colors.card,
+                  borderWidth: isActive ? 0 : 1,
+                  borderColor: theme.colors.border,
+                }}
+              >
+                <Text style={{ color: isActive ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 13 }}>{cat.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+        
         {loading ? (
           <ActivityIndicator color={theme.colors.primary} />
         ) : (
           <FlatList
-            data={studies}
+            data={filteredStudies}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ paddingBottom: 8 }}
             renderItem={({ item }) => (
@@ -127,16 +197,34 @@ export default function StudiesList() {
                 } catch {
                   navigation.navigate('StudyDetail', { studyId: item.id, title: item.title });
                 }
-              }} style={{ paddingVertical: 12, paddingHorizontal: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8 }}>
-                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}>{item.title}</Text>
+              }} style={{ paddingVertical: 12, paddingHorizontal: 12, backgroundColor: theme.colors.card, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: theme.colors.border }}>
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+                  {/* Avatar */}
+                  {item.character?.avatar_url ? (
+                    <Image source={{ uri: item.character.avatar_url }} style={{ width: 48, height: 48, borderRadius: 24 }} />
+                  ) : (
+                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 18 }}>{item.title?.[0] || '?'}</Text>
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600' }}>{item.title}</Text>
+                    {item.character?.name && (
+                      <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>Guide: {item.character.name}</Text>
+                    )}
+                    {item.description && (
+                      <Text numberOfLines={2} style={{ color: theme.colors.muted, fontSize: 13, marginTop: 4, lineHeight: 18 }}>{item.description}</Text>
+                    )}
+                  </View>
+                </View>
                 {!!item.lessonCount && item.lessonCount > 0 && (
-                  <View style={{ marginTop: 8 }}>
+                  <View style={{ marginTop: 10 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                       <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
                         {item.lessonCount} lesson{item.lessonCount !== 1 ? 's' : ''}
                       </Text>
                       {user && (
-                        <Text style={{ color: item.progressPercent === 100 ? theme.colors.primary : theme.colors.muted, fontSize: 12, fontWeight: '600' }}>
+                        <Text style={{ color: item.progressPercent === 100 ? '#22c55e' : theme.colors.muted, fontSize: 12, fontWeight: '600' }}>
                           {item.progressPercent}% complete
                         </Text>
                       )}

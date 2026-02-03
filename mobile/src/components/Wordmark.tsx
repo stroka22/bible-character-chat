@@ -6,9 +6,9 @@ type Props = {
   variant?: 'stacked' | 'iconOnly' | 'inline';
 };
 
-// Colors per brand spec
-const GRAY = '#9ca3af'; // FaithTalk + bubble
-const GOLD = '#facc15'; // AI + cross
+// Colors per brand spec - amber theme
+const MAIN_COLOR = '#92400e'; // amber-800 - FaithTalk + bubble (matches muted text)
+const GOLD = '#d97706'; // amber-600 - AI + cross (matches primary)
 
 export default function Wordmark({ width = 200, variant = 'inline' }: Props) {
   // Bubble geometry helpers
@@ -22,9 +22,9 @@ export default function Wordmark({ width = 200, variant = 'inline' }: Props) {
   const Bubble = (
     <View style={{ width: bubbleSize, height: bubbleSize + tailSize, justifyContent: 'flex-start', alignItems: 'center' }}>
       {/* Bubble outline */}
-      <View style={{ width: bubbleSize, height: bubbleSize, borderRadius, borderWidth: stroke, borderColor: GRAY, backgroundColor: 'transparent' }} />
+      <View style={{ width: bubbleSize, height: bubbleSize, borderRadius, borderWidth: stroke, borderColor: MAIN_COLOR, backgroundColor: 'transparent' }} />
       {/* Tail */}
-      <View style={{ width: 0, height: 0, borderTopWidth: tailSize, borderTopColor: GRAY, borderLeftWidth: tailSize, borderLeftColor: 'transparent', alignSelf: 'flex-start', marginLeft: bubbleSize * 0.18, marginTop: -stroke }} />
+      <View style={{ width: 0, height: 0, borderTopWidth: tailSize, borderTopColor: MAIN_COLOR, borderLeftWidth: tailSize, borderLeftColor: 'transparent', alignSelf: 'flex-start', marginLeft: bubbleSize * 0.18, marginTop: -stroke }} />
       {/* Cross centered */}
       <View style={{ position: 'absolute', top: (bubbleSize - crossLen) / 2 + Math.round(bubbleSize * 0.08), left: (bubbleSize - crossLen) / 2 }}>
         <View style={{ width: crossLen, height: crossThickness, backgroundColor: GOLD }} />
@@ -49,7 +49,7 @@ export default function Wordmark({ width = 200, variant = 'inline' }: Props) {
       <View style={{ width, alignItems: 'center' }}>
         {Bubble}
         <View style={{ height: Math.max(6, Math.round(width * 0.02)) }} />
-        <Text style={{ color: GRAY, fontFamily: 'Inter_700Bold', fontSize, includeFontPadding: false }}>FaithTalk</Text>
+        <Text style={{ color: MAIN_COLOR, fontFamily: 'Inter_700Bold', fontSize, includeFontPadding: false }}>FaithTalk</Text>
         <Text style={{ color: GOLD, fontFamily: 'Inter_700Bold', fontSize: fontSize * 0.9, includeFontPadding: false }}>AI</Text>
       </View>
     );
@@ -59,7 +59,7 @@ export default function Wordmark({ width = 200, variant = 'inline' }: Props) {
   const fontSize = Math.max(16, Math.min(48, Math.floor(width / 9)));
   return (
     <View style={{ width, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center' }}>
-      <Text style={{ color: GRAY, fontFamily: 'Inter_700Bold', fontSize, includeFontPadding: false }}>FaithTalk</Text>
+      <Text style={{ color: MAIN_COLOR, fontFamily: 'Inter_700Bold', fontSize, includeFontPadding: false }}>FaithTalk</Text>
       <Text style={{ color: GOLD, fontFamily: 'Inter_700Bold', fontSize: fontSize * 0.92, marginLeft: 4, includeFontPadding: false }}>AI</Text>
     </View>
   );

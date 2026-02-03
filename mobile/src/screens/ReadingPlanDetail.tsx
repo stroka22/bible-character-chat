@@ -203,30 +203,17 @@ export default function ReadingPlanDetail() {
 
             {selectedDay.reflection_prompt && (
               <View style={{ 
-                backgroundColor: '#fef3c7', 
+                backgroundColor: theme.colors.surface, 
                 padding: 14, 
                 borderRadius: 8, 
                 marginTop: 16,
                 borderWidth: 1,
-                borderColor: '#fcd34d',
+                borderColor: theme.colors.border,
               }}>
-                <Text style={{ color: '#92400e', fontWeight: '600', marginBottom: 4 }}>
-                  Reflection Question
+                <Text style={{ color: theme.colors.accent, fontWeight: '600', marginBottom: 4 }}>
+                  💭 Reflection Question
                 </Text>
-                <Text style={{ color: '#78350f' }}>{selectedDay.reflection_prompt}</Text>
-                <TouchableOpacity 
-                  onPress={() => {
-                    navigation.navigate('MainTabs', {
-                      screen: 'Chat',
-                      params: { screen: 'ChatNew' }
-                    });
-                  }}
-                  style={{ marginTop: 12 }}
-                >
-                  <Text style={{ color: theme.colors.primary, fontWeight: '600', fontSize: 14 }}>
-                    Discuss this with a Bible character →
-                  </Text>
-                </TouchableOpacity>
+                <Text style={{ color: theme.colors.text }}>{selectedDay.reflection_prompt}</Text>
               </View>
             )}
 
@@ -240,7 +227,7 @@ export default function ReadingPlanDetail() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Mark Complete ✓</Text>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>✓ Mark Day Complete</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -257,7 +244,7 @@ export default function ReadingPlanDetail() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>Chat About This</Text>
+                <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>💬 Discuss with a Character</Text>
               </TouchableOpacity>
             </View>
           </View>

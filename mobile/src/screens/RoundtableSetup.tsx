@@ -117,7 +117,14 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
             </TouchableOpacity>
           ))}
         </ScrollView>
-        <Text style={{ color: theme.colors.text, marginBottom: 8 }}>Selected: {selected.length} / {maxParticipants}</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Text style={{ color: theme.colors.text }}>Selected: {selected.length} / {maxParticipants}</Text>
+          {selected.length > 0 && (
+            <TouchableOpacity onPress={() => { setSelected([]); setTopic(''); }} style={{ paddingVertical: 4, paddingHorizontal: 10, backgroundColor: theme.colors.surface, borderRadius: 6, borderWidth: 1, borderColor: theme.colors.border }}>
+              <Text style={{ color: theme.colors.text, fontSize: 12, fontWeight: '600' }}>🔄 New</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         {loading ? (
           <View style={{ paddingVertical: 24 }}>
             <ActivityIndicator color={theme.colors.primary} />

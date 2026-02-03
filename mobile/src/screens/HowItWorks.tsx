@@ -85,9 +85,11 @@ export default function HowItWorks() {
 
   const handleCTA = () => {
     if (current.ctaScreen === 'Chat') {
-      navigation.navigate('Chat', { screen: 'ChatNew' });
+      navigation.navigate('MainTabs', { screen: 'Chat', params: { screen: 'ChatNew' } });
+    } else if (current.ctaScreen === 'RoundtableSetup') {
+      navigation.navigate('RoundtableSetup');
     } else {
-      navigation.navigate(current.ctaScreen);
+      navigation.navigate('MainTabs', { screen: current.ctaScreen });
     }
   };
 
@@ -220,7 +222,7 @@ export default function HowItWorks() {
 
         {/* Back to Home */}
         <TouchableOpacity
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })}
           style={{
             backgroundColor: theme.colors.card,
             paddingVertical: 14,

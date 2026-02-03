@@ -181,8 +181,8 @@ function AppInner() {
               headerTitleAlign: 'center', 
               headerTitle: () => <BrandHeaderTitle />,
               headerLeft: () => (
-                <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })} style={{ paddingHorizontal: 8 }}>
-                  <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Home'}</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Studies' })} style={{ paddingHorizontal: 8 }}>
+                  <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Studies'}</Text>
                 </TouchableOpacity>
               )
             })} />
