@@ -811,40 +811,64 @@ const ChatPageScroll = () => {
   // Handle share conversation
   const handleShareConversation = async () => {
     try {
-      // Save first if not saved
-      if (!chatId) {
-        const ok = await saveChat();
-        if (!ok) {
-          showActionMessage('Please save the conversation first', 'error');
-          return;
+      let shareUrl = null;
+      
+      // Try to generate share link if logged in
+      if (chatId || window.__lastChatId) {
+        try {
+          const code = await shareConversation(chatId || window.__lastChatId || '');
+          if (code) {
+            shareUrl = `${window.location.origin}/shared/${code}`;
+          }
+        } catch (e) {
+          console.warn('Share code generation failed, falling back to text:', e);
         }
       }
-      const code = await shareConversation(chatId || window.__lastChatId || '');
-      if (!code) {
-        showActionMessage('Failed to generate share link', 'error');
-        return;
-      }
-      const url = `${window.location.origin}/shared/${code}`;
-      const shareText = `You are being invited to join a Bible Chat on Faith Talk AI!\n\nView my conversation with ${character?.name}:\n${url}`;
       
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'Bible Chat on Faith Talk AI',
-            text: shareText,
-            url,
-          });
-          showActionMessage('Shared successfully!');
-        } catch (shareErr) {
-          // User cancelled share - not an error, just copy to clipboard
-          if (shareErr.name !== 'AbortError') {
-            await navigator.clipboard.writeText(shareText);
-            showActionMessage('Share link copied!');
+      // If we have a share URL, use it
+      if (shareUrl) {
+        const shareText = `You are being invited to join a Bible Chat on Faith Talk AI!\n\nView my conversation with ${character?.name}:\n${shareUrl}`;
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Bible Chat on Faith Talk AI',
+              text: shareText,
+              url: shareUrl,
+            });
+            showActionMessage('Shared successfully!');
+          } catch (shareErr) {
+            if (shareErr.name !== 'AbortError') {
+              await navigator.clipboard.writeText(shareText);
+              showActionMessage('Share link copied!');
+            }
           }
+        } else {
+          await navigator.clipboard.writeText(shareText);
+          showActionMessage('Share link copied!');
         }
       } else {
-        await navigator.clipboard.writeText(shareText);
-        showActionMessage('Share link copied!');
+        // Fallback: share conversation as text (works without login)
+        const conversationText = formatConversationAsText();
+        const shareText = `Conversation with ${character?.name || 'FaithTalk AI'}\n\n${conversationText}\n\n— via Faith Talk AI (faithtalkai.com)`;
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `Chat with ${character?.name}`,
+              text: shareText,
+            });
+            showActionMessage('Shared successfully!');
+          } catch (shareErr) {
+            if (shareErr.name !== 'AbortError') {
+              await navigator.clipboard.writeText(shareText);
+              showActionMessage('Conversation copied!');
+            }
+          }
+        } else {
+          await navigator.clipboard.writeText(shareText);
+          showActionMessage('Conversation copied!');
+        }
       }
     } catch (err) {
       console.error('Share error:', err);
