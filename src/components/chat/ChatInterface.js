@@ -104,8 +104,26 @@ const ChatInterface = () => {
             console.warn('[ChatInterface] share_code generation failed:', e);
         }
 
-        // If we do not have a public URL, exit silently (no non-public fallback)
-        if (!url) return;
+        // If we do not have a public URL, fallback to sharing conversation as text
+        if (!url) {
+            const conversationText = messages
+                .filter(m => m.role !== 'system')
+                .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Character'}: ${m.content}`)
+                .join('\n\n');
+            const shareText = `Conversation with ${character?.name || 'FaithTalk AI'}\n\n${conversationText}\n\n— via Faith Talk AI (faithtalkai.com)`;
+            
+            try {
+                if (navigator.share) {
+                    await navigator.share({ title: `Chat with ${character?.name}`, text: shareText });
+                } else {
+                    await navigator.clipboard.writeText(shareText);
+                    alert('Conversation copied to clipboard');
+                }
+            } catch (e) {
+                try { await navigator.clipboard.writeText(shareText); alert('Conversation copied to clipboard'); } catch {}
+            }
+            return;
+        }
 
         // If we now have a chatId but URL bar isn't at /chat/:id yet, sync it for consistency
         try {

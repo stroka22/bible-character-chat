@@ -1270,13 +1270,29 @@ const SimpleChatWithHistory = () => {
                                                                 }
                                                               }
                                                             } catch (e) {
-                                                              console.warn('[Share] share_code generation failed; falling back:', e);
+                                                              console.warn('[Share] share_code generation failed; falling back to text:', e);
                                                             }
 
-                                                            // If no public share URL, do nothing (avoid non-public fallbacks)
-                                                            if (!shareUrl) return;
-                                                            // If no public share URL, do nothing (avoid non-public fallbacks)
-                                                            if (!shareUrl) return;
+                                                            // If no public share URL, fallback to sharing conversation as text
+                                                            if (!shareUrl) {
+                                                              const conversationText = messages
+                                                                .filter(m => m.role !== 'system')
+                                                                .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Character'}: ${m.content}`)
+                                                                .join('\n\n');
+                                                              const shareText = `Conversation with ${character?.name || 'FaithTalk AI'}\n\n${conversationText}\n\n— via Faith Talk AI (faithtalkai.com)`;
+                                                              
+                                                              try {
+                                                                if (navigator.share) {
+                                                                  await navigator.share({ title: `Chat with ${character?.name}`, text: shareText });
+                                                                } else {
+                                                                  await navigator.clipboard.writeText(shareText);
+                                                                  alert('Conversation copied to clipboard');
+                                                                }
+                                                              } catch (e) {
+                                                                try { await navigator.clipboard.writeText(shareText); alert('Conversation copied to clipboard'); } catch {}
+                                                              }
+                                                              return;
+                                                            }
 
                                                     // Prefer native share sheet when available
                                                     try {
