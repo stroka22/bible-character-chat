@@ -82,35 +82,59 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
     };
     const handleSharePublic = async () => {
         try {
-            // Ensure chat is saved
-            if (!chatId) {
-                const ok = await saveChat();
-                if (!ok) return;
+            // If logged in, try to generate a share link
+            if (user && chatId) {
+                const code = await shareConversation(chatId);
+                if (code) {
+                    const url = `${window.location.origin}/shared/${code}`;
+                    try {
+                        if (navigator.share) {
+                            await navigator.share({
+                                title: 'FaithTalk AI Conversation',
+                                text: `Chat with ${character?.name || 'FaithTalk AI'}`,
+                                url,
+                            });
+                        } else {
+                            await navigator.clipboard.writeText(url);
+                            setShowCopySuccess(true);
+                            setTimeout(() => setShowCopySuccess(false), 2000);
+                        }
+                    } catch (err) {
+                        try { await navigator.clipboard.writeText(url); } catch {}
+                    }
+                    return;
+                }
             }
-            // Generate share code via repository path
-            const code = await shareConversation(chatId || (window.__lastChatId || ''));
-            if (!code) {
-                setError('Failed to generate share link.');
-                return;
-            }
-            const url = `${window.location.origin}/shared/${code}`;
-            // Prefer native share sheet; fallback to clipboard
+            
+            // Fallback: share conversation as text (works without login)
+            const conversationText = messages
+                .filter(m => m.role !== 'system')
+                .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Character'}: ${m.content}`)
+                .join('\n\n');
+            
+            const shareText = `Conversation with ${character?.name || 'FaithTalk AI'}\n\n${conversationText}\n\n— via Faith Talk AI (faithtalkai.com)`;
+            
             try {
-              if (navigator.share) {
-                await navigator.share({
-                  title: 'FaithTalk AI Conversation',
-                  text: `Chat with ${character?.name || 'FaithTalk AI'}`,
-                  url,
-                });
-              } else {
-                await navigator.clipboard.writeText(url);
-              }
+                if (navigator.share) {
+                    await navigator.share({
+                        title: `Chat with ${character?.name || 'FaithTalk AI'}`,
+                        text: shareText,
+                    });
+                } else {
+                    await navigator.clipboard.writeText(shareText);
+                    setShowCopySuccess(true);
+                    setTimeout(() => setShowCopySuccess(false), 2000);
+                }
             } catch (err) {
-              try { await navigator.clipboard.writeText(url); } catch {}
+                try { 
+                    await navigator.clipboard.writeText(shareText); 
+                    setShowCopySuccess(true);
+                    setTimeout(() => setShowCopySuccess(false), 2000);
+                } catch {}
             }
         } catch (e) {
-            console.error('Error generating public share link:', e);
-            setError('Failed to generate share link. Please try again.');
+            console.error('Error sharing conversation:', e);
+            setError('Failed to share. Please try again.');
         }
     };
     const handleSaveChat = async () => {
