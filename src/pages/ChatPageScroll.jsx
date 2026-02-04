@@ -464,6 +464,8 @@ const ChatPageScroll = () => {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [renameValue, setRenameValue] = useState('');
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [signupPromptShown, setSignupPromptShown] = useState(false);
   
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -995,6 +997,14 @@ const ChatPageScroll = () => {
     }
     prevMessageCount.current = messages.length;
   }, [messages.length, isTyping, scrollToBottom]);
+
+  // Show signup prompt after 4 messages for non-logged-in users
+  useEffect(() => {
+    if (!isAuthenticated && !signupPromptShown && messages.length >= 4) {
+      setShowSignupPrompt(true);
+      setSignupPromptShown(true);
+    }
+  }, [isAuthenticated, signupPromptShown, messages.length]);
 
   // Render alphabetical navigation (horizontal)
   const renderAlphaNav = () => (
@@ -1773,6 +1783,40 @@ const ChatPageScroll = () => {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sign Up Prompt Modal */}
+      {showSignupPrompt && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowSignupPrompt(false)}>
+          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-2xl font-bold text-amber-900 mb-3 text-center" style={{ fontFamily: 'Cinzel, serif' }}>
+              Enjoying the conversation?
+            </h3>
+            <p className="text-amber-700 mb-6 text-center">
+              Sign up for free to save your conversations, access them from any device, and never lose your chats!
+            </p>
+            <div className="flex flex-col gap-3">
+              <Link
+                to="/signup"
+                className="w-full py-3 bg-amber-600 text-white text-center font-bold rounded-lg hover:bg-amber-700 transition-colors"
+              >
+                Sign Up Free
+              </Link>
+              <Link
+                to="/login"
+                className="w-full py-3 bg-amber-100 text-amber-800 text-center font-medium rounded-lg hover:bg-amber-200 transition-colors"
+              >
+                Already have an account? Log in
+              </Link>
+              <button
+                onClick={() => setShowSignupPrompt(false)}
+                className="w-full py-2 text-amber-600 hover:text-amber-800 text-sm transition-colors"
+              >
+                Continue without signing up
               </button>
             </div>
           </div>
