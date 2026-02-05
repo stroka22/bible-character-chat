@@ -538,15 +538,20 @@ const ChatPageScroll = () => {
         // Try site settings
         const owner = getOwnerSlug();
         try {
+          console.log('[ChatPageScroll] Loading site settings for owner:', owner);
           const settings = await siteSettingsRepository.getSettings(owner);
+          console.log('[ChatPageScroll] Site settings result:', settings);
           if (settings?.defaultId) {
             const c = data.find(c => String(c.id) === String(settings.defaultId));
+            console.log('[ChatPageScroll] Found character for defaultId:', c?.name);
             if (c) {
               setFeaturedCharacter(c);
               return;
             }
           }
-        } catch {}
+        } catch (e) {
+          console.error('[ChatPageScroll] Failed to load site settings:', e);
+        }
         
         // Try user preference
         if (user?.id) {
