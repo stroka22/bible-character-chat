@@ -299,8 +299,8 @@ export default function StudyDetail({ route, navigation }: any) {
         const hasStudyPrompt = studyInstructions && studyInstructions.trim().length > 0;
         console.log('[StudyDetail] Has study prompt:', hasStudyPrompt, 'length:', studyInstructions?.length || 0);
         const introRequest = hasStudyPrompt
-          ? `Begin this Bible study session now. You MUST follow the MANDATORY STRUCTURE in the Study Prompt section above EXACTLY. If the Study Prompt says to open with prayer, you MUST start with a prayer. If it specifies steps or format, follow them precisely. Do not skip, reorder, or improvise any required steps. The Study Prompt instructions take priority over everything else.`
-          : `Begin this Bible study session now. Start with a warm greeting and introduce the lesson topic.`;
+          ? `Begin this Bible study session now. CRITICAL: You MUST start with a prayer about this lesson's topic. After the prayer, follow any other instructions in the Study Prompt section above. The prayer should be sincere, relevant to the lesson topic, and about 2-3 sentences. Then greet the student and introduce the lesson.`
+          : `Begin this Bible study session now. Start with a brief prayer about the lesson topic (2-3 sentences), then greet the student warmly and introduce what you'll be studying together.`;
         
         const intro = await generateCharacterResponse(displayName, char?.persona_prompt || '', [
           { role: 'system', content: lessonPrompt },

@@ -47,8 +47,8 @@ function defaults(): TierSettings {
     freeCharacters: [],
     freeCharacterNames: [],
     premiumRoundtableGates: {
-      savingRequiresPremium: true,
-      premiumOnly: true,
+      savingRequiresPremium: false,
+      premiumOnly: false,  // Allow free users to access roundtables by default
       allowAllSpeak: false,
       strictRotation: false,
     },
