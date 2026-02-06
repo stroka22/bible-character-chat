@@ -413,6 +413,162 @@ export const readingPlansRepository = {
     if (error) throw error;
     return true;
   },
+
+  // ============================================
+  // COPY-ON-WRITE: Org-specific plan management
+  // ============================================
+
+  /**
+   * Copy a single reading plan (with all its days) to a new organization
+   * @param {string} planId - Source plan ID
+   * @param {string} targetOwnerSlug - Target organization
+   * @returns {object} The new plan
+   */
+  async copyPlanToOrg(planId, targetOwnerSlug) {
+    if (!planId || !targetOwnerSlug) {
+      throw new Error('Plan ID and target organization required');
+    }
+    
+    // Get the source plan
+    const { data: sourcePlan, error: planError } = await supabase
+      .from('reading_plans')
+      .select('*')
+      .eq('id', planId)
+      .single();
+    
+    if (planError || !sourcePlan) {
+      throw new Error('Source plan not found');
+    }
+    
+    // Check if a copy already exists for this org
+    const { data: existing } = await supabase
+      .from('reading_plans')
+      .select('id')
+      .eq('owner_slug', targetOwnerSlug)
+      .eq('source_plan_id', planId)
+      .maybeSingle();
+    
+    if (existing) {
+      throw new Error('Plan already exists for this organization');
+    }
+    
+    // Create the plan copy with a unique slug
+    const { id: _oldId, created_at: _ca, updated_at: _ua, slug: oldSlug, ...planData } = sourcePlan;
+    const newPlan = {
+      ...planData,
+      slug: `${oldSlug}-${targetOwnerSlug}`,
+      owner_slug: targetOwnerSlug,
+      source_plan_id: planId,
+    };
+    
+    const { data: createdPlan, error: createError } = await supabase
+      .from('reading_plans')
+      .insert(newPlan)
+      .select()
+      .single();
+    
+    if (createError) throw createError;
+    
+    // Get all days from the source plan
+    const { data: sourceDays, error: daysError } = await supabase
+      .from('reading_plan_days')
+      .select('*')
+      .eq('plan_id', planId)
+      .order('day_number');
+    
+    if (daysError) throw daysError;
+    
+    // Copy all days
+    if (sourceDays && sourceDays.length > 0) {
+      const newDays = sourceDays.map(day => {
+        const { id: _did, created_at: _dca, plan_id: _pid, ...dayData } = day;
+        return {
+          ...dayData,
+          plan_id: createdPlan.id,
+          source_day_id: day.id,
+        };
+      });
+      
+      const { error: insertDaysError } = await supabase
+        .from('reading_plan_days')
+        .insert(newDays);
+      
+      if (insertDaysError) throw insertDaysError;
+    }
+    
+    return createdPlan;
+  },
+
+  /**
+   * Copy all reading plans from one organization to another
+   * @param {string} sourceOwnerSlug - Source organization (use null for default/unowned plans)
+   * @param {string} targetOwnerSlug - Target organization
+   * @returns {number} Number of plans copied
+   */
+  async copyAllPlansToOrg(sourceOwnerSlug, targetOwnerSlug) {
+    if (!targetOwnerSlug) {
+      throw new Error('Cannot copy to empty organization');
+    }
+    
+    // Get all plans from source org
+    let query = supabase
+      .from('reading_plans')
+      .select('id, title');
+    
+    if (sourceOwnerSlug) {
+      query = query.eq('owner_slug', sourceOwnerSlug);
+    } else {
+      query = query.or('owner_slug.is.null,owner_slug.eq.default,owner_slug.eq.faithtalkai');
+    }
+    
+    const { data: sourcePlans, error: fetchError } = await query;
+    
+    if (fetchError) throw fetchError;
+    if (!sourcePlans || sourcePlans.length === 0) return 0;
+    
+    // Check which plans already exist in target org
+    const { data: existingPlans } = await supabase
+      .from('reading_plans')
+      .select('source_plan_id')
+      .eq('owner_slug', targetOwnerSlug);
+    
+    const existingSourceIds = new Set((existingPlans || []).map(p => p.source_plan_id).filter(Boolean));
+    
+    // Filter out plans that already exist
+    const plansToCopy = sourcePlans.filter(p => !existingSourceIds.has(p.id));
+    
+    let copied = 0;
+    for (const plan of plansToCopy) {
+      try {
+        await this.copyPlanToOrg(plan.id, targetOwnerSlug);
+        copied++;
+      } catch (err) {
+        console.error(`Failed to copy plan ${plan.id}:`, err);
+      }
+    }
+    
+    return copied;
+  },
+
+  /**
+   * Reset an org's plan back to the source (delete the copy)
+   * @param {string} planId - The org-specific plan ID to delete
+   */
+  async resetPlanToSource(planId) {
+    // First delete all days
+    await supabase
+      .from('reading_plan_days')
+      .delete()
+      .eq('plan_id', planId);
+    
+    // Then delete the plan
+    const { error } = await supabase
+      .from('reading_plans')
+      .delete()
+      .eq('id', planId);
+    
+    if (error) throw error;
+  }
 };
 
 export default readingPlansRepository;

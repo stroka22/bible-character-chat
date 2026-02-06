@@ -863,5 +863,149 @@ export const bibleStudiesAdminRepository = {
       if (error) throw error;
     }
     return true;
+  },
+
+  /**
+   * Copy a single study (with all its lessons) to a new organization
+   * @param {string} studyId - Source study ID
+   * @param {string} targetOwnerSlug - Target organization
+   * @returns {object} The new study
+   */
+  async copyStudyToOrg(studyId, targetOwnerSlug) {
+    if (!studyId || !targetOwnerSlug) {
+      throw new Error('Study ID and target organization required');
+    }
+    
+    // Get the source study
+    const { data: sourceStudy, error: studyError } = await supabase
+      .from('bible_studies')
+      .select('*')
+      .eq('id', studyId)
+      .single();
+    
+    if (studyError || !sourceStudy) {
+      throw new Error('Source study not found');
+    }
+    
+    // Check if a copy already exists for this org
+    const { data: existing } = await supabase
+      .from('bible_studies')
+      .select('id')
+      .eq('owner_slug', targetOwnerSlug)
+      .eq('source_study_id', studyId)
+      .maybeSingle();
+    
+    if (existing) {
+      throw new Error('Study already exists for this organization');
+    }
+    
+    // Create the study copy
+    const { id: _oldId, created_at: _ca, updated_at: _ua, ...studyData } = sourceStudy;
+    const newStudy = {
+      ...studyData,
+      owner_slug: targetOwnerSlug,
+      source_study_id: studyId,
+    };
+    
+    const { data: createdStudy, error: createError } = await supabase
+      .from('bible_studies')
+      .insert(newStudy)
+      .select()
+      .single();
+    
+    if (createError) throw createError;
+    
+    // Get all lessons from the source study
+    const { data: sourceLessons, error: lessonsError } = await supabase
+      .from('bible_study_lessons')
+      .select('*')
+      .eq('study_id', studyId)
+      .order('order_index');
+    
+    if (lessonsError) throw lessonsError;
+    
+    // Copy all lessons
+    if (sourceLessons && sourceLessons.length > 0) {
+      const newLessons = sourceLessons.map(lesson => {
+        const { id: _lid, created_at: _lca, updated_at: _lua, study_id: _sid, ...lessonData } = lesson;
+        return {
+          ...lessonData,
+          study_id: createdStudy.id,
+          source_lesson_id: lesson.id,
+        };
+      });
+      
+      const { error: insertLessonsError } = await supabase
+        .from('bible_study_lessons')
+        .insert(newLessons);
+      
+      if (insertLessonsError) throw insertLessonsError;
+    }
+    
+    return createdStudy;
+  },
+
+  /**
+   * Copy all studies from one organization to another
+   * @param {string} sourceOwnerSlug - Source organization (use 'default' or 'faithtalkai')
+   * @param {string} targetOwnerSlug - Target organization
+   * @returns {number} Number of studies copied
+   */
+  async copyAllStudiesToOrg(sourceOwnerSlug, targetOwnerSlug) {
+    if (!targetOwnerSlug || targetOwnerSlug === 'default') {
+      throw new Error('Cannot copy to default organization');
+    }
+    
+    // Get all studies from source org
+    const { data: sourceStudies, error: fetchError } = await supabase
+      .from('bible_studies')
+      .select('id, title')
+      .eq('owner_slug', sourceOwnerSlug || 'faithtalkai');
+    
+    if (fetchError) throw fetchError;
+    if (!sourceStudies || sourceStudies.length === 0) return 0;
+    
+    // Check which studies already exist in target org
+    const { data: existingStudies } = await supabase
+      .from('bible_studies')
+      .select('source_study_id')
+      .eq('owner_slug', targetOwnerSlug);
+    
+    const existingSourceIds = new Set((existingStudies || []).map(s => s.source_study_id).filter(Boolean));
+    
+    // Filter out studies that already exist
+    const studiesToCopy = sourceStudies.filter(s => !existingSourceIds.has(s.id));
+    
+    let copied = 0;
+    for (const study of studiesToCopy) {
+      try {
+        await this.copyStudyToOrg(study.id, targetOwnerSlug);
+        copied++;
+      } catch (err) {
+        console.error(`Failed to copy study ${study.id}:`, err);
+      }
+    }
+    
+    return copied;
+  },
+
+  /**
+   * Reset an org's study back to the source (delete the copy)
+   * @param {string} studyId - The org-specific study ID to delete
+   */
+  async resetStudyToSource(studyId) {
+    // First delete all lessons
+    await supabase
+      .from('bible_study_lessons')
+      .delete()
+      .eq('study_id', studyId);
+    
+    // Then delete the study
+    const { error } = await supabase
+      .from('bible_studies')
+      .delete()
+      .eq('id', studyId);
+    
+    if (error) throw error;
   }
 };
