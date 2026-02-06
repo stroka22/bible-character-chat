@@ -136,8 +136,9 @@ const AdminPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Pass isAdmin=true to fetch all characters for admin view
-      const fetchedCharacters = await characterRepository.getAll(true);
+      // Pass isAdmin=true and owner_slug to fetch org-specific characters merged with defaults
+      const ownerSlug = profile?.owner_slug || 'default';
+      const fetchedCharacters = await characterRepository.getAll(true, ownerSlug);
       setCharacters(fetchedCharacters);
     } catch (err) {
       console.error('Failed to fetch characters:', err);
@@ -145,7 +146,7 @@ const AdminPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [profile?.owner_slug]);
 
   // Mirror profile -> local toggle state
   useEffect(() => {
@@ -229,7 +230,8 @@ const AdminPage: React.FC = () => {
         throw new Error('No valid characters found in CSV. Ensure headers and data are correct.');
       }
 
-      await characterRepository.bulkCreateCharacters(charactersToCreate);
+      const ownerSlug = profile?.owner_slug || 'default';
+      await characterRepository.bulkCreateCharacters(charactersToCreate, ownerSlug);
       setSuccessMessage(`Successfully uploaded ${charactersToCreate.length} characters.`);
       fetchCharacters(); // Refresh list
     } catch (err) {
@@ -269,11 +271,14 @@ const AdminPage: React.FC = () => {
     };
 
     try {
+      // Use the admin's owner_slug for copy-on-write behavior
+      const ownerSlug = profile?.owner_slug || 'default';
+      
       if (editingCharacterId) {
-        await characterRepository.updateCharacter(editingCharacterId, characterData);
+        await characterRepository.updateCharacter(editingCharacterId, characterData, ownerSlug);
         setSuccessMessage('Character updated successfully!');
       } else {
-        await characterRepository.createCharacter(characterData);
+        await characterRepository.createCharacter(characterData, ownerSlug);
         setSuccessMessage('Character created successfully!');
       }
       resetForm();
@@ -338,8 +343,9 @@ const AdminPage: React.FC = () => {
     setError(null);
     setSuccessMessage(null);
     try {
+      const ownerSlug = profile?.owner_slug || 'default';
       const newVisibility = !(character.is_visible ?? true); // Toggle current state, default to true
-      await characterRepository.updateCharacter(character.id, { is_visible: newVisibility });
+      await characterRepository.updateCharacter(character.id, { is_visible: newVisibility }, ownerSlug);
       setSuccessMessage(`Character '${character.name}' visibility updated to ${newVisibility ? 'visible' : 'hidden'}.`);
       fetchCharacters(); // Refresh list
     } catch (err) {
