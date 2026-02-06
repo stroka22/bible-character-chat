@@ -853,10 +853,10 @@ const SuperadminUsersPage = () => {
                 >
                   <option value="">Select organization...</option>
                   {owners
-                    .filter(o => o !== '__ALL__' && o !== 'default' && o !== 'faithtalkai')
+                    .filter(o => o.owner_slug && o.owner_slug !== 'default' && o.owner_slug !== 'faithtalkai')
                     .map((o) => (
-                      <option key={o} value={o}>
-                        {o}
+                      <option key={o.owner_slug} value={o.owner_slug}>
+                        {o.display_name || o.owner_slug}
                       </option>
                     ))}
                 </select>
