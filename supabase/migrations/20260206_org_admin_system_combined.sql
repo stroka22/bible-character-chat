@@ -53,7 +53,7 @@ CREATE POLICY "Users can insert characters for their org" ON characters
       'default'
     )
     OR 
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_superadmin = true)
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'superadmin')
   );
 
 -- Users can update characters for their own org
@@ -64,7 +64,7 @@ CREATE POLICY "Users can update characters for their org" ON characters
       'default'
     )
     OR 
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_superadmin = true)
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'superadmin')
   );
 
 -- Users can delete characters for their own org (not default)
@@ -78,7 +78,7 @@ CREATE POLICY "Users can delete their org characters" ON characters
       AND owner_slug != 'default'
     )
     OR 
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_superadmin = true)
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'superadmin')
   );
 
 -- ============================================================
