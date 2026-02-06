@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { supabase, SUPABASE_ANON_KEY } from '../../services/supabase';
 import { getMyProfile } from '../../services/invitesService';
 import { useAuth } from '../../contexts/AuthContext';
+import { characterRepository } from '../../repositories/characterRepository';
+import { bibleStudiesAdminRepository } from '../../repositories/bibleStudiesRepository';
+import { readingPlansRepository } from '../../repositories/readingPlansRepository';
 
 // Helper: fetch active Stripe subscription info for a customer id
 async function fetchActiveSubscription(customerId) {
@@ -74,6 +77,15 @@ const SuperadminUsersPage = () => {
   const [newOrg, setNewOrg] = useState({ ownerSlug: '', displayName: '' });
   const [savingOrg, setSavingOrg] = useState(false);
   const [orgError, setOrgError] = useState('');
+
+  /* ─────────────────────────────────────────────
+   *  Copy All Content modal state (superadmin)
+   * ──────────────────────────────────────────── */
+  const [showCopyContent, setShowCopyContent] = useState(false);
+  const [copyTargetOrg, setCopyTargetOrg] = useState('');
+  const [copyingContent, setCopyingContent] = useState(false);
+  const [copyResult, setCopyResult] = useState(null);
+  const [copyError, setCopyError] = useState('');
   
   // Check if current user is superadmin
   useEffect(() => {
@@ -582,6 +594,58 @@ const SuperadminUsersPage = () => {
     }
   };
 
+  /* ─────────────────────────────────────────────
+   *  Copy All Content to Organization (superadmin)
+   * ──────────────────────────────────────────── */
+  const handleCopyAllContent = async (e) => {
+    e.preventDefault();
+    if (!isSuperAdmin || copyingContent || !copyTargetOrg) return;
+
+    setCopyError('');
+    setCopyResult(null);
+    setCopyingContent(true);
+
+    try {
+      const results = {
+        characters: 0,
+        studies: 0,
+        plans: 0,
+      };
+
+      // Copy all characters
+      try {
+        results.characters = await characterRepository.copyAllCharactersToOrg(copyTargetOrg);
+      } catch (err) {
+        console.error('Failed to copy characters:', err);
+      }
+
+      // Copy all Bible studies
+      try {
+        results.studies = await bibleStudiesAdminRepository.copyAllStudiesToOrg('faithtalkai', copyTargetOrg);
+      } catch (err) {
+        console.error('Failed to copy studies:', err);
+      }
+
+      // Copy all reading plans
+      try {
+        results.plans = await readingPlansRepository.copyAllPlansToOrg(null, copyTargetOrg);
+      } catch (err) {
+        console.error('Failed to copy plans:', err);
+      }
+
+      setCopyResult(results);
+      setActionMessage({
+        text: `Copied ${results.characters} characters, ${results.studies} studies, ${results.plans} plans to ${copyTargetOrg}`,
+        type: 'success',
+      });
+    } catch (err) {
+      setCopyError(err.message || 'Failed to copy content');
+    } finally {
+      setCopyingContent(false);
+      setTimeout(() => setActionMessage({ text: '', type: '' }), 5000);
+    }
+  };
+
   const totalPages = Math.ceil(totalProfiles / filters.pageSize);
   
   // If still loading initial check
@@ -640,9 +704,15 @@ const SuperadminUsersPage = () => {
           </Link>
         </div>
         
-        {/* Create-org action */}
+        {/* Create-org and Copy Content actions */}
         {isSuperAdmin && (
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end gap-3 mb-4">
+            <button
+              onClick={() => setShowCopyContent(true)}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-400 transition-colors"
+            >
+              Copy All Content to Org
+            </button>
             <button
               onClick={() => setShowCreateOrg(true)}
               className="px-4 py-2 bg-yellow-400 text-blue-900 rounded-lg hover:bg-yellow-300 transition-colors"
@@ -733,6 +803,95 @@ const SuperadminUsersPage = () => {
                   >
                     {savingOrg ? 'Creating...' : 'Create'}
                   </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────
+         *  Copy All Content Modal (superadmin only)
+         * ──────────────────────────────────────────── */}
+        {showCopyContent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black bg-opacity-60"
+              onClick={() => !copyingContent && setShowCopyContent(false)}
+            />
+
+            {/* Modal card */}
+            <div className="relative bg-blue-800 w-11/12 max-w-md rounded-lg shadow-xl p-6 z-10">
+              <h3 className="text-xl font-semibold mb-4">Copy All Content to Organization</h3>
+
+              <p className="text-blue-200 text-sm mb-4">
+                This will copy all characters, Bible studies, and reading plans from the default organization to the selected organization.
+              </p>
+
+              {copyError && (
+                <div className="mb-3 p-2 rounded bg-red-700 text-white text-sm">
+                  {copyError}
+                </div>
+              )}
+
+              {copyResult && (
+                <div className="mb-3 p-2 rounded bg-green-700 text-white text-sm">
+                  Copied: {copyResult.characters} characters, {copyResult.studies} studies, {copyResult.plans} plans
+                </div>
+              )}
+
+              <form onSubmit={handleCopyAllContent}>
+                {/* Target Organization */}
+                <label className="block text-sm font-medium mb-1">
+                  Target Organization
+                </label>
+                <select
+                  value={copyTargetOrg}
+                  onChange={(e) => setCopyTargetOrg(e.target.value)}
+                  className="w-full mb-4 px-3 py-2 bg-blue-700 border border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  disabled={copyingContent}
+                >
+                  <option value="">Select organization...</option>
+                  {owners
+                    .filter(o => o !== '__ALL__' && o !== 'default' && o !== 'faithtalkai')
+                    .map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
+                </select>
+
+                {/* Actions */}
+                <div className="flex justify-end space-x-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCopyContent(false);
+                      setCopyResult(null);
+                      setCopyError('');
+                    }}
+                    disabled={copyingContent}
+                    className={`px-4 py-2 rounded-lg ${
+                      copyingContent
+                        ? 'bg-gray-600'
+                        : 'bg-blue-700 hover:bg-blue-600'
+                    }`}
+                  >
+                    {copyResult ? 'Done' : 'Cancel'}
+                  </button>
+                  {!copyResult && (
+                    <button
+                      type="submit"
+                      disabled={copyingContent || !copyTargetOrg}
+                      className={`px-4 py-2 rounded-lg font-medium ${
+                        copyingContent || !copyTargetOrg
+                          ? 'bg-gray-500 cursor-not-allowed'
+                          : 'bg-green-500 text-white hover:bg-green-400'
+                      }`}
+                    >
+                      {copyingContent ? 'Copying...' : 'Copy All Content'}
+                    </button>
+                  )}
                 </div>
               </form>
             </div>
