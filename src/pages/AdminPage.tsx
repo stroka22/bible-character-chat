@@ -13,6 +13,7 @@ import AccountTierManagement from '../components/admin/AccountTierManagement';
 import AdminStudiesPage from './admin/AdminStudiesPage.jsx';
 import AdminReadingPlansPage from './admin/AdminReadingPlansPage.jsx';
 import AdminBranding from '../components/admin/AdminBranding';
+import { getOwnerSlug } from '../services/tierSettingsService';
 
 // Helper function for basic CSV parsing
 const parseCSV = (csvText: string): Array<Record<string, string>> => {
@@ -62,6 +63,25 @@ const AdminPage: React.FC = () => {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isAdmin = true;
+  
+  /* ------------------------------------------------------------
+   * Effective Owner Slug - for superadmin "View as Org" feature
+   * Uses localStorage if set (by superadmin), otherwise uses profile
+   * ---------------------------------------------------------- */
+  const [effectiveOwnerSlug, setEffectiveOwnerSlug] = useState<string>(() => {
+    return getOwnerSlug() || profile?.owner_slug || 'default';
+  });
+  
+  // Update effectiveOwnerSlug when localStorage changes (View as Org)
+  useEffect(() => {
+    const handleOwnerSlugChange = () => {
+      const newSlug = getOwnerSlug() || profile?.owner_slug || 'default';
+      setEffectiveOwnerSlug(newSlug);
+    };
+    window.addEventListener('ownerSlugChanged', handleOwnerSlugChange);
+    return () => window.removeEventListener('ownerSlugChanged', handleOwnerSlugChange);
+  }, [profile?.owner_slug]);
+  
   const [characters, setCharacters] = useState<Character[]>([]);
   const [savingWeeklyCsv, setSavingWeeklyCsv] = useState<boolean>(false);
   const [weeklyCsvEnabled, setWeeklyCsvEnabled] = useState<boolean>(false);
@@ -139,8 +159,7 @@ const AdminPage: React.FC = () => {
     setError(null);
     try {
       // Pass isAdmin=true and owner_slug to fetch org-specific characters merged with defaults
-      const ownerSlug = profile?.owner_slug || 'default';
-      const fetchedCharacters = await characterRepository.getAll(true, ownerSlug);
+      const fetchedCharacters = await characterRepository.getAll(true, effectiveOwnerSlug);
       setCharacters(fetchedCharacters);
     } catch (err) {
       console.error('Failed to fetch characters:', err);
@@ -148,7 +167,7 @@ const AdminPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [profile?.owner_slug]);
+  }, [effectiveOwnerSlug]);
 
   // Mirror profile -> local toggle state
   useEffect(() => {
@@ -232,8 +251,7 @@ const AdminPage: React.FC = () => {
         throw new Error('No valid characters found in CSV. Ensure headers and data are correct.');
       }
 
-      const ownerSlug = profile?.owner_slug || 'default';
-      await characterRepository.bulkCreateCharacters(charactersToCreate, ownerSlug);
+      await characterRepository.bulkCreateCharacters(charactersToCreate, effectiveOwnerSlug);
       setSuccessMessage(`Successfully uploaded ${charactersToCreate.length} characters.`);
       fetchCharacters(); // Refresh list
     } catch (err) {
@@ -273,14 +291,12 @@ const AdminPage: React.FC = () => {
     };
 
     try {
-      // Use the admin's owner_slug for copy-on-write behavior
-      const ownerSlug = profile?.owner_slug || 'default';
-      
+      // Use the effective owner_slug for copy-on-write behavior (supports View as Org)
       if (editingCharacterId) {
-        await characterRepository.updateCharacter(editingCharacterId, characterData, ownerSlug);
+        await characterRepository.updateCharacter(editingCharacterId, characterData, effectiveOwnerSlug);
         setSuccessMessage('Character updated successfully!');
       } else {
-        await characterRepository.createCharacter(characterData, ownerSlug);
+        await characterRepository.createCharacter(characterData, effectiveOwnerSlug);
         setSuccessMessage('Character created successfully!');
       }
       resetForm();
@@ -345,9 +361,8 @@ const AdminPage: React.FC = () => {
     setError(null);
     setSuccessMessage(null);
     try {
-      const ownerSlug = profile?.owner_slug || 'default';
       const newVisibility = !(character.is_visible ?? true); // Toggle current state, default to true
-      await characterRepository.updateCharacter(character.id, { is_visible: newVisibility }, ownerSlug);
+      await characterRepository.updateCharacter(character.id, { is_visible: newVisibility }, effectiveOwnerSlug);
       setSuccessMessage(`Character '${character.name}' visibility updated to ${newVisibility ? 'visible' : 'hidden'}.`);
       fetchCharacters(); // Refresh list
     } catch (err) {
@@ -392,6 +407,25 @@ const AdminPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 md:pl-72">
+      {/* Show banner when viewing as different org */}
+      {effectiveOwnerSlug !== (profile?.owner_slug || 'default') && (
+        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded-lg flex items-center justify-between">
+          <span className="text-yellow-800 font-medium">
+            👁️ Viewing as: <strong>{effectiveOwnerSlug}</strong>
+          </span>
+          <button 
+            onClick={() => {
+              const myOrg = profile?.owner_slug || 'faithtalkai';
+              localStorage.setItem('ownerSlug', myOrg);
+              window.dispatchEvent(new Event('ownerSlugChanged'));
+              window.location.reload();
+            }}
+            className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+          >
+            Exit View Mode
+          </button>
+        </div>
+      )}
       <h1 className="text-3xl font-bold text-gray-900 mb-2">{tabInfo.title}</h1>
       <p className="text-gray-700 mb-4">{tabInfo.desc}</p>
 
