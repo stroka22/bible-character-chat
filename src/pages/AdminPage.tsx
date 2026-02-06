@@ -12,6 +12,7 @@ import AdminFavorites from '../components/admin/AdminFavorites';
 import AccountTierManagement from '../components/admin/AccountTierManagement';
 import AdminStudiesPage from './admin/AdminStudiesPage.jsx';
 import AdminReadingPlansPage from './admin/AdminReadingPlansPage.jsx';
+import AdminBranding from '../components/admin/AdminBranding';
 
 // Helper function for basic CSV parsing
 const parseCSV = (csvText: string): Array<Record<string, string>> => {
@@ -85,7 +86,8 @@ const AdminPage: React.FC = () => {
     | 'accountTiers'
     | 'roundtable'
     | 'studies'
-    | 'readingPlans';
+    | 'readingPlans'
+    | 'branding';
   const [activeTab, setActiveTab] = useState<AdminMainTab>('overview');
 
   // Form state for manual creation/editing
@@ -379,6 +381,7 @@ const AdminPage: React.FC = () => {
       case 'featured': return { title: 'Admin Panel - Featured Character', desc: 'Set which character appears as featured on the home page.' };
       case 'studies': return { title: 'Admin Panel - Bible Studies', desc: 'Manage Bible studies, lessons, categories, and visibility.' };
       case 'readingPlans': return { title: 'Admin Panel - Reading Plans', desc: 'Manage reading plans, categories, and featured plans.' };
+      case 'branding': return { title: 'Admin Panel - Branding', desc: 'Customize your organization\'s logo, colors, and welcome message.' };
       case 'faq': return { title: 'Admin Panel - FAQ', desc: 'Manage frequently asked questions and answers.' };
       case 'roundtable': return { title: 'Admin Panel - Roundtable', desc: 'Manage roundtable discussion settings.' };
       case 'accountTiers': return { title: 'Admin Panel - Account Tiers', desc: 'Manage subscription tiers and pricing.' };
@@ -403,6 +406,7 @@ const AdminPage: React.FC = () => {
             <button onClick={() => setActiveTab('featured')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'featured' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Featured Character</button>
             <button onClick={() => setActiveTab('studies')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'studies' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Bible Studies</button>
             <button onClick={() => setActiveTab('readingPlans')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'readingPlans' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Reading Plans</button>
+            <button onClick={() => setActiveTab('branding')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'branding' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Branding</button>
             <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
             <button onClick={() => setActiveTab('faq')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'faq' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>FAQ</button>
           </nav>
@@ -978,6 +982,12 @@ const AdminPage: React.FC = () => {
 
       {activeTab === 'readingPlans' && (
         <AdminReadingPlansPage embedded={true} />
+      )}
+
+      {activeTab === 'branding' && (
+        <section className="p-6 bg-white rounded-lg shadow-md">
+          <AdminBranding />
+        </section>
       )}
 
       {/* ----------------------------------------------------------------
