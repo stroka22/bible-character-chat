@@ -4,35 +4,29 @@ import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
 
-// Influencer configuration - add new influencers here
+// Influencer configuration - audience-facing content
 const influencers = {
   'joshua-wright': {
     name: 'Joshua Wright',
-    handle: '@joshuawrightguided',
-    instagram: 'https://www.instagram.com/joshuawrightgguided/',
+    handle: '@joshuawrightgguided',
     followers: '817K',
-    tagline: 'Your Ministry. Your Message. Your Business.',
-    welcomeMessage: "This isn't about promoting an app - it's about building something that's truly yours.",
-    bio: "Joshua Wright reaches hundreds of thousands with powerful content about authentic faith. Now imagine that message amplified through AI characters that teach exactly the way you do.",
+    welcomeMessage: "I'm excited to share this incredible tool with you. It's helped me go deeper in Scripture, and I know it will do the same for you.",
     photoUrl: null,
-    customColor: 'amber',
-    hasCustomCharacters: true,
-    customCharacterExamples: ['Real Jesus', 'Fake Jesus', 'The Discerner'],
-    controlsTiers: true,
+    // Exclusive characters for this influencer's audience
+    hasExclusiveContent: true,
+    exclusiveCharacters: ['Real Jesus', 'Fake Jesus', 'The Discerner'],
+    exclusiveStudies: ['Authentic Faith', 'Discerning Truth from Deception'],
   },
 };
 
-// Default config for unknown influencers
 const defaultInfluencer = {
-  name: 'Partner',
+  name: 'Our Partner',
   handle: '',
-  tagline: 'Your Ministry. Your Message. Your Business.',
-  welcomeMessage: "This isn't about promoting an app - it's about building something that's truly yours.",
-  bio: "A trusted voice in the Christian community ready to amplify their message through AI.",
+  welcomeMessage: "Welcome! I'm excited to share this incredible tool with you.",
   photoUrl: null,
-  customColor: 'amber',
-  hasCustomCharacters: true,
-  controlsTiers: true,
+  hasExclusiveContent: false,
+  exclusiveCharacters: [],
+  exclusiveStudies: [],
 };
 
 const InfluencerLandingPage = () => {
@@ -41,71 +35,51 @@ const InfluencerLandingPage = () => {
   
   const features = [
     {
-      icon: '🎭',
-      title: 'Custom Characters',
-      description: 'Create AI characters that teach YOUR theology, answer questions YOUR way, and reflect YOUR message.',
+      icon: '💬',
+      title: '90+ Biblical Characters',
+      description: 'Have real conversations with Moses, David, Paul, Mary, and dozens more. Ask questions, explore their stories, grow in faith.',
     },
     {
-      icon: '💰',
-      title: 'You Own the Revenue',
-      description: "Your audience, your pricing, your business. We handle the tech - you keep the profits.",
-    },
-    {
-      icon: '🎯',
-      title: 'Your Brand, Your Platform',
-      description: 'Custom landing pages, your branding, your voice. Not a generic app with your name slapped on it.',
+      icon: '👥',
+      title: 'Roundtable Discussions',
+      description: 'Bring multiple characters together to discuss any topic from different biblical perspectives.',
     },
     {
       icon: '📖',
-      title: 'Custom Bible Studies',
-      description: 'Create guided studies led by your custom characters teaching exactly how you would teach.',
+      title: '35+ Guided Bible Studies',
+      description: 'Go through structured studies with a biblical character as your personal guide.',
     },
     {
-      icon: '🔄',
-      title: '24/7 Ministry',
-      description: 'Your characters can minister to your audience anytime, anywhere - even when you sleep.',
+      icon: '📅',
+      title: '140+ Reading Plans',
+      description: 'Follow curated plans covering different books, topics, and timeframes.',
     },
     {
-      icon: '📈',
-      title: 'Scalable Income',
-      description: 'Turn your following into sustainable ministry income without trading more of your time.',
+      icon: '📚',
+      title: '9 Bible Translations',
+      description: 'Read Scripture in KJV, ASV, WEB, and more - all built right in.',
+    },
+    {
+      icon: '🔖',
+      title: 'Save & Share',
+      description: 'Save meaningful conversations, share insights, and invite friends to join discussions.',
     },
   ];
 
-  // What makes this different - the business opportunity
-  const businessFeatures = [
+  const exclusiveFeatures = influencer.hasExclusiveContent ? [
     {
       icon: '⭐',
-      title: 'Your Custom Characters',
-      description: `Characters that teach YOUR message - designed by you, powered by our AI.`,
-      examples: influencer.customCharacterExamples,
+      title: 'Exclusive Characters',
+      description: `Access unique characters curated by ${influencer.name} - only available to this community.`,
+      items: influencer.exclusiveCharacters,
     },
     {
-      icon: '💵',
-      title: 'Real Revenue',
-      description: `Set your own pricing. Your subscribers pay you directly. We just take a small platform fee.`,
+      icon: '📖',
+      title: 'Exclusive Studies',
+      description: `Special Bible studies designed for ${influencer.name}'s community.`,
+      items: influencer.exclusiveStudies,
     },
-    {
-      icon: '🚀',
-      title: 'We Build It For You',
-      description: 'No tech skills needed. Tell us your vision, we make it happen. You focus on ministry.',
-    },
-  ];
-
-  const comingSoon = [
-    {
-      icon: '🎥',
-      title: 'Video Conversations',
-      description: 'Face-to-face video meetings with biblical characters using cutting-edge AI avatar technology.',
-      status: 'Coming 2026',
-    },
-    {
-      icon: '🎧',
-      title: 'Voice Conversations',
-      description: 'Speak naturally and hear characters respond in realistic voices.',
-      status: 'Coming Soon',
-    },
-  ];
+  ] : [];
 
   return (
     <PreviewLayout>
@@ -116,17 +90,17 @@ const InfluencerLandingPage = () => {
             <div className="text-center py-8">
               {/* Partner Badge */}
               <div className="inline-flex items-center gap-2 bg-amber-600/20 text-amber-800 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-amber-300">
-                <span>🤝</span>
-                <span>Partnership Opportunity for {influencer.name}</span>
+                <span>✨</span>
+                <span>Recommended by {influencer.name}</span>
               </div>
 
               {/* Main Headline */}
               <h1 className="text-4xl md:text-5xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
-                Launch Your Own AI-Powered Ministry
+                Have Real Conversations with Biblical Characters
               </h1>
               
               <p className="text-xl text-amber-700 max-w-2xl mx-auto mb-6">
-                Your theology. Your characters. Your audience. Your revenue. We handle the tech.
+                AI-powered faith conversations that help you understand Scripture like never before.
               </p>
 
               {/* Influencer Welcome */}
@@ -158,64 +132,66 @@ const InfluencerLandingPage = () => {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <a
-                  href="mailto:partnerships@faithtalkai.com?subject=Partnership Inquiry&body=Hi, I'm interested in learning more about launching my own AI-powered ministry platform."
+                <Link
+                  to={`/signup?ref=${slug}`}
                   className="px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors shadow-lg text-lg"
                 >
-                  Let's Talk Partnership
-                </a>
+                  Start Free Today
+                </Link>
                 <Link
                   to="/chat"
                   className="px-8 py-3 bg-white/80 hover:bg-white text-amber-800 font-medium rounded-lg transition-colors border border-amber-300"
                 >
-                  Try the Platform
+                  Try It Now
                 </Link>
               </div>
 
               {/* Trust indicators */}
               <p className="mt-4 text-amber-600 text-sm">
-                ✓ No upfront costs &nbsp;•&nbsp; ✓ We build it for you &nbsp;•&nbsp; ✓ You own your business
+                ✓ No credit card required &nbsp;•&nbsp; ✓ Free tier available &nbsp;•&nbsp; ✓ Cancel anytime
               </p>
             </div>
           </ScrollWrap>
         </section>
 
-        {/* Business Opportunity Section */}
-        <section className="py-12 px-4">
-          <div className="max-w-4xl mx-auto">
-            <ScrollWrap>
-              <div className="py-8">
-                <div className="text-center mb-8">
-                  <span className="inline-block bg-gradient-to-r from-amber-600 to-orange-500 text-white text-sm font-bold px-4 py-1 rounded-full mb-4">
-                    NOT A SPONSORSHIP - A BUSINESS
-                  </span>
-                  <h2 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
-                    What You Get
-                  </h2>
+        {/* Exclusive Content Section */}
+        {exclusiveFeatures.length > 0 && (
+          <section className="py-12 px-4">
+            <div className="max-w-4xl mx-auto">
+              <ScrollWrap>
+                <div className="py-8">
+                  <div className="text-center mb-8">
+                    <span className="inline-block bg-gradient-to-r from-amber-600 to-orange-500 text-white text-sm font-bold px-4 py-1 rounded-full mb-4">
+                      EXCLUSIVE TO THIS COMMUNITY
+                    </span>
+                    <h2 className="text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
+                      Only Available Through {influencer.name}
+                    </h2>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {exclusiveFeatures.map((feature, i) => (
+                      <div key={i} className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl p-6 border-2 border-amber-400">
+                        <div className="text-3xl mb-3">{feature.icon}</div>
+                        <h3 className="font-bold text-amber-900 mb-2">{feature.title}</h3>
+                        <p className="text-amber-700 text-sm mb-3">{feature.description}</p>
+                        {feature.items && feature.items.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {feature.items.map((item, j) => (
+                              <span key={j} className="text-xs bg-amber-600/20 text-amber-800 px-2 py-1 rounded-full border border-amber-300">
+                                {item}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                
-                <div className="grid md:grid-cols-3 gap-6">
-                  {businessFeatures.map((feature, i) => (
-                    <div key={i} className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl p-6 border-2 border-amber-400 relative">
-                      <div className="text-3xl mb-3">{feature.icon}</div>
-                      <h3 className="font-bold text-amber-900 mb-2">{feature.title}</h3>
-                      <p className="text-amber-700 text-sm mb-3">{feature.description}</p>
-                      {feature.examples && (
-                        <div className="flex flex-wrap gap-2">
-                          {feature.examples.map((ex, j) => (
-                            <span key={j} className="text-xs bg-amber-600/20 text-amber-800 px-2 py-1 rounded-full border border-amber-300">
-                              {ex}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </ScrollWrap>
-          </div>
-        </section>
+              </ScrollWrap>
+            </div>
+          </section>
+        )}
 
         {/* Features Section */}
         <section className="py-12 px-4">
@@ -223,7 +199,7 @@ const InfluencerLandingPage = () => {
             <ScrollWrap>
               <div className="py-8">
                 <h2 className="text-3xl font-bold text-amber-900 text-center mb-8" style={{ fontFamily: 'Cinzel, serif' }}>
-                  Build a Real Ministry Business
+                  Everything in FaithTalkAI
                 </h2>
                 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -240,51 +216,22 @@ const InfluencerLandingPage = () => {
           </div>
         </section>
 
-        {/* Coming Soon Section */}
-        <section className="py-12 px-4 bg-gradient-to-b from-transparent via-amber-100/50 to-transparent">
-          <div className="max-w-4xl mx-auto">
-            <ScrollWrap>
-              <div className="py-8">
-                <h2 className="text-2xl font-bold text-amber-900 text-center mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
-                  The Future of Faith Technology
-                </h2>
-                <p className="text-amber-600 text-center mb-8">Exciting features on our roadmap</p>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  {comingSoon.map((feature, i) => (
-                    <div key={i} className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border-2 border-dashed border-amber-300">
-                      <div className="flex items-start gap-4">
-                        <div className="text-4xl">{feature.icon}</div>
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-amber-900">{feature.title}</h3>
-                            <span className="text-xs bg-amber-600 text-white px-2 py-0.5 rounded-full">{feature.status}</span>
-                          </div>
-                          <p className="text-amber-700 text-sm">{feature.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </ScrollWrap>
-          </div>
-        </section>
-
-        {/* How It Works Preview */}
+        {/* How It Works */}
         <section className="py-12 px-4">
           <div className="max-w-4xl mx-auto">
             <ScrollWrap>
               <div className="py-8">
                 <h2 className="text-2xl font-bold text-amber-900 text-center mb-8" style={{ fontFamily: 'Cinzel, serif' }}>
-                  How It Works
+                  Getting Started is Easy
                 </h2>
                 
                 <div className="grid md:grid-cols-3 gap-6">
                   {[
-                    { step: '1', title: 'We Talk', desc: "Tell us your vision, your theology, your audience. We'll design a plan together." },
-                    { step: '2', title: 'We Build', desc: "We create your custom characters, studies, and branded experience. You approve everything." },
-                    { step: '3', title: 'You Launch', desc: "Announce to your audience. They subscribe. You earn. We handle the tech." },
+                    { step: '1', title: 'Create Your Account', desc: 'Sign up free in seconds with just your email' },
+                    { step: '2', title: 'Choose a Character', desc: influencer.hasExclusiveContent 
+                      ? `Talk to exclusive characters from ${influencer.name} or 90+ biblical figures`
+                      : 'Browse 90+ biblical figures and pick who to talk with' },
+                    { step: '3', title: 'Start the Conversation', desc: 'Ask questions, explore stories, and grow in your faith' },
                   ].map((item, i) => (
                     <div key={i} className="text-center">
                       <div className="w-12 h-12 bg-amber-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
@@ -300,74 +247,61 @@ const InfluencerLandingPage = () => {
           </div>
         </section>
 
-        {/* Partnership Model */}
+        {/* Pricing Section */}
         <section className="py-12 px-4">
           <div className="max-w-4xl mx-auto">
             <ScrollWrap>
               <div className="py-8">
                 <h2 className="text-2xl font-bold text-amber-900 text-center mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
-                  The Partnership Model
+                  Simple, Honest Pricing
                 </h2>
                 <p className="text-amber-600 text-center mb-8 text-sm">
-                  This isn't affiliate marketing. You're building your own business.
+                  Start free and upgrade when you're ready
                 </p>
                 
                 <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                  {/* What You Get */}
+                  {/* Free Tier */}
                   <div className="bg-white/80 rounded-xl p-6 border border-amber-200">
-                    <h3 className="font-bold text-amber-900 text-lg mb-4">What You Get</h3>
-                    <ul className="text-amber-700 text-sm space-y-3">
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">✓</span>
-                        <span>Custom AI characters trained on YOUR teaching</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">✓</span>
-                        <span>Branded landing page for your audience</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">✓</span>
-                        <span>Custom Bible studies you design</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">✓</span>
-                        <span>You set your own subscription pricing</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">✓</span>
-                        <span>Full analytics on your audience</span>
-                      </li>
+                    <h3 className="font-bold text-amber-900 text-lg mb-2">Free</h3>
+                    <p className="text-3xl font-bold text-amber-800 mb-4">$0<span className="text-sm font-normal">/month</span></p>
+                    <ul className="text-amber-700 text-sm space-y-2 mb-6">
+                      <li>✓ Access to select characters</li>
+                      <li>✓ Limited daily messages</li>
+                      <li>✓ Sample Bible studies</li>
+                      <li>✓ Basic features</li>
                     </ul>
+                    <Link
+                      to={`/signup?ref=${slug}`}
+                      className="block text-center py-2 px-4 border border-amber-400 text-amber-700 rounded-lg hover:bg-amber-50 transition-colors"
+                    >
+                      Get Started Free
+                    </Link>
                   </div>
                   
-                  {/* Revenue Model */}
+                  {/* Premium Tier */}
                   <div className="bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl p-6 border-2 border-amber-400 relative">
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                      YOUR REVENUE
+                      FULL ACCESS
                     </div>
-                    <h3 className="font-bold text-amber-900 text-lg mb-4">How You Earn</h3>
-                    <ul className="text-amber-700 text-sm space-y-3">
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">💰</span>
-                        <span><strong>You keep 70-80%</strong> of subscriber revenue</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">💰</span>
-                        <span>Set your price: $5, $10, $20/month - your choice</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">💰</span>
-                        <span>Monthly payouts directly to you</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">💰</span>
-                        <span>No upfront costs to get started</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-amber-500">💰</span>
-                        <span>Scalable: more subscribers = more income</span>
-                      </li>
+                    <h3 className="font-bold text-amber-900 text-lg mb-2">Premium</h3>
+                    <p className="text-3xl font-bold text-amber-800 mb-1">$6.99<span className="text-sm font-normal">/month</span></p>
+                    <p className="text-amber-600 text-sm mb-4">or $49.99/year (save 40%)</p>
+                    <ul className="text-amber-700 text-sm space-y-2 mb-6">
+                      <li>✓ <strong>Unlimited</strong> conversations</li>
+                      <li>✓ All 90+ characters</li>
+                      {influencer.hasExclusiveContent && (
+                        <li>✓ <strong>Exclusive characters</strong></li>
+                      )}
+                      <li>✓ All 35+ Bible studies</li>
+                      <li>✓ All 140+ reading plans</li>
+                      <li>✓ Roundtable discussions</li>
                     </ul>
+                    <Link
+                      to={`/signup?ref=${slug}`}
+                      className="block text-center py-2 px-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors"
+                    >
+                      Start Free Trial
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -381,22 +315,22 @@ const InfluencerLandingPage = () => {
             <ScrollWrap>
               <div className="py-8 text-center">
                 <h2 className="text-3xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>
-                  Ready to Build Something That Matters?
+                  Ready to Go Deeper?
                 </h2>
                 <p className="text-amber-700 mb-6 max-w-xl mx-auto">
-                  Your message deserves to reach more people. Let's build a platform that amplifies your ministry and creates sustainable income.
+                  Join thousands of believers growing in their faith through meaningful conversations with biblical characters.
                 </p>
-                <a
-                  href="mailto:partnerships@faithtalkai.com?subject=Partnership Inquiry - {influencer.name}&body=Hi, I'm interested in learning more about launching my own AI-powered ministry platform."
+                <Link
+                  to={`/signup?ref=${slug}`}
                   className="inline-flex items-center gap-2 px-10 py-4 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors shadow-lg text-lg"
                 >
-                  Schedule a Conversation
+                  Create Your Free Account
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
-                </a>
+                </Link>
                 <p className="mt-4 text-amber-600 text-sm">
-                  No commitment. Just a conversation about what's possible.
+                  Recommended by {influencer.name}
                 </p>
               </div>
             </ScrollWrap>
