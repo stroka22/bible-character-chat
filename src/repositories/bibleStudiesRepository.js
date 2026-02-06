@@ -965,16 +965,19 @@ export const bibleStudiesAdminRepository = {
     if (fetchError) throw fetchError;
     if (!sourceStudies || sourceStudies.length === 0) return 0;
     
-    // Check which studies already exist in target org
+    // Check which studies already exist in target org by source_study_id OR by title
     const { data: existingStudies } = await supabase
       .from('bible_studies')
-      .select('source_study_id')
+      .select('source_study_id, title')
       .eq('owner_slug', targetOwnerSlug);
     
     const existingSourceIds = new Set((existingStudies || []).map(s => s.source_study_id).filter(Boolean));
+    const existingTitles = new Set((existingStudies || []).map(s => s.title?.toLowerCase()).filter(Boolean));
     
-    // Filter out studies that already exist
-    const studiesToCopy = sourceStudies.filter(s => !existingSourceIds.has(s.id));
+    // Filter out studies that already exist (by source_study_id or title)
+    const studiesToCopy = sourceStudies.filter(s => 
+      !existingSourceIds.has(s.id) && !existingTitles.has(s.title?.toLowerCase())
+    );
     
     let copied = 0;
     for (const study of studiesToCopy) {

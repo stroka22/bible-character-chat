@@ -510,32 +510,30 @@ export const readingPlansRepository = {
       throw new Error('Cannot copy to empty organization');
     }
     
-    // Get all plans from source org
-    let query = supabase
+    // Get all plans from source org (default to 'faithtalkai' as primary source)
+    const source = sourceOwnerSlug || 'faithtalkai';
+    
+    const { data: sourcePlans, error: fetchError } = await supabase
       .from('reading_plans')
-      .select('id, title');
-    
-    if (sourceOwnerSlug) {
-      query = query.eq('owner_slug', sourceOwnerSlug);
-    } else {
-      query = query.or('owner_slug.is.null,owner_slug.eq.default,owner_slug.eq.faithtalkai');
-    }
-    
-    const { data: sourcePlans, error: fetchError } = await query;
+      .select('id, title, slug')
+      .eq('owner_slug', source);
     
     if (fetchError) throw fetchError;
     if (!sourcePlans || sourcePlans.length === 0) return 0;
     
-    // Check which plans already exist in target org
+    // Check which plans already exist in target org by source_plan_id OR by slug
     const { data: existingPlans } = await supabase
       .from('reading_plans')
-      .select('source_plan_id')
+      .select('source_plan_id, slug')
       .eq('owner_slug', targetOwnerSlug);
     
     const existingSourceIds = new Set((existingPlans || []).map(p => p.source_plan_id).filter(Boolean));
+    const existingSlugs = new Set((existingPlans || []).map(p => p.slug).filter(Boolean));
     
-    // Filter out plans that already exist
-    const plansToCopy = sourcePlans.filter(p => !existingSourceIds.has(p.id));
+    // Filter out plans that already exist (by source_plan_id or slug)
+    const plansToCopy = sourcePlans.filter(p => 
+      !existingSourceIds.has(p.id) && !existingSlugs.has(p.slug)
+    );
     
     let copied = 0;
     for (const plan of plansToCopy) {
