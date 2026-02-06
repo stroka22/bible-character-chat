@@ -45,40 +45,35 @@ DROP POLICY IF EXISTS "Users can delete their org characters" ON characters;
 CREATE POLICY "Characters are viewable by everyone" ON characters
   FOR SELECT USING (true);
 
--- Users can insert characters for their own org
+-- Users can insert characters for their own org (admins only)
 CREATE POLICY "Users can insert characters for their org" ON characters
   FOR INSERT WITH CHECK (
-    owner_slug = COALESCE(
-      (SELECT owner_slug FROM profiles WHERE id = auth.uid()),
-      'default'
+    (
+      public.current_user_role() IN ('admin', 'superadmin')
+      AND owner_slug IS NOT DISTINCT FROM COALESCE(public.current_user_owner_slug(), 'default')
     )
-    OR 
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'superadmin')
+    OR public.current_user_role() = 'superadmin'
   );
 
--- Users can update characters for their own org
+-- Users can update characters for their own org (admins only)
 CREATE POLICY "Users can update characters for their org" ON characters
   FOR UPDATE USING (
-    owner_slug = COALESCE(
-      (SELECT owner_slug FROM profiles WHERE id = auth.uid()),
-      'default'
+    (
+      public.current_user_role() IN ('admin', 'superadmin')
+      AND owner_slug IS NOT DISTINCT FROM COALESCE(public.current_user_owner_slug(), 'default')
     )
-    OR 
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'superadmin')
+    OR public.current_user_role() = 'superadmin'
   );
 
--- Users can delete characters for their own org (not default)
+-- Users can delete characters for their own org (not default, admins only)
 CREATE POLICY "Users can delete their org characters" ON characters
   FOR DELETE USING (
     (
-      owner_slug = COALESCE(
-        (SELECT owner_slug FROM profiles WHERE id = auth.uid()),
-        'default'
-      )
+      public.current_user_role() IN ('admin', 'superadmin')
+      AND owner_slug IS NOT DISTINCT FROM COALESCE(public.current_user_owner_slug(), 'default')
       AND owner_slug != 'default'
     )
-    OR 
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'superadmin')
+    OR public.current_user_role() = 'superadmin'
   );
 
 -- ============================================================
