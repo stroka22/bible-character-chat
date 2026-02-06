@@ -74,8 +74,8 @@ export async function getTierSettings(slug: string): Promise<TierSettings> {
         freeCharacters: data.free_characters ?? [],
         freeCharacterNames: data.free_character_names ?? [],
         premiumRoundtableGates: {
-          savingRequiresPremium: gates.savingRequiresPremium !== false,
-          premiumOnly: gates.premiumOnly !== false,
+          savingRequiresPremium: gates.savingRequiresPremium === true,
+          premiumOnly: gates.premiumOnly === true,
           allowAllSpeak: !!gates.allowAllSpeak,
           strictRotation: !!gates.strictRotation,
           followUpsMin: gates.followUpsMin ?? null,

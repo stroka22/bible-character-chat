@@ -480,7 +480,7 @@ const SimpleChatWithHistory = () => {
               persona,
               [
                 { role: 'system', content: systemContext },
-                { role: 'user', content: 'Begin this Bible study session now. IMPORTANT: Follow the MANDATORY STRUCTURE in the Study Prompt exactly - if it says to open with prayer, you MUST start with a prayer. Do not skip or reorder any required steps.' }
+                { role: 'user', content: 'Begin this Bible study session now. CRITICAL: You MUST start with a prayer about this lesson\'s topic. After the prayer, follow any other instructions in the Study Prompt section above. The prayer should be sincere, relevant to the lesson topic, and about 2-3 sentences. Then greet the student and introduce the lesson.' }
               ]
             );
             

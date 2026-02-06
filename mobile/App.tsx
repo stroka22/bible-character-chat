@@ -167,15 +167,12 @@ function AppInner() {
       }
     }}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!authed ? (
-          <>
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="SignUp" component={SignUp} />
-            <Stack.Screen name="ResetPassword" component={ResetPassword} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="MainTabs" component={MainTabs} />
+        {/* All users (logged in or not) can access the main app */}
+        <>
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="SignUp" component={SignUp} />
+          <Stack.Screen name="ResetPassword" component={ResetPassword} />
             <Stack.Screen name="StudyDetail" component={StudyDetail} options={({ navigation }) => ({ 
               headerShown: true, 
               headerTitleAlign: 'center', 
@@ -236,11 +233,9 @@ function AppInner() {
                 </TouchableOpacity>
               )
             })} />
-          </>
-        )}
-        {/* Deep link only screens - available for both auth states */}
-        <Stack.Screen name="JoinChat" component={JoinChat} />
-        <Stack.Screen name="Paywall" component={Paywall} />
+          <Stack.Screen name="JoinChat" component={JoinChat} />
+          <Stack.Screen name="Paywall" component={Paywall} />
+        </>
       </Stack.Navigator>
     </NavigationContainer>
   );

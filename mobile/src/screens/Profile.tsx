@@ -42,6 +42,32 @@ export default function Profile() {
   const isIOSPremium = premium || Platform.OS === 'ios';
   const progressPct = limit > 0 ? Math.min(100, Math.round((count / limit) * 100)) : 0;
 
+  // If not logged in, show login prompt
+  if (!user) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <View style={{ padding: 16, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', marginBottom: 12, fontFamily: 'Cinzel_700Bold' }}>Profile</Text>
+          <Text style={{ color: theme.colors.text, textAlign: 'center', marginBottom: 20 }}>
+            Sign in to save your conversations, track your progress, and access your profile.
+          </Text>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Login')}
+            style={{ backgroundColor: theme.colors.primary, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 10, marginBottom: 12 }}
+          >
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 16 }}>Sign In</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('SignUp')}
+            style={{ backgroundColor: theme.colors.card, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderColor: theme.colors.border }}
+          >
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View style={{ padding: 16 }}>
