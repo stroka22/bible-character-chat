@@ -621,15 +621,15 @@ const SuperadminUsersPage = () => {
         results.errors.push(`Characters: ${err.message || 'Unknown error'}`);
       }
 
-      // Copy all Bible studies
+      // Copy all Bible studies (from 'default' where most studies are)
       try {
-        results.studies = await bibleStudiesAdminRepository.copyAllStudiesToOrg('faithtalkai', copyTargetOrg);
+        results.studies = await bibleStudiesAdminRepository.copyAllStudiesToOrg('default', copyTargetOrg);
       } catch (err) {
         console.error('Failed to copy studies:', err);
         results.errors.push(`Studies: ${err.message || 'Unknown error'}`);
       }
 
-      // Copy all reading plans
+      // Copy all reading plans (from NULL owner_slug)
       try {
         results.plans = await readingPlansRepository.copyAllPlansToOrg(null, copyTargetOrg);
       } catch (err) {

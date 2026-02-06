@@ -510,13 +510,18 @@ export const readingPlansRepository = {
       throw new Error('Cannot copy to empty organization');
     }
     
-    // Get all plans from source org (default to 'faithtalkai' as primary source)
-    const source = sourceOwnerSlug || 'faithtalkai';
-    
-    const { data: sourcePlans, error: fetchError } = await supabase
+    // Get all plans from source org (NULL means plans without an owner)
+    let query = supabase
       .from('reading_plans')
-      .select('id, title, slug')
-      .eq('owner_slug', source);
+      .select('id, title, slug');
+    
+    if (sourceOwnerSlug === null) {
+      query = query.is('owner_slug', null);
+    } else {
+      query = query.eq('owner_slug', sourceOwnerSlug);
+    }
+    
+    const { data: sourcePlans, error: fetchError } = await query;
     
     if (fetchError) throw fetchError;
     if (!sourcePlans || sourcePlans.length === 0) return 0;
