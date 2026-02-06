@@ -610,6 +610,7 @@ const SuperadminUsersPage = () => {
         characters: 0,
         studies: 0,
         plans: 0,
+        errors: [],
       };
 
       // Copy all characters
@@ -617,6 +618,7 @@ const SuperadminUsersPage = () => {
         results.characters = await characterRepository.copyAllCharactersToOrg(copyTargetOrg);
       } catch (err) {
         console.error('Failed to copy characters:', err);
+        results.errors.push(`Characters: ${err.message || 'Unknown error'}`);
       }
 
       // Copy all Bible studies
@@ -624,6 +626,7 @@ const SuperadminUsersPage = () => {
         results.studies = await bibleStudiesAdminRepository.copyAllStudiesToOrg('faithtalkai', copyTargetOrg);
       } catch (err) {
         console.error('Failed to copy studies:', err);
+        results.errors.push(`Studies: ${err.message || 'Unknown error'}`);
       }
 
       // Copy all reading plans
@@ -631,19 +634,48 @@ const SuperadminUsersPage = () => {
         results.plans = await readingPlansRepository.copyAllPlansToOrg(null, copyTargetOrg);
       } catch (err) {
         console.error('Failed to copy plans:', err);
+        results.errors.push(`Plans: ${err.message || 'Unknown error'}`);
       }
 
       setCopyResult(results);
-      setActionMessage({
-        text: `Copied ${results.characters} characters, ${results.studies} studies, ${results.plans} plans to ${copyTargetOrg}`,
-        type: 'success',
-      });
+      
+      if (results.errors.length > 0) {
+        setActionMessage({
+          text: `Copied ${results.characters} characters, ${results.studies} studies, ${results.plans} plans. Errors: ${results.errors.join('; ')}`,
+          type: 'error',
+        });
+      } else {
+        setActionMessage({
+          text: `Copied ${results.characters} characters, ${results.studies} studies, ${results.plans} plans to ${copyTargetOrg}`,
+          type: 'success',
+        });
+      }
     } catch (err) {
       setCopyError(err.message || 'Failed to copy content');
     } finally {
       setCopyingContent(false);
-      setTimeout(() => setActionMessage({ text: '', type: '' }), 5000);
+      setTimeout(() => setActionMessage({ text: '', type: '' }), 8000);
     }
+  };
+
+  /* ─────────────────────────────────────────────
+   *  View as Organization (superadmin)
+   * ──────────────────────────────────────────── */
+  const handleViewAsOrg = (orgSlug) => {
+    if (!orgSlug) return;
+    // Store the org slug in localStorage so the admin panel loads as that org
+    localStorage.setItem('ownerSlug', orgSlug);
+    window.dispatchEvent(new Event('ownerSlugChanged'));
+    // Redirect to admin panel
+    window.location.href = '/admin';
+  };
+
+  const handleResetToOwnOrg = () => {
+    // Reset to the user's actual org
+    const myOrg = currentProfile?.owner_slug || 'faithtalkai';
+    localStorage.setItem('ownerSlug', myOrg);
+    window.dispatchEvent(new Event('ownerSlugChanged'));
+    window.location.reload();
   };
 
   const totalPages = Math.ceil(totalProfiles / filters.pageSize);
@@ -706,7 +738,30 @@ const SuperadminUsersPage = () => {
         
         {/* Create-org and Copy Content actions */}
         {isSuperAdmin && (
-          <div className="flex justify-end gap-3 mb-4">
+          <div className="flex flex-wrap justify-end gap-3 mb-4">
+            {/* View as Org dropdown */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-blue-200">View as:</label>
+              <select
+                onChange={(e) => e.target.value && handleViewAsOrg(e.target.value)}
+                className="px-3 py-2 bg-blue-700 border border-blue-600 rounded-lg text-white text-sm"
+                defaultValue=""
+              >
+                <option value="">Select org to view...</option>
+                {owners.map(o => (
+                  <option key={o.owner_slug} value={o.owner_slug}>
+                    {o.display_name || o.owner_slug}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleResetToOwnOrg}
+                className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors text-sm"
+                title="Reset to your organization"
+              >
+                Reset
+              </button>
+            </div>
             <button
               onClick={() => setShowCopyContent(true)}
               className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-400 transition-colors"
@@ -835,8 +890,11 @@ const SuperadminUsersPage = () => {
               )}
 
               {copyResult && (
-                <div className="mb-3 p-2 rounded bg-green-700 text-white text-sm">
-                  Copied: {copyResult.characters} characters, {copyResult.studies} studies, {copyResult.plans} plans
+                <div className={`mb-3 p-2 rounded text-white text-sm ${copyResult.errors?.length > 0 ? 'bg-yellow-600' : 'bg-green-700'}`}>
+                  <p>Copied: {copyResult.characters} characters, {copyResult.studies} studies, {copyResult.plans} plans</p>
+                  {copyResult.errors?.length > 0 && (
+                    <p className="mt-2 text-xs">Errors: {copyResult.errors.join('; ')}</p>
+                  )}
                 </div>
               )}
 
