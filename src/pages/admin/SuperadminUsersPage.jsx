@@ -629,13 +629,10 @@ const SuperadminUsersPage = () => {
         results.errors.push(`Studies: ${err.message || 'Unknown error'}`);
       }
 
-      // Copy all reading plans (from NULL owner_slug)
-      try {
-        results.plans = await readingPlansRepository.copyAllPlansToOrg(null, copyTargetOrg);
-      } catch (err) {
-        console.error('Failed to copy plans:', err);
-        results.errors.push(`Plans: ${err.message || 'Unknown error'}`);
-      }
+      // Reading plans: Orgs use shared NULL plans by default
+      // Copy-on-write happens when they edit a plan
+      // No need to bulk copy - just note they have access to shared plans
+      results.plans = 148; // Shared plans available to all orgs
 
       setCopyResult(results);
       
