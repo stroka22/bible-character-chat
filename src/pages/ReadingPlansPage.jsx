@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { readingPlansRepository } from '../repositories/readingPlansRepository';
+import { getOwnerSlug } from '../services/tierSettingsService';
 
 // Compact card for horizontal scroll rows
 function PlanCard({ plan, userProgress, onStart, onRemove, compact = false, showRemove = false, isCompleted = false }) {
@@ -265,8 +266,9 @@ export default function ReadingPlansPage() {
     setLoading(true);
     setError('');
     try {
+      const ownerSlug = getOwnerSlug();
       const [allPlans, progress, completed] = await Promise.all([
-        readingPlansRepository.getAll(),
+        readingPlansRepository.getAll(ownerSlug),
         user ? readingPlansRepository.getUserPlans(user.id) : [],
         user ? readingPlansRepository.getCompletedPlans(user.id) : [],
       ]);

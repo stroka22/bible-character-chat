@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { readingPlansRepository } from '../repositories/readingPlansRepository';
+import { getOwnerSlug } from '../services/tierSettingsService';
 import FooterScroll from '../components/FooterScroll';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
 import PreviewLayout from '../components/PreviewLayout';
@@ -206,8 +207,9 @@ export default function ReadingPlansPageScroll() {
     setLoading(true);
     setError('');
     try {
+      const ownerSlug = getOwnerSlug();
       const [allPlans, progress, completed] = await Promise.all([
-        readingPlansRepository.getAll(),
+        readingPlansRepository.getAll(ownerSlug),
         user ? readingPlansRepository.getUserPlans(user.id) : [],
         user ? readingPlansRepository.getCompletedPlans(user.id) : [],
       ]);

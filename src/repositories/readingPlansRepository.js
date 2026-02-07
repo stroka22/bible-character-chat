@@ -2,26 +2,34 @@
 import { supabase } from '../services/supabase';
 
 export const readingPlansRepository = {
-  // Get all active reading plans
-  async getAll() {
-    const { data, error } = await supabase
+  // Get all active reading plans for an org (merged: org-specific override NULL/shared)
+  async getAll(ownerSlug = null) {
+    // Fetch plans for org + NULL (shared plans)
+    let query = supabase
       .from('reading_plans')
       .select('*')
-      .eq('is_active', true)
+      .eq('is_active', true);
+    
+    if (ownerSlug) {
+      query = query.or(`owner_slug.eq.${ownerSlug},owner_slug.is.null`);
+    }
+    
+    const { data, error } = await query
       .order('is_featured', { ascending: false })
       .order('display_order', { ascending: true })
       .order('duration_days', { ascending: true });
     
     if (error) throw error;
-    return data || [];
+    
+    // Merge: org-specific plans override NULL plans with same slug
+    return this._mergePlans(data || [], ownerSlug);
   },
 
   // ============================================
   // ADMIN: Get all plans (including inactive) for an org
   // ============================================
   async getAllAdmin(ownerSlug = null) {
-    // If ownerSlug provided, get plans for that org + plans with NULL owner (shared)
-    // If no ownerSlug, get all plans (superadmin view)
+    // Fetch plans for org + NULL (shared plans)
     let query = supabase
       .from('reading_plans')
       .select('*');
@@ -36,7 +44,32 @@ export const readingPlansRepository = {
       .order('title', { ascending: true });
     
     if (error) throw error;
-    return data || [];
+    
+    // Merge: org-specific plans override NULL plans with same slug
+    return this._mergePlans(data || [], ownerSlug);
+  },
+  
+  // Helper: merge plans - org-specific overrides NULL/shared plans with same slug
+  _mergePlans(plans, ownerSlug) {
+    if (!ownerSlug) return plans;
+    
+    const plansBySlug = new Map();
+    
+    // First add NULL/shared plans
+    for (const plan of plans) {
+      if (!plan.owner_slug) {
+        plansBySlug.set(plan.slug, plan);
+      }
+    }
+    
+    // Then override with org-specific plans
+    for (const plan of plans) {
+      if (plan.owner_slug === ownerSlug) {
+        plansBySlug.set(plan.slug, plan);
+      }
+    }
+    
+    return Array.from(plansBySlug.values());
   },
 
   // ============================================
