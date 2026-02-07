@@ -55,16 +55,17 @@ export const characterRepository = {
   async getAll(isAdmin: boolean = false, ownerSlug: string = 'default'): Promise<Character[]> {
     try {
       // Fetch both org-specific and default characters
-      const { data, error } = await supabase
+      let query = supabase
         .from('characters')
         .select('*')
-        .or(`owner_slug.eq.${ownerSlug},owner_slug.eq.default`)
-        .modify((query) => {
-          if (!isAdmin) {
-            query.or('is_visible.is.null,is_visible.eq.true');
-          }
-        })
-        .order('name');
+        .or(`owner_slug.eq.${ownerSlug},owner_slug.eq.default`);
+      
+      // Hide non-visible characters unless admin
+      if (!isAdmin) {
+        query = query.or('is_visible.is.null,is_visible.eq.true');
+      }
+      
+      const { data, error } = await query.order('name');
       
       if (error) {
         throw error;
