@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { readingPlansRepository } from '../../repositories/readingPlansRepository';
+import { getOwnerSlug } from '../../services/tierSettingsService';
 
 const DIFFICULTY_OPTIONS = ['easy', 'medium', 'intensive'];
 
@@ -348,8 +349,9 @@ export default function AdminReadingPlansPage({ embedded = false }) {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
+      const ownerSlug = getOwnerSlug();
       const [plansData, categoriesData] = await Promise.all([
-        readingPlansRepository.getAllAdmin(),
+        readingPlansRepository.getAllAdmin(ownerSlug),
         readingPlansRepository.getCategories().catch(() => []),
       ]);
       setPlans(plansData);

@@ -17,12 +17,20 @@ export const readingPlansRepository = {
   },
 
   // ============================================
-  // ADMIN: Get all plans (including inactive)
+  // ADMIN: Get all plans (including inactive) for an org
   // ============================================
-  async getAllAdmin() {
-    const { data, error } = await supabase
+  async getAllAdmin(ownerSlug = null) {
+    // If ownerSlug provided, get plans for that org + plans with NULL owner (shared)
+    // If no ownerSlug, get all plans (superadmin view)
+    let query = supabase
       .from('reading_plans')
-      .select('*')
+      .select('*');
+    
+    if (ownerSlug) {
+      query = query.or(`owner_slug.eq.${ownerSlug},owner_slug.is.null`);
+    }
+    
+    const { data, error } = await query
       .order('category', { ascending: true })
       .order('display_order', { ascending: true })
       .order('title', { ascending: true });
