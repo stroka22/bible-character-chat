@@ -60,10 +60,14 @@ export default function ChatNew() {
     let active = true;
     (async () => {
       try {
+        // Get user's org slug for filtering
+        const ownerSlug = await getOwnerSlug(user?.id);
+        
         let query = supabase
           .from('characters')
-          .select('id,name,description,avatar_url,opening_line,persona_prompt,is_visible,bible_book')
-          .or('is_visible.is.null,is_visible.eq.true');
+          .select('id,name,description,avatar_url,opening_line,persona_prompt,is_visible,bible_book,owner_slug')
+          .or('is_visible.is.null,is_visible.eq.true')
+          .or(`owner_slug.eq.${ownerSlug},owner_slug.eq.default`);
         if (search && search.trim()) {
           query = query.or(
             `name.ilike.%${search}%,description.ilike.%${search}%,bible_book.ilike.%${search}%`
@@ -74,7 +78,20 @@ export default function ChatNew() {
         }
         // no category filter
         const { data } = await query.order('name');
-        let out = data || [];
+        
+        // Merge: org-specific characters override default characters with same name
+        const charactersByName = new Map<string, any>();
+        for (const char of (data || [])) {
+          if (char.owner_slug === 'default' || !char.owner_slug) {
+            charactersByName.set(char.name.toLowerCase(), char);
+          }
+        }
+        for (const char of (data || [])) {
+          if (char.owner_slug === ownerSlug && ownerSlug !== 'default') {
+            charactersByName.set(char.name.toLowerCase(), char);
+          }
+        }
+        let out = Array.from(charactersByName.values()).sort((a, b) => a.name.localeCompare(b.name));
         // enforce featured pin if configured
         if (siteSettings.enforceAdminDefault && siteSettings.defaultFeaturedCharacterId) {
           const fid = String(siteSettings.defaultFeaturedCharacterId);
