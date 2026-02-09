@@ -28,15 +28,30 @@ export default function RoundtableSetup({ navigation }: NativeStackScreenProps<a
   useEffect(() => {
     (async () => {
       setLoading(true);
+      const ownerSlug = await getOwnerSlug(user?.id);
       const { data } = await supabase
         .from('characters')
-        .select('id,name,description,avatar_url')
-        .eq('is_visible', true)
-        .order('name', { ascending: true });
-      setCharacters((data as any) || []);
+        .select('id,name,description,avatar_url,owner_slug')
+        .or('is_visible.is.null,is_visible.eq.true')
+        .or(`owner_slug.eq.${ownerSlug},owner_slug.eq.default`);
+      
+      // Merge: org-specific overrides default by name
+      const byName = new Map<string, Character>();
+      for (const c of (data || []) as any[]) {
+        if (c.owner_slug === 'default' || !c.owner_slug) {
+          byName.set(c.name.toLowerCase(), c);
+        }
+      }
+      for (const c of (data || []) as any[]) {
+        if (c.owner_slug === ownerSlug && ownerSlug !== 'default') {
+          byName.set(c.name.toLowerCase(), c);
+        }
+      }
+      const merged = Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+      setCharacters(merged);
       setLoading(false);
     })();
-  }, []);
+  }, [user?.id]);
 
   // Load org roundtable limits to cap selection size
   useEffect(() => {

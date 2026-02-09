@@ -8,6 +8,7 @@ import { listFavoriteCharacters, setFavoriteCharacter } from '../lib/favorites';
 import { getUserStudiesWithProgress, deleteProgress, updateProgressLabel, saveStudyProgress, getProgressPercent, type StudyWithProgress } from '../lib/studyProgress';
 import { getUserPlans, leavePlan, type UserPlanProgress } from '../lib/readingPlans';
 import { supabase } from '../lib/supabase';
+import { getOwnerSlug } from '../lib/tier';
 
 type TabType = 'chats' | 'roundtables' | 'studies' | 'plans';
 
@@ -114,18 +115,33 @@ export default function MyWalk() {
   const loadAllCharacters = React.useCallback(async () => {
     setLoadingCharacters(true);
     try {
+      const ownerSlug = await getOwnerSlug(user?.id);
       const { data } = await supabase
         .from('characters')
-        .select('id, name, description, avatar_url')
+        .select('id, name, description, avatar_url, owner_slug')
         .or('is_visible.is.null,is_visible.eq.true')
-        .order('name');
-      setAllCharacters(data || []);
+        .or(`owner_slug.eq.${ownerSlug},owner_slug.eq.default`);
+      
+      // Merge: org-specific overrides default by name
+      const byName = new Map<string, any>();
+      for (const c of (data || [])) {
+        if (c.owner_slug === 'default' || !c.owner_slug) {
+          byName.set(c.name.toLowerCase(), c);
+        }
+      }
+      for (const c of (data || [])) {
+        if (c.owner_slug === ownerSlug && ownerSlug !== 'default') {
+          byName.set(c.name.toLowerCase(), c);
+        }
+      }
+      const merged = Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+      setAllCharacters(merged);
     } catch (e) {
       console.warn('[MyWalk] Error loading characters:', e);
     } finally {
       setLoadingCharacters(false);
     }
-  }, []);
+  }, [user?.id]);
 
   const openAddFavoriteModal = async () => {
     setShowAddFavorite(true);
