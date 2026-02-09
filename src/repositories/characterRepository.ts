@@ -337,9 +337,10 @@ export const characterRepository = {
 
       if (error) throw error;
       return this.sanitizeCharacter(data as Character);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Failed to update character ${id}:`, error);
-      throw new Error('Failed to update character. Please try again later.');
+      console.error('Supabase error details:', error?.message, error?.code, error?.details, error?.hint);
+      throw new Error(error?.message || 'Failed to update character. Please try again later.');
     }
   },
 
