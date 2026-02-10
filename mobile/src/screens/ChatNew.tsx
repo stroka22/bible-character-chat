@@ -123,7 +123,13 @@ export default function ChatNew() {
   // Categories kept small and curated for speed and legibility
 
   async function start(c: any) {
-    if (!user) return;
+    if (!user) {
+      Alert.alert('Sign in required', 'Please sign in to start a conversation.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign In', onPress: () => (nav as any).navigate('Login') }
+      ]);
+      return;
+    }
     if (c && c.is_visible === false) {
       Alert.alert('Unavailable', 'This character is not available.');
       return;

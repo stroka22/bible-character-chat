@@ -22,7 +22,12 @@ export default function Login() {
     setLoading(true);
     try {
       const { error } = (await signInWithPassword(email.trim(), password)) || {};
-      if (error) setError(error.message || String(error));
+      if (error) {
+        setError(error.message || String(error));
+      } else {
+        // Navigate to Home after successful login
+        navigation.navigate('MainTabs', { screen: 'Home' });
+      }
     } catch (e: any) {
       setError(e?.message || String(e));
     } finally {
