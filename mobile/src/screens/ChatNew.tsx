@@ -123,40 +123,41 @@ export default function ChatNew() {
   // Categories kept small and curated for speed and legibility
 
   async function start(c: any) {
-    if (!user) {
-      Alert.alert('Sign in required', 'Please sign in to start a conversation.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign In', onPress: () => (nav as any).navigate('Login') }
-      ]);
-      return;
-    }
     if (c && c.is_visible === false) {
       Alert.alert('Unavailable', 'This character is not available.');
       return;
     }
-    // Gate by character if not premium and not in free list
-    try {
-      const premium = (Platform.OS === 'ios' ? (await isLocalPremiumActive()) : await isPremiumUser(user.id));
-      if (!premium) {
-        const slug = await getOwnerSlug(user.id);
-        const s = await getTierSettings(slug);
-        if (!isCharacterFree(s, { id: c.id, name: c.name })) {
-          Alert.alert('Upgrade required', `${c.name} is a premium character. Upgrade to continue.`, [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Upgrade', onPress: () => (nav as any).navigate('Paywall') }
-          ]);
-          return;
+    // Gate by character if not premium and not in free list (only check if user is logged in)
+    if (user) {
+      try {
+        const premium = (Platform.OS === 'ios' ? (await isLocalPremiumActive()) : await isPremiumUser(user.id));
+        if (!premium) {
+          const slug = await getOwnerSlug(user.id);
+          const s = await getTierSettings(slug);
+          if (!isCharacterFree(s, { id: c.id, name: c.name })) {
+            Alert.alert('Upgrade required', `${c.name} is a premium character. Upgrade to continue.`, [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Upgrade', onPress: () => (nav as any).navigate('Paywall') }
+            ]);
+            return;
+          }
         }
-      }
-    } catch {}
+      } catch {}
+    }
     setLoading(true);
     try {
-      const newChat = await chat.createChat(user.id, String(c.id), title.trim() || `Chat with ${c.name}`);
-      // add opening line if available
-      if (c.opening_line) {
-        try { await chat.addMessage(newChat.id, c.opening_line, 'assistant'); } catch {}
+      if (user) {
+        // Logged in user - create persistent chat
+        const newChat = await chat.createChat(user.id, String(c.id), title.trim() || `Chat with ${c.name}`);
+        // add opening line if available
+        if (c.opening_line) {
+          try { await chat.addMessage(newChat.id, c.opening_line, 'assistant'); } catch {}
+        }
+        nav.navigate('ChatDetail', { chatId: newChat.id, character: c });
+      } else {
+        // Anonymous user - navigate to chat without persisting (ephemeral chat)
+        nav.navigate('ChatDetail', { character: c, ephemeral: true });
       }
-      nav.navigate('ChatDetail', { chatId: newChat.id, character: c });
     } finally {
       setLoading(false);
     }

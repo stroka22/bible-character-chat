@@ -15,8 +15,9 @@ import { inviteFriendToChat } from '../lib/invites';
 export default function ChatDetail() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
-  const { chatId } = route.params || {};
+  const { chatId, ephemeral } = route.params || {};
   const { user } = useAuth();
+  const isEphemeral = ephemeral === true || !chatId;
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [input, setInput] = React.useState('');
   const [sending, setSending] = React.useState(false);
@@ -46,6 +47,21 @@ export default function ChatDetail() {
 
   React.useEffect(() => {
     (async () => {
+      // For ephemeral chats, just set up the opening line
+      if (isEphemeral) {
+        if (character?.opening_line) {
+          setMessages([{
+            id: 'opening',
+            chat_id: 'ephemeral',
+            content: character.opening_line,
+            role: 'assistant',
+            created_at: new Date().toISOString(),
+          }]);
+        }
+        setTitle(character?.name ? `Chat with ${character.name}` : 'Chat');
+        return;
+      }
+      
       if (!chatId) return;
       try {
         const meta = await chat.getChat(chatId);
@@ -168,7 +184,10 @@ export default function ChatDetail() {
   // character is passed from ChatNew; optional.
 
   async function onSend() {
-    if (!input.trim() || sending || !chatId) return;
+    if (!input.trim() || sending) return;
+    // For persistent chats, require chatId
+    if (!isEphemeral && !chatId) return;
+    
     const content = input.trim();
     setInput('');
     setSending(true);
@@ -179,7 +198,21 @@ export default function ChatDetail() {
         onAllowed: async () => {},
         onUpgrade: () => { throw new Error('UPGRADE_REQUIRED'); }
       });
-      const userMsg = await chat.addMessage(chatId, content, 'user');
+      
+      // Create user message
+      const userMsg: ChatMessage = {
+        id: `temp-${Date.now()}`,
+        chat_id: chatId || 'ephemeral',
+        content,
+        role: 'user',
+        created_at: new Date().toISOString(),
+      };
+      
+      // For persistent chats, save to DB
+      if (!isEphemeral && chatId) {
+        const savedMsg = await chat.addMessage(chatId, content, 'user');
+        userMsg.id = savedMsg.id;
+      }
       setMessages((m) => [...m, userMsg]);
 
       // Build context for proxy
@@ -192,17 +225,40 @@ export default function ChatDetail() {
       const history = [...systemMsgs, ...nonSystemMsgs];
       
       const reply = await generateCharacterResponse(name, persona, history);
-      const aiMsg = await chat.addMessage(chatId, reply || '...', 'assistant');
+      
+      // Create assistant message
+      const aiMsg: ChatMessage = {
+        id: `temp-${Date.now()}-ai`,
+        chat_id: chatId || 'ephemeral',
+        content: reply || '...',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+      };
+      
+      // For persistent chats, save to DB
+      if (!isEphemeral && chatId) {
+        const savedMsg = await chat.addMessage(chatId, reply || '...', 'assistant');
+        aiMsg.id = savedMsg.id;
+      }
       setMessages((m) => [...m, aiMsg]);
       await incrementDailyMessageCount(user?.id);
     } catch (e) {
       if ((e as any)?.message === 'UPGRADE_REQUIRED') {
         // show prompt
-        // Basic inline notice instead of inserting message bubble
         (navigation as any).navigate('Paywall');
       } else {
         const errText = e instanceof Error ? e.message : 'Failed to send';
-        const aiMsg = await chat.addMessage(chatId, `(Error) ${errText}`, 'assistant');
+        const aiMsg: ChatMessage = {
+          id: `temp-${Date.now()}-err`,
+          chat_id: chatId || 'ephemeral',
+          content: `(Error) ${errText}`,
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+        };
+        if (!isEphemeral && chatId) {
+          const savedMsg = await chat.addMessage(chatId, `(Error) ${errText}`, 'assistant');
+          aiMsg.id = savedMsg.id;
+        }
         setMessages((m) => [...m, aiMsg]);
       }
     } finally {
