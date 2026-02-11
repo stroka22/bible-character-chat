@@ -390,7 +390,7 @@ const AdminPage: React.FC = () => {
   // Dynamic title and description based on active tab
   const getTabInfo = () => {
     switch (activeTab) {
-      case 'overview': return { title: 'Admin Panel - Overview', desc: 'Welcome, Admin! View your dashboard and quick stats.' };
+      case 'overview': return { title: 'Admin Panel', desc: 'Welcome, Admin! View your dashboard and quick stats.' };
       case 'characters': return { title: 'Admin Panel - Characters', desc: 'Manage Bible characters, their profiles, and settings.' };
       case 'groups': return { title: 'Admin Panel - Groups', desc: 'Organize characters into groups for better management.' };
       case 'featured': return { title: 'Admin Panel - Featured Character', desc: 'Set which character appears as featured on the home page.' };
@@ -407,11 +407,11 @@ const AdminPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 md:pl-72">
-      {/* Show banner when viewing as different org */}
+      {/* Show banner when managing different org */}
       {effectiveOwnerSlug !== (profile?.owner_slug || 'default') && (
-        <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded-lg flex items-center justify-between">
-          <span className="text-yellow-800 font-medium">
-            👁️ Viewing as: <strong>{effectiveOwnerSlug}</strong>
+        <div className="mb-4 p-3 bg-amber-100 border border-amber-400 rounded-lg flex items-center justify-between">
+          <span className="text-amber-800 font-medium">
+            Managing: <strong>{effectiveOwnerSlug}</strong>
           </span>
           <button 
             onClick={() => {
@@ -420,9 +420,9 @@ const AdminPage: React.FC = () => {
               window.dispatchEvent(new Event('ownerSlugChanged'));
               window.location.reload();
             }}
-            className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+            className="px-3 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm"
           >
-            Exit View Mode
+            Exit
           </button>
         </div>
       )}
@@ -432,25 +432,31 @@ const AdminPage: React.FC = () => {
       {/* Desktop left sidebar navigation (matches legacy layout) */}
       <div className="hidden md:block">
         <aside className="fixed top-24 left-6 w-64 bg-white rounded-md shadow border">
-          <div className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Navigation</div>
+          <div className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Content Management</div>
           <nav className="px-2 pb-3 space-y-1">
-            <button onClick={() => setActiveTab('overview')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'overview' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Overview</button>
-            <button onClick={() => setActiveTab('characters')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'characters' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Characters</button>
-            <button onClick={() => setActiveTab('groups')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'groups' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Groups</button>
-            <button onClick={() => setActiveTab('featured')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'featured' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Featured Character</button>
-            <button onClick={() => setActiveTab('studies')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'studies' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Bible Studies</button>
-            <button onClick={() => setActiveTab('readingPlans')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'readingPlans' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Reading Plans</button>
-            <button onClick={() => setActiveTab('branding')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'branding' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Branding</button>
-            <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
-            <button onClick={() => setActiveTab('faq')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'faq' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>FAQ</button>
+            <button onClick={() => setActiveTab('overview')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'overview' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Overview</button>
+            <button onClick={() => setActiveTab('characters')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'characters' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Characters</button>
+            <button onClick={() => setActiveTab('groups')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'groups' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Groups</button>
+            <button onClick={() => setActiveTab('featured')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'featured' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Featured Character</button>
+            <button onClick={() => setActiveTab('studies')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'studies' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Bible Studies</button>
+            <button onClick={() => setActiveTab('readingPlans')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'readingPlans' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Reading Plans</button>
+            <button onClick={() => setActiveTab('branding')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'branding' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Branding</button>
+            <button onClick={() => setActiveTab('faq')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'faq' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>FAQ</button>
           </nav>
+          
+          <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Users</div>
+          <nav className="px-2 pb-3 space-y-1">
+            <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
+            <Link to="/admin/invites" className="block px-3 py-2 rounded hover:bg-gray-100">Manage Invites</Link>
+          </nav>
+          
           {isSuperadmin && (
             <>
-              <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Advanced</div>
+              <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Super-Admin</div>
               <nav className="px-2 pb-3 space-y-1">
-                <button onClick={() => setActiveTab('roundtable')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'roundtable' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Roundtable</button>
-                <button onClick={() => setActiveTab('accountTiers')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'accountTiers' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}>Account Tiers</button>
                 <Link to="/admin/users" className="block px-3 py-2 rounded hover:bg-gray-100">Users & Organizations</Link>
+                <button onClick={() => setActiveTab('accountTiers')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'accountTiers' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Account Tiers</button>
+                <button onClick={() => setActiveTab('roundtable')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'roundtable' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Roundtable Settings</button>
                 <Link to="/admin/leads" className="block px-3 py-2 rounded hover:bg-gray-100">Leads</Link>
               </nav>
             </>
@@ -546,14 +552,7 @@ const AdminPage: React.FC = () => {
 
       {activeTab === 'overview' && (
         <>
-          {/* Quick actions row at the top (legacy) */}
-          <div className="mb-6 flex flex-wrap gap-3">
-            <Link to="/admin/invites" className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">Manage Invites</Link>
-            <Link to="/admin/premium" className="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700">Premium Customers</Link>
-            <Link to="/admin/users" className="inline-flex items-center rounded-md bg-amber-500 px-4 py-2 text-white hover:bg-amber-600">Users & Organizations</Link>
-          </div>
-
-          {/* Weekly CSV Email self-toggle (moved into Overview) */}
+          {/* Weekly CSV Email self-toggle */}
           <div className="mb-6 p-4 bg-white rounded-md shadow border">
             <div className="flex items-center justify-between">
               <div>
