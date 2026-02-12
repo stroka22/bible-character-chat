@@ -80,6 +80,8 @@ import RoundtableChatScroll from './pages/RoundtableChatScroll.jsx';
 import StudyDetailsScroll from './pages/StudyDetailsScroll.jsx';
 import InfluencerLandingPage from './pages/InfluencerLandingPage.jsx';
 import InfluencerPartnerPage from './pages/InfluencerPartnerPage.jsx';
+import UserFeaturesPageScroll from './pages/UserFeaturesPageScroll.jsx';
+import BusinessFeaturesPageScroll from './pages/BusinessFeaturesPageScroll.jsx';
 import StudyLessonScroll from './pages/StudyLessonScroll.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
@@ -403,6 +405,8 @@ function AppContent() {
     <Route path="/about" element={<AboutPageScroll />} />
     <Route path="/contact" element={<ContactPageScroll />} />
     <Route path="/how-it-works" element={<HowItWorksPageScroll />} />
+    <Route path="/features" element={<UserFeaturesPageScroll />} />
+    <Route path="/business" element={<BusinessFeaturesPageScroll />} />
     <Route path="/faq" element={<FAQPageScroll />} />
     <Route path="/terms" element={<TermsPageScroll />} />
     <Route path="/privacy" element={<PrivacyPageScroll />} />
