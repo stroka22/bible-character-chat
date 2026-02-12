@@ -1,10 +1,246 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
 
 const BusinessFeaturesPageScroll = () => {
+  const [generating, setGenerating] = useState(false);
+
+  const generatePDF = () => {
+    setGenerating(true);
+    
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      const contentWidth = pageWidth - (margin * 2);
+      let y = 20;
+
+      // Helper function to add text with word wrap
+      const addWrappedText = (text, x, startY, maxWidth, lineHeight = 6) => {
+        const lines = doc.splitTextToSize(text, maxWidth);
+        lines.forEach((line, i) => {
+          if (startY + (i * lineHeight) > 270) {
+            doc.addPage();
+            startY = 20;
+            y = 20;
+          }
+          doc.text(line, x, startY + (i * lineHeight));
+        });
+        return startY + (lines.length * lineHeight);
+      };
+
+      // Title
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14); // amber-800
+      doc.text('FaithTalkAI for Ministry', pageWidth / 2, y, { align: 'center' });
+      y += 12;
+
+      // Subtitle
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(120, 53, 15); // amber-700
+      doc.text('Launch your own AI-powered ministry platform', pageWidth / 2, y, { align: 'center' });
+      y += 15;
+
+      // Divider line
+      doc.setDrawColor(217, 119, 6); // amber-500
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 10;
+
+      // Value Proposition
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14);
+      doc.text('Your Ministry, Your Platform', margin, y);
+      y += 8;
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      y = addWrappedText(
+        'FaithTalkAI provides churches, ministries, and faith-based organizations with a complete AI-powered platform they can customize and offer to their communities. Keep your branding, align with your theology, and engage your community like never before.',
+        margin, y, contentWidth
+      );
+      y += 10;
+
+      // Core Features Section
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14);
+      doc.text('Core Platform Features', margin, y);
+      y += 8;
+
+      const allFeatures = [
+        { title: 'Your Own Branded Organization', desc: 'Custom name, logo, colors, and welcome messages for a white-label experience.' },
+        { title: 'User & Member Management', desc: 'Add users, assign admin roles, grant premium access, and track engagement.' },
+        { title: 'Customize Character Prompts', desc: 'Tailor biblical characters to align with your theology and denomination.' },
+        { title: 'Create Custom Characters', desc: 'Add your own AI characters - including yourself or your pastor for 24/7 engagement.' },
+        { title: 'Custom Bible Studies', desc: 'Edit studies to fit your curriculum, customize guides, and control visibility.' },
+        { title: 'Reading Plan Management', desc: 'Access 148+ plans, feature specific ones, and organize by categories.' },
+        { title: 'Featured Character Control', desc: 'Set which character greets your community, aligned with sermon series.' },
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+
+      allFeatures.forEach((feature) => {
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text('• ' + feature.title, margin, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        y = addWrappedText(feature.desc, margin + 5, y, contentWidth - 5);
+        y += 4;
+      });
+
+      y += 5;
+
+      // Admin Tools Section
+      if (y > 220) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14);
+      doc.text('Admin & Management Tools', margin, y);
+      y += 8;
+
+      const adminFeatures = [
+        { title: 'Admin Dashboard', desc: 'Comprehensive control center for all content and users.' },
+        { title: 'Premium & Access Control', desc: 'Manage premium access and track member status.' },
+        { title: 'Account Tier Settings', desc: 'Set free message limits and configure premium-only features.' },
+        { title: 'Character Group Management', desc: 'Organize biblical characters into themed groups.' },
+        { title: 'Invite System', desc: 'Send invitations, track status, and grow your community.' },
+        { title: 'Analytics & Reporting', desc: 'Weekly reports, engagement tracking, and member insights.' },
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+
+      adminFeatures.forEach((feature) => {
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text('• ' + feature.title, margin, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        y = addWrappedText(feature.desc, margin + 5, y, contentWidth - 5);
+        y += 4;
+      });
+
+      y += 5;
+
+      // Why Partner Section
+      if (y > 220) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14);
+      doc.text('Why Partner With FaithTalkAI?', margin, y);
+      y += 8;
+
+      const whyPartner = [
+        'Proven Technology - Built on enterprise-grade AI with biblical accuracy',
+        'No Development Required - Everything is ready to go',
+        'Ongoing Updates - New features, characters, and studies added regularly',
+        'Full Support - Training and support to help you succeed',
+      ];
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+
+      whyPartner.forEach((item) => {
+        if (y > 260) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text('• ' + item, margin, y);
+        y += 6;
+      });
+
+      y += 10;
+
+      // Contact Section
+      if (y > 200) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setDrawColor(217, 119, 6);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 10;
+
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(146, 64, 14);
+      doc.text('Ready to Launch Your Ministry?', pageWidth / 2, y, { align: 'center' });
+      y += 10;
+
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      doc.text('Contact us to discuss partnership options', pageWidth / 2, y, { align: 'center' });
+      y += 15;
+
+      // Contact Info
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Email:', margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text('support@FaithTalkAI.com', margin + 15, y);
+      y += 8;
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Website:', margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text('www.FaithTalkAI.com', margin + 20, y);
+      y += 12;
+
+      // Social Media
+      doc.setFont('helvetica', 'bold');
+      doc.text('Follow Us:', margin, y);
+      y += 7;
+
+      doc.setFont('helvetica', 'normal');
+      doc.text('Instagram: @Faith_Talk_AI', margin + 5, y);
+      y += 6;
+      doc.text('TikTok: @faithtalkai', margin + 5, y);
+      y += 6;
+      doc.text('Facebook: Faith Talk AI', margin + 5, y);
+      y += 15;
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('© ' + new Date().getFullYear() + ' FaithTalkAI. All rights reserved.', pageWidth / 2, 285, { align: 'center' });
+
+      // Save the PDF
+      doc.save('FaithTalkAI-Ministry-Partnership.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const coreFeatures = [
     {
       icon: '🏢',
@@ -357,6 +593,16 @@ const BusinessFeaturesPageScroll = () => {
               >
                 View User Features
               </Link>
+              <button
+                onClick={generatePDF}
+                disabled={generating}
+                className="px-6 py-3 bg-white hover:bg-amber-50 text-amber-700 font-bold rounded-lg border border-amber-300 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {generating ? 'Generating...' : 'Download PDF'}
+              </button>
             </div>
           </div>
 
