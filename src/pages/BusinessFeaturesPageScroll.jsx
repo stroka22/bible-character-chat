@@ -40,6 +40,17 @@ const BusinessFeaturesPageScroll = () => {
       ],
     },
     {
+      icon: '🧑‍🏫',
+      title: 'Create Custom Characters',
+      description: 'Add your own AI characters - including yourself or your pastor.',
+      highlights: [
+        'Create a character of your ministry leader',
+        'Let your community chat with "you" 24/7',
+        'Train on your teachings and worldview',
+        'Extend your reach and availability',
+      ],
+    },
+    {
       icon: '📖',
       title: 'Custom Bible Studies',
       description: 'Create and customize Bible studies for your congregation.',
