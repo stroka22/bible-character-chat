@@ -7,17 +7,37 @@ import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/Scrol
 const ContactPageScroll = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In production, this would send to a backend
-    const mailtoLink = `mailto:contact@faithtalkai.com?subject=${encodeURIComponent(formData.subject)}&body=${encodeURIComponent(`From: ${formData.name} (${formData.email})\n\n${formData.message}`)}`;
-    window.location.href = mailtoLink;
-    setSubmitted(true);
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const resp = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok || data.error) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -64,8 +84,8 @@ const ContactPageScroll = () => {
                     </div>
                     <div>
                       <p className="font-medium text-amber-900">Email</p>
-                      <a href="mailto:contact@faithtalkai.com" className="text-amber-600 hover:text-amber-800 text-sm">
-                        contact@faithtalkai.com
+                      <a href="mailto:support@faithtalkai.com" className="text-amber-600 hover:text-amber-800 text-sm">
+                        support@faithtalkai.com
                       </a>
                     </div>
                   </div>
@@ -101,6 +121,11 @@ const ContactPageScroll = () => {
 
               {/* Contact Form */}
               <div className="md:col-span-2">
+                {error && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
@@ -160,9 +185,10 @@ const ContactPageScroll = () => {
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors"
+                    disabled={submitting}
+                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Send Message
+                    {submitting ? 'Sending...' : 'Send Message'}
                   </button>
                 </form>
               </div>

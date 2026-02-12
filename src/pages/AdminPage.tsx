@@ -458,6 +458,7 @@ const AdminPage: React.FC = () => {
                 <button onClick={() => setActiveTab('accountTiers')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'accountTiers' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Account Tiers</button>
                 <button onClick={() => setActiveTab('roundtable')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'roundtable' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Roundtable Settings</button>
                 <Link to="/admin/leads" className="block px-3 py-2 rounded hover:bg-gray-100">Leads</Link>
+                <Link to="/admin/contact" className="block px-3 py-2 rounded hover:bg-gray-100">Contact Submissions</Link>
               </nav>
             </>
           )}

@@ -44,6 +44,7 @@ import AdminPremiumCustomers from './pages/admin/AdminPremiumCustomers.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
 import AdminLeadsPage from './pages/admin/AdminLeadsPage.jsx';
+import AdminContactPage from './pages/admin/AdminContactPage.jsx';
 import PresentationGuide from './pages/PresentationGuide.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
@@ -471,6 +472,7 @@ function AppContent() {
         <Route path="/admin/users" element={<SuperadminUsersPage />} />
         <Route path="/admin/studies" element={<AdminStudiesPage />} />
         <Route path="/admin/leads" element={<AdminLeadsPage />} />
+        <Route path="/admin/contact" element={<AdminContactPage />} />
         <Route path="/present/features" element={<PresentationGuide />} />
       </Route>
       <Route path="/conversations" element={<ConversationsPage />} />
