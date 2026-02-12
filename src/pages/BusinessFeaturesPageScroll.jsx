@@ -110,13 +110,13 @@ const BusinessFeaturesPageScroll = () => {
     },
     {
       icon: '👨‍👩‍👧‍👦',
-      title: 'Group Management',
-      description: 'Organize your community into groups for better engagement.',
+      title: 'Character Group Management',
+      description: 'Organize biblical characters into themed groups for easier discovery.',
       highlights: [
-        'Create groups (small groups, classes, etc.)',
-        'Assign characters to groups',
-        'Organize content by audience',
-        'Manage group-specific access',
+        'Create themed groups (Prophets, Apostles, etc.)',
+        'Assign characters to multiple groups',
+        'Set display order and icons',
+        'Help users find relevant characters',
       ],
     },
     {
