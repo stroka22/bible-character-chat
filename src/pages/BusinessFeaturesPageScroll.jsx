@@ -88,13 +88,13 @@ const BusinessFeaturesPageScroll = () => {
     },
     {
       icon: '💰',
-      title: 'Revenue & Pricing Control',
-      description: 'Set your own pricing and earn revenue from your community.',
+      title: 'Premium & Access Control',
+      description: 'Manage premium access for your community members.',
       highlights: [
-        'Set premium pricing for your org',
-        'Revenue sharing on subscriptions',
-        'Grant free premium to members',
-        'Track subscription metrics',
+        'Grant premium access to members',
+        'Track premium vs free members',
+        'Manage subscription status',
+        'View member engagement',
       ],
     },
     {
@@ -297,24 +297,27 @@ const BusinessFeaturesPageScroll = () => {
           <div className="mt-10 bg-white/80 rounded-xl border border-amber-200 p-8">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-amber-900 mb-3" style={{ fontFamily: 'Cinzel, serif' }}>
-                Revenue Model
+                Partnership Options
               </h2>
               <p className="text-amber-700 max-w-2xl mx-auto mb-6">
-                When your members subscribe to premium, you earn a share of the revenue. 
-                No upfront costs - we grow together.
+                We offer flexible partnership models to fit your ministry's needs. 
+                Contact us to discuss the best option for your organization.
               </p>
               <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
                 <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <div className="text-2xl font-bold text-amber-900">$6.99/mo</div>
-                  <div className="text-amber-700 text-sm">Monthly Premium</div>
+                  <div className="text-2xl font-bold text-amber-900">🚀</div>
+                  <div className="text-amber-700 text-sm font-medium">Quick Setup</div>
+                  <div className="text-amber-600 text-xs mt-1">Get started fast</div>
                 </div>
                 <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <div className="text-2xl font-bold text-amber-900">$49.99/yr</div>
-                  <div className="text-amber-700 text-sm">Annual Premium</div>
+                  <div className="text-2xl font-bold text-amber-900">🎨</div>
+                  <div className="text-amber-700 text-sm font-medium">Full Customization</div>
+                  <div className="text-amber-600 text-xs mt-1">Your brand, your way</div>
                 </div>
                 <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                  <div className="text-2xl font-bold text-amber-900">Rev Share</div>
-                  <div className="text-amber-700 text-sm">Earn on Subscriptions</div>
+                  <div className="text-2xl font-bold text-amber-900">🤝</div>
+                  <div className="text-amber-700 text-sm font-medium">Ongoing Support</div>
+                  <div className="text-amber-600 text-xs mt-1">We grow together</div>
                 </div>
               </div>
             </div>
