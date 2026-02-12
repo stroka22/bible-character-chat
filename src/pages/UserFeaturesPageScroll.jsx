@@ -22,7 +22,7 @@ const UserFeaturesPageScroll = () => {
       title: 'Roundtable Discussions',
       description: 'Bring multiple biblical characters together to discuss any topic from their unique perspectives.',
       highlights: [
-        'Choose 2-5 characters to participate',
+        'Choose up to 8 characters (12 for premium)',
         'Enter any topic or question',
         'Watch characters interact with each other',
         'Gain multiple biblical perspectives at once',
