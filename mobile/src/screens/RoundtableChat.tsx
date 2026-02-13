@@ -10,6 +10,8 @@ import { chat } from '../lib/chat';
 import { requirePremiumOrPrompt, getOwnerSlug as getTierOwnerSlug, getTierSettings } from '../lib/tier';
 import { useAuth } from '../contexts/AuthContext';
 import { inviteFriendToChat } from '../lib/invites';
+import { hasAIConsent, setAIConsent } from '../lib/aiConsent';
+import AIConsentModal from '../components/AIConsentModal';
 
 type Message = {
   id: string;
@@ -34,6 +36,10 @@ export default function RoundtableChat({ route }: any) {
   const headerHeight = useHeaderHeight();
   const { user } = useAuth();
   const didAutoStart = React.useRef(false);
+  
+  // AI consent state
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   React.useEffect(() => {
     (async () => {
@@ -109,21 +115,49 @@ export default function RoundtableChat({ route }: any) {
           .in('id', participantIds);
         const loaded = (data as any) || [];
         setParticipants(loaded);
-        // Auto-start the first round once characters are loaded
+        // Auto-start the first round once characters are loaded (with consent check)
         if (!didAutoStart.current) {
           didAutoStart.current = true;
-          const initialMessages = [{
-            id: `sys-${Date.now()}`,
-            role: 'system' as const,
-            content: `A roundtable discussion on the topic: "${topic}"`
-          }];
-          try { await generateRound(initialMessages, loaded, undefined, roundRef.current); } catch {}
+          const consentGranted = await hasAIConsent();
+          if (!consentGranted) {
+            // Show consent modal before starting
+            setPendingAction(() => async () => {
+              const initialMessages = [{
+                id: `sys-${Date.now()}`,
+                role: 'system' as const,
+                content: `A roundtable discussion on the topic: "${topic}"`
+              }];
+              try { await generateRound(initialMessages, loaded, undefined, roundRef.current); } catch {}
+            });
+            setShowConsentModal(true);
+          } else {
+            const initialMessages = [{
+              id: `sys-${Date.now()}`,
+              role: 'system' as const,
+              content: `A roundtable discussion on the topic: "${topic}"`
+            }];
+            try { await generateRound(initialMessages, loaded, undefined, roundRef.current); } catch {}
+          }
         }
       }
     })();
   }, [participantIds, conversationId]);
 
   const sendUser = async () => {
+    if (!input.trim()) return;
+    
+    // Check for AI consent before sending
+    const consentGranted = await hasAIConsent();
+    if (!consentGranted) {
+      setPendingAction(() => sendUserMessage);
+      setShowConsentModal(true);
+      return;
+    }
+    
+    await sendUserMessage();
+  };
+  
+  const sendUserMessage = async () => {
     if (!input.trim()) return;
     // Detect direct reply to a specific character using @Name prefix
     let targetId: string | null = null;
@@ -148,6 +182,27 @@ export default function RoundtableChat({ route }: any) {
     }
     
     await generateRound(base, undefined, { onlySpeakerId: targetId || undefined }, roundRef.current);
+  };
+  
+  // Handle AI consent acceptance
+  const handleConsentAccept = async () => {
+    await setAIConsent(true);
+    setShowConsentModal(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+  
+  // Handle AI consent decline
+  const handleConsentDecline = () => {
+    setShowConsentModal(false);
+    setPendingAction(null);
+    Alert.alert(
+      'Consent Required',
+      'To participate in roundtable discussions, you must agree to the AI data usage terms.',
+      [{ text: 'OK' }]
+    );
   };
 
   const generateRound = async (
@@ -429,6 +484,13 @@ export default function RoundtableChat({ route }: any) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      
+      {/* AI Consent Modal */}
+      <AIConsentModal
+        visible={showConsentModal}
+        onAccept={handleConsentAccept}
+        onDecline={handleConsentDecline}
+      />
     </SafeAreaView>
   );
 }

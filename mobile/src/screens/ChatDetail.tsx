@@ -11,6 +11,8 @@ import { generateCharacterResponse } from '../lib/api';
 import { theme } from '../theme';
 import { saveStudyProgress, getStudyProgress } from '../lib/studyProgress';
 import { inviteFriendToChat } from '../lib/invites';
+import { hasAIConsent, setAIConsent } from '../lib/aiConsent';
+import AIConsentModal from '../components/AIConsentModal';
 
 export default function ChatDetail() {
   const route = useRoute<any>();
@@ -44,6 +46,10 @@ export default function ChatDetail() {
   const [showInsights, setShowInsights] = React.useState(false);
   const [insights, setInsights] = React.useState<string | null>(null);
   const [loadingInsights, setLoadingInsights] = React.useState(false);
+  
+  // AI consent state
+  const [showConsentModal, setShowConsentModal] = React.useState(false);
+  const [pendingMessage, setPendingMessage] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     (async () => {
@@ -189,6 +195,19 @@ export default function ChatDetail() {
     if (!isEphemeral && !chatId) return;
     
     const content = input.trim();
+    
+    // Check for AI consent before first message
+    const consentGranted = await hasAIConsent();
+    if (!consentGranted) {
+      setPendingMessage(content);
+      setShowConsentModal(true);
+      return;
+    }
+    
+    await sendMessage(content);
+  }
+  
+  async function sendMessage(content: string) {
     setInput('');
     setSending(true);
     try {
@@ -264,6 +283,27 @@ export default function ChatDetail() {
     } finally {
       setSending(false);
     }
+  }
+  
+  // Handle AI consent acceptance
+  async function handleConsentAccept() {
+    await setAIConsent(true);
+    setShowConsentModal(false);
+    if (pendingMessage) {
+      await sendMessage(pendingMessage);
+      setPendingMessage(null);
+    }
+  }
+  
+  // Handle AI consent decline
+  function handleConsentDecline() {
+    setShowConsentModal(false);
+    setPendingMessage(null);
+    Alert.alert(
+      'Consent Required',
+      'To chat with biblical characters, you must agree to the AI data usage terms. You can still browse characters and studies without chatting.',
+      [{ text: 'OK' }]
+    );
   }
 
   // Determine if study is already saved (has progress record)
@@ -632,6 +672,12 @@ Keep each section concise but informative. This is for someone about to have a c
           </TouchableOpacity>
         </View>
         
+        {/* AI Consent Modal */}
+        <AIConsentModal
+          visible={showConsentModal}
+          onAccept={handleConsentAccept}
+          onDecline={handleConsentDecline}
+        />
 
       </SafeAreaView>
     </KeyboardAvoidingView>
