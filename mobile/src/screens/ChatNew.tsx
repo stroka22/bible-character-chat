@@ -69,9 +69,7 @@ export default function ChatNew() {
           .or('is_visible.is.null,is_visible.eq.true')
           .or(`owner_slug.eq.${ownerSlug},owner_slug.eq.default`);
         if (search && search.trim()) {
-          query = query.or(
-            `name.ilike.%${search}%,description.ilike.%${search}%,bible_book.ilike.%${search}%`
-          ) as any;
+          query = query.ilike('name', `%${search}%`) as any;
         }
         if (activeLetter) {
           query = query.ilike('name', `${activeLetter}%`) as any;

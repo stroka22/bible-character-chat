@@ -624,12 +624,11 @@ const ChatPageScroll = () => {
   const filteredCharacters = useMemo(() => {
     let result = [...characters];
     
-    // Search filter
+    // Search filter - only search by name
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(c =>
-        c.name?.toLowerCase().includes(q) ||
-        (c.description || '').toLowerCase().includes(q)
+        c.name?.toLowerCase().includes(q
       );
     }
     
