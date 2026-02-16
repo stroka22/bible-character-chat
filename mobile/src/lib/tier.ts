@@ -107,9 +107,11 @@ export async function isPremiumUser(userId?: string): Promise<boolean> {
   try {
     const { data } = await supabase
       .from('profiles')
-      .select('premium_override')
+      .select('premium_override,role')
       .eq('id', userId)
       .maybeSingle();
+    // Admins always have premium access
+    if (data?.role === 'admin') return true;
     return !!data?.premium_override;
   } catch {
     return false;
