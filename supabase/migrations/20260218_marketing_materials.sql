@@ -93,6 +93,39 @@ CREATE TRIGGER marketing_materials_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_marketing_materials_updated_at();
 
--- Create storage bucket for marketing materials if it doesn't exist
--- Note: Run this in Supabase dashboard or via supabase CLI
--- INSERT INTO storage.buckets (id, name, public) VALUES ('marketing', 'marketing', true);
+-- Create storage bucket for marketing materials
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('marketing', 'marketing', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Allow authenticated users to upload to marketing bucket
+CREATE POLICY "Admins can upload marketing files"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'marketing' 
+  AND EXISTS (
+    SELECT 1 FROM profiles p
+    WHERE p.id = auth.uid() AND p.role = 'admin'
+  )
+);
+
+-- Allow public read access to marketing files
+CREATE POLICY "Public can view marketing files"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'marketing');
+
+-- Allow admins to delete their uploads
+CREATE POLICY "Admins can delete marketing files"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'marketing'
+  AND EXISTS (
+    SELECT 1 FROM profiles p
+    WHERE p.id = auth.uid() 
+    AND p.role = 'admin'
+    AND (p.owner_slug IS NULL OR p.owner_slug = 'default' OR p.owner_slug = 'faithtalkai')
+  )
+);
