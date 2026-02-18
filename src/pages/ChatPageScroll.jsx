@@ -628,7 +628,7 @@ const ChatPageScroll = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(c =>
-        c.name?.toLowerCase().includes(q
+        c.name?.toLowerCase().includes(q)
       );
     }
     
