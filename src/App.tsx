@@ -322,17 +322,9 @@ const AdminMarketingPageRoute = () => {
   return <AdminMarketingPage isSuperAdmin={isSuperadmin} userOwnerSlug={profile?.owner_slug || 'default'} />;
 };
 
-// Placeholder for Business Partners page (super-admin only)
+// Business Partners page (super-admin only) - uses AdminMarketingPage with partner filter
 const AdminBusinessPartnersPage = () => {
-  return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Business Partners</h1>
-        <p className="text-gray-600 mb-8">Materials for potential business partners.</p>
-        <AdminMarketingPage isSuperAdmin={true} userOwnerSlug="default" filterPartnerOnly={true} />
-      </div>
-    </div>
-  );
+  return <AdminMarketingPage isSuperAdmin={true} userOwnerSlug="default" filterPartnerOnly={true} />;
 };
 
 function App(): JSX.Element {

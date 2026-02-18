@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 const CATEGORIES = [
   { value: 'general', label: 'General' },
@@ -230,7 +231,8 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
   };
 
   return (
-    <div className="p-6 pt-24">
+    <AdminLayout>
+    <div className="p-6 pt-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -495,5 +497,6 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 }
