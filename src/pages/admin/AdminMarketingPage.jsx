@@ -142,6 +142,7 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
       }
 
       // Insert material record
+      // For non-super admins, force org-specific settings
       const { error: insertError } = await supabase
         .from('marketing_materials')
         .insert({
@@ -149,9 +150,9 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
           description: uploadForm.description,
           type: uploadForm.type,
           category: uploadForm.category,
-          is_global: uploadForm.isGlobal,
-          is_partner_material: uploadForm.isPartnerMaterial,
-          target_org_slugs: uploadForm.targetOrgSlugs,
+          is_global: isSuperAdmin ? uploadForm.isGlobal : false,
+          is_partner_material: isSuperAdmin ? uploadForm.isPartnerMaterial : false,
+          target_org_slugs: isSuperAdmin ? uploadForm.targetOrgSlugs : [userOwnerSlug],
           file_url: fileUrl,
           file_name: fileName,
           file_size: fileSize,
@@ -229,7 +230,7 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -243,14 +244,12 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
                 : 'Download marketing materials'}
           </p>
         </div>
-        {isSuperAdmin && (
-          <button
-            onClick={() => setShowUploadModal(true)}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium"
-          >
-            + Upload Material
-          </button>
-        )}
+        <button
+          onClick={() => setShowUploadModal(true)}
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium"
+        >
+          + Upload Material
+        </button>
       </div>
 
       {/* Filters */}
@@ -327,7 +326,7 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
                 >
                   {material.external_url ? 'Open Link' : 'Download'}
                 </a>
-                {isSuperAdmin && (
+                {(isSuperAdmin || material.owner_slug === userOwnerSlug) && (
                   <button
                     onClick={() => handleDelete(material)}
                     className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg"
@@ -421,28 +420,36 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={uploadForm.isGlobal}
-                    onChange={(e) => setUploadForm(prev => ({ ...prev, isGlobal: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-700">Available to all org admins</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={uploadForm.isPartnerMaterial}
-                    onChange={(e) => setUploadForm(prev => ({ ...prev, isPartnerMaterial: e.target.checked }))}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-700">Business Partner Material (Super Admin only)</span>
-                </label>
-              </div>
+              {isSuperAdmin && (
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={uploadForm.isGlobal}
+                      onChange={(e) => setUploadForm(prev => ({ ...prev, isGlobal: e.target.checked }))}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-700">Available to all org admins</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={uploadForm.isPartnerMaterial}
+                      onChange={(e) => setUploadForm(prev => ({ ...prev, isPartnerMaterial: e.target.checked }))}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-700">Business Partner Material (Super Admin only)</span>
+                  </label>
+                </div>
+              )}
 
-              {!uploadForm.isGlobal && orgs.length > 0 && (
+              {!isSuperAdmin && (
+                <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                  This material will be uploaded for your organization ({userOwnerSlug}).
+                </p>
+              )}
+
+              {isSuperAdmin && !uploadForm.isGlobal && orgs.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Target Organizations</label>
                   <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2">

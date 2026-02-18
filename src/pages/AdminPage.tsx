@@ -432,7 +432,7 @@ const AdminPage: React.FC = () => {
 
       {/* Desktop left sidebar navigation (matches legacy layout) */}
       <div className="hidden md:block">
-        <aside className="fixed top-24 left-6 w-64 bg-white rounded-md shadow border">
+        <aside className="fixed top-24 left-6 w-64 bg-white rounded-md shadow border max-h-[calc(100vh-120px)] overflow-y-auto">
           <div className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Content Management</div>
           <nav className="px-2 pb-3 space-y-1">
             <button onClick={() => setActiveTab('overview')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'overview' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Overview</button>
