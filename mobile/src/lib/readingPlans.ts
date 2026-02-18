@@ -23,6 +23,7 @@ export interface PlanDay {
     verses?: string;
   }>;
   reflection_prompt: string | null;
+  context: string | null; // Day's teaching/explanation content
 }
 
 export interface UserPlanProgress {
@@ -153,6 +154,40 @@ export async function completeDay(
       completed_days: completedDays,
       current_day: nextDay,
       is_completed: isCompleted,
+      last_activity_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .eq('plan_id', planId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+// Unmark a day as complete
+export async function uncompleteDay(
+  userId: string,
+  planId: string,
+  dayNumber: number
+): Promise<UserPlanProgress> {
+  const progress = await getUserProgress(userId, planId);
+  
+  if (!progress) {
+    throw new Error('No progress found for this plan');
+  }
+
+  const completedDays = (progress.completed_days || []).filter(d => d !== dayNumber);
+  
+  // If uncompleting, set current day to this day
+  const currentDay = dayNumber;
+
+  const { data, error } = await supabase
+    .from('user_reading_plan_progress')
+    .update({
+      completed_days: completedDays,
+      current_day: currentDay,
+      is_completed: false,
       last_activity_at: new Date().toISOString(),
     })
     .eq('user_id', userId)

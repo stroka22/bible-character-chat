@@ -21,6 +21,7 @@ import {
   getUserProgress,
   startPlan,
   completeDay,
+  uncompleteDay,
 } from '../lib/readingPlans';
 import { supabase } from '../lib/supabase';
 import { chat } from '../lib/chat';
@@ -124,6 +125,33 @@ export default function ReadingPlanDetail() {
     }
   };
 
+  const handleUncompleteDay = async () => {
+    if (!user || !plan || !progress || !selectedDay) return;
+    try {
+      const updatedProgress = await uncompleteDay(
+        user.id,
+        plan.id,
+        selectedDay.day_number
+      );
+      setProgress(updatedProgress);
+    } catch (e: any) {
+      console.error('Error unmarking day:', e);
+      Alert.alert('Error', 'Failed to unmark day');
+    }
+  };
+
+  const handlePrevDay = () => {
+    if (!selectedDay || selectedDay.day_number <= 1) return;
+    const prevDay = days.find(d => d.day_number === selectedDay.day_number - 1);
+    if (prevDay) setSelectedDay(prevDay);
+  };
+
+  const handleNextDay = () => {
+    if (!selectedDay || !plan || selectedDay.day_number >= plan.duration_days) return;
+    const nextDay = days.find(d => d.day_number === selectedDay.day_number + 1);
+    if (nextDay) setSelectedDay(nextDay);
+  };
+
   // Start chat with a suggested character based on today's reading
   const startCharacterChat = async () => {
     if (!user || !selectedDay || !plan) {
@@ -156,13 +184,42 @@ export default function ReadingPlanDetail() {
       
       const newChat = await chat.createChat(user.id, charData.id, chatTitle);
       
-      // Add context as system message
-      const contextMsg = `The user is reading "${plan.title}" - Day ${selectedDay.day_number}: ${selectedDay.title || ''}. Today's passages: ${readingsStr}. ${selectedDay.reflection_prompt ? `Reflection: ${selectedDay.reflection_prompt}` : ''}`;
-      await chat.addMessage(newChat.id, contextMsg, 'system');
+      // Build comprehensive system message for character-led conversation
+      const systemPrompt = [
+        `READING PLAN CONTEXT:`,
+        `Plan: "${plan.title}"`,
+        `Day ${selectedDay.day_number} of ${plan.duration_days}: ${selectedDay.title || ''}`,
+        `Today's Passages: ${readingsStr}`,
+        selectedDay.context ? `\nToday's Teaching:\n${selectedDay.context}` : '',
+        selectedDay.reflection_prompt ? `\nReflection Question: ${selectedDay.reflection_prompt}` : '',
+        `\nINSTRUCTIONS:`,
+        `You are ${charData.name}, guiding this person through their daily reading plan.`,
+        `Lead the conversation - don't wait for them to ask questions.`,
+        `1. Start by warmly greeting them and introducing today's reading.`,
+        `2. Share your personal connection to these passages (if relevant to your biblical story).`,
+        `3. After they've read, guide them through the key themes and lessons.`,
+        `4. Use the reflection question to spark deeper discussion.`,
+        `5. Encourage them and remind them of God's faithfulness.`,
+        `Keep responses warm, conversational, and spiritually encouraging.`
+      ].filter(Boolean).join('\n');
       
-      // Add opening line
-      if (charData.opening_line) {
-        await chat.addMessage(newChat.id, charData.opening_line, 'assistant');
+      await chat.addMessage(newChat.id, systemPrompt, 'system');
+      
+      // Generate character-led opening message instead of generic opening line
+      const { generateCharacterResponse } = await import('../lib/api');
+      const introPrompt = `Begin today's reading plan session. Warmly greet the reader, introduce Day ${selectedDay.day_number} (${selectedDay.title || readingsStr}), and share why these passages are meaningful. If these passages relate to your own story in Scripture, briefly mention that connection. Encourage them to read the passages and let you know when they're ready to discuss. Keep it warm and inviting (3-4 sentences).`;
+      
+      try {
+        const introResponse = await generateCharacterResponse(
+          charData.name,
+          charData.persona_prompt || '',
+          [{ role: 'user', content: introPrompt }]
+        );
+        await chat.addMessage(newChat.id, introResponse, 'assistant');
+      } catch (introError) {
+        // Fallback to a generic but contextual opening
+        const fallbackIntro = `Welcome to Day ${selectedDay.day_number} of "${plan.title}"! Today we'll be reading ${readingsStr}. Take your time with the passages, and when you're ready, I'd love to discuss what stood out to you and explore these truths together.`;
+        await chat.addMessage(newChat.id, fallbackIntro, 'assistant');
       }
       
       // Navigate to chat with plan context for back button
@@ -219,26 +276,96 @@ export default function ReadingPlanDetail() {
 
   // Day Detail View
   if (selectedDay) {
+    const isDayCompleted = completedDays.has(selectedDay.day_number);
+    const hasPrev = selectedDay.day_number > 1;
+    const hasNext = selectedDay.day_number < plan.duration_days;
+    
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
-          <TouchableOpacity 
-            onPress={() => setSelectedDay(null)}
-            style={{ marginBottom: 16 }}
-          >
-            <Text style={{ color: theme.colors.primary, fontSize: 16 }}>← Back to Plan</Text>
-          </TouchableOpacity>
+          {/* Navigation Header */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <TouchableOpacity onPress={() => setSelectedDay(null)}>
+              <Text style={{ color: theme.colors.primary, fontSize: 16 }}>← Back to Plan</Text>
+            </TouchableOpacity>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TouchableOpacity 
+                onPress={handlePrevDay}
+                disabled={!hasPrev}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  backgroundColor: hasPrev ? theme.colors.surface : theme.colors.background,
+                  borderRadius: 6,
+                  borderWidth: 1,
+                  borderColor: hasPrev ? theme.colors.border : theme.colors.background,
+                }}
+              >
+                <Text style={{ color: hasPrev ? theme.colors.text : theme.colors.muted }}>← Prev</Text>
+              </TouchableOpacity>
+              
+              <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
+                {selectedDay.day_number}/{plan.duration_days}
+              </Text>
+              
+              <TouchableOpacity 
+                onPress={handleNextDay}
+                disabled={!hasNext}
+                style={{
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  backgroundColor: hasNext ? theme.colors.surface : theme.colors.background,
+                  borderRadius: 6,
+                  borderWidth: 1,
+                  borderColor: hasNext ? theme.colors.border : theme.colors.background,
+                }}
+              >
+                <Text style={{ color: hasNext ? theme.colors.text : theme.colors.muted }}>Next →</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
           <View style={{ backgroundColor: theme.colors.card, borderRadius: 12, padding: 16, borderWidth: 1, borderColor: theme.colors.border }}>
-            <Text style={{ color: theme.colors.primary, fontSize: 14, fontWeight: '600', marginBottom: 4 }}>
-              Day {selectedDay.day_number} of {plan.duration_days}
-            </Text>
-            <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: '700', marginBottom: 16 }}>
-              {selectedDay.title || `Day ${selectedDay.day_number}`}
-            </Text>
+            {/* Day Header */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: theme.colors.primary, fontSize: 14, fontWeight: '600', marginBottom: 4 }}>
+                  Day {selectedDay.day_number} of {plan.duration_days}
+                </Text>
+                <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: '700' }}>
+                  {selectedDay.title || `Day ${selectedDay.day_number}`}
+                </Text>
+              </View>
+              {isDayCompleted && (
+                <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                  <Text style={{ color: '#166534', fontSize: 12, fontWeight: '600' }}>✓ Completed</Text>
+                </View>
+              )}
+            </View>
 
+            {/* Today's Teaching/Context Section */}
+            {selectedDay.context && (
+              <View style={{ 
+                backgroundColor: '#eff6ff', 
+                padding: 16, 
+                borderRadius: 10, 
+                marginBottom: 16,
+                borderWidth: 1,
+                borderColor: '#bfdbfe',
+              }}>
+                <Text style={{ color: '#1e40af', fontWeight: '700', fontSize: 16, marginBottom: 10 }}>
+                  📖 Today's Teaching
+                </Text>
+                <Text style={{ color: '#1e3a8a', lineHeight: 22 }}>
+                  {selectedDay.context}
+                </Text>
+              </View>
+            )}
+
+            {/* Scripture Readings */}
             <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600', marginBottom: 12 }}>
-              Today's Reading
+              📜 Today's Scripture
             </Text>
             
             {selectedDay.readings?.map((reading, idx) => (
@@ -263,34 +390,50 @@ export default function ReadingPlanDetail() {
               </TouchableOpacity>
             ))}
 
+            {/* Reflection Prompt */}
             {selectedDay.reflection_prompt && (
               <View style={{ 
-                backgroundColor: theme.colors.surface, 
+                backgroundColor: '#fef9c3', 
                 padding: 14, 
                 borderRadius: 8, 
                 marginTop: 16,
                 borderWidth: 1,
-                borderColor: theme.colors.border,
+                borderColor: '#fde047',
               }}>
-                <Text style={{ color: theme.colors.accent, fontWeight: '600', marginBottom: 4 }}>
+                <Text style={{ color: '#854d0e', fontWeight: '600', marginBottom: 4 }}>
                   💭 Reflection Question
                 </Text>
-                <Text style={{ color: theme.colors.text }}>{selectedDay.reflection_prompt}</Text>
+                <Text style={{ color: '#713f12' }}>{selectedDay.reflection_prompt}</Text>
               </View>
             )}
 
+            {/* Action Buttons */}
             <View style={{ gap: 12, marginTop: 20 }}>
-              <TouchableOpacity
-                onPress={handleCompleteDay}
-                style={{
-                  backgroundColor: '#16a34a',
-                  paddingVertical: 14,
-                  borderRadius: 10,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: '#fff', fontWeight: '700' }}>✓ Mark Day Complete</Text>
-              </TouchableOpacity>
+              {isDayCompleted ? (
+                <TouchableOpacity
+                  onPress={handleUncompleteDay}
+                  style={{
+                    backgroundColor: '#6b7280',
+                    paddingVertical: 14,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700' }}>↩ Unmark Complete</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleCompleteDay}
+                  style={{
+                    backgroundColor: '#16a34a',
+                    paddingVertical: 14,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700' }}>✓ Mark Day Complete</Text>
+                </TouchableOpacity>
+              )}
               
               <TouchableOpacity
                 onPress={startCharacterChat}
