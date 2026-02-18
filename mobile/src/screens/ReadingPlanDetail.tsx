@@ -241,10 +241,19 @@ export default function ReadingPlanDetail() {
   };
 
   const openReading = (reading: { book: string; chapter: number; verses?: string }) => {
+    // Pass reading plan context so highlighted verses can flow into character chat
     navigation.navigate('Bible', {
       translation: 'KJV',
       book: reading.book,
       chapter: reading.chapter,
+      readingPlanContext: plan ? {
+        planTitle: plan.title,
+        planSlug: plan.slug,
+        dayNumber: selectedDay?.day_number,
+        dayTitle: selectedDay?.title,
+        reflectionPrompt: selectedDay?.reflection_prompt,
+        suggestedCharacter: getBestCharacterName(selectedDay?.readings || [], plan.title),
+      } : undefined,
     });
   };
 

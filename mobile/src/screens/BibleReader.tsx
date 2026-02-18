@@ -20,10 +20,20 @@ import {
   ChapterData,
 } from '../lib/bible';
 
+interface ReadingPlanContext {
+  planTitle: string;
+  planSlug: string;
+  dayNumber?: number;
+  dayTitle?: string;
+  reflectionPrompt?: string;
+  suggestedCharacter?: string;
+}
+
 interface RouteParams {
   translation?: string;
   book?: string;
   chapter?: number;
+  readingPlanContext?: ReadingPlanContext;
 }
 
 export default function BibleReader() {
@@ -110,18 +120,41 @@ export default function BibleReader() {
       reference += ranges.join(', ');
     }
     
-    // Navigate to chat with context
-    navigation.navigate('Chat', {
-      screen: 'ChatNew',
-      params: {
-        initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
-        bibleContext: {
-          reference,
-          translation,
-          text: passageText,
+    // Check if we have reading plan context
+    const planContext = params.readingPlanContext;
+    
+    if (planContext) {
+      // Navigate with reading plan context for character-led discussion
+      navigation.navigate('Chat', {
+        screen: 'ChatNew',
+        params: {
+          initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
+          bibleContext: {
+            reference,
+            translation,
+            text: passageText,
+          },
+          readingPlanContext: {
+            ...planContext,
+            highlightedVerses: reference,
+            highlightedText: passageText,
+          },
         },
-      },
-    });
+      });
+    } else {
+      // Navigate to chat with basic context
+      navigation.navigate('Chat', {
+        screen: 'ChatNew',
+        params: {
+          initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
+          bibleContext: {
+            reference,
+            translation,
+            text: passageText,
+          },
+        },
+      });
+    }
   };
 
   const goToNextChapter = () => {
@@ -298,7 +331,10 @@ export default function BibleReader() {
             }}
           >
             <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 16 }}>
-              Chat About {selectedVerses.size} Verse{selectedVerses.size > 1 ? 's' : ''}
+              {params.readingPlanContext?.suggestedCharacter 
+                ? `Discuss with ${params.readingPlanContext.suggestedCharacter}`
+                : `Chat About ${selectedVerses.size} Verse${selectedVerses.size > 1 ? 's' : ''}`
+              }
             </Text>
           </TouchableOpacity>
         </View>

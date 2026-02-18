@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, FlatList, Image, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { getOwnerSlug, getTierSettings, isCharacterFree, isPremiumUser } from '../lib/tier';
@@ -11,12 +11,38 @@ import { Alert, Linking, Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
 import { getFavoriteCharacterIds, setFavoriteCharacter } from '../lib/favorites';
+import { generateCharacterResponse } from '../lib/api';
 
 const CURATED_BOOKS = ['Genesis','Exodus','Psalms','Proverbs','Gospels','Acts','Romans','Hebrews'];
+
+interface ReadingPlanContext {
+  planTitle: string;
+  planSlug: string;
+  dayNumber?: number;
+  dayTitle?: string;
+  reflectionPrompt?: string;
+  suggestedCharacter?: string;
+  highlightedVerses?: string;
+  highlightedText?: string;
+}
+
+interface BibleContext {
+  reference: string;
+  translation: string;
+  text: string;
+}
+
+interface RouteParams {
+  initialMessage?: string;
+  bibleContext?: BibleContext;
+  readingPlanContext?: ReadingPlanContext;
+}
 
 export default function ChatNew() {
   const { user } = useAuth();
   const nav = useNavigation<any>();
+  const route = useRoute();
+  const params = (route.params || {}) as RouteParams;
   const insets = useSafeAreaInsets();
   const [title, setTitle] = React.useState('');
   const [search, setSearch] = React.useState('');
@@ -117,6 +143,83 @@ export default function ChatNew() {
     })();
     return () => { active = false; };
   }, [search, activeLetter, filterMode, selectedGroup, user, favIds, siteSettings.defaultFeaturedCharacterId, siteSettings.enforceAdminDefault]);
+
+  // Auto-start chat with suggested character when coming from reading plan with highlighted verses
+  React.useEffect(() => {
+    if (!params.readingPlanContext?.suggestedCharacter || !user) return;
+    
+    let active = true;
+    (async () => {
+      try {
+        const planCtx = params.readingPlanContext!;
+        const characterName = planCtx.suggestedCharacter!;
+        
+        // Find the character
+        const { data: charData } = await supabase
+          .from('characters')
+          .select('id,name,avatar_url,persona_prompt,opening_line')
+          .ilike('name', `%${characterName}%`)
+          .limit(1)
+          .maybeSingle();
+        
+        if (!charData || !active) return;
+        
+        // Create chat with reading plan context
+        const chatTitle = planCtx.dayNumber 
+          ? `${planCtx.planTitle} - Day ${planCtx.dayNumber}`
+          : `${planCtx.planTitle}`;
+        
+        const newChat = await chat.createChat(user.id, String(charData.id), chatTitle);
+        
+        // Build system prompt with highlighted verses context
+        const systemPrompt = [
+          `READING PLAN CONTEXT:`,
+          `Plan: "${planCtx.planTitle}"`,
+          planCtx.dayNumber ? `Day ${planCtx.dayNumber}: ${planCtx.dayTitle || ''}` : '',
+          planCtx.highlightedVerses ? `\nThe user highlighted these verses: ${planCtx.highlightedVerses}` : '',
+          planCtx.highlightedText ? `\nHighlighted text:\n"${planCtx.highlightedText}"` : '',
+          planCtx.reflectionPrompt ? `\nReflection Question: ${planCtx.reflectionPrompt}` : '',
+          `\nINSTRUCTIONS:`,
+          `You are ${charData.name}, discussing the verses the user highlighted.`,
+          `1. Acknowledge the specific verses they selected.`,
+          `2. Share your perspective on these verses, especially if they relate to your biblical story.`,
+          `3. Ask what drew them to these particular verses.`,
+          `4. Guide a meaningful discussion about the spiritual truths in these passages.`,
+          `Keep responses warm, conversational, and spiritually encouraging.`
+        ].filter(Boolean).join('\n');
+        
+        await chat.addMessage(newChat.id, systemPrompt, 'system');
+        
+        // Generate character-led opening about the highlighted verses
+        try {
+          const introPrompt = `The reader just highlighted ${planCtx.highlightedVerses || 'some verses'} while reading ${planCtx.planTitle}${planCtx.dayNumber ? ` - Day ${planCtx.dayNumber}` : ''}. Warmly acknowledge their selection and share why these verses are meaningful. If they relate to your own story, mention that. Ask what drew them to these particular verses. Keep it conversational (3-4 sentences).`;
+          
+          const introResponse = await generateCharacterResponse(
+            charData.name,
+            charData.persona_prompt || '',
+            [{ role: 'user', content: introPrompt }]
+          );
+          await chat.addMessage(newChat.id, introResponse, 'assistant');
+        } catch {
+          // Fallback
+          const fallback = `I see you've been reading ${planCtx.planTitle}${planCtx.dayNumber ? ` - Day ${planCtx.dayNumber}` : ''} and highlighted ${planCtx.highlightedVerses || 'some verses'}. I'd love to discuss these passages with you. What stood out to you in what you read?`;
+          await chat.addMessage(newChat.id, fallback, 'assistant');
+        }
+        
+        if (active) {
+          nav.navigate('ChatDetail', { 
+            chatId: newChat.id, 
+            character: charData,
+            fromPlan: { slug: planCtx.planSlug, title: planCtx.planTitle, dayNumber: planCtx.dayNumber }
+          });
+        }
+      } catch (e) {
+        console.error('Error auto-starting reading plan chat:', e);
+      }
+    })();
+    
+    return () => { active = false; };
+  }, [params.readingPlanContext, user]);
 
   // Categories kept small and curated for speed and legibility
 
