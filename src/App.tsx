@@ -45,6 +45,7 @@ import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
 import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
 import AdminLeadsPage from './pages/admin/AdminLeadsPage.jsx';
 import AdminContactPage from './pages/admin/AdminContactPage.jsx';
+import AdminMarketingPage from './pages/admin/AdminMarketingPage.jsx';
 import PresentationGuide from './pages/PresentationGuide.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
@@ -315,6 +316,25 @@ const AdminRoute = ({ redirectPath = '/' }: { redirectPath?: string }): JSX.Elem
   return <Outlet />;
 };
 
+// Wrapper component for Marketing Vault route (super-admin gets full access)
+const AdminMarketingPageRoute = () => {
+  const { profile, isSuperadmin } = useAuth();
+  return <AdminMarketingPage isSuperAdmin={isSuperadmin} userOwnerSlug={profile?.owner_slug || 'default'} />;
+};
+
+// Placeholder for Business Partners page (super-admin only)
+const AdminBusinessPartnersPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Business Partners</h1>
+        <p className="text-gray-600 mb-8">Materials for potential business partners.</p>
+        <AdminMarketingPage isSuperAdmin={true} userOwnerSlug="default" filterPartnerOnly={true} />
+      </div>
+    </div>
+  );
+};
+
 function App(): JSX.Element {
   const params = new URLSearchParams(window.location.search);
   // Only enable the "direct render" shortcut while _developing_ and
@@ -407,7 +427,7 @@ function AppContent() {
     <Route path="/contact" element={<ContactPageScroll />} />
     <Route path="/how-it-works" element={<HowItWorksPageScroll />} />
     <Route path="/features" element={<UserFeaturesPageScroll />} />
-    <Route path="/business" element={<BusinessFeaturesPageScroll />} />
+    {/* /business route removed - now only accessible in super admin panel at /admin/partners */}
     <Route path="/faq" element={<FAQPageScroll />} />
     <Route path="/terms" element={<TermsPageScroll />} />
     <Route path="/privacy" element={<PrivacyPageScroll />} />
@@ -473,6 +493,8 @@ function AppContent() {
         <Route path="/admin/studies" element={<AdminStudiesPage />} />
         <Route path="/admin/leads" element={<AdminLeadsPage />} />
         <Route path="/admin/contact" element={<AdminContactPage />} />
+        <Route path="/admin/marketing" element={<AdminMarketingPageRoute />} />
+        <Route path="/admin/partners" element={<AdminBusinessPartnersPage />} />
         <Route path="/present/features" element={<PresentationGuide />} />
       </Route>
       <Route path="/conversations" element={<ConversationsPage />} />

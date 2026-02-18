@@ -42,12 +42,14 @@ const UserFeaturesPageScroll = () => {
     {
       icon: '📅',
       title: 'Reading Plans',
-      description: '148+ curated reading plans to help you systematically read through Scripture.',
+      description: '148+ curated reading plans with character-guided discussions and daily teachings.',
       highlights: [
         'Plans for all timeframes and topics',
-        'Daily readings with educational context',
-        'Track completion and build habits',
-        'Continue where you left off',
+        'Daily teachings and reflection prompts',
+        'Character-led discussions on each day\'s reading',
+        'Highlight verses and discuss with a biblical character',
+        'Navigate between days easily',
+        'Mark and unmark days as complete',
       ],
     },
     {
@@ -57,6 +59,7 @@ const UserFeaturesPageScroll = () => {
       highlights: [
         'KJV, NIV, ESV, NASB, NLT, and more',
         'Quick navigation to any book/chapter',
+        'Highlight any verse and discuss with a biblical character',
         'Seamlessly integrated with studies and plans',
         'Clean, distraction-free reading experience',
       ],
@@ -89,7 +92,8 @@ const UserFeaturesPageScroll = () => {
       description: 'Take your faith journey anywhere with our iOS app.',
       highlights: [
         'Full-featured mobile experience',
-        'Offline-capable conversations',
+        'All reading plans and Bible studies',
+        'Bible reader with character discussions',
         'Push notifications for reminders',
         'Seamless sync across devices',
       ],

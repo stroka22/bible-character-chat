@@ -13,6 +13,7 @@ import AccountTierManagement from '../components/admin/AccountTierManagement';
 import AdminStudiesPage from './admin/AdminStudiesPage.jsx';
 import AdminReadingPlansPage from './admin/AdminReadingPlansPage.jsx';
 import AdminBranding from '../components/admin/AdminBranding';
+import AdminMarketingPage from './admin/AdminMarketingPage.jsx';
 import { getOwnerSlug } from '../services/tierSettingsService';
 
 // Helper function for basic CSV parsing
@@ -442,6 +443,7 @@ const AdminPage: React.FC = () => {
             <button onClick={() => setActiveTab('readingPlans')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'readingPlans' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Reading Plans</button>
             <button onClick={() => setActiveTab('branding')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'branding' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Branding</button>
             <button onClick={() => setActiveTab('faq')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'faq' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>FAQ</button>
+            <button onClick={() => setActiveTab('marketing')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'marketing' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Marketing</button>
           </nav>
           
           <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Users</div>
@@ -459,6 +461,8 @@ const AdminPage: React.FC = () => {
                 <button onClick={() => setActiveTab('roundtable')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'roundtable' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Roundtable Settings</button>
                 <Link to="/admin/leads" className="block px-3 py-2 rounded hover:bg-gray-100">Leads</Link>
                 <Link to="/admin/contact" className="block px-3 py-2 rounded hover:bg-gray-100">Contact Submissions</Link>
+                <Link to="/admin/marketing" className="block px-3 py-2 rounded hover:bg-gray-100">Marketing Vault</Link>
+                <Link to="/admin/partners" className="block px-3 py-2 rounded hover:bg-gray-100">Business Partners</Link>
               </nav>
             </>
           )}
@@ -1022,6 +1026,13 @@ const AdminPage: React.FC = () => {
         <section className="p-6 bg-white rounded-lg shadow-md">
           <AdminBranding />
         </section>
+      )}
+
+      {activeTab === 'marketing' && (
+        <AdminMarketingPage 
+          isSuperAdmin={isSuperadmin} 
+          userOwnerSlug={profile?.owner_slug || 'default'} 
+        />
       )}
 
       {/* ----------------------------------------------------------------
