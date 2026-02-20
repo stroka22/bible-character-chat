@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaithTalkAI - Admin & Business Partner Features</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #78350f;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(120, 53, 15, 0.15);
+      padding: 48px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #f59e0b;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #b45309;
+      margin-bottom: 8px;
+    }
+    .tagline {
+      color: #92400e;
+      font-style: italic;
+    }
+    h1 {
+      font-size: 28px;
+      color: #78350f;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #a16207;
+      font-size: 16px;
+    }
+    .badge {
+      display: inline-block;
+      background: #b45309;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .section {
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-size: 20px;
+      color: #b45309;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #fcd34d;
+    }
+    .feature {
+      margin-bottom: 24px;
+      padding-left: 16px;
+      border-left: 3px solid #f59e0b;
+    }
+    .feature-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #78350f;
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      color: #92400e;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .feature-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    .feature-list li {
+      color: #a16207;
+      font-size: 14px;
+      padding: 4px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .feature-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #f59e0b;
+      font-weight: bold;
+    }
+    .highlight-box {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0;
+    }
+    .highlight-title {
+      font-size: 18px;
+      color: #b45309;
+      margin-bottom: 12px;
+      font-weight: bold;
+    }
+    .highlight-text {
+      color: #78350f;
+      line-height: 1.6;
+    }
+    .two-column {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 16px;
+    }
+    .column-item {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #fcd34d;
+    }
+    .column-title {
+      font-weight: bold;
+      color: #78350f;
+      margin-bottom: 8px;
+    }
+    .column-desc {
+      color: #92400e;
+      font-size: 14px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #fcd34d;
+      color: #a16207;
+      font-size: 14px;
+    }
+    .cta {
+      display: inline-block;
+      background: #f59e0b;
+      color: white;
+      padding: 12px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+    @media print {
+      body { background: white; padding: 20px; }
+      .container { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">✝ FaithTalkAI</div>
+      <div class="tagline">Conversations with Scripture, Guided by Faith</div>
+      <h1>Admin & Business Partner Features</h1>
+      <div class="subtitle">White-label ministry platform for churches and organizations</div>
+      <div class="badge">Partnership Opportunity</div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-title">Why Partner with FaithTalkAI?</div>
+      <div class="highlight-text">
+        FaithTalkAI provides a complete, customizable faith engagement platform that your ministry can brand as your own. 
+        Engage your congregation with AI-powered biblical conversations, structured Bible studies, and reading plans - 
+        all managed through your own admin dashboard.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🎨 Branding & Customization</div>
+
+      <div class="feature">
+        <div class="feature-title">Custom Branding</div>
+        <div class="feature-desc">Make the platform your own with full branding control.</div>
+        <ul class="feature-list">
+          <li>Custom logo and colors</li>
+          <li>Your organization's name throughout</li>
+          <li>Branded landing pages</li>
+          <li>Custom domain support (yourministry.faithtalkai.com)</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">Featured Character Selection</div>
+        <div class="feature-desc">Choose which biblical character greets your users first.</div>
+        <ul class="feature-list">
+          <li>Pin a featured character for your organization</li>
+          <li>Enforce default character for all users</li>
+          <li>Customize character visibility</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📚 Content Management</div>
+
+      <div class="feature">
+        <div class="feature-title">Character Management</div>
+        <div class="feature-desc">Full control over the biblical characters your users interact with.</div>
+        <ul class="feature-list">
+          <li>Create custom characters for your ministry</li>
+          <li>Edit character personas and opening lines</li>
+          <li>Organize characters into groups</li>
+          <li>Control character visibility</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">Bible Studies</div>
+        <div class="feature-desc">Create and manage structured Bible study content.</div>
+        <ul class="feature-list">
+          <li>36+ pre-built studies available</li>
+          <li>Create custom studies for your congregation</li>
+          <li>Multi-lesson study structure</li>
+          <li>Scripture references and reflection prompts</li>
+          <li>Track user progress across studies</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">Reading Plans</div>
+        <div class="feature-desc">Curated reading plans with daily devotional content.</div>
+        <ul class="feature-list">
+          <li>148+ pre-built reading plans</li>
+          <li>Create custom plans for your ministry</li>
+          <li>Daily readings with educational context</li>
+          <li>Reflection prompts for each day</li>
+          <li>Character-led discussions</li>
+          <li>Progress tracking and completion status</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">FAQ Management</div>
+        <div class="feature-desc">Customize the FAQ section for your users.</div>
+        <ul class="feature-list">
+          <li>Add organization-specific questions</li>
+          <li>Edit existing FAQ content</li>
+          <li>Organize by category</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">👥 User Management</div>
+
+      <div class="feature">
+        <div class="feature-title">User Analytics</div>
+        <div class="feature-desc">Understand how your congregation engages with the platform.</div>
+        <ul class="feature-list">
+          <li>User activity tracking</li>
+          <li>Popular characters and topics</li>
+          <li>Study completion rates</li>
+          <li>Reading plan progress</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">User Favorites</div>
+        <div class="feature-desc">See which characters resonate with your community.</div>
+        <ul class="feature-list">
+          <li>View user favorite characters</li>
+          <li>Track engagement patterns</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📦 Marketing Vault</div>
+
+      <div class="feature">
+        <div class="feature-title">Downloadable Marketing Materials</div>
+        <div class="feature-desc">Access professional marketing assets to promote the platform.</div>
+        <ul class="feature-list">
+          <li>PDF feature guides and brochures</li>
+          <li>Social media images and templates</li>
+          <li>Email templates</li>
+          <li>Presentation materials</li>
+          <li>Brand assets and logos</li>
+          <li>Upload your own org-specific materials</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">⚙️ Platform Features (All Users)</div>
+      
+      <div class="two-column">
+        <div class="column-item">
+          <div class="column-title">90+ Biblical Characters</div>
+          <div class="column-desc">Conversations with figures from both testaments</div>
+        </div>
+        <div class="column-item">
+          <div class="column-title">Roundtable Discussions</div>
+          <div class="column-desc">Multi-character conversations on any topic</div>
+        </div>
+        <div class="column-item">
+          <div class="column-title">9 Bible Translations</div>
+          <div class="column-desc">KJV, NIV, ESV, NASB, NLT and more</div>
+        </div>
+        <div class="column-item">
+          <div class="column-title">iOS Mobile App</div>
+          <div class="column-desc">Full-featured native mobile experience</div>
+        </div>
+        <div class="column-item">
+          <div class="column-title">Progress Tracking</div>
+          <div class="column-desc">My Walk dashboard for personal journey</div>
+        </div>
+        <div class="column-item">
+          <div class="column-title">Share & Invite</div>
+          <div class="column-desc">Community features for group engagement</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-title">Partnership Tiers</div>
+      <div class="two-column">
+        <div class="column-item">
+          <div class="column-title">Ministry Partner</div>
+          <div class="column-desc">
+            • Custom branding<br>
+            • Admin dashboard access<br>
+            • Content management<br>
+            • User analytics<br>
+            • Marketing materials
+          </div>
+        </div>
+        <div class="column-item">
+          <div class="column-title">Enterprise Partner</div>
+          <div class="column-desc">
+            • Everything in Ministry<br>
+            • Custom domain<br>
+            • API access<br>
+            • Priority support<br>
+            • Custom integrations
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Ready to bring FaithTalkAI to your ministry?</p>
+      <a href="https://www.faithtalkai.com/contact" class="cta">Contact Us</a>
+      <p style="margin-top: 24px; font-size: 12px;">© 2026 FaithTalkAI. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaithTalkAI - User Features</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Georgia', serif;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      color: #78350f;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(120, 53, 15, 0.15);
+      padding: 48px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 2px solid #f59e0b;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #b45309;
+      margin-bottom: 8px;
+    }
+    .tagline {
+      color: #92400e;
+      font-style: italic;
+    }
+    h1 {
+      font-size: 28px;
+      color: #78350f;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #a16207;
+      font-size: 16px;
+    }
+    .section {
+      margin-bottom: 32px;
+    }
+    .section-title {
+      font-size: 20px;
+      color: #b45309;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #fcd34d;
+    }
+    .feature {
+      margin-bottom: 24px;
+      padding-left: 16px;
+      border-left: 3px solid #f59e0b;
+    }
+    .feature-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #78350f;
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      color: #92400e;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .feature-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    .feature-list li {
+      color: #a16207;
+      font-size: 14px;
+      padding: 4px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .feature-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #f59e0b;
+      font-weight: bold;
+    }
+    .premium-section {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 32px;
+    }
+    .premium-title {
+      font-size: 20px;
+      color: #b45309;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .premium-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .premium-item {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .premium-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .premium-item-title {
+      font-weight: bold;
+      color: #78350f;
+      font-size: 14px;
+    }
+    .premium-item-desc {
+      color: #92400e;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #fcd34d;
+      color: #a16207;
+      font-size: 14px;
+    }
+    .cta {
+      display: inline-block;
+      background: #f59e0b;
+      color: white;
+      padding: 12px 32px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+    @media print {
+      body { background: white; padding: 20px; }
+      .container { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">✝ FaithTalkAI</div>
+      <div class="tagline">Conversations with Scripture, Guided by Faith</div>
+      <h1>User Features Guide</h1>
+      <div class="subtitle">Everything you need to deepen your faith journey</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Core Features</div>
+
+      <div class="feature">
+        <div class="feature-title">💬 One-on-One Character Conversations</div>
+        <div class="feature-desc">Have meaningful, personal conversations with over 90 biblical characters from both Old and New Testaments.</div>
+        <ul class="feature-list">
+          <li>Ask questions about their lives and experiences</li>
+          <li>Seek wisdom for your own situations</li>
+          <li>Explore Scripture through their eyes</li>
+          <li>Characters respond based on biblical accuracy</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">👥 Roundtable Discussions</div>
+        <div class="feature-desc">Bring multiple biblical characters together to discuss any topic from their unique perspectives.</div>
+        <ul class="feature-list">
+          <li>Choose up to 8 characters (12 for premium)</li>
+          <li>Enter any topic or question</li>
+          <li>Watch characters interact with each other</li>
+          <li>Gain multiple biblical perspectives at once</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">📖 Character-Guided Bible Studies</div>
+        <div class="feature-desc">36+ structured Bible studies led by characters who lived the stories.</div>
+        <ul class="feature-list">
+          <li>Studies on books, topics, and themes</li>
+          <li>Interactive lessons with your guide</li>
+          <li>Track your progress through each study</li>
+          <li>Studies begin with prayer for focus</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">📅 Reading Plans</div>
+        <div class="feature-desc">148+ curated reading plans with character-guided discussions and daily teachings.</div>
+        <ul class="feature-list">
+          <li>Plans for all timeframes and topics</li>
+          <li>Daily teachings and reflection prompts</li>
+          <li>Character-led discussions on each day's reading</li>
+          <li>Highlight verses and discuss with a biblical character</li>
+          <li>Navigate between days easily</li>
+          <li>Mark and unmark days as complete</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">📕 Integrated Bible Reader</div>
+        <div class="feature-desc">Read Scripture directly in the app with 9 translations available.</div>
+        <ul class="feature-list">
+          <li>KJV, NIV, ESV, NASB, NLT, and more</li>
+          <li>Quick navigation to any book/chapter</li>
+          <li>Highlight any verse and discuss with a biblical character</li>
+          <li>Seamlessly integrated with studies and plans</li>
+          <li>Clean, distraction-free reading experience</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">🔖 My Walk - Personal Dashboard</div>
+        <div class="feature-desc">Your personal faith journey hub to track all your progress.</div>
+        <ul class="feature-list">
+          <li>Saved conversations and roundtables</li>
+          <li>Bible study progress tracking</li>
+          <li>Reading plan completion status</li>
+          <li>Favorite characters for quick access</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">🤝 Share & Invite Friends</div>
+        <div class="feature-desc">Faith is better together. Share your journey with others.</div>
+        <ul class="feature-list">
+          <li>Invite friends to join conversations</li>
+          <li>Share insights and discussion highlights</li>
+          <li>Grow together in community</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <div class="feature-title">📱 Mobile App</div>
+        <div class="feature-desc">Take your faith journey anywhere with our iOS app.</div>
+        <ul class="feature-list">
+          <li>Full-featured mobile experience</li>
+          <li>All reading plans and Bible studies</li>
+          <li>Bible reader with character discussions</li>
+          <li>Push notifications for reminders</li>
+          <li>Seamless sync across devices</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="premium-section">
+      <div class="premium-title">✨ Premium Benefits</div>
+      <div class="premium-grid">
+        <div class="premium-item">
+          <div class="premium-icon">♾️</div>
+          <div class="premium-item-title">Unlimited Conversations</div>
+          <div class="premium-item-desc">No daily message limits</div>
+        </div>
+        <div class="premium-item">
+          <div class="premium-icon">🌟</div>
+          <div class="premium-item-title">All Characters</div>
+          <div class="premium-item-desc">Access every biblical character</div>
+        </div>
+        <div class="premium-item">
+          <div class="premium-icon">📚</div>
+          <div class="premium-item-title">Premium Studies</div>
+          <div class="premium-item-desc">Exclusive in-depth content</div>
+        </div>
+        <div class="premium-item">
+          <div class="premium-icon">💾</div>
+          <div class="premium-item-title">Unlimited Saves</div>
+          <div class="premium-item-desc">Save all your conversations</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Start your faith journey today at</p>
+      <a href="https://www.faithtalkai.com" class="cta">www.FaithTalkAI.com</a>
+      <p style="margin-top: 24px; font-size: 12px;">© 2026 FaithTalkAI. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
