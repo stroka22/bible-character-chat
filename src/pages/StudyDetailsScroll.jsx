@@ -33,6 +33,8 @@ const StudyDetailsScroll = () => {
   const { isPremium } = usePremium();
   const [progress, setProgress] = useState(null);
   const [togglingLesson, setTogglingLesson] = useState(null);
+  const [allProgressRecords, setAllProgressRecords] = useState([]);
+  const [showProgressPicker, setShowProgressPicker] = useState(false);
   
   const isStudyPremium = (s) => {
     if (!s) return false;
@@ -71,14 +73,23 @@ const StudyDetailsScroll = () => {
 
         if (user?.id) {
           try {
-            const p = await bibleStudiesRepository.getProgress({ 
+            // Get all progress records for this study
+            const allProgress = await bibleStudiesRepository.getAllProgressForStudy({ 
               userId: user.id, 
-              studyId: id,
-              progressId: progressIdFromUrl || undefined
+              studyId: id 
             });
-            setProgress(p);
+            setAllProgressRecords(allProgress);
+            
+            // If a specific progress is requested, use it; otherwise use the most recent
+            if (progressIdFromUrl) {
+              const p = allProgress.find(pr => pr.id === progressIdFromUrl);
+              setProgress(p || allProgress[0] || null);
+            } else {
+              setProgress(allProgress[0] || null);
+            }
           } catch {
             setProgress(null);
+            setAllProgressRecords([]);
           }
         }
         
@@ -228,6 +239,82 @@ const StudyDetailsScroll = () => {
                     <button onClick={() => setShowUpgrade(true)} className="ml-3 px-3 py-1 bg-amber-600 text-white text-sm rounded hover:bg-amber-700">
                       Upgrade
                     </button>
+                  </div>
+                )}
+                
+                {/* Progress Instances - allow multiple study instances */}
+                {user && (
+                  <div className="mt-4 pt-4 border-t border-amber-200">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        {allProgressRecords.length > 0 && (
+                          <div className="relative">
+                            <button 
+                              onClick={() => setShowProgressPicker(!showProgressPicker)}
+                              className="px-3 py-1.5 bg-amber-100 text-amber-800 text-sm rounded-lg border border-amber-300 hover:bg-amber-200 flex items-center gap-1"
+                            >
+                              {progress?.label || `Study ${allProgressRecords.findIndex(p => p.id === progress?.id) + 1}`}
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                            {showProgressPicker && (
+                              <div className="absolute top-full left-0 mt-1 bg-white border border-amber-200 rounded-lg shadow-lg z-10 min-w-[200px]">
+                                {allProgressRecords.map((pr, idx) => (
+                                  <button
+                                    key={pr.id}
+                                    onClick={() => {
+                                      setProgress(pr);
+                                      setShowProgressPicker(false);
+                                      navigate(`/studies/${id}?progress=${pr.id}`);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-amber-50 ${pr.id === progress?.id ? 'bg-amber-100' : ''}`}
+                                  >
+                                    <div className="font-medium text-amber-900">{pr.label || `Study Instance ${idx + 1}`}</div>
+                                    <div className="text-amber-600 text-xs">
+                                      {pr.completed_lessons?.length || 0}/{lessons.length} lessons
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {allProgressRecords.length > 0 && (
+                          <span className="text-amber-600 text-sm">
+                            {progress?.completed_lessons?.length || 0}/{lessons.length} complete
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (!user?.id) return;
+                          const label = prompt('Name this study instance (e.g., "Solo Study" or "Small Group"):');
+                          if (label === null) return;
+                          try {
+                            const newProgress = await bibleStudiesRepository.saveProgress({
+                              userId: user.id,
+                              studyId: id,
+                              createNew: true,
+                              completedLessons: [],
+                              currentLessonIndex: 0,
+                              label: label.trim() || `Study ${allProgressRecords.length + 1}`
+                            });
+                            setAllProgressRecords([newProgress, ...allProgressRecords]);
+                            setProgress(newProgress);
+                            navigate(`/studies/${id}?progress=${newProgress.id}`);
+                          } catch (err) {
+                            console.error('Error creating new study instance:', err);
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 flex items-center gap-1"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Start New
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { chat } from '../lib/chat';
 import { generateCharacterResponse } from '../lib/api';
-import { getStudyProgress, toggleLessonComplete, getProgressPercent, saveStudyProgress, StudyProgress } from '../lib/studyProgress';
+import { getStudyProgress, getAllProgressForStudy, toggleLessonComplete, getProgressPercent, saveStudyProgress, StudyProgress } from '../lib/studyProgress';
 import { theme } from '../theme';
 
 type LessonPrompt = {
@@ -34,6 +34,8 @@ export default function StudyDetail({ route, navigation }: any) {
   const [guide, setGuide] = useState<{ id: string; name: string; avatar_url?: string | null; persona_prompt?: string | null } | null>(null);
   const [lessonCharacters, setLessonCharacters] = useState<Record<string, { id: string; name: string; avatar_url?: string | null }>>({});
   const [progress, setProgress] = useState<StudyProgress | null>(null);
+  const [allProgressRecords, setAllProgressRecords] = useState<StudyProgress[]>([]);
+  const [showProgressPicker, setShowProgressPicker] = useState(false);
   const [togglingLesson, setTogglingLesson] = useState<number | null>(null);
   const [lessonChats, setLessonChats] = useState<Record<string, any[]>>({});
 
@@ -94,9 +96,15 @@ export default function StudyDetail({ route, navigation }: any) {
       }
     }
     
-    // Load progress (use routeProgressId if provided)
+    // Load all progress records for this study
     if (user?.id) {
-      const p = await getStudyProgress(user.id, studyId, routeProgressId);
+      const allProgress = await getAllProgressForStudy(user.id, studyId);
+      setAllProgressRecords(allProgress);
+      
+      // Use routeProgressId if provided, otherwise use most recent
+      const p = routeProgressId 
+        ? allProgress.find(pr => pr.id === routeProgressId) || allProgress[0] || null
+        : allProgress[0] || null;
       setProgress(p);
       
       // Load existing chats for this progress
@@ -356,6 +364,107 @@ export default function StudyDetail({ route, navigation }: any) {
                 borderRadius: 3 
               }} />
             </View>
+            
+            {/* Multiple Progress Instances */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, gap: 8 }}>
+              {allProgressRecords.length > 0 && (
+                <TouchableOpacity 
+                  onPress={() => setShowProgressPicker(!showProgressPicker)}
+                  style={{ 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    backgroundColor: theme.colors.surface, 
+                    paddingHorizontal: 10, 
+                    paddingVertical: 6, 
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: theme.colors.border
+                  }}
+                >
+                  <Text style={{ color: theme.colors.text, fontSize: 13, marginRight: 4 }}>
+                    {progress?.label || `Study ${allProgressRecords.findIndex(p => p.id === progress?.id) + 1}`}
+                  </Text>
+                  <Text style={{ color: theme.colors.muted, fontSize: 10 }}>▼</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity 
+                onPress={async () => {
+                  if (!user?.id) return;
+                  Alert.prompt(
+                    'New Study Instance',
+                    'Name this study (e.g., "Solo Study" or "Small Group"):',
+                    async (label) => {
+                      if (label === null || label === undefined) return;
+                      try {
+                        const newProgress = await saveStudyProgress({
+                          userId: user.id,
+                          studyId,
+                          createNew: true,
+                          completedLessons: [],
+                          currentLessonIndex: 0,
+                          label: label.trim() || `Study ${allProgressRecords.length + 1}`
+                        });
+                        if (newProgress) {
+                          setAllProgressRecords([newProgress, ...allProgressRecords]);
+                          setProgress(newProgress);
+                        }
+                      } catch (err) {
+                        console.error('Error creating new study instance:', err);
+                      }
+                    },
+                    'plain-text',
+                    ''
+                  );
+                }}
+                style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'center', 
+                  backgroundColor: theme.colors.primary, 
+                  paddingHorizontal: 10, 
+                  paddingVertical: 6, 
+                  borderRadius: 6 
+                }}
+              >
+                <Text style={{ color: theme.colors.primaryText, fontSize: 13, fontWeight: '600' }}>+ Start New</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Progress Picker Dropdown */}
+            {showProgressPicker && allProgressRecords.length > 0 && (
+              <View style={{ 
+                marginTop: 8, 
+                backgroundColor: theme.colors.card, 
+                borderRadius: 8, 
+                borderWidth: 1, 
+                borderColor: theme.colors.border,
+                overflow: 'hidden'
+              }}>
+                {allProgressRecords.map((pr, idx) => (
+                  <TouchableOpacity
+                    key={pr.id}
+                    onPress={() => {
+                      setProgress(pr);
+                      setShowProgressPicker(false);
+                      // Reload data with new progress
+                      navigation.setParams({ progressId: pr.id });
+                    }}
+                    style={{ 
+                      padding: 12, 
+                      backgroundColor: pr.id === progress?.id ? theme.colors.surface : 'transparent',
+                      borderBottomWidth: idx < allProgressRecords.length - 1 ? 1 : 0,
+                      borderBottomColor: theme.colors.border
+                    }}
+                  >
+                    <Text style={{ color: theme.colors.text, fontWeight: pr.id === progress?.id ? '700' : '400' }}>
+                      {pr.label || `Study Instance ${idx + 1}`}
+                    </Text>
+                    <Text style={{ color: theme.colors.muted, fontSize: 12, marginTop: 2 }}>
+                      {pr.completed_lessons?.length || 0}/{lessons.length} lessons complete
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         )}
 

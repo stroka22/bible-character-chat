@@ -24,6 +24,31 @@ export type StudyWithProgress = {
   lesson_count: number;
 };
 
+/**
+ * Get all progress records for a specific study
+ * Allows users to have multiple progress instances (e.g., solo and with a group)
+ */
+export async function getAllProgressForStudy(userId: string, studyId: string): Promise<StudyProgress[]> {
+  if (!userId || !studyId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('user_study_progress')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('study_id', studyId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.warn('[studyProgress] getAllProgressForStudy error:', error);
+      return [];
+    }
+    return (data || []) as StudyProgress[];
+  } catch (e) {
+    console.warn('[studyProgress] getAllProgressForStudy exception:', e);
+    return [];
+  }
+}
+
 export async function getStudyProgress(userId: string, studyId: string, progressId?: string): Promise<StudyProgress | null> {
   if (!userId || !studyId) return null;
   try {

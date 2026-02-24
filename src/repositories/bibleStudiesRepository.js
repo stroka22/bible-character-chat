@@ -468,6 +468,33 @@ export const bibleStudiesRepository = {
       return null;
     }
   },
+  
+  /**
+   * Get all progress records for a specific study
+   * Allows users to have multiple progress instances (e.g., solo and with a group)
+   */
+  async getAllProgressForStudy({ userId, studyId }) {
+    try {
+      if (!userId || !studyId) return [];
+      
+      const { data, error } = await supabase
+        .from('user_study_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('study_id', studyId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('[bibleStudiesRepository] Error fetching all progress:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (err) {
+      console.error('[bibleStudiesRepository] Unexpected error fetching all progress:', err);
+      return [];
+    }
+  },
 
   /**
    * Get all studies that a user has started (has progress records)
