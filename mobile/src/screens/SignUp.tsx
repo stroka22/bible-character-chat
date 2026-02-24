@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
 
 export default function SignUp() {
   const { signUpWithEmail } = useAuth();
+  const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -43,7 +45,15 @@ export default function SignUp() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 16, paddingBottom: 32 }} keyboardShouldPersistTaps="handled">
         <View style={{ gap: 12 }}>
-          <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', fontFamily: 'Cinzel_700Bold' }}>Create Account</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: '800', fontFamily: 'Cinzel_700Bold' }}>Create Account</Text>
+            <TouchableOpacity 
+              onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Home')}
+              style={{ padding: 8 }}
+            >
+              <Text style={{ color: theme.colors.primary, fontSize: 16, fontWeight: '600' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
           
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TextInput

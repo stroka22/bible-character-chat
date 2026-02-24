@@ -73,6 +73,12 @@ export default function Login() {
           <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
             <Text style={{ color: theme.colors.muted, textDecorationLine: 'underline' }}>Forgot password?</Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Home')}
+            style={{ marginTop: 8, padding: 8 }}
+          >
+            <Text style={{ color: theme.colors.muted, fontSize: 14 }}>Cancel and go back</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
