@@ -593,7 +593,15 @@ Keep each section concise but informative. This is for someone about to have a c
         </Modal>
 
         <FlatList
-          data={messages.filter((m) => m.role !== 'system')}
+          data={messages.filter((m) => {
+            if (m.role === 'system') return false;
+            const content = m.content || '';
+            if (content.includes('[Guiding Prompt]')) return false;
+            if (content.includes('[Study Prompt]')) return false;
+            if (content.includes('[Lesson Instructions]')) return false;
+            if (content.includes('IMPORTANT INSTRUCTIONS FOR THIS SESSION')) return false;
+            return true;
+          })}
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 12, paddingBottom: 12 + Math.max(insets.bottom, 8) + 56 }}
           renderItem={({ item }) => (

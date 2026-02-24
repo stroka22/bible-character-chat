@@ -1362,6 +1362,9 @@ const SimpleChatWithHistory = () => {
                                                                 // Hide system messages and any legacy intro lines containing the label
                                                                 if (m?.role === 'system') return false;
                                                                 if (content.includes('[Guiding Prompt]')) return false;
+                                                                if (content.includes('[Study Prompt]')) return false;
+                                                                if (content.includes('[Lesson Instructions]')) return false;
+                                                                if (content.includes('IMPORTANT INSTRUCTIONS FOR THIS SESSION')) return false;
                                                                 return content.trim() !== '';
                                                             })
                                                             .map((message, index) => (
