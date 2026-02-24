@@ -45,13 +45,13 @@ export async function createChatInvite(chatId: string): Promise<{ code: string |
 export async function shareInviteLink(code: string, title?: string): Promise<boolean> {
   const url = `https://faithtalkai.com/join/${code}`;
   const message = title 
-    ? `Join me in "${title}" on Faith Talk AI!\n\n${url}`
-    : `Join me on Faith Talk AI!\n\n${url}`;
+    ? `I'd like to invite you to join my conversation "${title}" on Faith Talk AI!\n\n${url}`
+    : `I'd like to invite you to join me on Faith Talk AI!\n\n${url}`;
   
   try {
+    // Only pass message (which includes URL) to avoid duplicate links on iOS
     const result = await Share.share({
       message,
-      url: Platform.OS === 'ios' ? url : undefined,
       title: 'Invite Friend to Faith Talk AI'
     });
     

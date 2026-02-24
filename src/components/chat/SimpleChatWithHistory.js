@@ -1218,10 +1218,11 @@ const SimpleChatWithHistory = () => {
                                                                 const { data, error } = await svc.createChatInvite(id);
                                                                 if (error || !data?.code) return;
                                                                 const url = `${window.location.origin}/join/${data.code}`;
-                                                                const title = 'Join my chat';
-                                                                const text = `Join my chat with ${character?.name}`;
+                                                                const title = 'Join my Faith Talk';
+                                                                const text = `I'd like to invite you to join my conversation with ${character?.name} on Faith Talk AI!\n\n${url}`;
                                                                 if (navigator.share) {
-                                                                    try { await navigator.share({ title, text, url }); return; } catch {}
+                                                                    // Only pass text (which includes URL) to avoid duplicate links
+                                                                    try { await navigator.share({ title, text }); return; } catch {}
                                                                 }
                                                                 try {
                                                                   await navigator.clipboard.writeText(url);
