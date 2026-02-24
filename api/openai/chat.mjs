@@ -68,7 +68,7 @@ export default async function handler(req, res) {
             model,
             messages: completeMessages,
             temperature: 0.7,
-            max_tokens: 300,
+            max_tokens: 1000,
             top_p: 1,
             frequency_penalty: 0.2,
             presence_penalty: 0.6,
