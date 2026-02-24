@@ -9,7 +9,7 @@ export type FavoriteCharacter = {
 export async function listFavoriteCharacters(userId: string) {
   const { data, error } = await supabase
     .from('user_favorites')
-    .select('character_id, created_at, characters:character_id ( id, name, description, avatar_url, is_visible )')
+    .select('character_id, created_at, characters:character_id ( id, name, description, avatar_url, is_visible, persona_prompt, opening_line )')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
   if (error) return [] as any[];

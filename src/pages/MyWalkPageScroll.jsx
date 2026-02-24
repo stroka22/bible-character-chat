@@ -46,7 +46,7 @@ const FavoriteCharacterCard = ({ character, isFeatured, onToggleFavorite, onSetF
           </svg>
         </button>
         <Link
-          to={`/?character=${character.id}`}
+          to={`/chat?character=${character.id}`}
           className="p-1.5 rounded-full bg-amber-600 text-white hover:bg-amber-700"
           title="Chat"
         >
