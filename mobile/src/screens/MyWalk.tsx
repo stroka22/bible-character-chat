@@ -354,23 +354,29 @@ export default function MyWalk() {
             onPress={async () => {
               // Start a new chat with this character
               try {
-                // Fetch character's opening line
+                // Fetch character's full data including opening_line
                 const { data: charData } = await supabase
                   .from('characters')
-                  .select('opening_sentence')
+                  .select('id, name, avatar_url, persona_prompt, opening_line')
                   .eq('id', item.id)
                   .maybeSingle();
                 
+                const characterToUse = charData || item;
                 const newChat = await chat.createChat(user!.id, item.id, `Chat with ${item.name}`);
                 
                 // Add opening line if available
-                if (charData?.opening_sentence) {
-                  try { await chat.addMessage(newChat.id, charData.opening_sentence, 'assistant'); } catch {}
+                if (characterToUse?.opening_line) {
+                  try { await chat.addMessage(newChat.id, characterToUse.opening_line, 'assistant'); } catch {}
                 }
                 
-                nav.navigate('Chat', { screen: 'ChatDetail', params: { chatId: newChat.id, character: item } });
-              } catch (e) {
-                Alert.alert('Error', 'Failed to start chat');
+                // Navigate to Chat tab then to ChatDetail
+                nav.navigate('Chat', { 
+                  screen: 'ChatDetail', 
+                  params: { chatId: newChat.id, character: characterToUse } 
+                });
+              } catch (e: any) {
+                console.error('[MyWalk] Failed to start chat:', e);
+                Alert.alert('Error', `Failed to start chat: ${e?.message || String(e)}`);
               }
             }} 
             onLongPress={() => {
