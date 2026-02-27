@@ -46,6 +46,7 @@ import AdminStudiesPage from './pages/admin/AdminStudiesPage.jsx';
 import AdminLeadsPage from './pages/admin/AdminLeadsPage.jsx';
 import AdminContactPage from './pages/admin/AdminContactPage.jsx';
 import AdminMarketingPage from './pages/admin/AdminMarketingPage.jsx';
+import SmartAppBanner from './components/SmartAppBanner.jsx';
 import PresentationGuide from './pages/PresentationGuide.jsx';
 import StudiesPage from './pages/StudiesPage.jsx';
 import StudyDetails from './pages/StudyDetails.jsx';
@@ -389,6 +390,8 @@ function AppContent() {
   
   return (<>
     <div className="flex flex-col min-h-screen">
+      {/* iOS app install banner */}
+      <SmartAppBanner />
       <ConditionalHeader />
       {/* Mobile-only banner */}
       <MobileLeadBannerGate />
