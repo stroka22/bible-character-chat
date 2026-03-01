@@ -347,8 +347,9 @@ export default function MyWalk() {
         data={favChars}
         keyExtractor={(i) => String(i.id)}
         horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 0, paddingTop: 4 }}
+        showsHorizontalScrollIndicator={true}
+        style={{ flexGrow: 0, maxHeight: 60 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 4, paddingTop: 4 }}
         renderItem={({ item }) => (
           <TouchableOpacity 
             onPress={async () => {
@@ -514,6 +515,7 @@ export default function MyWalk() {
           keyExtractor={(i) => i.progressId}
           onRefresh={loadStudies}
           refreshing={studiesLoading}
+          style={{ flex: 1 }}
           contentContainerStyle={{ padding: 12 }}
           renderItem={({ item: study }) => {
             const completedCount = Array.isArray(study.progress.completed_lessons) 
@@ -628,6 +630,7 @@ export default function MyWalk() {
           keyExtractor={(i) => i.id}
           onRefresh={loadPlans}
           refreshing={plansLoading}
+          style={{ flex: 1 }}
           contentContainerStyle={{ padding: 12 }}
           renderItem={({ item: progress }) => {
             const plan = progress.plan;
@@ -735,6 +738,7 @@ export default function MyWalk() {
           keyExtractor={(i) => i.id}
           onRefresh={load}
           refreshing={loading}
+          style={{ flex: 1 }}
           contentContainerStyle={{ padding: 12 }}
           renderItem={({ item }) => {
             const participantCount = getParticipantCount(item);

@@ -358,18 +358,19 @@ export default function ChatDetail() {
     }
   }
 
-  // Handle mark complete action
-  async function handleMarkComplete() {
-    if (!user?.id || !studyId || isLessonComplete) return;
+  // Handle toggle lesson complete (mark or unmark)
+  async function handleToggleComplete() {
+    if (!user?.id || !studyId) return;
     setMarkingComplete(true);
     
-    console.log('[ChatDetail] handleMarkComplete - lessonIndex:', lessonIndex, 'studyId:', studyId, 'progressId:', progressId);
+    const willBeComplete = !isLessonComplete;
+    console.log('[ChatDetail] handleToggleComplete - lessonIndex:', lessonIndex, 'willBeComplete:', willBeComplete);
     
     try {
       let currentProgressId = progressId;
       
-      // If not saved yet, create progress record first
-      if (!isSavedToMyWalk) {
+      // If not saved yet and marking complete, create progress record first
+      if (!isSavedToMyWalk && willBeComplete) {
         console.log('[ChatDetail] Creating new progress with completedLessons:', [lessonIndex]);
         const newProgress = await saveStudyProgress({
           userId: user.id,
@@ -378,7 +379,6 @@ export default function ChatDetail() {
           completedLessons: [lessonIndex],
           createNew: true
         });
-        console.log('[ChatDetail] New progress created:', newProgress);
         
         if (newProgress?.id) {
           currentProgressId = newProgress.id;
@@ -393,58 +393,81 @@ export default function ChatDetail() {
               .eq('id', chatId);
           } catch {}
         }
-      } else {
-        // Get existing progress and add this lesson to completed
-        console.log('[ChatDetail] Updating existing progress:', progressId);
-        const existingProgress = await getStudyProgress(user.id, studyId, progressId!);
-        console.log('[ChatDetail] Existing progress:', existingProgress);
-        const completedLessons = Array.isArray(existingProgress?.completed_lessons) 
-          ? [...existingProgress.completed_lessons] 
-          : [];
         
+        setIsLessonComplete(true);
+        setMarkingComplete(false);
+        
+        Alert.alert(
+          'Lesson Complete!', 
+          'Would you like to continue to the next lesson?',
+          [
+            { text: 'Stay Here', style: 'cancel' },
+            {
+              text: 'View Outline',
+              onPress: () => {
+                navigation.navigate('StudyDetail', {
+                  studyId,
+                  title: studyTitle || 'Bible Study',
+                  progressId: currentProgressId
+                });
+              }
+            }
+          ]
+        );
+        return;
+      }
+      
+      // Get existing progress and toggle this lesson
+      const existingProgress = await getStudyProgress(user.id, studyId, progressId || undefined);
+      let completedLessons = Array.isArray(existingProgress?.completed_lessons) 
+        ? [...existingProgress.completed_lessons] 
+        : [];
+      
+      if (willBeComplete) {
+        // Mark complete
         if (!completedLessons.includes(lessonIndex)) {
           completedLessons.push(lessonIndex);
           completedLessons.sort((a, b) => a - b);
         }
-        
-        console.log('[ChatDetail] Saving with completedLessons:', completedLessons);
-        await saveStudyProgress({
-          userId: user.id,
-          studyId,
-          progressId,
-          currentLessonIndex: lessonIndex,
-          completedLessons
-        });
+      } else {
+        // Unmark complete
+        completedLessons = completedLessons.filter(i => i !== lessonIndex);
       }
       
-      setIsLessonComplete(true);
+      await saveStudyProgress({
+        userId: user.id,
+        studyId,
+        progressId: progressId || existingProgress?.id,
+        currentLessonIndex: lessonIndex,
+        completedLessons
+      });
+      
+      setIsLessonComplete(willBeComplete);
       setMarkingComplete(false);
       
-      // Navigate back to study outline
-      const finalProgressId = currentProgressId || progressId;
-      Alert.alert(
-        'Lesson Complete!', 
-        'Would you like to continue to the next lesson?',
-        [
-          {
-            text: 'Stay Here',
-            style: 'cancel'
-          },
-          {
-            text: 'View Outline',
-            onPress: () => {
-              navigation.navigate('StudyDetail', {
-                studyId,
-                title: studyTitle || 'Bible Study',
-                progressId: finalProgressId
-              });
+      if (willBeComplete) {
+        const finalProgressId = currentProgressId || progressId;
+        Alert.alert(
+          'Lesson Complete!', 
+          'Would you like to continue to the next lesson?',
+          [
+            { text: 'Stay Here', style: 'cancel' },
+            {
+              text: 'View Outline',
+              onPress: () => {
+                navigation.navigate('StudyDetail', {
+                  studyId,
+                  title: studyTitle || 'Bible Study',
+                  progressId: finalProgressId
+                });
+              }
             }
-          }
-        ]
-      );
+          ]
+        );
+      }
     } catch (e) {
-      console.warn('[ChatDetail] Error marking complete:', e);
-      Alert.alert('Error', 'Failed to mark lesson complete');
+      console.warn('[ChatDetail] Error toggling complete:', e);
+      Alert.alert('Error', 'Failed to update lesson status');
       setMarkingComplete(false);
     }
   }
@@ -619,50 +642,75 @@ Keep each section concise but informative. This is for someone about to have a c
             </View>
           )}
         />
-        {/* Save/Complete buttons for Bible Studies (not for Introduction) */}
+        {/* Back to Study + Save/Complete buttons for Bible Studies */}
         {studyId && (
-          <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingBottom: 6, gap: 6 }}>
-            {/* Save Progress button */}
+          <View style={{ paddingHorizontal: 12, paddingBottom: 6 }}>
+            {/* Back to Study Outline button */}
             <TouchableOpacity 
-              onPress={handleSaveProgress}
-              disabled={markingComplete || isLessonComplete}
+              onPress={() => navigation.navigate('StudyDetail', {
+                studyId,
+                title: studyTitle || 'Bible Study',
+                progressId
+              })}
               style={{ 
-                flex: 1,
                 height: 34, 
-                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.primary,
+                backgroundColor: theme.colors.surface,
                 borderRadius: 6, 
                 alignItems: 'center', 
                 justifyContent: 'center',
-                opacity: (markingComplete || isLessonComplete) ? 0.6 : 1
+                marginBottom: 6,
+                borderWidth: 1,
+                borderColor: theme.colors.border
               }}
             >
-              <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>
-                {getSaveButtonText()}
+              <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 13 }}>
+                ← Back to Study Outline
               </Text>
             </TouchableOpacity>
             
-            {/* Lesson Complete button */}
-            <TouchableOpacity 
-              onPress={handleMarkComplete}
-              disabled={markingComplete || isLessonComplete}
-              style={{ 
-                flex: 1,
-                height: 34, 
-                backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.primary, 
-                borderRadius: 6, 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                opacity: (markingComplete || isLessonComplete) ? 0.6 : 1
-              }}
-            >
-              {markingComplete ? (
-                <ActivityIndicator color={theme.colors.primaryText} size="small" />
-              ) : (
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              {/* Save Progress button */}
+              <TouchableOpacity 
+                onPress={handleSaveProgress}
+                disabled={markingComplete || isLessonComplete}
+                style={{ 
+                  flex: 1,
+                  height: 34, 
+                  backgroundColor: isLessonComplete ? theme.colors.surface : theme.colors.primary,
+                  borderRadius: 6, 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  opacity: (markingComplete || isLessonComplete) ? 0.6 : 1
+                }}
+              >
                 <Text style={{ color: isLessonComplete ? theme.colors.muted : theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>
-                  {isLessonComplete ? '✓ Lesson Complete' : 'Lesson Complete'}
+                  {getSaveButtonText()}
                 </Text>
-              )}
-            </TouchableOpacity>
+              </TouchableOpacity>
+              
+              {/* Lesson Complete toggle button */}
+              <TouchableOpacity 
+                onPress={handleToggleComplete}
+                disabled={markingComplete}
+                style={{ 
+                  flex: 1,
+                  height: 34, 
+                  backgroundColor: isLessonComplete ? '#22c55e' : theme.colors.primary, 
+                  borderRadius: 6, 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  opacity: markingComplete ? 0.6 : 1
+                }}
+              >
+                {markingComplete ? (
+                  <ActivityIndicator color={theme.colors.primaryText} size="small" />
+                ) : (
+                  <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 13 }}>
+                    {isLessonComplete ? '✓ Complete' : 'Mark Complete'}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         
