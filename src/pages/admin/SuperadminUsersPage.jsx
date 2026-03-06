@@ -99,16 +99,16 @@ const SuperadminUsersPage = () => {
         setIsSuperAdmin(data.role === 'superadmin');
         setIsAdmin(data.role === 'admin' || data.role === 'superadmin');
         
-        // Load data based on role
+        // Load data based on role - pass profile data to avoid race condition
         if (data.role === 'superadmin') {
           await Promise.all([
-            loadProfiles(),
+            loadProfiles(data),
             loadOwners()
           ]);
           // After owners are loaded, compute org stats
           await loadOrgStats();
         } else if (data.role === 'admin') {
-          await loadProfiles();
+          await loadProfiles(data);
         }
       } catch (error) {
         console.error('Error checking superadmin status:', error);
@@ -121,9 +121,15 @@ const SuperadminUsersPage = () => {
   }, []);
   
   // Load profiles with filters
-  const loadProfiles = async () => {
+  // Optional overrideProfile param allows passing fresh profile data before state updates
+  const loadProfiles = async (overrideProfile = null) => {
     setLoadingProfiles(true);
     try {
+      // Use override if provided (for initial load before state updates)
+      const profileToUse = overrideProfile || currentProfile;
+      const isSuperAdminNow = profileToUse?.role === 'superadmin';
+      const isAdminNow = profileToUse?.role === 'admin' || isSuperAdminNow;
+      
       // Build query with filters
       let query = supabase
         .from('profiles')
@@ -149,12 +155,12 @@ const SuperadminUsersPage = () => {
       }
 
       // Owner slug filter logic
-      if (isSuperAdmin) {
+      if (isSuperAdminNow) {
         if (filters.ownerSlug !== 'all') {
           query = query.eq('owner_slug', filters.ownerSlug);
         }
-      } else if (isAdmin && currentProfile?.owner_slug) {
-        query = query.eq('owner_slug', currentProfile.owner_slug);
+      } else if (isAdminNow && profileToUse?.owner_slug) {
+        query = query.eq('owner_slug', profileToUse.owner_slug);
       }
       
       // Apply pagination
