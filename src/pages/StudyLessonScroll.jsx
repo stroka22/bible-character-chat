@@ -304,11 +304,14 @@ const StudyLessonScroll = () => {
                 <div className="bg-white/80 border border-amber-200 rounded-xl p-6 mb-6">
                   <h2 className="text-lg font-bold text-amber-900 mb-3">Scripture References</h2>
                   <div className="flex flex-wrap gap-2">
-                    {lesson.scripture_refs.map((ref, i) => (
-                      <span key={i} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full border border-amber-200 text-sm">
-                        {ref}
-                      </span>
-                    ))}
+                    {lesson.scripture_refs.map((ref, i) => {
+                      const refText = typeof ref === 'string' ? ref : (ref?.reference || ref?.text || '');
+                      return (
+                        <span key={i} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full border border-amber-200 text-sm">
+                          {refText}
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -326,14 +329,17 @@ const StudyLessonScroll = () => {
                 <div className="bg-white/80 border border-amber-200 rounded-xl p-6 mb-6">
                   <h2 className="text-lg font-bold text-amber-900 mb-3">Discussion Prompts</h2>
                   <ul className="space-y-3">
-                    {lesson.prompts.map((prompt, i) => (
-                      <li key={i} className="flex gap-3">
-                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-medium">
-                          {i + 1}
-                        </span>
-                        <span className="text-amber-800" style={{ fontFamily: 'Georgia, serif' }}>{prompt}</span>
-                      </li>
-                    ))}
+                    {lesson.prompts.map((prompt, i) => {
+                      const promptText = typeof prompt === 'string' ? prompt : (prompt?.text || prompt?.prompt || '');
+                      return (
+                        <li key={i} className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-medium">
+                            {i + 1}
+                          </span>
+                          <span className="text-amber-800" style={{ fontFamily: 'Georgia, serif' }}>{promptText}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               )}
