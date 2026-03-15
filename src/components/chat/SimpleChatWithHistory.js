@@ -1040,6 +1040,7 @@ const SimpleChatWithHistory = () => {
                                                             to: `/study/${studyMeta.id}`, 
                                                             id: "backBtn", 
                                                             className: "text-xs md:text-sm px-2 md:px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
+                                                            title: "Return to the Bible study",
                                                             children: "Back to Study" 
                                                         })
                                                     ) : (
@@ -1047,6 +1048,7 @@ const SimpleChatWithHistory = () => {
                                                             to: "/", 
                                                             id: "backBtn", 
                                                             className: "text-xs md:text-sm px-2 md:px-3 py-1 rounded bg-[rgba(250,204,21,.15)] border border-yellow-400 hover:bg-yellow-400 hover:text-[#0a0a2a] transition",
+                                                            title: "Return to character selection",
                                                             children: "Back to Characters" 
                                                         })
                                                     )
@@ -1121,6 +1123,7 @@ const SimpleChatWithHistory = () => {
                                                             }
                                                         },
                                                         className: "flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
+                                                        title: "Copy conversation to clipboard",
                                                         children: "Copy Transcript"
                                                     }),
                                                     
@@ -1128,6 +1131,7 @@ const SimpleChatWithHistory = () => {
                                                     isAuthenticated && !isChatSaved && messages.length > 0 && (
                                                         _jsxs("button", {
                                                             onClick: handleSaveConversation,
+                                                            title: "Save this conversation to your account",
                                                             className: "flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
                                                             children: [
                                                                 _jsx("svg", {
@@ -1149,6 +1153,7 @@ const SimpleChatWithHistory = () => {
                                                         _jsxs("button", {
                                                             onClick: handleMarkLessonComplete,
                                                             disabled: isLessonComplete || isMarkingComplete,
+                                                            title: isLessonComplete ? "You've completed this lesson" : "Mark this lesson as complete",
                                                             className: `flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg font-semibold transition-all text-xs md:text-sm ${
                                                                 isLessonComplete 
                                                                     ? 'bg-green-500/30 border border-green-400 text-green-300 cursor-default'
@@ -1178,6 +1183,7 @@ const SimpleChatWithHistory = () => {
                                                         id: "insightsToggle", 
                                                         onClick: () => setShowInsightsPanel(!showInsightsPanel),
                                                         className: `insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg ${showInsightsPanel ? 'bg-yellow-400 text-blue-900' : 'bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400'} font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm`,
+                                                        title: "View character background and scripture references",
                                                         children: [
                                                             _jsx("svg", { 
                                                                 xmlns: "http://www.w3.org/2000/svg", 
@@ -1198,6 +1204,7 @@ const SimpleChatWithHistory = () => {
                                                     _jsxs("button", { 
                                                         id: "inviteBtn", 
                                                         className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
+                                                        title: "Invite someone to join this conversation",
                                                         onClick: async () => {
                                                             try {
                                                                 let id = chatId;
@@ -1243,6 +1250,7 @@ const SimpleChatWithHistory = () => {
                                                     _jsxs("button", { 
                                                         id: "shareBtn", 
                                                         className: "insights-toggle-button flex items-center gap-1 px-2 md:px-3 py-1.5 md:py-2 rounded-lg bg-[rgba(250,204,21,.2)] border border-yellow-400 text-yellow-400 font-semibold transition-all hover:bg-yellow-400 hover:text-blue-900 text-xs md:text-sm",
+                                                        title: "Share this conversation publicly",
                                                         onClick: async () => {
                                                             const origin = window.location.origin;
                                                             const params = new URLSearchParams(location.search);
