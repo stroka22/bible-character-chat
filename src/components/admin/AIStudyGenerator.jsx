@@ -38,7 +38,8 @@ export default function AIStudyGenerator({
   const loadCharacters = async () => {
     setLoadingCharacters(true);
     try {
-      const chars = await characterRepository.listCharacters({ ownerSlug, allOwners: true });
+      // getAll(isAdmin, ownerSlug) - fetch all characters for the admin
+      const chars = await characterRepository.getAll(true, ownerSlug);
       setCharacters(chars || []);
     } catch (e) {
       console.error('Error loading characters:', e);

@@ -213,9 +213,16 @@ const AdminPage: React.FC = () => {
   // Load all organizations for super admin (for AI generators)
   useEffect(() => {
     if (isSuperadmin) {
-      listOwnerSlugs().then(owners => {
-        setAllOwners(owners || []);
-      }).catch(console.error);
+      supabase
+        .from('owners')
+        .select('owner_slug, display_name')
+        .order('display_name')
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setAllOwners(data);
+          }
+        })
+        .catch(console.error);
     }
   }, [isSuperadmin]);
 
