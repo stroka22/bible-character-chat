@@ -14,7 +14,9 @@ import AdminStudiesPage from './admin/AdminStudiesPage.jsx';
 import AdminReadingPlansPage from './admin/AdminReadingPlansPage.jsx';
 import AdminBranding from '../components/admin/AdminBranding';
 import AdminMarketingPage from './admin/AdminMarketingPage.jsx';
-import { getOwnerSlug } from '../services/tierSettingsService';
+import AIStudyGenerator from '../components/admin/AIStudyGenerator';
+import AIReadingPlanGenerator from '../components/admin/AIReadingPlanGenerator';
+import { getOwnerSlug, listOwnerSlugs } from '../services/tierSettingsService';
 
 // Helper function for basic CSV parsing
 const parseCSV = (csvText: string): Array<Record<string, string>> => {
@@ -110,6 +112,11 @@ const AdminPage: React.FC = () => {
     | 'readingPlans'
     | 'branding';
   const [activeTab, setActiveTab] = useState<AdminMainTab>('overview');
+  
+  // AI Generator modals
+  const [showAIStudyGenerator, setShowAIStudyGenerator] = useState(false);
+  const [showAIReadingPlanGenerator, setShowAIReadingPlanGenerator] = useState(false);
+  const [allOwners, setAllOwners] = useState<Array<{owner_slug: string; display_name?: string}>>([]);
 
   // Form state for manual creation/editing
   const [editingCharacterId, setEditingCharacterId] = useState<string | null>(null);
@@ -202,6 +209,15 @@ const AdminPage: React.FC = () => {
   useEffect(() => {
     if (isAdmin) fetchCharacters();
   }, [isAdmin, fetchCharacters]);
+
+  // Load all organizations for super admin (for AI generators)
+  useEffect(() => {
+    if (isSuperadmin) {
+      listOwnerSlugs().then(owners => {
+        setAllOwners(owners || []);
+      }).catch(console.error);
+    }
+  }, [isSuperadmin]);
 
   if (!isAdmin) {
     return (
@@ -1015,11 +1031,37 @@ const AdminPage: React.FC = () => {
       )}
 
       {activeTab === 'studies' && (
-        <AdminStudiesPage embedded={true} />
+        <div>
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => setShowAIStudyGenerator(true)}
+              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 flex items-center gap-2 shadow-md"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              AI Generate Study
+            </button>
+          </div>
+          <AdminStudiesPage embedded={true} />
+        </div>
       )}
 
       {activeTab === 'readingPlans' && (
-        <AdminReadingPlansPage embedded={true} />
+        <div>
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => setShowAIReadingPlanGenerator(true)}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:from-emerald-600 hover:to-emerald-700 flex items-center gap-2 shadow-md"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              AI Generate Plan
+            </button>
+          </div>
+          <AdminReadingPlansPage embedded={true} />
+        </div>
       )}
 
       {activeTab === 'branding' && (
@@ -1048,6 +1090,30 @@ const AdminPage: React.FC = () => {
             and promote them to the “pastor” role.
           </p>
         </section>
+      )}
+      {/* AI Generator Modals */}
+      {showAIStudyGenerator && (
+        <AIStudyGenerator
+          ownerSlug={effectiveOwnerSlug}
+          isSuperAdmin={isSuperadmin}
+          allOwners={allOwners}
+          onStudyCreated={() => {
+            setShowAIStudyGenerator(false);
+          }}
+          onClose={() => setShowAIStudyGenerator(false)}
+        />
+      )}
+
+      {showAIReadingPlanGenerator && (
+        <AIReadingPlanGenerator
+          ownerSlug={effectiveOwnerSlug}
+          isSuperAdmin={isSuperadmin}
+          allOwners={allOwners}
+          onPlanCreated={() => {
+            setShowAIReadingPlanGenerator(false);
+          }}
+          onClose={() => setShowAIReadingPlanGenerator(false)}
+        />
       )}
     </div>
   );
