@@ -254,12 +254,12 @@ export default function AIStudyGenerator({
                 </div>
 
                 {!autoSelectCharacters && (
-                  <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto">
+                  <div className="border border-gray-200 rounded-lg p-3 max-h-64 overflow-y-auto">
                     {loadingCharacters ? (
                       <p className="text-gray-500 text-sm">Loading characters...</p>
                     ) : (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {characters.slice(0, 30).map(char => (
+                        {characters.map(char => (
                           <label key={char.id} className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
