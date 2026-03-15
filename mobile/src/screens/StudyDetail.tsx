@@ -486,7 +486,7 @@ export default function StudyDetail({ route, navigation }: any) {
               const url = `https://faithtalkai.com/studies/${studyId}`;
               const message = `Join me in studying "${title}" on Faith Talk AI!\n\n${url}`;
               try {
-                await Share.share({ message, url, title: 'Invite Friend to Bible Study' });
+                await Share.share({ message });
               } catch {}
             }} 
             style={{ backgroundColor: theme.colors.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
