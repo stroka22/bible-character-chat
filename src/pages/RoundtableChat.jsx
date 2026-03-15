@@ -526,7 +526,7 @@ const RoundtableChat = () => {
                           const title = `Join Roundtable: ${topic || 'Discussion'}`;
                           const text = `Join this roundtable on "${topic}"`;
                           if (navigator.share) {
-                            try { await navigator.share({ title, text, url }); return; } catch {}
+                            try { await navigator.share({ title, text: `${text}\n\n${url}` }); return; } catch {}
                           }
                           try {
                             await navigator.clipboard.writeText(url);
@@ -559,7 +559,7 @@ const RoundtableChat = () => {
                           const text = `Join this roundtable on \"${topic}\"`;
                           if (navigator.share) {
                             try {
-                              await navigator.share({ title, text, url });
+                              await navigator.share({ title, text: `${text}\n\n${url}` });
                               return;
                             } catch {/* fallthrough */}
                           }

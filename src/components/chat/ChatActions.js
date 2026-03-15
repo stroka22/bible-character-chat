@@ -91,8 +91,7 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
                         if (navigator.share) {
                             await navigator.share({
                                 title: 'FaithTalk AI Conversation',
-                                text: `Chat with ${character?.name || 'FaithTalk AI'}`,
-                                url,
+                                text: `Chat with ${character?.name || 'FaithTalk AI'}\n\n${url}`,
                             });
                         } else {
                             await navigator.clipboard.writeText(url);

@@ -840,7 +840,6 @@ const ChatPageScroll = () => {
             await navigator.share({
               title: 'Bible Chat on Faith Talk AI',
               text: shareText,
-              url: shareUrl,
             });
             showActionMessage('Shared successfully!');
           } catch (shareErr) {
@@ -954,7 +953,6 @@ const ChatPageScroll = () => {
           await navigator.share({
             title: 'Join my Bible Chat on Faith Talk AI',
             text: inviteText,
-            url,
           });
           showActionMessage('Invite shared!');
         } catch (shareErr) {

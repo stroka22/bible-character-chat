@@ -299,7 +299,7 @@ const RoundtableChatScroll = () => {
                     if (res.error || !res.data) return;
                     const url = `${window.location.origin}/join/${res.data.code}`;
                     if (navigator.share) {
-                      try { await navigator.share({ title: `Join Roundtable: ${topic}`, url }); return; } catch {}
+                      try { await navigator.share({ title: `Join Roundtable: ${topic}`, text: `Join this roundtable discussion!\n\n${url}` }); return; } catch {}
                     }
                     await navigator.clipboard.writeText(url);
                     alert('Invite link copied!');
@@ -319,7 +319,7 @@ const RoundtableChatScroll = () => {
                     const qp = names.length ? `?participants=${encodeURIComponent(names.join(','))}` : '';
                     const url = `${window.location.origin}/shared/${shareCode}${qp}`;
                     if (navigator.share) {
-                      try { await navigator.share({ title: `Roundtable: ${topic}`, url }); return; } catch {}
+                      try { await navigator.share({ title: `Roundtable: ${topic}`, text: `Check out this roundtable discussion!\n\n${url}` }); return; } catch {}
                     }
                     await navigator.clipboard.writeText(url);
                     alert('Share link copied!');

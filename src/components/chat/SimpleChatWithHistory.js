@@ -1300,8 +1300,7 @@ const SimpleChatWithHistory = () => {
                                                       if (navigator.share) {
                                                         await navigator.share({
                                                           title: 'FaithTalk AI Conversation',
-                                                          text: `Chat with ${character.name}`,
-                                                          url: shareUrl,
+                                                          text: `Chat with ${character.name}\n\n${shareUrl}`,
                                                         });
                                                       } else {
                                                         await navigator.clipboard.writeText(shareUrl);
