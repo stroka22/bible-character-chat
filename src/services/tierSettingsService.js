@@ -271,6 +271,15 @@ export async function getSettings(ownerSlug) {
         return settings;
       }
       
+      // Not found in Supabase for this org - fall back to 'default' org settings
+      if (slug !== 'default') {
+        // Recursively get default settings (will use its own caching)
+        const defaultSettings = await getSettings('default');
+        // Cache these as this org's settings so we don't keep fetching
+        saveToCache(defaultSettings, slug);
+        return defaultSettings;
+      }
+      
       // Not found in Supabase, try cache
       if (cachedSettings) {
         return cachedSettings;
