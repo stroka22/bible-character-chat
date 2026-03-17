@@ -294,9 +294,78 @@ const StudyLessonScroll = () => {
             <>
               {/* Lesson Header */}
               <div className="bg-white/80 border border-amber-200 rounded-xl p-6 mb-6">
-                <h1 className="text-2xl md:text-3xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
-                  Lesson {parseInt(lessonIndex, 10) + 1}: {lesson.title}
-                </h1>
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <h1 className="text-2xl md:text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
+                    Lesson {parseInt(lessonIndex, 10) + 1}: {lesson.title}
+                  </h1>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Invite Friend */}
+                    <button
+                      onClick={async () => {
+                        const url = `${window.location.origin}/studies/${id}/lesson/${lessonIndex}`;
+                        const text = `Join me in studying "${study.title}" - Lesson ${parseInt(lessonIndex, 10) + 1}: ${lesson.title}`;
+                        
+                        if (navigator.share) {
+                          try {
+                            await navigator.share({ title: lesson.title, text: `${text}\n\n${url}` });
+                            return;
+                          } catch {}
+                        }
+                        
+                        await navigator.clipboard.writeText(`${text}\n${url}`);
+                        alert('Invite link copied!');
+                      }}
+                      className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-600"
+                      title="Invite friend to this lesson"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                    </button>
+                    {/* Share/Copy Content */}
+                    <button
+                      onClick={async () => {
+                        // Format lesson content as text
+                        let content = `${study.title}\nLesson ${parseInt(lessonIndex, 10) + 1}: ${lesson.title}\n\n`;
+                        
+                        if (lesson.scripture_refs?.length > 0) {
+                          const refs = lesson.scripture_refs.map(r => typeof r === 'string' ? r : (r?.reference || r?.text || '')).join(', ');
+                          content += `Scripture: ${refs}\n\n`;
+                        }
+                        
+                        if (lesson.summary) {
+                          content += `Summary:\n${lesson.summary}\n\n`;
+                        }
+                        
+                        if (lesson.prompts?.length > 0) {
+                          content += `Reflection Questions:\n`;
+                          lesson.prompts.forEach((p, i) => {
+                            const promptText = typeof p === 'string' ? p : (p?.text || p?.prompt || '');
+                            content += `${i + 1}. ${promptText}\n`;
+                          });
+                        }
+                        
+                        content += `\n— via Faith Talk AI (faithtalkai.com/studies/${id})`;
+                        
+                        if (navigator.share) {
+                          try {
+                            await navigator.share({ title: lesson.title, text: content });
+                            return;
+                          } catch {}
+                        }
+                        
+                        await navigator.clipboard.writeText(content);
+                        alert('Lesson content copied!');
+                      }}
+                      className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-600"
+                      title="Share lesson content"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
                 <p className="text-amber-600 mb-4">{study.title}</p>
                 
                 {character && (
