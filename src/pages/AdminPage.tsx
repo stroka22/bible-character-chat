@@ -115,7 +115,8 @@ const AdminPage: React.FC = () => {
     | 'studies'
     | 'readingPlans'
     | 'branding'
-    | 'subscription';
+    | 'subscription'
+    | 'marketing';
   const [activeTab, setActiveTab] = useState<AdminMainTab>('overview');
   
   // AI Generator modals
