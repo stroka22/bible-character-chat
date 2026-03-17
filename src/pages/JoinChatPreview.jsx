@@ -111,7 +111,115 @@ const JoinChatPreview = () => {
     );
   }
 
-  // Preview state
+  // Roundtable Preview
+  if (preview?.isRoundtable) {
+    return (
+      <PreviewLayout>
+        <ScrollBackground className="min-h-screen py-12 px-4">
+          <div className="max-w-md mx-auto">
+            <div className="bg-white/95 rounded-2xl shadow-xl overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                  Roundtable Invitation
+                </h1>
+                <p className="text-purple-100">
+                  {getInviterName()} invited you to join a discussion
+                </p>
+              </div>
+
+              {/* Topic */}
+              {preview?.roundtableTopic && (
+                <div className="px-6 py-5 bg-purple-50 border-b border-purple-100">
+                  <p className="text-purple-600 text-xs font-medium uppercase tracking-wide mb-1">Topic</p>
+                  <p className="text-purple-900 font-semibold text-lg">{preview.roundtableTopic}</p>
+                </div>
+              )}
+
+              {/* Participants */}
+              {preview?.participants?.length > 0 && (
+                <div className="px-6 py-5">
+                  <p className="text-gray-600 text-xs font-medium uppercase tracking-wide mb-3">
+                    {preview.participants.length} Participants
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {preview.participants.map((char, idx) => (
+                      <div key={char.id || idx} className="flex items-center gap-2 bg-gray-50 rounded-full pl-1 pr-3 py-1">
+                        <img
+                          src={char.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(char.name)}&background=random`}
+                          alt={char.name}
+                          className="w-8 h-8 rounded-full object-cover border-2 border-white shadow"
+                          style={{ objectPosition: 'center 8%' }}
+                        />
+                        <span className="text-sm font-medium text-gray-800">{char.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="px-6 py-6 space-y-3 border-t border-gray-100">
+                <button
+                  onClick={handleJoin}
+                  disabled={joining}
+                  className="w-full py-4 bg-purple-600 text-white rounded-xl font-bold text-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {joining ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Joining...
+                    </>
+                  ) : user ? (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Join Roundtable
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      Sign Up to Join
+                    </>
+                  )}
+                </button>
+
+                {!user && (
+                  <p className="text-center text-gray-500 text-sm">
+                    Already have an account?{' '}
+                    <Link 
+                      to={`/login?joinCode=${code}&redirect=/join/${code}`} 
+                      className="text-purple-600 font-medium hover:underline"
+                    >
+                      Sign in
+                    </Link>
+                  </p>
+                )}
+              </div>
+
+              {/* Footer note */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                <p className="text-gray-500 text-xs text-center">
+                  Join this roundtable to discuss "{preview?.roundtableTopic || 'the topic'}" with {preview?.participants?.length || 0} biblical characters.
+                </p>
+              </div>
+            </div>
+          </div>
+        </ScrollBackground>
+        <FooterScroll />
+      </PreviewLayout>
+    );
+  }
+
+  // Regular Chat Preview
   return (
     <PreviewLayout>
       <ScrollBackground className="min-h-screen py-12 px-4">

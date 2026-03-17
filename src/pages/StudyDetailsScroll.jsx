@@ -210,9 +210,33 @@ const StudyDetailsScroll = () => {
                   </div>
                 )}
                 
-                <h1 className="text-2xl md:text-3xl font-bold text-amber-900 mb-3" style={{ fontFamily: 'Cinzel, serif' }}>
-                  {study.title}
-                </h1>
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <h1 className="text-2xl md:text-3xl font-bold text-amber-900" style={{ fontFamily: 'Cinzel, serif' }}>
+                    {study.title}
+                  </h1>
+                  <button
+                    onClick={async () => {
+                      const url = `${window.location.origin}/studies/${id}`;
+                      const text = `Check out this Bible study: "${study.title}"`;
+                      
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({ title: study.title, text: `${text}\n\n${url}` });
+                          return;
+                        } catch {}
+                      }
+                      
+                      await navigator.clipboard.writeText(`${text}\n${url}`);
+                      alert('Link copied to clipboard!');
+                    }}
+                    className="flex-shrink-0 p-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-colors"
+                    title="Share this study"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                  </button>
+                </div>
                 
                 {character && (
                   <div className="flex items-center gap-3 mb-4">

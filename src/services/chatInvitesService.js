@@ -106,10 +106,10 @@ export async function getChatInvitePreview(code) {
     return { data: null, error: { message: 'This invite has reached its maximum uses' } };
   }
   
-  // Get the chat details
+  // Get the chat details including conversation_type and participants for roundtables
   const { data: chat, error: chatError } = await supabase
     .from('chats')
-    .select('id, title, character_id')
+    .select('id, title, character_id, conversation_type, participants')
     .eq('id', invite.chat_id)
     .single();
   
@@ -117,9 +117,19 @@ export async function getChatInvitePreview(code) {
     return { data: null, error: { message: 'Conversation not found' } };
   }
   
-  // Get the character
+  // Detect if this is a roundtable
+  const isRoundtable = chat.conversation_type === 'roundtable' || 
+    (chat.title && chat.title.startsWith('Roundtable: '));
+  
+  // Get roundtable topic from title
+  let roundtableTopic = null;
+  if (isRoundtable && chat.title && chat.title.startsWith('Roundtable: ')) {
+    roundtableTopic = chat.title.substring('Roundtable: '.length);
+  }
+  
+  // Get the character (for regular chats)
   let character = null;
-  if (chat.character_id) {
+  if (!isRoundtable && chat.character_id) {
     const { data: charData } = await supabase
       .from('characters')
       .select('id, name, avatar_url, short_biography')
@@ -128,12 +138,23 @@ export async function getChatInvitePreview(code) {
     character = charData;
   }
   
+  // Get roundtable participants
+  let participants = [];
+  if (isRoundtable && chat.participants && Array.isArray(chat.participants)) {
+    // participants is an array of character IDs
+    const { data: participantChars } = await supabase
+      .from('characters')
+      .select('id, name, avatar_url')
+      .in('id', chat.participants);
+    participants = participantChars || [];
+  }
+  
   // Get the inviter's profile
   let inviter = null;
   if (invite.created_by) {
     const { data: profileData } = await supabase
       .from('profiles')
-      .select('id, first_name, display_name')
+      .select('id, display_name')
       .eq('id', invite.created_by)
       .single();
     inviter = profileData;
@@ -145,7 +166,10 @@ export async function getChatInvitePreview(code) {
       chatId: chat.id,
       chatTitle: chat.title,
       character,
-      inviter
+      inviter,
+      isRoundtable,
+      roundtableTopic,
+      participants
     },
     error: null
   };
