@@ -8,6 +8,10 @@ import { supabase } from '../services/supabase';
 
 // Table configuration
 const TABLE_NAME = 'tier_settings';
+
+// In-flight request deduplication to prevent ERR_INSUFFICIENT_RESOURCES
+const pendingRequests = new Map();
+
 /**
  * Build the per-organisation cache key. This keeps settings isolated
  * for each owner while remaining backward-compatible with the original
@@ -214,6 +218,7 @@ function saveToCache(settings, slug) {
   try {
     const key = getCacheKey(slug);
     localStorage.setItem(key, JSON.stringify(settings));
+    localStorage.setItem(`${key}:timestamp`, String(Date.now()));
     
     // Dispatch custom event for same-tab updates
     // (storage event only fires in other tabs)
@@ -235,35 +240,72 @@ function saveToCache(settings, slug) {
 export async function getSettings(ownerSlug) {
   const slug = ownerSlug || getOwnerSlug();
   
-  try {
-    // Use same-origin proxy to avoid QUIC/HTTP3 issues
-    const response = await fetch(`/api/tier-settings?owner_slug=${encodeURIComponent(slug)}`);
-    if (!response.ok) {
-      throw new Error(`Proxy returned ${response.status}`);
-    }
-    const dataArray = await response.json();
-    const data = Array.isArray(dataArray) ? dataArray[0] : dataArray;
-    
-    if (data) {
-      // Found in Supabase, normalize and update cache
-      const settings = normalizeRecord(data);
-      saveToCache(settings, slug);
-      return settings;
-    }
-    
-    // Not found in Supabase, try cache
-    const cachedSettings = loadFromCache(slug);
-    if (cachedSettings) {
-      return cachedSettings;
-    }
-    
-    // Nothing in cache either, return defaults
-    return getDefaultSettings();
-  } catch (err) {
-    console.error('[tierSettingsService] Error fetching settings:', err);
-    // Fall back to cache on any error
-    return loadFromCache(slug) || getDefaultSettings();
+  // Check for in-flight request to prevent duplicate API calls
+  if (pendingRequests.has(slug)) {
+    return pendingRequests.get(slug);
   }
+  
+  // Check cache first to avoid unnecessary API calls
+  const cachedSettings = loadFromCache(slug);
+  const cacheAge = getCacheAge(slug);
+  
+  // Use cache if it's less than 30 seconds old
+  if (cachedSettings && cacheAge < 30000) {
+    return cachedSettings;
+  }
+  
+  const fetchPromise = (async () => {
+    try {
+      // Use same-origin proxy to avoid QUIC/HTTP3 issues
+      const response = await fetch(`/api/tier-settings?owner_slug=${encodeURIComponent(slug)}`);
+      if (!response.ok) {
+        throw new Error(`Proxy returned ${response.status}`);
+      }
+      const dataArray = await response.json();
+      const data = Array.isArray(dataArray) ? dataArray[0] : dataArray;
+      
+      if (data) {
+        // Found in Supabase, normalize and update cache
+        const settings = normalizeRecord(data);
+        saveToCache(settings, slug);
+        return settings;
+      }
+      
+      // Not found in Supabase, try cache
+      if (cachedSettings) {
+        return cachedSettings;
+      }
+      
+      // Nothing in cache either, return defaults
+      return getDefaultSettings();
+    } catch (err) {
+      console.error('[tierSettingsService] Error fetching settings:', err);
+      // Fall back to cache on any error
+      return cachedSettings || getDefaultSettings();
+    } finally {
+      // Clean up pending request
+      pendingRequests.delete(slug);
+    }
+  })();
+  
+  pendingRequests.set(slug, fetchPromise);
+  return fetchPromise;
+}
+
+/**
+ * Get cache age in milliseconds
+ * @param {string} slug
+ * @returns {number} Age in ms, or Infinity if no cache
+ */
+function getCacheAge(slug) {
+  try {
+    const timestampKey = `${getCacheKey(slug)}:timestamp`;
+    const timestamp = localStorage.getItem(timestampKey);
+    if (timestamp) {
+      return Date.now() - parseInt(timestamp, 10);
+    }
+  } catch {}
+  return Infinity;
 }
 
 /**
