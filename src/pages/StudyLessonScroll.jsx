@@ -5,6 +5,7 @@ import { characterRepository } from '../repositories/characterRepository';
 import { chatRepository } from '../repositories/chatRepository';
 import { usePremium } from '../hooks/usePremium';
 import UpgradeModal from '../components/modals/UpgradeModal';
+import SignupPromptModal from '../components/modals/SignupPromptModal';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
@@ -28,6 +29,7 @@ const StudyLessonScroll = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const { isPremium } = usePremium();
   const [progress, setProgress] = useState(null);
   const [isSavingProgress, setIsSavingProgress] = useState(false);
@@ -53,6 +55,15 @@ const StudyLessonScroll = () => {
         }
         
         const idx = parseInt(lessonIndex, 10);
+        
+        // If not logged in and trying to access lesson 2+, redirect to lesson 1 with signup prompt
+        if (!user && idx >= 1) {
+          navigate(`/studies/${id}/lesson/0`, { replace: true });
+          // Show signup prompt after redirect
+          setTimeout(() => setShowSignupPrompt(true), 500);
+          return;
+        }
+        
         let lessonData = await bibleStudiesRepository.getLessonByIndex(id, idx);
         
         if (!lessonData) {
@@ -193,6 +204,13 @@ const StudyLessonScroll = () => {
   const goToNext = async () => {
     const next = Math.min(currentIndex + 1, Math.max(totalLessons - 1, 0));
     if (next === currentIndex) return;
+    
+    // Prompt signup after lesson 1 (when trying to go to lesson 2+)
+    if (!user && currentIndex === 0 && next >= 1) {
+      setShowSignupPrompt(true);
+      return;
+    }
+    
     if (user?.id) {
       try {
         setIsSavingProgress(true);
@@ -407,6 +425,14 @@ const StudyLessonScroll = () => {
         isOpen={showUpgrade}
         onClose={() => setShowUpgrade(false)}
         message="Upgrade to access premium Bible studies."
+      />
+      
+      <SignupPromptModal
+        isOpen={showSignupPrompt}
+        onClose={() => setShowSignupPrompt(false)}
+        context="study"
+        studyTitle={study?.title}
+        allowDismiss={true}
       />
     </PreviewLayout>
   );

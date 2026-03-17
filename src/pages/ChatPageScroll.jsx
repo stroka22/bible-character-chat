@@ -12,6 +12,7 @@ import { userSettingsRepository } from '../repositories/userSettingsRepository';
 import userFavoritesRepository from '../repositories/userFavoritesRepository';
 import siteSettingsRepository from '../repositories/siteSettingsRepository';
 import UpgradeModal from '../components/modals/UpgradeModal';
+import SignupPromptModal from '../components/modals/SignupPromptModal';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
@@ -922,6 +923,12 @@ const ChatPageScroll = () => {
 
   // Handle invite to chat
   const handleInviteToChat = async () => {
+    // Require login to send invites
+    if (!isAuthenticated) {
+      setShowSignupPrompt(true);
+      return;
+    }
+    
     try {
       let id = chatId;
       // Save first if not saved
@@ -1000,13 +1007,14 @@ const ChatPageScroll = () => {
     prevMessageCount.current = messages.length;
   }, [messages.length, isTyping, scrollToBottom]);
 
-  // Show signup prompt after 4 messages for non-logged-in users
+  // Show signup prompt after 5 user messages for non-logged-in users
   useEffect(() => {
-    if (!isAuthenticated && !signupPromptShown && messages.length >= 4) {
+    const userMessageCount = messages.filter(m => m.role === 'user').length;
+    if (!isAuthenticated && !signupPromptShown && userMessageCount >= 5) {
       setShowSignupPrompt(true);
       setSignupPromptShown(true);
     }
-  }, [isAuthenticated, signupPromptShown, messages.length]);
+  }, [isAuthenticated, signupPromptShown, messages]);
 
   // Render alphabetical navigation (horizontal)
   const renderAlphaNav = () => (
@@ -1792,38 +1800,13 @@ const ChatPageScroll = () => {
       )}
 
       {/* Sign Up Prompt Modal */}
-      {showSignupPrompt && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowSignupPrompt(false)}>
-          <div className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-2xl font-bold text-amber-900 mb-3 text-center" style={{ fontFamily: 'Cinzel, serif' }}>
-              Enjoying the conversation?
-            </h3>
-            <p className="text-amber-700 mb-6 text-center">
-              Sign up for free to save your conversations, access them from any device, and never lose your chats!
-            </p>
-            <div className="flex flex-col gap-3">
-              <Link
-                to="/signup"
-                className="w-full py-3 bg-amber-600 text-white text-center font-bold rounded-lg hover:bg-amber-700 transition-colors"
-              >
-                Sign Up Free
-              </Link>
-              <Link
-                to="/login"
-                className="w-full py-3 bg-amber-100 text-amber-800 text-center font-medium rounded-lg hover:bg-amber-200 transition-colors"
-              >
-                Already have an account? Log in
-              </Link>
-              <button
-                onClick={() => setShowSignupPrompt(false)}
-                className="w-full py-2 text-amber-600 hover:text-amber-800 text-sm transition-colors"
-              >
-                Continue without signing up
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SignupPromptModal
+        isOpen={showSignupPrompt}
+        onClose={() => setShowSignupPrompt(false)}
+        context="chat"
+        characterName={character?.name}
+        allowDismiss={true}
+      />
 
       {/* Messages - scrollable area */}
       <div 
