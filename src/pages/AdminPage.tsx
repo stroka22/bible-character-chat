@@ -46,7 +46,8 @@ function tryParseJson(str: string) {
 }
 
 const AdminPage: React.FC = () => {
-  const { user, profile, refreshProfile, isSuperadmin } = useAuth();
+  const { user, profile, refreshProfile, isSuperadmin: isSuperadminFn } = useAuth();
+  const isSuperadmin = isSuperadminFn();
 
   /* ------------------------------------------------------------
    * ADMIN / BYPASS ACCESS CHECK
