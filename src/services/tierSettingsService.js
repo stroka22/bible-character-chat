@@ -102,6 +102,7 @@ function normalizeRecord(record) {
         if (v && typeof v === 'object') {
           // Ensure all expected keys exist with sane defaults
           return {
+            myWalkRequiresPremium: v.myWalkRequiresPremium === true,
             savingRequiresPremium: v.savingRequiresPremium === true,
             premiumOnly: v.premiumOnly === true,
             allowAllSpeak: !!v.allowAllSpeak,
@@ -112,7 +113,7 @@ function normalizeRecord(record) {
           };
         }
       } catch {}
-      return { savingRequiresPremium: false, premiumOnly: false, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' };
+      return { myWalkRequiresPremium: false, savingRequiresPremium: false, premiumOnly: false, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' };
     })(),
     premiumStudyIds: (() => {
       try {
@@ -160,6 +161,7 @@ function denormalizeSettings(settings) {
     free_characters: settings.freeCharacters || [],
     free_character_names: settings.freeCharacterNames || [],
     premium_roundtable_gates: {
+      myWalkRequiresPremium: settings?.premiumRoundtableGates?.myWalkRequiresPremium === true,
       savingRequiresPremium: settings?.premiumRoundtableGates?.savingRequiresPremium === true,
       premiumOnly: settings?.premiumRoundtableGates?.premiumOnly === true,
       allowAllSpeak: !!settings?.premiumRoundtableGates?.allowAllSpeak,
