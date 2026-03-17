@@ -20,6 +20,7 @@ const FILE_TYPES = [
 ];
 
 export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug = 'default', filterPartnerOnly = false, embedded = false }) {
+  console.log('[AdminMarketingPage] props:', { isSuperAdmin, userOwnerSlug, filterPartnerOnly, embedded });
   const { user } = useAuth();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +90,7 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
       }
 
       const { data, error } = await query;
+      console.log('[AdminMarketingPage] fetchMaterials result:', { data, error, isSuperAdmin, filterPartnerOnly });
       if (error) throw error;
       setMaterials(data || []);
     } catch (e) {
