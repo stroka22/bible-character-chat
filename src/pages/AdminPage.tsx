@@ -16,6 +16,7 @@ import AdminBranding from '../components/admin/AdminBranding';
 import AdminMarketingPage from './admin/AdminMarketingPage.jsx';
 import AIStudyGenerator from '../components/admin/AIStudyGenerator';
 import AIReadingPlanGenerator from '../components/admin/AIReadingPlanGenerator';
+import SubscriptionSettings from '../components/admin/SubscriptionSettings';
 import { getOwnerSlug, listOwnerSlugs } from '../services/tierSettingsService';
 
 // Helper function for basic CSV parsing
@@ -110,7 +111,8 @@ const AdminPage: React.FC = () => {
     | 'roundtable'
     | 'studies'
     | 'readingPlans'
-    | 'branding';
+    | 'branding'
+    | 'subscription';
   const [activeTab, setActiveTab] = useState<AdminMainTab>('overview');
   
   // AI Generator modals
@@ -469,6 +471,11 @@ const AdminPage: React.FC = () => {
             <button onClick={() => setActiveTab('marketing')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'marketing' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Marketing</button>
           </nav>
           
+          <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Subscription</div>
+          <nav className="px-2 pb-3 space-y-1">
+            <button onClick={() => setActiveTab('subscription')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'subscription' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Free vs Premium</button>
+          </nav>
+
           <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Users</div>
           <nav className="px-2 pb-3 space-y-1">
             <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
@@ -634,6 +641,11 @@ const AdminPage: React.FC = () => {
               <div className="text-gray-900 font-semibold">FAQ</div>
               <div className="text-sm text-gray-600 mb-3">Edit frequently asked questions.</div>
               <button onClick={() => setActiveTab('faq')} className="inline-block px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Edit</button>
+            </div>
+            <div className="p-4 bg-white rounded-md shadow border bg-gradient-to-br from-amber-50 to-white">
+              <div className="text-gray-900 font-semibold">Free vs Premium</div>
+              <div className="text-sm text-gray-600 mb-3">Configure which features require premium subscription.</div>
+              <button onClick={() => setActiveTab('subscription')} className="inline-block px-3 py-2 bg-amber-600 text-white rounded hover:bg-amber-700">Configure</button>
             </div>
           </div>
 
@@ -1074,6 +1086,12 @@ const AdminPage: React.FC = () => {
       {activeTab === 'branding' && (
         <section className="p-6 bg-white rounded-lg shadow-md">
           <AdminBranding />
+        </section>
+      )}
+
+      {activeTab === 'subscription' && (
+        <section className="p-6 bg-white rounded-lg shadow-md">
+          <SubscriptionSettings ownerSlug={effectiveOwnerSlug} />
         </section>
       )}
 
