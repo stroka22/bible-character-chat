@@ -50,11 +50,15 @@ async function getActiveSubscriptionForProfile(profile) {
 }
 
 export default function AdminPremiumCustomers() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [ownerSlug, setOwnerSlug] = useState('default');
+  const [filterOrg, setFilterOrg] = useState('all'); // 'all' for superadmin to see everyone
   const [members, setMembers] = useState([]);
+  const [orgs, setOrgs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  const isSuperadmin = profile?.role === 'superadmin';
 
   useEffect(() => {
     // Determine current org from localStorage (kept in sync by AuthContext)
@@ -64,18 +68,44 @@ export default function AdminPremiumCustomers() {
     } catch {}
   }, [user]);
 
+  // Load available organizations for superadmin filter
+  useEffect(() => {
+    if (!isSuperadmin) return;
+    async function loadOrgs() {
+      try {
+        const { data } = await supabase
+          .from('owners')
+          .select('owner_slug, display_name')
+          .order('display_name');
+        setOrgs(data || []);
+      } catch {}
+    }
+    loadOrgs();
+  }, [isSuperadmin]);
+
   useEffect(() => {
     let mounted = true;
     async function load() {
       setLoading(true);
       setError('');
       try {
-        // Fetch profiles for this org (include premium_override)
-        const { data, error } = await supabase
+        // Build query - superadmin with 'all' filter sees everyone
+        let query = supabase
           .from('profiles')
-          .select('id, email, display_name, owner_slug, stripe_customer_id, premium_override')
-          .eq('owner_slug', ownerSlug)
-          .order('display_name', { ascending: true });
+          .select('id, email, display_name, owner_slug, stripe_customer_id, premium_override, role')
+          .order('email', { ascending: true });
+        
+        // Apply org filter
+        if (isSuperadmin && filterOrg === 'all') {
+          // No filter - get all users
+        } else if (isSuperadmin && filterOrg) {
+          query = query.eq('owner_slug', filterOrg);
+        } else {
+          // Non-superadmin only sees their org
+          query = query.eq('owner_slug', ownerSlug);
+        }
+        
+        const { data, error } = await query;
         if (error) throw error;
 
         // For each member, fetch active subscription (by customer id or email fallback)
@@ -95,9 +125,9 @@ export default function AdminPremiumCustomers() {
         if (mounted) setLoading(false);
       }
     }
-    if (ownerSlug) load();
+    load();
     return () => { mounted = false; };
-  }, [ownerSlug]);
+  }, [ownerSlug, filterOrg, isSuperadmin]);
 
   const stats = useMemo(() => {
     const total = members.length;
@@ -120,7 +150,25 @@ export default function AdminPremiumCustomers() {
             <h1 className="text-2xl font-bold">Premium Customers</h1>
             <Link to="/admin" className="px-3 py-2 bg-yellow-400 text-blue-900 rounded">← Back to Admin</Link>
           </div>
-          <p className="text-sm text-blue-200 mt-2">Organization: <span className="font-mono">{ownerSlug}</span></p>
+          {isSuperadmin ? (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-sm text-blue-200">Filter by Organization:</span>
+              <select
+                value={filterOrg}
+                onChange={(e) => setFilterOrg(e.target.value)}
+                className="px-3 py-1 rounded bg-blue-800 text-white border border-blue-600 text-sm"
+              >
+                <option value="all">All Organizations</option>
+                {orgs.map(o => (
+                  <option key={o.owner_slug} value={o.owner_slug}>
+                    {o.display_name || o.owner_slug}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <p className="text-sm text-blue-200 mt-2">Organization: <span className="font-mono">{ownerSlug}</span></p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -149,6 +197,8 @@ export default function AdminPremiumCustomers() {
                   <tr>
                     <th className="px-3 py-2">Name</th>
                     <th className="px-3 py-2">Email</th>
+                    {isSuperadmin && <th className="px-3 py-2">Org</th>}
+                    {isSuperadmin && <th className="px-3 py-2">Role</th>}
                     <th className="px-3 py-2">Premium</th>
                     <th className="px-3 py-2">Source</th>
                     <th className="px-3 py-2">Status</th>
@@ -160,6 +210,8 @@ export default function AdminPremiumCustomers() {
                     <tr key={m.id} className="border-t border-blue-700">
                       <td className="px-3 py-2">{m.display_name || '—'}</td>
                       <td className="px-3 py-2">{m.email || '—'}</td>
+                      {isSuperadmin && <td className="px-3 py-2 text-xs">{m.owner_slug || '—'}</td>}
+                      {isSuperadmin && <td className="px-3 py-2 text-xs">{m.role || 'user'}</td>}
                       <td className="px-3 py-2">{m.isPremium ? 'Yes' : 'No'}</td>
                       <td className="px-3 py-2">
                         {m.premium_override && m.subscription?.isActive 
