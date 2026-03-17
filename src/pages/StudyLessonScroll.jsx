@@ -379,6 +379,26 @@ const StudyLessonScroll = () => {
                   {isSavingProgress ? 'Saving...' : isCompleted ? '✓ Completed' : 'Mark as Complete'}
                 </button>
 
+                {/* My Walk Promo - shown after completing a lesson */}
+                {isCompleted && user && (
+                  <Link 
+                    to="/my-walk?tab=studies"
+                    className="block p-3 bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg border border-amber-200 hover:border-amber-300 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-200 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-amber-900 text-sm">Track Your Progress</p>
+                        <p className="text-amber-600 text-xs">View all your Bible studies in My Walk →</p>
+                      </div>
+                    </div>
+                  </Link>
+                )}
+
                 {/* Chat with Character */}
                 {character && (
                   <button
