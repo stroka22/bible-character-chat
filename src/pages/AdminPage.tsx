@@ -110,7 +110,6 @@ const AdminPage: React.FC = () => {
     | 'featured'
     | 'favorites'
     | 'faq'
-    | 'accountTiers'
     | 'roundtable'
     | 'studies'
     | 'readingPlans'
@@ -497,7 +496,7 @@ const AdminPage: React.FC = () => {
       case 'branding': return { title: 'Admin Panel - Branding', desc: 'Customize your organization\'s logo, colors, and welcome message.' };
       case 'faq': return { title: 'Admin Panel - FAQ', desc: 'Manage frequently asked questions and answers.' };
       case 'roundtable': return { title: 'Admin Panel - Roundtable', desc: 'Manage roundtable discussion settings.' };
-      case 'accountTiers': return { title: 'Admin Panel - Account Tiers', desc: 'Manage subscription tiers and pricing.' };
+      case 'subscription': return { title: 'Admin Panel - Subscription Settings', desc: 'Configure free vs premium access.' };
       default: return { title: 'Admin Panel', desc: 'Welcome, Admin!' };
     }
   };
@@ -559,7 +558,6 @@ const AdminPage: React.FC = () => {
               <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Super-Admin</div>
               <nav className="px-2 pb-3 space-y-1">
                 <Link to="/admin/users" className="block px-3 py-2 rounded hover:bg-gray-100">Users & Organizations</Link>
-                <button onClick={() => setActiveTab('accountTiers')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'accountTiers' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Account Tiers</button>
                 <button onClick={() => setActiveTab('roundtable')} className={`w-full text-left px-3 py-2 rounded ${activeTab === 'roundtable' ? 'bg-amber-100 text-amber-900' : 'hover:bg-gray-100'}`}>Roundtable Settings</button>
                 <Link to="/admin/leads" className="block px-3 py-2 rounded hover:bg-gray-100">Leads</Link>
                 <Link to="/admin/contact" className="block px-3 py-2 rounded hover:bg-gray-100">Contact Submissions</Link>
@@ -1154,10 +1152,6 @@ const AdminPage: React.FC = () => {
         <AdminFAQEditor />
       )}
 
-      {activeTab === 'accountTiers' && (
-        <AccountTierManagement />
-      )}
-
       {activeTab === 'roundtable' && (
         <AccountTierManagement mode="roundtable-only" />
       )}
@@ -1204,7 +1198,7 @@ const AdminPage: React.FC = () => {
 
       {activeTab === 'subscription' && (
         <section className="p-6 bg-white rounded-lg shadow-md">
-          <SubscriptionSettings ownerSlug={effectiveOwnerSlug} />
+          <SubscriptionSettings ownerSlug={effectiveOwnerSlug} isSuperAdmin={isSuperadmin} />
         </section>
       )}
 
