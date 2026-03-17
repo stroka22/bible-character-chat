@@ -1211,7 +1211,8 @@ const AdminPage: React.FC = () => {
       {activeTab === 'marketing' && (
         <AdminMarketingPage 
           isSuperAdmin={isSuperadmin} 
-          userOwnerSlug={profile?.owner_slug || 'default'} 
+          userOwnerSlug={profile?.owner_slug || 'default'}
+          embedded={true}
         />
       )}
 

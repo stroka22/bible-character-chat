@@ -19,7 +19,7 @@ const FILE_TYPES = [
   { value: 'other', label: 'Other', accept: '*' },
 ];
 
-export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug = 'default', filterPartnerOnly = false }) {
+export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug = 'default', filterPartnerOnly = false, embedded = false }) {
   const { user } = useAuth();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -230,9 +230,8 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
     }
   };
 
-  return (
-    <AdminLayout>
-    <div className="pt-16">
+  const content = (
+    <div className={embedded ? '' : 'pt-16'}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -497,6 +496,15 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
         </div>
       )}
     </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <AdminLayout>
+      {content}
     </AdminLayout>
   );
 }
