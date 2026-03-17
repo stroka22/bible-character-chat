@@ -98,17 +98,6 @@ const PricingPageScroll = () => {
     }
   };
 
-  const features = [
-    { name: 'Chat with 30+ Biblical Characters', free: true, premium: true },
-    { name: 'Save & Continue Conversations', free: '5 saved', premium: 'Unlimited' },
-    { name: 'Roundtable Discussions', free: '3 per month', premium: 'Unlimited' },
-    { name: '140+ Reading Plans', free: true, premium: true },
-    { name: '90+ Guided Bible Studies', free: 'Limited', premium: 'Full Access' },
-    { name: 'Premium Characters', free: false, premium: true },
-    { name: 'Priority Support', free: false, premium: true },
-    { name: 'Ad-Free Experience', free: false, premium: true },
-  ];
-
   return (
     <PreviewLayout>
       <ScrollBackground className="min-h-screen py-12 px-4">
@@ -203,50 +192,68 @@ const PricingPageScroll = () => {
 
           <ScrollDivider />
 
-          {/* Feature Comparison */}
+          {/* Premium Benefits Summary */}
           <div className="mt-10">
             <h2 className="text-2xl font-bold text-amber-900 text-center mb-6" style={{ fontFamily: 'Cinzel, serif' }}>
-              Compare Plans
+              Premium Benefits
             </h2>
-            <div className="bg-white/80 rounded-xl border border-amber-200 overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-amber-100">
-                    <th className="text-left py-3 px-4 text-amber-800 font-medium">Feature</th>
-                    <th className="text-center py-3 px-4 text-amber-800 font-medium">Free</th>
-                    <th className="text-center py-3 px-4 text-amber-800 font-medium">Premium</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {features.map((feature, i) => (
-                    <tr key={i} className={i % 2 === 0 ? 'bg-white/50' : 'bg-amber-50/50'}>
-                      <td className="py-3 px-4 text-amber-900">{feature.name}</td>
-                      <td className="text-center py-3 px-4">
-                        {feature.free === true ? (
-                          <svg className="w-5 h-5 text-green-600 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        ) : feature.free === false ? (
-                          <svg className="w-5 h-5 text-gray-400 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <span className="text-amber-700 text-sm">{feature.free}</span>
-                        )}
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        {feature.premium === true ? (
-                          <svg className="w-5 h-5 text-green-600 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <span className="text-amber-700 text-sm">{feature.premium}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="bg-white/80 rounded-xl border border-amber-200 p-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-amber-900">My Walk Dashboard</p>
+                    <p className="text-sm text-amber-700">Track your spiritual journey and progress</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-amber-900">Unlimited Conversations</p>
+                    <p className="text-sm text-amber-700">Save and continue all your conversations</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-amber-900">Roundtable Discussions</p>
+                    <p className="text-sm text-amber-700">Multi-character group conversations</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-amber-900">All Bible Studies</p>
+                    <p className="text-sm text-amber-700">Full access to all guided studies</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-amber-900">All Characters</p>
+                    <p className="text-sm text-amber-700">Access to every biblical character</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-amber-900">Priority Support</p>
+                    <p className="text-sm text-amber-700">Get help when you need it</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
