@@ -181,7 +181,7 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
         lastUpdated: new Date().toISOString(),
       };
       
-      await setTierSettings(ownerSlug, updatedSettings);
+      await setTierSettings(updatedSettings, ownerSlug);
       
       // Notify other components
       try {
