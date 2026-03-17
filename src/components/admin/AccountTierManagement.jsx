@@ -49,6 +49,7 @@ Stay in character and draw from biblical knowledge.`;
     followUpsMin: null,
     repliesPerRoundMin: null,
     promptTemplate: '',
+    myWalkRequiresPremium: true,
   });
   const [premiumStudyIds, setPremiumStudyIds] = useState([]);
   const [studies, setStudies] = useState([]);
@@ -104,6 +105,7 @@ Stay in character and draw from biblical knowledge.`;
             const tpl = supabaseSettings?.premiumRoundtableGates?.promptTemplate;
             return (typeof tpl === 'string' && tpl.trim().length > 0) ? tpl : DEFAULT_PROMPT_TEMPLATE;
           })(),
+          myWalkRequiresPremium: supabaseSettings?.premiumRoundtableGates?.myWalkRequiresPremium !== false,
         });
         setPremiumStudyIds(Array.isArray(supabaseSettings?.premiumStudyIds) ? supabaseSettings.premiumStudyIds : []);
 
@@ -656,6 +658,21 @@ Stay in character and draw from biblical knowledge.`;
                   Mark specific features as Premium-only for this organization.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* My Walk Premium Gate */}
+                  <div className="space-y-3 p-4 border rounded-md bg-amber-50">
+                    <h4 className="font-medium text-amber-800 mb-1">My Walk Dashboard</h4>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-amber-600 border-gray-300 rounded"
+                        checked={!!premiumGates.myWalkRequiresPremium}
+                        onChange={(e) => setPremiumGates({ ...premiumGates, myWalkRequiresPremium: e.target.checked })}
+                      />
+                      <span className="text-sm text-gray-700">My Walk requires Premium</span>
+                    </label>
+                    <p className="text-xs text-gray-500">When enabled, only premium users can access the My Walk dashboard showing their progress, history, and stats.</p>
+                  </div>
+
                   {/* Roundtable Feature Gates */}
                   <div className="space-y-3 p-4 border rounded-md">
                     <h4 className="font-medium text-blue-800 mb-1">Roundtable & Saving</h4>

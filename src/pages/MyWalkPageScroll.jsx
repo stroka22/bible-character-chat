@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useConversation } from '../contexts/ConversationContext.jsx';
 import { characterRepository } from '../repositories/characterRepository';
@@ -7,9 +7,12 @@ import userFavoritesRepository from '../repositories/userFavoritesRepository';
 import userSettingsRepository from '../repositories/userSettingsRepository';
 import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 import conversationRepository from '../repositories/conversationRepository';
+import { usePremium } from '../hooks/usePremium';
+import { getSettings as getTierSettings } from '../services/tierSettingsService';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
+import MyWalkPromoModal from '../components/modals/MyWalkPromoModal';
 
 const generateFallbackAvatar = (name) => 
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random`;
@@ -61,6 +64,8 @@ const FavoriteCharacterCard = ({ character, isFeatured, onToggleFavorite, onSetF
 
 const MyWalkPageScroll = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { isPremium } = usePremium();
   const {
     conversations = [],
     fetchConversations,
@@ -70,6 +75,11 @@ const MyWalkPageScroll = () => {
     isLoading: conversationsLoading,
   } = useConversation() || {};
 
+  // Premium gate state
+  const [showPromoModal, setShowPromoModal] = useState(false);
+  const [myWalkRequiresPremium, setMyWalkRequiresPremium] = useState(true);
+  const [premiumCheckDone, setPremiumCheckDone] = useState(false);
+
   // State
   const [favoriteCharacters, setFavoriteCharacters] = useState([]);
   const [favLoading, setFavLoading] = useState(true);
@@ -77,6 +87,32 @@ const MyWalkPageScroll = () => {
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
   const [userStudies, setUserStudies] = useState([]);
   const [studiesLoading, setStudiesLoading] = useState(false);
+
+  // Check if My Walk requires premium
+  useEffect(() => {
+    const checkPremiumGate = async () => {
+      try {
+        const settings = await getTierSettings();
+        const requiresPremium = settings?.premiumRoundtableGates?.myWalkRequiresPremium !== false;
+        setMyWalkRequiresPremium(requiresPremium);
+        
+        // If requires premium and user is not premium, show promo
+        if (requiresPremium && !isPremium && user) {
+          setShowPromoModal(true);
+        }
+      } catch (e) {
+        console.error('Error checking premium gate:', e);
+      } finally {
+        setPremiumCheckDone(true);
+      }
+    };
+    
+    if (user && !loading) {
+      checkPremiumGate();
+    } else if (!loading) {
+      setPremiumCheckDone(true);
+    }
+  }, [user, loading, isPremium]);
   
   // UI State - check URL for initial tab
   const [activeTab, setActiveTab] = useState(() => {
@@ -670,6 +706,12 @@ const MyWalkPageScroll = () => {
         </ScrollWrap>
       </ScrollBackground>
       <FooterScroll />
+      
+      {/* My Walk Premium Promo Modal */}
+      <MyWalkPromoModal
+        isOpen={showPromoModal}
+        onClose={() => setShowPromoModal(false)}
+      />
     </PreviewLayout>
   );
 };
