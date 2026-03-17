@@ -43,6 +43,7 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
   });
 
   useEffect(() => {
+    console.log('[AdminMarketingPage] useEffect triggered, calling fetchMaterials');
     fetchMaterials();
     if (isSuperAdmin) {
       fetchOrgs();
@@ -65,8 +66,10 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
   };
 
   const fetchMaterials = async () => {
+    console.log('[AdminMarketingPage] fetchMaterials called');
     setLoading(true);
     try {
+      console.log('[AdminMarketingPage] Building query...');
       let query = supabase
         .from('marketing_materials')
         .select('*')
@@ -74,11 +77,13 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
 
       // For non-super admins, only show non-partner materials
       if (!isSuperAdmin) {
+        console.log('[AdminMarketingPage] Adding is_partner_material filter (not superadmin)');
         query = query.eq('is_partner_material', false);
       }
       
       // Filter to partner materials only if requested
       if (filterPartnerOnly) {
+        console.log('[AdminMarketingPage] Adding partner-only filter');
         query = query.eq('is_partner_material', true);
       }
 
@@ -89,14 +94,17 @@ export default function AdminMarketingPage({ isSuperAdmin = false, userOwnerSlug
         query = query.eq('category', filter.category);
       }
 
+      console.log('[AdminMarketingPage] Executing query...');
       const { data, error } = await query;
-      console.log('[AdminMarketingPage] fetchMaterials result:', { data, error, isSuperAdmin, filterPartnerOnly });
+      console.log('[AdminMarketingPage] fetchMaterials result:', { data, error, dataLength: data?.length, isSuperAdmin, filterPartnerOnly });
       if (error) throw error;
       setMaterials(data || []);
+      console.log('[AdminMarketingPage] Materials set:', data?.length || 0);
     } catch (e) {
-      console.error('Error fetching materials:', e);
+      console.error('[AdminMarketingPage] Error fetching materials:', e);
     } finally {
       setLoading(false);
+      console.log('[AdminMarketingPage] Loading set to false');
     }
   };
 
