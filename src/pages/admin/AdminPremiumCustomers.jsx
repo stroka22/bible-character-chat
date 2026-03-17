@@ -70,10 +70,10 @@ export default function AdminPremiumCustomers() {
       setLoading(true);
       setError('');
       try {
-        // Fetch profiles for this org
+        // Fetch profiles for this org (include premium_override)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, email, display_name, owner_slug, stripe_customer_id')
+          .select('id, email, display_name, owner_slug, stripe_customer_id, premium_override')
           .eq('owner_slug', ownerSlug)
           .order('display_name', { ascending: true });
         if (error) throw error;
@@ -82,7 +82,9 @@ export default function AdminPremiumCustomers() {
         const enriched = await Promise.all(
           (data || []).map(async (p) => {
             const sub = await getActiveSubscriptionForProfile(p);
-            return { ...p, subscription: sub };
+            // Consider premium if has active subscription OR has premium_override
+            const isPremium = p.premium_override || sub?.isActive;
+            return { ...p, subscription: sub, isPremium };
           })
         );
         if (mounted) setMembers(enriched);
@@ -99,7 +101,7 @@ export default function AdminPremiumCustomers() {
 
   const stats = useMemo(() => {
     const total = members.length;
-    const premium = members.filter(m => m.subscription?.isActive).length;
+    const premium = members.filter(m => m.isPremium).length;
     return { total, premium };
   }, [members]);
 
@@ -148,6 +150,7 @@ export default function AdminPremiumCustomers() {
                     <th className="px-3 py-2">Name</th>
                     <th className="px-3 py-2">Email</th>
                     <th className="px-3 py-2">Premium</th>
+                    <th className="px-3 py-2">Source</th>
                     <th className="px-3 py-2">Status</th>
                     <th className="px-3 py-2">Renews</th>
                   </tr>
@@ -157,7 +160,16 @@ export default function AdminPremiumCustomers() {
                     <tr key={m.id} className="border-t border-blue-700">
                       <td className="px-3 py-2">{m.display_name || '—'}</td>
                       <td className="px-3 py-2">{m.email || '—'}</td>
-                      <td className="px-3 py-2">{m.subscription?.isActive ? 'Yes' : 'No'}</td>
+                      <td className="px-3 py-2">{m.isPremium ? 'Yes' : 'No'}</td>
+                      <td className="px-3 py-2">
+                        {m.premium_override && m.subscription?.isActive 
+                          ? 'Override + Stripe' 
+                          : m.premium_override 
+                            ? 'Override' 
+                            : m.subscription?.isActive 
+                              ? 'Stripe' 
+                              : '—'}
+                      </td>
                       <td className="px-3 py-2">{m.subscription?.status || '—'}</td>
                       <td className="px-3 py-2">{m.subscription?.currentPeriodEnd ? new Date(m.subscription.currentPeriodEnd * 1000).toLocaleDateString() : '—'}</td>
                     </tr>
