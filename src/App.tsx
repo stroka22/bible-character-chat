@@ -38,7 +38,7 @@ import SalesPage from './pages/SalesPage.jsx';
 import AdminUpgrade from './pages/AdminUpgrade.jsx';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import InviteAccept from './pages/InviteAccept.jsx';
-import JoinChat from './pages/JoinChat.jsx';
+import JoinChatPreview from './pages/JoinChatPreview.jsx';
 import AdminInvitesPage from './pages/admin/AdminInvitesPage.jsx';
 import AdminPremiumCustomers from './pages/admin/AdminPremiumCustomers.jsx';
 import SuperadminUsersPage from './pages/admin/SuperadminUsersPage.jsx';
@@ -473,7 +473,7 @@ function AppContent() {
     <Route path="/pastors" element={<PastorsPage />} />
     <Route path="/sales" element={<SalesPage />} />
     <Route path="/invite/:code" element={<InviteAccept />} />
-    <Route path="/join/:code" element={<JoinChat />} />
+    <Route path="/join/:code" element={<JoinChatPreview />} />
     <Route path="/shared/:shareCode" element={<SimpleChatWithHistory isSharedView={true} />} />
     <Route path="/debug" element={<div className="min-h-screen bg-slate-800 text-white p-4"><h1 className="text-2xl mb-4">Debug Tools</h1><DebugPanel /></div>} />
 

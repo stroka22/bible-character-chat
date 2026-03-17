@@ -76,3 +76,77 @@ export async function redeemChatInvite(code) {
   const { data, error } = await supabase.rpc('redeem_chat_invite', { p_code: code });
   return { data, error };
 }
+
+/**
+ * Get preview information for a chat invite without redeeming it
+ * Returns: inviter name, character name/avatar, conversation topic
+ */
+export async function getChatInvitePreview(code) {
+  if (!code) return { data: null, error: { message: 'Missing code' } };
+  
+  // Get the invite
+  const { data: invite, error: inviteError } = await supabase
+    .from('chat_invites')
+    .select('id, chat_id, created_by, expires_at, revoked, max_uses, use_count')
+    .eq('code', code)
+    .single();
+  
+  if (inviteError || !invite) {
+    return { data: null, error: { message: 'Invite not found or expired' } };
+  }
+  
+  // Check if invite is valid
+  if (invite.revoked) {
+    return { data: null, error: { message: 'This invite has been revoked' } };
+  }
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+    return { data: null, error: { message: 'This invite has expired' } };
+  }
+  if (invite.max_uses && invite.use_count >= invite.max_uses) {
+    return { data: null, error: { message: 'This invite has reached its maximum uses' } };
+  }
+  
+  // Get the chat details
+  const { data: chat, error: chatError } = await supabase
+    .from('chats')
+    .select('id, title, character_id')
+    .eq('id', invite.chat_id)
+    .single();
+  
+  if (chatError || !chat) {
+    return { data: null, error: { message: 'Conversation not found' } };
+  }
+  
+  // Get the character
+  let character = null;
+  if (chat.character_id) {
+    const { data: charData } = await supabase
+      .from('characters')
+      .select('id, name, avatar_url, short_biography')
+      .eq('id', chat.character_id)
+      .single();
+    character = charData;
+  }
+  
+  // Get the inviter's profile
+  let inviter = null;
+  if (invite.created_by) {
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id, first_name, display_name')
+      .eq('id', invite.created_by)
+      .single();
+    inviter = profileData;
+  }
+  
+  return {
+    data: {
+      inviteId: invite.id,
+      chatId: chat.id,
+      chatTitle: chat.title,
+      character,
+      inviter
+    },
+    error: null
+  };
+}
