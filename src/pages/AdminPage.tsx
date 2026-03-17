@@ -96,6 +96,8 @@ const AdminPage: React.FC = () => {
   // Pagination state
   const [pageSize, setPageSize] = useState<number>(10); // 10, 25, 50
   const [currentPage, setCurrentPage] = useState<number>(1);
+  // Character selection state
+  const [selectedCharacterIds, setSelectedCharacterIds] = useState<Set<string>>(new Set());
 
   /* ------------------------------------------------------------
    * Top-level Admin Tabs
@@ -379,6 +381,74 @@ const AdminPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Character selection handlers
+  const toggleCharacterSelection = (id: string) => {
+    setSelectedCharacterIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAllCharacters = () => {
+    if (selectedCharacterIds.size === filteredCharacters.length) {
+      setSelectedCharacterIds(new Set());
+    } else {
+      setSelectedCharacterIds(new Set(filteredCharacters.map(c => c.id)));
+    }
+  };
+
+  const clearSelection = () => setSelectedCharacterIds(new Set());
+
+  // Download selected characters as CSV
+  const downloadCharactersCSV = () => {
+    const charsToExport = selectedCharacterIds.size > 0 
+      ? characters.filter(c => selectedCharacterIds.has(c.id))
+      : characters;
+    
+    if (charsToExport.length === 0) {
+      alert('No characters to export');
+      return;
+    }
+
+    // Define CSV columns
+    const columns = [
+      'id', 'name', 'avatar_url', 'feature_image_url', 'short_biography', 'bible_book',
+      'opening_line', 'persona_prompt', 'scriptural_context', 'description', 'is_visible',
+      'timeline_period', 'historical_context', 'geographic_location', 'key_scripture_references',
+      'theological_significance', 'relationships', 'study_questions'
+    ];
+
+    // Helper to escape CSV values
+    const escapeCSV = (val: any) => {
+      if (val === null || val === undefined) return '';
+      const str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // Build CSV content
+    const header = columns.join(',');
+    const rows = charsToExport.map(char => 
+      columns.map(col => escapeCSV((char as any)[col])).join(',')
+    );
+    const csvContent = [header, ...rows].join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `characters_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Handle toggling character visibility
@@ -908,7 +978,31 @@ const AdminPage: React.FC = () => {
 
       {/* Character List with Search */}
       <section className="p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Existing Characters</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-semibold text-gray-800">Existing Characters</h2>
+          <div className="flex items-center gap-2">
+            {selectedCharacterIds.size > 0 && (
+              <span className="text-sm text-gray-600">{selectedCharacterIds.size} selected</span>
+            )}
+            <button
+              onClick={downloadCharactersCSV}
+              className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              {selectedCharacterIds.size > 0 ? `Download Selected (${selectedCharacterIds.size})` : 'Download All CSV'}
+            </button>
+            {selectedCharacterIds.size > 0 && (
+              <button
+                onClick={clearSelection}
+                className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 text-sm"
+              >
+                Clear Selection
+              </button>
+            )}
+          </div>
+        </div>
         
         {/* Toolbar: search + pagination controls */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -965,14 +1059,31 @@ const AdminPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th scope="col" className="px-3 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedCharacterIds.size === filteredCharacters.length && filteredCharacters.length > 0}
+                      onChange={selectAllCharacters}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      title="Select all"
+                    />
+                  </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visibility</th> {/* New column */}
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Visibility</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {paginatedCharacters.map((character) => (
-                  <tr key={character.id}>
+                  <tr key={character.id} className={selectedCharacterIds.has(character.id) ? 'bg-primary-50' : ''}>
+                    <td className="px-3 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={selectedCharacterIds.has(character.id)}
+                        onChange={() => toggleCharacterSelection(character.id)}
+                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {character.avatar_url && (
