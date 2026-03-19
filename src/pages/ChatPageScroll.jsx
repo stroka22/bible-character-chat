@@ -482,6 +482,8 @@ const ChatPageScroll = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
   const [savingRequiresPremium, setSavingRequiresPremium] = useState(true);
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
+  const [hasConversationHistory, setHasConversationHistory] = useState(false);
   
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -1095,6 +1097,35 @@ const ChatPageScroll = () => {
       navigate(destination);
     }
   }, [isAuthenticated, isPremium, savingRequiresPremium, messages, navigate]);
+
+  // Check for conversation history when character is selected (for welcome back message)
+  useEffect(() => {
+    const checkHistory = async () => {
+      if (!isAuthenticated || isPremium || !savingRequiresPremium || !character || !user?.id) {
+        setHasConversationHistory(false);
+        setShowWelcomeBack(false);
+        return;
+      }
+      
+      try {
+        // Check if user has any saved conversations with this character
+        const { data } = await import('../repositories/conversationRepository').then(m => 
+          m.default.getByUser(user.id)
+        );
+        const hasHistory = data?.some(conv => conv.character_id === character.id);
+        setHasConversationHistory(hasHistory);
+        
+        // Show welcome back message if they have history and this is a new conversation
+        if (hasHistory && messages.length === 0) {
+          setShowWelcomeBack(true);
+        }
+      } catch (err) {
+        console.error('Error checking conversation history:', err);
+      }
+    };
+    
+    checkHistory();
+  }, [isAuthenticated, isPremium, savingRequiresPremium, character, user?.id, messages.length]);
 
   // Render alphabetical navigation (horizontal)
   const renderAlphaNav = () => (
@@ -1931,6 +1962,15 @@ const ChatPageScroll = () => {
             setShowLeaveModal(false);
             navigate('/pricing');
           }}
+        />
+      )}
+
+      {/* Welcome back message for returning free users */}
+      {showWelcomeBack && hasConversationHistory && isAuthenticated && !isPremium && savingRequiresPremium && (
+        <WelcomeBackMessage
+          characterName={character?.name}
+          hasHistory={true}
+          onDismiss={() => setShowWelcomeBack(false)}
         />
       )}
 

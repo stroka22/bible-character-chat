@@ -117,7 +117,7 @@ function normalizeRecord(record) {
           };
         }
       } catch {}
-      return { myWalkRequiresPremium: false, savingRequiresPremium: false, premiumOnly: false, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' };
+      return { myWalkRequiresPremium: true, savingRequiresPremium: true, premiumOnly: false, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' };
     })(),
     premiumStudyIds: (() => {
       try {
@@ -327,7 +327,7 @@ function getDefaultSettings() {
     freeCharacterLimit: 10,
     freeCharacters: [],
     freeCharacterNames: [],
-    premiumRoundtableGates: { savingRequiresPremium: false, premiumOnly: false, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' },
+    premiumRoundtableGates: { myWalkRequiresPremium: true, savingRequiresPremium: true, premiumOnly: false, allowAllSpeak: false, strictRotation: false, followUpsMin: null, repliesPerRoundMin: null, promptTemplate: '' },
     premiumStudyIds: [],
     inviteSettings: {
       max_chat_participants_free: 3,
