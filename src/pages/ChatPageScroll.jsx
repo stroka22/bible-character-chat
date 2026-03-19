@@ -1027,7 +1027,14 @@ const ChatPageScroll = () => {
   // Show signup prompt after 5 user messages for non-logged-in users
   useEffect(() => {
     const userMessageCount = messages.filter(m => m.role === 'user').length;
+    console.log('[ChatPageScroll] Signup prompt check:', { 
+      userMessageCount, 
+      isAuthenticated, 
+      signupPromptShown,
+      shouldShow: !isAuthenticated && !signupPromptShown && userMessageCount >= 5
+    });
     if (!isAuthenticated && !signupPromptShown && userMessageCount >= 5) {
+      console.log('[ChatPageScroll] Showing signup prompt!');
       setShowSignupPrompt(true);
       setSignupPromptShown(true);
     }
