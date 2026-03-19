@@ -20,9 +20,9 @@ const SignupPromptModal = ({
   const getContextMessage = () => {
     switch (context) {
       case "study":
-        return `You've completed your first lesson${studyTitle ? ` of "${studyTitle}"` : ''}! Create a free account to save your progress and continue your study.`;
+        return `You've completed your first lesson${studyTitle ? ` of "${studyTitle}"` : ''}! Create a free account to track your progress.`;
       case "chat":
-        return `You're having a great conversation${characterName ? ` with ${characterName}` : ''}! Create a free account to save this chat and continue.`;
+        return `You're having a great conversation${characterName ? ` with ${characterName}` : ''}! Create a free account to keep chatting.`;
       case "invite":
         return "Create a free account to invite others to join your conversation.";
       default:
@@ -33,9 +33,9 @@ const SignupPromptModal = ({
   const getContextTitle = () => {
     switch (context) {
       case "study":
-        return "Keep Your Progress!";
+        return "Track Your Progress";
       case "chat":
-        return "Save This Conversation";
+        return "Keep the Conversation Going";
       case "invite":
         return "Sign In to Invite";
       default:
