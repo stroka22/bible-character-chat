@@ -111,7 +111,7 @@ const HomePage: React.FC = () => {
               </div>
               <p className="text-center text-blue-200 text-xs mt-4">
                 <Link to="/getting-started" className="text-yellow-400 hover:underline">See How It Works</Link>
-                {' '}&bull;{' '}Invite friends to your conversations &bull; Save and share chats
+                {' '}&bull;{' '}Share conversations with friends &bull; Track your progress
               </p>
             </div>
           </div>

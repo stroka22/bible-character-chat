@@ -210,7 +210,7 @@ const HomePage = () => {
                     ]}),
                     _jsxs("p", { className: "text-center text-blue-200 text-[10px] mt-3", children: [
                         _jsx(Link, { to: "/getting-started", className: "text-yellow-400 hover:underline", children: "See How It Works" }),
-                        " • Invite friends to conversations • Save & share chats"
+                        " • Share conversations with friends • Track your progress"
                     ]})
                 ]})
             }),

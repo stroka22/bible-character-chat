@@ -67,7 +67,7 @@ const SignupPromptModal = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </span>
-              <span className="text-gray-700">Save your Bible study progress</span>
+              <span className="text-gray-700">Unlimited chats with free characters</span>
             </li>
             <li className="flex items-center gap-3">
               <span className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
@@ -75,7 +75,7 @@ const SignupPromptModal = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </span>
-              <span className="text-gray-700">Keep all your conversations</span>
+              <span className="text-gray-700">Track your Bible study progress</span>
             </li>
             <li className="flex items-center gap-3">
               <span className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
@@ -83,7 +83,7 @@ const SignupPromptModal = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </span>
-              <span className="text-gray-700">Invite friends to join you</span>
+              <span className="text-gray-700">Track your reading plan progress</span>
             </li>
             <li className="flex items-center gap-3">
               <span className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
@@ -91,9 +91,12 @@ const SignupPromptModal = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </span>
-              <span className="text-gray-700">Sync across all your devices</span>
+              <span className="text-gray-700">Share conversations with friends</span>
             </li>
           </ul>
+          <p className="text-xs text-gray-500 mt-4 text-center">
+            Upgrade to Premium for full conversation history and more features
+          </p>
         </div>
 
         {/* Actions */}
