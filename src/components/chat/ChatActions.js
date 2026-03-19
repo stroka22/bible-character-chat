@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { useChat } from '../../contexts/ChatContext.jsx';
 import { useConversation } from '../../contexts/ConversationContext.jsx';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePremium } from '../../hooks/usePremium';
-import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 // Added `basicOnly` prop: when true in compact mode, only show
 // copy, favorite & save – omit rename/delete even for saved chats.
 // Added `hideSave` prop: when true, hide the save button (for Bible study chats that auto-save)
@@ -12,7 +10,6 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
     const { character, chatId, messages, saveChatTitle, toggleFavorite, saveChat, deleteCurrentChat, isChatSaved, isFavorite } = useChat();
     const { shareConversation } = useConversation();
     const { user } = useAuth();
-    const { isPremium } = usePremium();
     const [bypassMode, setBypassMode] = useState(false);
     useEffect(() => {
         const bypass = localStorage.getItem('bypass_auth') === 'true';
@@ -56,17 +53,7 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
         try {
             setIsLoading(true);
             setError(null);
-            // Premium gating for saving
-            try {
-              const s = await getTierSettings();
-              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
-              if (requiresPremium && !isPremium) {
-                window.location.assign('/pricing');
-                setIsLoading(false);
-                return;
-              }
-              
-            } catch {}
+            // Copy is always allowed - it's just copying current session text
             const text = formatConversationAsText();
             await navigator.clipboard.writeText(text);
             setShowCopySuccess(true);
@@ -157,18 +144,7 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
         try {
             setIsLoading(true);
             setError(null);
-            // Premium gating for saving
-            try {
-              const s = await getTierSettings();
-              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
-              if (requiresPremium && !isPremium) {
-                window.location.assign('/pricing');
-                setIsLoading(false);
-                return;
-              }
-              
-            } catch {}
-            
+            // Conversations are always saved now - access is gated via My Walk
             // Don't pass any title - let the repository generate the default
             const success = await saveChat();
             
@@ -189,17 +165,7 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
         try {
             setIsLoading(true);
             setError(null);
-            // Premium gating for saving
-            try {
-              const s = await getTierSettings();
-              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
-              if (requiresPremium && !isPremium) {
-                window.location.assign('/pricing');
-                setIsLoading(false);
-                return;
-              }
-              
-            } catch {}
+            // Renaming is always allowed - it's part of the current session
             await saveChatTitle(newTitle.trim());
             setIsRenaming(false);
             setNewTitle('');
@@ -231,17 +197,7 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
         try {
             setIsLoading(true);
             setError(null);
-            // Premium gating for saving
-            try {
-              const s = await getTierSettings();
-              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
-              if (requiresPremium && !isPremium) {
-                window.location.assign('/pricing');
-                setIsLoading(false);
-                return;
-              }
-              
-            } catch {}
+            // Favoriting is always allowed - part of current session management
 
             // Handle non-saved chats (bypass mode)
             if (bypassMode && !chatId) {
@@ -276,17 +232,7 @@ const ChatActions = ({ className = '', compact = false, basicOnly = false, hideS
         try {
             setIsLoading(true);
             setError(null);
-            // Premium gating for saving
-            try {
-              const s = await getTierSettings();
-              const requiresPremium = s?.premiumRoundtableGates?.savingRequiresPremium !== false;
-              if (requiresPremium && !isPremium) {
-                window.location.assign('/pricing');
-                setIsLoading(false);
-                return;
-              }
-              
-            } catch {}
+            // Deleting is always allowed for the current chat
             await deleteCurrentChat();
         }
         catch (error) {
