@@ -13,6 +13,7 @@ import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
 import MyWalkPromoModal from '../components/modals/MyWalkPromoModal';
+import { MyWalkPremiumGate } from '../components/modals/ConversationUpgradePrompts';
 
 const generateFallbackAvatar = (name) => 
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=random`;
@@ -369,6 +370,15 @@ const MyWalkPageScroll = () => {
           </ScrollWrap>
         </ScrollBackground>
         <FooterScroll />
+      </PreviewLayout>
+    );
+  }
+
+  // Premium gate - show full gate page for non-premium users when My Walk requires premium
+  if (premiumCheckDone && myWalkRequiresPremium && !isPremium && user) {
+    return (
+      <PreviewLayout>
+        <MyWalkPremiumGate />
       </PreviewLayout>
     );
   }

@@ -13,6 +13,12 @@ import userFavoritesRepository from '../repositories/userFavoritesRepository';
 import siteSettingsRepository from '../repositories/siteSettingsRepository';
 import UpgradeModal from '../components/modals/UpgradeModal';
 import SignupPromptModal from '../components/modals/SignupPromptModal';
+import {
+  FirstMessageBanner,
+  MessageCountToast,
+  LeaveConversationModal,
+  WelcomeBackMessage,
+} from '../components/modals/ConversationUpgradePrompts';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
@@ -467,6 +473,15 @@ const ChatPageScroll = () => {
   const [renameValue, setRenameValue] = useState('');
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [signupPromptShown, setSignupPromptShown] = useState(false);
+  
+  // Upgrade prompt state (for free authenticated users)
+  const [showFirstMsgBanner, setShowFirstMsgBanner] = useState(false);
+  const [firstMsgBannerDismissed, setFirstMsgBannerDismissed] = useState(false);
+  const [showMessageToast, setShowMessageToast] = useState(false);
+  const [messageToastDismissed, setMessageToastDismissed] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const [savingRequiresPremium, setSavingRequiresPremium] = useState(true);
   
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
@@ -1015,6 +1030,71 @@ const ChatPageScroll = () => {
       setSignupPromptShown(true);
     }
   }, [isAuthenticated, signupPromptShown, messages]);
+
+  // Load saving requires premium setting
+  useEffect(() => {
+    const loadSavingSetting = async () => {
+      try {
+        const settings = await getTierSettings();
+        setSavingRequiresPremium(settings?.premiumRoundtableGates?.savingRequiresPremium !== false);
+      } catch (err) {
+        console.error('Error loading tier settings:', err);
+      }
+    };
+    loadSavingSetting();
+  }, []);
+
+  // Upgrade prompts for free authenticated users (when saving requires premium)
+  useEffect(() => {
+    // Only show upgrade prompts if: authenticated, not premium, saving requires premium, has messages
+    if (!isAuthenticated || isPremium || !savingRequiresPremium) return;
+    
+    const userMessageCount = messages.filter(m => m.role === 'user').length;
+    
+    // Show first message banner after first user message
+    if (userMessageCount >= 1 && !firstMsgBannerDismissed && !showFirstMsgBanner) {
+      setShowFirstMsgBanner(true);
+    }
+    
+    // Show toast after 7 messages (midpoint of 5-10)
+    if (userMessageCount >= 7 && !messageToastDismissed && !showMessageToast) {
+      setShowMessageToast(true);
+    }
+  }, [isAuthenticated, isPremium, savingRequiresPremium, messages, firstMsgBannerDismissed, messageToastDismissed, showFirstMsgBanner, showMessageToast]);
+
+  // Handle navigation blocking for unsaved conversations (free users)
+  useEffect(() => {
+    if (!isAuthenticated || isPremium || !savingRequiresPremium) return;
+    
+    const userMessageCount = messages.filter(m => m.role === 'user').length;
+    if (userMessageCount < 5) return;
+
+    // Warn on browser close/refresh
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isAuthenticated, isPremium, savingRequiresPremium, messages]);
+
+  // Intercept navigation for leave modal
+  const handleNavigateAway = useCallback((destination) => {
+    if (!isAuthenticated || isPremium || !savingRequiresPremium) {
+      navigate(destination);
+      return;
+    }
+    
+    const userMessageCount = messages.filter(m => m.role === 'user').length;
+    if (userMessageCount >= 5) {
+      setPendingNavigation(destination);
+      setShowLeaveModal(true);
+    } else {
+      navigate(destination);
+    }
+  }, [isAuthenticated, isPremium, savingRequiresPremium, messages, navigate]);
 
   // Render alphabetical navigation (horizontal)
   const renderAlphaNav = () => (
@@ -1807,6 +1887,52 @@ const ChatPageScroll = () => {
         characterName={character?.name}
         allowDismiss={true}
       />
+
+      {/* Upgrade Prompts for Free Users */}
+      {/* First message banner */}
+      {showFirstMsgBanner && !firstMsgBannerDismissed && isAuthenticated && !isPremium && savingRequiresPremium && (
+        <FirstMessageBanner
+          characterName={character?.name}
+          onDismiss={() => {
+            setShowFirstMsgBanner(false);
+            setFirstMsgBannerDismissed(true);
+          }}
+        />
+      )}
+
+      {/* Message count toast */}
+      {showMessageToast && !messageToastDismissed && isAuthenticated && !isPremium && savingRequiresPremium && (
+        <MessageCountToast
+          characterName={character?.name}
+          messageCount={messages.filter(m => m.role === 'user').length}
+          onDismiss={() => {
+            setShowMessageToast(false);
+            setMessageToastDismissed(true);
+          }}
+        />
+      )}
+
+      {/* Leave conversation modal */}
+      {showLeaveModal && (
+        <LeaveConversationModal
+          characterName={character?.name}
+          messageCount={messages.filter(m => m.role === 'user').length}
+          onStay={() => {
+            setShowLeaveModal(false);
+            setPendingNavigation(null);
+          }}
+          onLeave={() => {
+            setShowLeaveModal(false);
+            if (pendingNavigation) {
+              navigate(pendingNavigation);
+            }
+          }}
+          onUpgrade={() => {
+            setShowLeaveModal(false);
+            navigate('/pricing');
+          }}
+        />
+      )}
 
       {/* Messages - scrollable area */}
       <div 
