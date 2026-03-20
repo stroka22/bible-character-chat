@@ -472,7 +472,6 @@ const ChatPageScroll = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
-  const [signupPromptShown, setSignupPromptShown] = useState(false);
   
   // Upgrade prompt state (for free authenticated users)
   const [showFirstMsgBanner, setShowFirstMsgBanner] = useState(false);
@@ -1024,14 +1023,18 @@ const ChatPageScroll = () => {
     prevMessageCount.current = messages.length;
   }, [messages.length, isTyping, scrollToBottom]);
 
-  // Show signup prompt after 5 user messages for non-logged-in users
+  // Show signup prompt every 5 user messages for non-logged-in users
+  const lastPromptCountRef = useRef(0);
   useEffect(() => {
+    if (isAuthenticated) return;
+    
     const userMessageCount = messages.filter(m => m.role === 'user').length;
-    if (!isAuthenticated && !signupPromptShown && userMessageCount >= 5) {
+    // Show prompt at 5, 10, 15, etc. messages
+    if (userMessageCount >= 5 && userMessageCount % 5 === 0 && userMessageCount > lastPromptCountRef.current) {
       setShowSignupPrompt(true);
-      setSignupPromptShown(true);
+      lastPromptCountRef.current = userMessageCount;
     }
-  }, [isAuthenticated, signupPromptShown, messages]);
+  }, [isAuthenticated, messages]);
 
   // Load saving requires premium setting
   useEffect(() => {

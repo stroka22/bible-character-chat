@@ -67,6 +67,14 @@ const SignupPromptModal = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </span>
+              <span className="text-gray-700">Chat without interruptions</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
               <span className="text-gray-700">Unlimited chats with free characters</span>
             </li>
             <li className="flex items-center gap-3">
@@ -84,14 +92,6 @@ const SignupPromptModal = ({
                 </svg>
               </span>
               <span className="text-gray-700">Track your reading plan progress</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </span>
-              <span className="text-gray-700">Share conversations with friends</span>
             </li>
           </ul>
           <p className="text-xs text-gray-500 mt-4 text-center">
