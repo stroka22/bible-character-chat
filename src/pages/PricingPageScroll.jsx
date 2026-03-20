@@ -105,6 +105,8 @@ const PricingPageScroll = () => {
     { name: 'Access Your Complete Conversation History', free: false, premium: true },
     { name: 'Roundtable Discussions', free: false, premium: true },
     { name: 'Invite Friends into Conversations', free: false, premium: true },
+    { name: 'Character-led Bible Studies', free: false, premium: true },
+    { name: 'Bible Reading Plans', free: false, premium: true },
   ];
 
   const CheckIcon = ({ className = "w-6 h-6" }) => (
@@ -196,12 +198,6 @@ const PricingPageScroll = () => {
                     <span className="text-gray-700">Unlimited chats</span>
                   </li>
                   <li className="flex items-center gap-3">
-                    <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span className="text-gray-700">No interruptions</span>
-                  </li>
-                  <li className="flex items-center gap-3">
                     <svg className="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -212,6 +208,12 @@ const PricingPageScroll = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     <span className="text-gray-400">Roundtable discussions</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-400">Bible Studies & Reading Plans</span>
                   </li>
                 </ul>
               </div>
@@ -263,7 +265,7 @@ const PricingPageScroll = () => {
                     <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-amber-900">Access complete conversation history</span>
+                    <span className="text-amber-900">Complete conversation history</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +277,13 @@ const PricingPageScroll = () => {
                     <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-amber-900">Invite friends into conversations</span>
+                    <span className="text-amber-900">Character-led Bible Studies</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="text-amber-900">Bible Reading Plans</span>
                   </li>
                 </ul>
               </div>
