@@ -137,14 +137,14 @@ const StripeTestPage: React.FC = () => {
   // Handle the test for monthly subscription
   const handleTestMonthly = () => {
     // Using the live price ID from the env file
-    const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY || 'price_1Rg4GcLh8PbWqwwD6RY18DBw';
+    const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_MONTHLY || 'price_1TD7N7Lh8PbWqwwDnM9Xb26I';
     createCheckoutSession(monthlyPriceId);
   };
 
   // Handle the test for yearly subscription
   const handleTestYearly = () => {
     // Using the live price ID from the env file
-    const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY || 'price_1Rg4dqLh8PbWqwwDQB5bW2Uc';
+    const yearlyPriceId = import.meta.env.VITE_STRIPE_PRICE_YEARLY || 'price_1TD7OsLh8PbWqwwDlvLA5jKg';
     createCheckoutSession(yearlyPriceId);
   };
 
