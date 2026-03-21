@@ -81,8 +81,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
             disabled:bg-gray-100 disabled:text-gray-500
             ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}
           `}
-          rows={1}
-          style={{ minHeight: '50px', maxHeight: '150px' }}
+          rows={3}
+          style={{ minHeight: '80px', maxHeight: '150px' }}
         />
         
         <button

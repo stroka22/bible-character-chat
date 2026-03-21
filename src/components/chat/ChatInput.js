@@ -71,7 +71,7 @@ const ChatInput = ({
             focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200
             disabled:bg-gray-100 disabled:text-gray-500
             ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}
-          `, rows: 1, style: { minHeight: '50px', maxHeight: '150px' } }), _jsx("button", { type: "submit", disabled: !message.trim() || disabled || isTyping, className: `
+          `, rows: 3, style: { minHeight: '80px', maxHeight: '150px' } }), _jsx("button", { type: "submit", disabled: !message.trim() || disabled || isTyping, className: `
             absolute bottom-2 right-2 rounded-full p-2
             transition-colors duration-200
             ${message.trim() && !disabled && !isTyping
