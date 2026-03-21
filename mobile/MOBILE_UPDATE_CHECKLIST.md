@@ -217,7 +217,7 @@ Test that mobile loads:
 
 ### Paywall.tsx
 - [x] Exists in mobile
-- [ ] Verify pricing: $6.99/month, $49.99/year
+- [ ] Verify pricing: $5.99/month, $59.99/year
 - [ ] Check in-app purchases work (iOS/Android)
 - [ ] Verify premium features gate properly
 
