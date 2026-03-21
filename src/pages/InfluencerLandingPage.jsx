@@ -284,8 +284,8 @@ const InfluencerLandingPage = () => {
                       FULL ACCESS
                     </div>
                     <h3 className="font-bold text-amber-900 text-lg mb-2">Premium</h3>
-                    <p className="text-3xl font-bold text-amber-800 mb-1">$6.99<span className="text-sm font-normal">/month</span></p>
-                    <p className="text-amber-600 text-sm mb-4">or $49.99/year (save 40%)</p>
+                    <p className="text-3xl font-bold text-amber-800 mb-1">$5.99<span className="text-sm font-normal">/month</span></p>
+                    <p className="text-amber-600 text-sm mb-4">or $59.99/year</p>
                     <ul className="text-amber-700 text-sm space-y-2 mb-6">
                       <li>✓ <strong>Unlimited</strong> conversations</li>
                       <li>✓ All 90+ characters</li>

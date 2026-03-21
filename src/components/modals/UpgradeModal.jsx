@@ -178,7 +178,7 @@ const UpgradeModal = ({
           </div>
           
           <div className="text-sm text-gray-500 mb-4">
-            Starting at just $9.97/month or save with our annual plan.
+            Starting at just $5.99/month or save with our annual plan.
           </div>
         </div>
         

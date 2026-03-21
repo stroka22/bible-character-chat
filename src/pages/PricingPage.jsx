@@ -32,7 +32,7 @@ const PricingPage = () => {
   const [configResult, setConfigResult] = useState(null);
 
   const selectedPriceId = billingPeriod === 'monthly' ? SUBSCRIPTION_PRICES.MONTHLY : SUBSCRIPTION_PRICES.YEARLY;
-  const displayPrice = billingPeriod === 'monthly' ? '$9.97' : '$97.97';
+  const displayPrice = billingPeriod === 'monthly' ? '$5.99' : '$59.99';
   const displayPeriod = billingPeriod === 'monthly' ? '/month' : '/year';
 
   useEffect(() => {

@@ -40,7 +40,7 @@ const DirectStripePage: React.FC = () => {
           {/* Monthly Subscription Card */}
           <div className="bg-white/20 backdrop-blur-md rounded-xl p-6 border border-white/20">
             <h2 className="text-2xl font-bold text-yellow-300 mb-2">Monthly Subscription</h2>
-            <p className="text-blue-100 mb-4">$9.97 per month</p>
+            <p className="text-blue-100 mb-4">$5.99 per month</p>
             <ul className="text-white/90 text-sm mb-6 space-y-2">
               <li className="flex items-start">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
@@ -74,7 +74,7 @@ const DirectStripePage: React.FC = () => {
           {/* Yearly Subscription Card */}
           <div className="bg-white/20 backdrop-blur-md rounded-xl p-6 border border-white/20">
             <h2 className="text-2xl font-bold text-yellow-300 mb-2">Yearly Subscription</h2>
-            <p className="text-blue-100 mb-4">$97.97 per year (Save 17%)</p>
+            <p className="text-blue-100 mb-4">$59.99 per year (Save 17%)</p>
             <ul className="text-white/90 text-sm mb-6 space-y-2">
               <li className="flex items-start">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400 mr-2 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
