@@ -361,8 +361,8 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
           </div>
           
           <div className="p-6 space-y-4">
-            {/* My Walk */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            {/* My Walk - Superadmin only */}
+            <div className={`flex items-center justify-between p-4 bg-gray-50 rounded-lg ${isSuperAdmin ? 'hover:bg-gray-100' : 'opacity-75'} transition-colors`}>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
                   <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,12 +372,16 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
                 <div>
                   <p className="font-semibold text-gray-900">My Walk Dashboard</p>
                   <p className="text-sm text-gray-500">Progress tracking, conversation history, study stats</p>
+                  {!isSuperAdmin && (
+                    <p className="text-xs text-amber-600 mt-1">Locked - Contact support to modify</p>
+                  )}
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setSettings(prev => ({ ...prev, myWalkRequiresPremium: !prev.myWalkRequiresPremium }))}
-                className={`relative w-14 h-7 rounded-full transition-colors ${settings.myWalkRequiresPremium ? 'bg-amber-500' : 'bg-gray-300'}`}
+                onClick={() => isSuperAdmin && setSettings(prev => ({ ...prev, myWalkRequiresPremium: !prev.myWalkRequiresPremium }))}
+                disabled={!isSuperAdmin}
+                className={`relative w-14 h-7 rounded-full transition-colors ${settings.myWalkRequiresPremium ? 'bg-amber-500' : 'bg-gray-300'} ${!isSuperAdmin ? 'cursor-not-allowed' : ''}`}
               >
                 <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.myWalkRequiresPremium ? 'left-8' : 'left-1'}`} />
                 <span className="sr-only">{settings.myWalkRequiresPremium ? 'Premium' : 'Free'}</span>
