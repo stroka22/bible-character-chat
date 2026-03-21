@@ -455,25 +455,6 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
               </div>
             )}
           </div>
-          
-          {/* Character Limit - informational only */}
-          <div className="p-6">
-            <div className="bg-gray-50 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <label className="block font-semibold text-gray-900">Free Characters</label>
-                  <p className="text-xs text-gray-500">Select which characters are available to free users in the Characters tab</p>
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-center text-gray-800">{settings.freeCharacters.length} characters</p>
-              <p className="text-xs text-gray-500 mt-2 text-center">currently set as free</p>
-            </div>
-          </div>
         </section>
       )}
 
