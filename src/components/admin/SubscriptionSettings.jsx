@@ -23,8 +23,8 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
   // Settings state
   const [settings, setSettings] = useState({
     myWalkRequiresPremium: true,
-    savingRequiresPremium: true,
     roundtableRequiresPremium: true,
+    messageLimitEnabled: false,
     freeMessageLimit: 50,
     freeCharacterLimit: 10,
     freeCharacters: [],
@@ -75,8 +75,8 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
         if (tierSettings) {
           setSettings({
             myWalkRequiresPremium: tierSettings?.premiumRoundtableGates?.myWalkRequiresPremium !== false,
-            savingRequiresPremium: tierSettings?.premiumRoundtableGates?.savingRequiresPremium !== false,
             roundtableRequiresPremium: tierSettings?.premiumRoundtableGates?.premiumOnly !== false,
+            messageLimitEnabled: tierSettings?.messageLimitEnabled === true,
             freeMessageLimit: tierSettings?.freeMessageLimit || 50,
             freeCharacterLimit: tierSettings?.freeCharacterLimit || 10,
             freeCharacters: tierSettings?.freeCharacters || [],
@@ -167,6 +167,7 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
       
       const updatedSettings = {
         ...currentSettings,
+        messageLimitEnabled: settings.messageLimitEnabled,
         freeMessageLimit: settings.freeMessageLimit,
         freeCharacterLimit: settings.freeCharacterLimit,
         freeCharacters: settings.freeCharacters,
@@ -175,7 +176,6 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
         premiumRoundtableGates: {
           ...(currentSettings.premiumRoundtableGates || {}),
           myWalkRequiresPremium: settings.myWalkRequiresPremium,
-          savingRequiresPremium: settings.savingRequiresPremium,
           premiumOnly: settings.roundtableRequiresPremium,
         },
         lastUpdated: new Date().toISOString(),
@@ -384,28 +384,6 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
               </button>
             </div>
 
-            {/* Saving Conversations */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900">Saving Conversations</p>
-                  <p className="text-sm text-gray-500">Save and access past conversations</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSettings(prev => ({ ...prev, savingRequiresPremium: !prev.savingRequiresPremium }))}
-                className={`relative w-14 h-7 rounded-full transition-colors ${settings.savingRequiresPremium ? 'bg-amber-500' : 'bg-gray-300'}`}
-              >
-                <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.savingRequiresPremium ? 'left-8' : 'left-1'}`} />
-              </button>
-            </div>
-
             {/* Roundtable */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div className="flex items-center gap-4">
@@ -439,30 +417,47 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
             <p className="text-gray-600 text-sm">Set usage limits for free accounts</p>
           </div>
           
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Message Limit Toggle */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-900">Message Limit</label>
-                  <p className="text-xs text-gray-500">Per conversation</p>
+                  <p className="font-semibold text-gray-900">Message Limit</p>
+                  <p className="text-sm text-gray-500">Show upgrade prompt after X messages per conversation</p>
                 </div>
               </div>
-              <input
-                type="number"
-                min="1"
-                max="1000"
-                value={settings.freeMessageLimit}
-                onChange={(e) => setSettings(prev => ({ ...prev, freeMessageLimit: parseInt(e.target.value) || 50 }))}
-                className="w-full px-4 py-3 text-2xl font-bold text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              />
-              <p className="text-xs text-gray-500 mt-2 text-center">messages before prompting upgrade</p>
+              <button
+                type="button"
+                onClick={() => setSettings(prev => ({ ...prev, messageLimitEnabled: !prev.messageLimitEnabled }))}
+                className={`relative w-14 h-7 rounded-full transition-colors ${settings.messageLimitEnabled ? 'bg-amber-500' : 'bg-gray-300'}`}
+              >
+                <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.messageLimitEnabled ? 'left-8' : 'left-1'}`} />
+              </button>
             </div>
             
+            {/* Message limit number input - only show when enabled */}
+            {settings.messageLimitEnabled && (
+              <div className="mt-4 ml-16 max-w-xs">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Messages before upgrade prompt</label>
+                <input
+                  type="number"
+                  min="5"
+                  max="1000"
+                  value={settings.freeMessageLimit}
+                  onChange={(e) => setSettings(prev => ({ ...prev, freeMessageLimit: parseInt(e.target.value) || 50 }))}
+                  className="w-full px-4 py-2 text-lg font-bold text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Character Limit - informational only */}
+          <div className="p-6">
             <div className="bg-gray-50 rounded-xl p-5">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -471,32 +466,12 @@ const SubscriptionSettings = ({ ownerSlug: propOwnerSlug, isSuperAdmin = false }
                   </svg>
                 </div>
                 <div>
-                  <label className="block font-semibold text-gray-900">Character Limit</label>
-                  <p className="text-xs text-gray-500">Free character access</p>
+                  <label className="block font-semibold text-gray-900">Free Characters</label>
+                  <p className="text-xs text-gray-500">Select which characters are available to free users in the Characters tab</p>
                 </div>
               </div>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value={settings.freeCharacterLimit}
-                onChange={(e) => setSettings(prev => ({ ...prev, freeCharacterLimit: parseInt(e.target.value) || 10 }))}
-                className="w-full px-4 py-3 text-2xl font-bold text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-              />
-              <p className="text-xs text-gray-500 mt-2 text-center">characters available to free users</p>
-            </div>
-          </div>
-          
-          {/* Not enforced notice */}
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div>
-                <p className="text-sm font-medium text-yellow-800">Coming Soon</p>
-                <p className="text-xs text-yellow-700 mt-1">These limits are saved but not currently enforced. They will be available in a future update.</p>
-              </div>
+              <p className="text-2xl font-bold text-center text-gray-800">{settings.freeCharacters.length} characters</p>
+              <p className="text-xs text-gray-500 mt-2 text-center">currently set as free</p>
             </div>
           </div>
         </section>

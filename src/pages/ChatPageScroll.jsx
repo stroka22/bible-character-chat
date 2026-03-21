@@ -19,6 +19,7 @@ import {
   LeaveConversationModal,
   WelcomeBackMessage,
 } from '../components/modals/ConversationUpgradePrompts';
+import MessageLimitHandler from '../components/chat/MessageLimitHandler';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
@@ -1930,6 +1931,13 @@ const ChatPageScroll = () => {
         characterName={character?.name}
         allowDismiss={true}
       />
+
+      {/* Message Limit Handler for Free Users */}
+      {isAuthenticated && !isPremium && (
+        <MessageLimitHandler
+          messageCount={messages.filter(m => m.role === 'user').length}
+        />
+      )}
 
       {/* Upgrade Prompts for Free Users */}
       {/* First message banner */}

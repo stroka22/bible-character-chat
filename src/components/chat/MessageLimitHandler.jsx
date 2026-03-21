@@ -1,81 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { usePremium } from '../../hooks/usePremium';
+import { getSettings as getTierSettings } from '../../services/tierSettingsService';
 import UpgradeModal from '../modals/UpgradeModal';
 
 /**
  * MessageLimitHandler Component
  * 
  * Monitors message count in a conversation and shows upgrade modal
- * when free users reach their message limit.
+ * when free users reach their message limit. Shows every X messages
+ * (similar to signup prompt behavior).
  * 
  * @param {Object} props
  * @param {React.ReactNode} props.children - Child components to render
- * @param {number} props.messageCount - Current number of messages in the conversation
- * @param {string} props.conversationId - ID of the current conversation
- * @param {function} props.onContinue - Optional callback when user dismisses modal but wants to continue
+ * @param {number} props.messageCount - Current number of user messages in the conversation
+ * @param {function} props.onContinue - Optional callback when user dismisses modal
  */
 const MessageLimitHandler = ({ 
   children, 
   messageCount = 0, 
-  conversationId,
   onContinue
 }) => {
-  const { user } = useAuth();
+  const { isPremium } = usePremium();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [messageLimit, setMessageLimit] = useState(5); // Default limit
-  const [hasShownModalForConversation, setHasShownModalForConversation] = useState(false);
+  const [messageLimit, setMessageLimit] = useState(50);
+  const [limitEnabled, setLimitEnabled] = useState(false);
+  const lastPromptCountRef = useRef(0);
   
-  // Load message limit from account tier settings
+  // Load message limit settings
   useEffect(() => {
-    try {
-      const settingsJson = localStorage.getItem('accountTierSettings');
-      if (settingsJson) {
-        const settings = JSON.parse(settingsJson);
-        if (settings.freeMessageLimit) {
-          setMessageLimit(settings.freeMessageLimit);
+    const loadSettings = async () => {
+      try {
+        const settings = await getTierSettings();
+        if (settings) {
+          setLimitEnabled(settings.messageLimitEnabled === true);
+          setMessageLimit(settings.freeMessageLimit || 50);
         }
+      } catch (error) {
+        console.error('Error loading message limit settings:', error);
       }
-      
-      // Check if we've already shown the modal for this conversation
-      if (conversationId) {
-        const shownModals = JSON.parse(localStorage.getItem('shownUpgradeModals') || '{}');
-        if (shownModals[conversationId]) {
-          setHasShownModalForConversation(true);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading message limit settings:', error);
-    }
-  }, [conversationId]);
+    };
+    loadSettings();
+  }, []);
   
-  // Check if user has premium access
-  const hasPremiumAccess = () => {
-    // This would typically check a subscription status from your auth system
-    // For now, we'll assume admin users have premium access
-    return user?.is_admin === true;
-  };
-  
-  // Check if message limit is reached
+  // Check if message limit is reached - show every X messages
   useEffect(() => {
+    if (!limitEnabled || isPremium) return;
+    
+    // Show prompt at messageLimit, messageLimit*2, messageLimit*3, etc.
     if (
-      messageCount >= messageLimit && // Has reached or exceeded the limit
-      !hasPremiumAccess() && // Is not a premium user
-      !hasShownModalForConversation && // Hasn't seen the modal for this conversation
-      conversationId // Has a valid conversation ID
+      messageCount >= messageLimit && 
+      messageCount % messageLimit === 0 && 
+      messageCount > lastPromptCountRef.current
     ) {
       setShowUpgradeModal(true);
-      
-      // Mark this conversation as having shown the modal
-      try {
-        const shownModals = JSON.parse(localStorage.getItem('shownUpgradeModals') || '{}');
-        shownModals[conversationId] = true;
-        localStorage.setItem('shownUpgradeModals', JSON.stringify(shownModals));
-        setHasShownModalForConversation(true);
-      } catch (error) {
-        console.error('Error saving modal shown state:', error);
-      }
+      lastPromptCountRef.current = messageCount;
     }
-  }, [messageCount, messageLimit, conversationId, hasShownModalForConversation]);
+  }, [messageCount, messageLimit, limitEnabled, isPremium]);
   
   // Handle modal close
   const handleCloseModal = () => {
