@@ -1814,9 +1814,16 @@ const ChatPageScroll = () => {
       {/* Chat Header with Actions - clean minimal styling */}
       <div className="flex items-center gap-2 sm:gap-3 py-2 sm:py-3 border-b border-amber-200/30">
         <button
-          onClick={handleBackToCharacters}
+          onClick={() => {
+            if (bibleStudyContext) {
+              // Navigate back to study page with progress
+              navigate(`/studies/${bibleStudyContext.studyId}${bibleStudyContext.progressId ? `?progress=${bibleStudyContext.progressId}` : ''}`);
+            } else {
+              handleBackToCharacters();
+            }
+          }}
           className="p-1.5 sm:p-2 hover:bg-amber-100 rounded-full transition-colors flex-shrink-0"
-          title="Back to characters"
+          title={bibleStudyContext ? "Back to study" : "Back to characters"}
         >
           <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -2070,7 +2077,6 @@ const ChatPageScroll = () => {
       </div>
 
       {/* Bible Study Controls Bar */}
-      {console.log('[ChatPageScroll] Bible Study bar check:', { bibleStudyContext, hasUser: !!user })}
       {bibleStudyContext && user && (
         <div className="bg-amber-100/80 border-b border-amber-200 px-3 py-2">
           <div className="flex items-center justify-between gap-2">
