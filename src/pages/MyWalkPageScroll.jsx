@@ -66,7 +66,7 @@ const FavoriteCharacterCard = ({ character, isFeatured, onToggleFavorite, onSetF
 const MyWalkPageScroll = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const { isPremium } = usePremium();
+  const { isPremium, loading: premiumLoading } = usePremium();
   const {
     conversations = [],
     fetchConversations,
@@ -108,12 +108,13 @@ const MyWalkPageScroll = () => {
       }
     };
     
-    if (user && !loading) {
+    // Wait for premium check to complete before deciding
+    if (user && !loading && !premiumLoading) {
       checkPremiumGate();
-    } else if (!loading) {
+    } else if (!loading && !premiumLoading) {
       setPremiumCheckDone(true);
     }
-  }, [user, loading, isPremium]);
+  }, [user, loading, premiumLoading, isPremium]);
   
   // UI State - check URL for initial tab
   const [activeTab, setActiveTab] = useState(() => {

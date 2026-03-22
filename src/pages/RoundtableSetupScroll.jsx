@@ -12,7 +12,7 @@ import PreviewLayout from '../components/PreviewLayout';
 const RoundtableSetupScroll = () => {
   const navigate = useNavigate();
   const { startRoundtable } = useRoundtable();
-  const { isPremium } = usePremium();
+  const { isPremium, loading: premiumLoading } = usePremium();
   
   const [characters, setCharacters] = useState([]);
   const [selectedCharacterIds, setSelectedCharacterIds] = useState([]);
@@ -327,15 +327,15 @@ const RoundtableSetupScroll = () => {
             <div className="flex justify-center mt-6">
               <button
                 type="submit"
-                disabled={isLoading || selectedCharacterIds.length === 0 || !topic.trim()}
+                disabled={isLoading || premiumLoading || selectedCharacterIds.length === 0 || !topic.trim()}
                 className={`
                   px-8 py-3 rounded-lg font-medium text-lg transition-colors
-                  ${isLoading || selectedCharacterIds.length === 0 || !topic.trim()
+                  ${isLoading || premiumLoading || selectedCharacterIds.length === 0 || !topic.trim()
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg'}
                 `}
               >
-                {isLoading ? "Setting up..." : "Start Roundtable"}
+                {isLoading ? "Setting up..." : premiumLoading ? "Checking status..." : "Start Roundtable"}
               </button>
             </div>
           </form>
