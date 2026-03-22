@@ -572,13 +572,12 @@ const ChatPageScroll = () => {
         );
         if (char && !cancelled) {
           const canChat = isPremium || isCharacterFree(char, tierSettings);
-          // Only select if not already selected (prevents infinite loop)
-          if (canChat && (!character || character.id !== char.id)) {
-            urlLoadedRef.current = urlKey; // Mark as loaded BEFORE selecting
+          // Only proceed if we haven't already loaded this URL
+          if (canChat && urlLoadedRef.current !== urlKey) {
+            urlLoadedRef.current = urlKey; // Mark as loaded BEFORE doing anything
             selectCharacter(char);
             
             // If this is a Bible Study context, set up the lesson context
-            // Note: We do this in a separate non-awaited call to avoid cancellation issues
             if (studyParam && lessonParam && setLessonContext) {
               loadBibleStudyContext(studyParam, lessonParam, setLessonContext);
             }
@@ -589,7 +588,7 @@ const ChatPageScroll = () => {
     loadFromUrl();
     
     return () => { cancelled = true; };
-  }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext]);
+  }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext, selectCharacter]);
 
   // Update URL when chat is saved (so refresh will reload conversation)
   useEffect(() => {
