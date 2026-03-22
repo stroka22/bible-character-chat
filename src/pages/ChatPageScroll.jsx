@@ -2070,6 +2070,7 @@ const ChatPageScroll = () => {
       </div>
 
       {/* Bible Study Controls Bar */}
+      {console.log('[ChatPageScroll] Bible Study bar check:', { bibleStudyContext, hasUser: !!user })}
       {bibleStudyContext && user && (
         <div className="bg-amber-100/80 border-b border-amber-200 px-3 py-2">
           <div className="flex items-center justify-between gap-2">
