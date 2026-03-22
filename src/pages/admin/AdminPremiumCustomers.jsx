@@ -1,7 +1,39 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
+
+// Download members as CSV
+function downloadCSV(members, filename = 'members.csv') {
+  const headers = ['Name', 'Email', 'Premium', 'Source', 'Status', 'Renews'];
+  const rows = members.map(m => [
+    m.display_name || '',
+    m.email || '',
+    m.isPremium ? 'Yes' : 'No',
+    m.premium_override && m.subscription?.isActive 
+      ? 'Override + Stripe' 
+      : m.premium_override 
+        ? 'Override' 
+        : m.subscription?.isActive 
+          ? 'Stripe' 
+          : '',
+    m.subscription?.status || '',
+    m.subscription?.currentPeriodEnd ? new Date(m.subscription.currentPeriodEnd * 1000).toLocaleDateString() : ''
+  ]);
+  
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+  ].join('\n');
+  
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 // Lightweight checker that mirrors stripe-safe behavior for listing subscriptions
 // Fetch active subscription by customer id, falling back to email if needed
@@ -135,6 +167,34 @@ export default function AdminPremiumCustomers() {
     return { total, premium };
   }, [members]);
 
+  // Toggle premium override for a member
+  const handleTogglePremium = useCallback(async (memberId, currentOverride) => {
+    const newOverride = !currentOverride;
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ premium_override: newOverride })
+        .eq('id', memberId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setMembers(prev => prev.map(m => 
+        m.id === memberId 
+          ? { ...m, premium_override: newOverride, isPremium: newOverride || m.subscription?.isActive }
+          : m
+      ));
+    } catch (e) {
+      console.error('Failed to toggle premium:', e);
+      alert('Failed to update premium status');
+    }
+  }, []);
+
+  const handleDownloadCSV = useCallback(() => {
+    const orgName = filterOrg === 'all' ? 'all-orgs' : filterOrg || ownerSlug;
+    downloadCSV(members, `members-${orgName}-${new Date().toISOString().split('T')[0]}.csv`);
+  }, [members, filterOrg, ownerSlug]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-700 to-blue-600 text-white p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
@@ -144,10 +204,10 @@ export default function AdminPremiumCustomers() {
             <span>&gt;</span>
             <Link to="/admin" className="text-yellow-300">Admin</Link>
             <span>&gt;</span>
-            <span>Premium Customers</span>
+            <span>Member Status</span>
           </div>
           <div className="flex items-center justify-between mt-2">
-            <h1 className="text-2xl font-bold">Premium Customers</h1>
+            <h1 className="text-2xl font-bold">Member Status</h1>
             <Link to="/admin" className="px-3 py-2 bg-yellow-400 text-blue-900 rounded">← Back to Admin</Link>
           </div>
           {isSuperadmin ? (
@@ -183,7 +243,19 @@ export default function AdminPremiumCustomers() {
         </div>
 
         <div className="bg-blue-800 rounded-lg shadow-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Members</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Members</h2>
+            <button
+              onClick={handleDownloadCSV}
+              disabled={members.length === 0}
+              className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded flex items-center gap-2 text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download CSV
+            </button>
+          </div>
           {loading ? (
             <div>Loading…</div>
           ) : error ? (
@@ -200,6 +272,7 @@ export default function AdminPremiumCustomers() {
                     {isSuperadmin && <th className="px-3 py-2">Org</th>}
                     {isSuperadmin && <th className="px-3 py-2">Role</th>}
                     <th className="px-3 py-2">Premium</th>
+                    <th className="px-3 py-2">Override</th>
                     <th className="px-3 py-2">Source</th>
                     <th className="px-3 py-2">Status</th>
                     <th className="px-3 py-2">Renews</th>
@@ -212,8 +285,21 @@ export default function AdminPremiumCustomers() {
                       <td className="px-3 py-2">{m.email || '—'}</td>
                       {isSuperadmin && <td className="px-3 py-2 text-xs">{m.owner_slug || '—'}</td>}
                       {isSuperadmin && <td className="px-3 py-2 text-xs">{m.role || 'user'}</td>}
-                      <td className="px-3 py-2">{m.isPremium ? 'Yes' : 'No'}</td>
                       <td className="px-3 py-2">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${m.isPremium ? 'bg-green-600' : 'bg-gray-600'}`}>
+                          {m.isPremium ? 'Premium' : 'Free'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <button
+                          onClick={() => handleTogglePremium(m.id, m.premium_override)}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${m.premium_override ? 'bg-green-500' : 'bg-gray-500'}`}
+                          title={m.premium_override ? 'Click to remove premium override' : 'Click to grant premium override'}
+                        >
+                          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${m.premium_override ? 'left-7' : 'left-1'}`} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-2 text-xs">
                         {m.premium_override && m.subscription?.isActive 
                           ? 'Override + Stripe' 
                           : m.premium_override 
@@ -222,8 +308,8 @@ export default function AdminPremiumCustomers() {
                               ? 'Stripe' 
                               : '—'}
                       </td>
-                      <td className="px-3 py-2">{m.subscription?.status || '—'}</td>
-                      <td className="px-3 py-2">{m.subscription?.currentPeriodEnd ? new Date(m.subscription.currentPeriodEnd * 1000).toLocaleDateString() : '—'}</td>
+                      <td className="px-3 py-2 text-xs">{m.subscription?.status || '—'}</td>
+                      <td className="px-3 py-2 text-xs">{m.subscription?.currentPeriodEnd ? new Date(m.subscription.currentPeriodEnd * 1000).toLocaleDateString() : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

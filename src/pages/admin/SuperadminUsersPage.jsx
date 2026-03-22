@@ -727,7 +727,7 @@ const SuperadminUsersPage = () => {
           
           <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Users</div>
           <nav className="px-2 pb-3 space-y-1">
-            <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
+            <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Member Status</Link>
             <Link to="/admin/invites" className="block px-3 py-2 rounded hover:bg-gray-100">Manage Invites</Link>
           </nav>
           

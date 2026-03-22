@@ -549,7 +549,7 @@ const AdminPage: React.FC = () => {
 
           <div className="px-4 pt-3 text-xs font-semibold text-gray-500 uppercase">Users</div>
           <nav className="px-2 pb-3 space-y-1">
-            <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Premium Members</Link>
+            <Link to="/admin/premium" className="block px-3 py-2 rounded hover:bg-gray-100">Member Status</Link>
             <Link to="/admin/invites" className="block px-3 py-2 rounded hover:bg-gray-100">Manage Invites</Link>
           </nav>
           
@@ -678,7 +678,7 @@ const AdminPage: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             <div className="p-4 bg-white rounded-md shadow border">
-              <div className="text-gray-900 font-semibold">Premium Members</div>
+              <div className="text-gray-900 font-semibold">Member Status</div>
               <div className="text-sm text-gray-600 mb-3">View members with active subscriptions under your organization.</div>
               <Link to="/admin/premium" className="inline-block px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Open</Link>
             </div>
