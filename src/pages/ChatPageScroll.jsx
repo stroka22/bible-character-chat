@@ -435,6 +435,7 @@ const ChatPageScroll = () => {
     toggleFavorite,
     isFavorite: isChatFavorite,
     hydrateFromConversation,
+    setLessonContext,
   } = useChat();
   
   // Conversation context for sharing and fetching
@@ -494,6 +495,8 @@ const ChatPageScroll = () => {
     const loadFromUrl = async () => {
       const params = new URLSearchParams(location.search);
       const charParam = params.get('character');
+      const studyParam = params.get('study');
+      const lessonParam = params.get('lesson');
       
       // If there's a conversationId in URL, load that conversation
       if (conversationId && fetchConversationWithMessages && hydrateFromConversation) {
@@ -516,12 +519,50 @@ const ChatPageScroll = () => {
           const canChat = isPremium || isCharacterFree(char, tierSettings);
           if (canChat) {
             selectCharacter(char);
+            
+            // If this is a Bible Study context, set up the lesson context
+            if (studyParam && lessonParam && setLessonContext) {
+              try {
+                const { bibleStudiesRepository } = await import('../repositories/bibleStudiesRepository');
+                const study = await bibleStudiesRepository.getStudyById(studyParam);
+                const lesson = await bibleStudiesRepository.getLessonByIndex(studyParam, parseInt(lessonParam, 10));
+                
+                if (study && lesson) {
+                  // Build context for the AI
+                  let context = `You are leading a Bible study discussion about "${study.title}". `;
+                  context += `The current lesson is "${lesson.title}". `;
+                  
+                  if (lesson.scripture_refs?.length > 0) {
+                    const refs = lesson.scripture_refs.map(r => typeof r === 'string' ? r : (r?.reference || '')).filter(Boolean).join(', ');
+                    if (refs) context += `Key scripture references: ${refs}. `;
+                  }
+                  
+                  if (lesson.summary) {
+                    context += `Lesson summary: ${lesson.summary} `;
+                  }
+                  
+                  if (lesson.prompts?.length > 0) {
+                    const prompts = lesson.prompts.map(p => typeof p === 'string' ? p : (p?.text || p?.prompt || '')).filter(Boolean);
+                    if (prompts.length > 0) {
+                      context += `Discussion questions to explore: ${prompts.join('; ')}. `;
+                    }
+                  }
+                  
+                  context += `Guide the conversation around these themes while staying in character. Help the user explore the biblical concepts and apply them to their life.`;
+                  
+                  setLessonContext(context);
+                  console.log('[ChatPageScroll] Set Bible Study lesson context');
+                }
+              } catch (err) {
+                console.error('Failed to load Bible Study context:', err);
+              }
+            }
           }
         }
       }
     };
     loadFromUrl();
-  }, [conversationId, location.search, characters, tierSettings, isPremium]);
+  }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext]);
 
   // Update URL when chat is saved (so refresh will reload conversation)
   useEffect(() => {
