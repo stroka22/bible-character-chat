@@ -498,6 +498,8 @@ const ChatPageScroll = () => {
       const studyParam = params.get('study');
       const lessonParam = params.get('lesson');
       
+      console.log('[ChatPageScroll] URL params:', { charParam, studyParam, lessonParam });
+      
       // If there's a conversationId in URL, load that conversation
       if (conversationId && fetchConversationWithMessages && hydrateFromConversation) {
         try {
@@ -522,10 +524,12 @@ const ChatPageScroll = () => {
             
             // If this is a Bible Study context, set up the lesson context
             if (studyParam && lessonParam && setLessonContext) {
+              console.log('[ChatPageScroll] Loading Bible Study context for study:', studyParam, 'lesson:', lessonParam);
               try {
                 const { bibleStudiesRepository } = await import('../repositories/bibleStudiesRepository');
                 const study = await bibleStudiesRepository.getStudyById(studyParam);
                 const lesson = await bibleStudiesRepository.getLessonByIndex(studyParam, parseInt(lessonParam, 10));
+                console.log('[ChatPageScroll] Loaded study:', study?.title, 'lesson:', lesson?.title);
                 
                 if (study && lesson) {
                   // Build context for the AI
