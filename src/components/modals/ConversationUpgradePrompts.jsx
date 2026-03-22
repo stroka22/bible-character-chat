@@ -211,6 +211,18 @@ export function MyWalkPremiumGate() {
             </li>
           </ul>
         </div>
+
+        {/* Kingdom impact message */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
+          <div className="flex items-start">
+            <svg className="h-5 w-5 text-amber-600 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 4.22 2.53C11.09 5.01 12.76 4 14.5 4 17 4 19 6 19 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            <p className="text-amber-900 text-sm">
+              Your subscription helps advance God's Kingdom by supporting the ongoing development and spiritual growth of Christian disciples by increasing the outreach potential of FaithTalk AI.
+            </p>
+          </div>
+        </div>
         
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
