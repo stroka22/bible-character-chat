@@ -8,15 +8,9 @@ import { listPublishedFaqs } from '../services/faqs';
  * FAQPage Component
  * 
  * Displays frequently asked questions in an organized, expandable format.
- * Pulls data from the same source used by the admin FAQ editor.
+ * Merges default FAQs with database FAQs - defaults take priority for matching questions.
  */
 const FAQPage = () => {
-  /* ------------------------------------------------------------------
-   * Constants
-   * ------------------------------------------------------------------ */
-  const FAQ_STORAGE_KEY = 'faithTalkAI_faqs';
-  const LEGACY_KEY = 'faqItems';
-
   const [faqs, setFaqs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [expandedQuestions, setExpandedQuestions] = useState({});
@@ -24,154 +18,75 @@ const FAQPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load FAQs – prefer Supabase, then fallback to localStorage / network / defaults
+  // Default FAQs - always included, merged with database FAQs
+  const defaultFaqs = [
+    // General
+    { id: 'default-1', category: 'General', question: 'What is FaithTalkAI?', answer: 'FaithTalkAI is an AI-powered platform that lets you have meaningful conversations with Biblical characters, explore guided Bible studies and reading plans, and participate in roundtable discussions with multiple characters at once.', isVisible: true },
+    { id: 'default-2', category: 'General', question: 'Is this a replacement for Bible study?', answer: 'No. FaithTalkAI is designed to supplement your faith journey, not replace traditional Bible study, church attendance, or pastoral counsel. Think of it as a companion tool to help you engage with Scripture in a new and interactive way.', isVisible: true },
+    { id: 'default-3', category: 'General', question: 'How accurate are the character responses?', answer: 'Our AI characters are trained on Biblical scripture and historical context to provide thoughtful, scripturally-grounded responses. However, they are AI interpretations and should not be considered authoritative theological sources. Always refer to Scripture and trusted spiritual leaders for guidance.', isVisible: true },
+    
+    // Features
+    { id: 'default-4', category: 'Features', question: 'How many characters can I chat with?', answer: 'We have over 50 Biblical characters available, including figures from both the Old and New Testaments such as Moses, David, Paul, Mary, and many more.', isVisible: true },
+    { id: 'default-5', category: 'Features', question: 'What is a Roundtable discussion?', answer: 'A Roundtable brings multiple Biblical characters together to discuss a topic from their unique perspectives. You can select 2-5 characters and watch them engage with each other and with you on topics like faith, forgiveness, leadership, and more.', isVisible: true },
+    { id: 'default-6', category: 'Features', question: 'What are Bible Studies?', answer: 'Our guided Bible Studies are multi-lesson journeys through Scripture with AI-powered conversation. Each lesson includes a reading passage, discussion questions, and the ability to chat with a relevant Biblical character about what you\'re learning.', isVisible: true },
+    { id: 'default-7', category: 'Features', question: 'What are Reading Plans?', answer: 'Reading Plans help you establish a daily Bible reading habit. Choose from various plans covering topics like foundational readings, book studies, topical studies, and more. Track your progress and pick up where you left off.', isVisible: true },
+    { id: 'default-8', category: 'Features', question: 'What is My Walk?', answer: 'My Walk is your personal dashboard (Premium feature) where you can view all your saved conversations, continue past chats, track your Bible study and reading plan progress, and see your spiritual journey at a glance.', isVisible: true },
+    
+    // Account & Pricing
+    { id: 'default-9', category: 'Account & Pricing', question: 'What\'s included in the free plan?', answer: 'Free accounts get unlimited conversations with all characters. However, you won\'t be able to access your conversation history later or use premium features like My Walk, Roundtables, and Invite Friends.', isVisible: true },
+    { id: 'default-10', category: 'Account & Pricing', question: 'What does Premium include?', answer: 'Premium ($5.99/month or $59.99/year) unlocks My Walk dashboard to access all your saved conversations, Roundtable discussions with multiple characters, the ability to invite friends to conversations, and priority support.', isVisible: true },
+    { id: 'default-11', category: 'Account & Pricing', question: 'How do I upgrade to Premium?', answer: 'Tap the "Upgrade" button in the app or visit our Pricing page. You can subscribe monthly or yearly through the App Store (iOS) or directly through our website.', isVisible: true },
+    { id: 'default-12', category: 'Account & Pricing', question: 'Can I cancel my subscription?', answer: 'Yes, you can cancel anytime. For iOS subscriptions, manage them in your Apple ID settings. For web subscriptions, visit your account settings. You\'ll retain Premium access until the end of your billing period.', isVisible: true },
+    
+    // Technical
+    { id: 'default-13', category: 'Technical', question: 'Is my data private?', answer: 'Yes. Your conversations are private and stored securely. We do not share your personal conversations with third parties. See our Privacy Policy for full details.', isVisible: true },
+    { id: 'default-14', category: 'Technical', question: 'Can I use FaithTalkAI on multiple devices?', answer: 'Yes! Sign in with the same account on any device - iOS app or web browser - and your account and Premium status will sync across all devices.', isVisible: true },
+    { id: 'default-15', category: 'Technical', question: 'What if I encounter a problem?', answer: 'Contact us at support@FaithTalkAI.com and we\'ll help you resolve any issues. You can also use the Contact form on our website.', isVisible: true },
+  ];
+
   useEffect(() => {
     setIsLoading(true);
     (async () => {
-      /* --------------------------------------------------------------
-       * 0) Try Supabase (shared, server-backed)
-       * ------------------------------------------------------------ */
       try {
-        const supaFaqs = await listPublishedFaqs();
-        if (Array.isArray(supaFaqs) && supaFaqs.length > 0) {
-          setFaqs(supaFaqs);
-          const uniqueCategories = [
-            ...new Set(supaFaqs.map(f => f.category || 'General')),
-          ];
-          setCategories(uniqueCategories);
-          const initCat = {};
-          uniqueCategories.forEach(c => (initCat[c] = true));
-          setExpandedCategories(initCat);
-
-          // cache in localStorage for offline / anon users
-          try {
-            localStorage.setItem(
-              FAQ_STORAGE_KEY,
-              JSON.stringify(supaFaqs),
-            );
-          } catch {
-            /* quota ignored */
-          }
-          setIsLoading(false);
-          return; // success, stop further fallbacks
-        }
+        const dbData = await listPublishedFaqs();
+        
+        // Merge: defaults take priority, db FAQs with non-matching questions are added
+        const normalizeQuestion = (q) => q.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const defaultQuestions = new Set(defaultFaqs.map(f => normalizeQuestion(f.question)));
+        
+        // Filter out db FAQs that match default questions (defaults win)
+        const uniqueDbFaqs = (dbData || []).filter(
+          dbFaq => !defaultQuestions.has(normalizeQuestion(dbFaq.question))
+        );
+        
+        // Combine: defaults first, then unique db FAQs
+        const mergedFaqs = [...defaultFaqs, ...uniqueDbFaqs];
+        
+        setFaqs(mergedFaqs);
+        
+        // Build categories with our preferred order
+        const uniqueCats = [...new Set(mergedFaqs.map(f => f.category || 'General'))];
+        const orderedCats = ['General', 'Features', 'Account & Pricing', 'Technical'];
+        const otherCats = uniqueCats.filter(c => !orderedCats.includes(c));
+        const finalCats = [...orderedCats.filter(c => uniqueCats.includes(c)), ...otherCats];
+        setCategories(finalCats);
+        
+        // Initialize all categories as expanded
+        const initCat = {};
+        finalCats.forEach(c => (initCat[c] = true));
+        setExpandedCategories(initCat);
       } catch (err) {
-        console.warn('[FAQPage] Supabase fetch failed, falling back:', err);
-      }
-
-      /* ------------------------------------------------------------------
-       * Existing fallback chain: localStorage → /faq.json → defaults
-       * ------------------------------------------------------------------ */
-    try {
-      /* --------------------------------------------------------------
-       * 1) Try localStorage (new key first, then legacy)
-       * ------------------------------------------------------------ */
-      const savedFaqsRaw =
-        localStorage.getItem(FAQ_STORAGE_KEY) ||
-        localStorage.getItem(LEGACY_KEY);
-
-      if (savedFaqsRaw) {
-        const parsedFaqs = JSON.parse(savedFaqsRaw);
-        setFaqs(parsedFaqs);
-        
-        // Extract unique categories
-        const uniqueCategories = [...new Set(parsedFaqs.map(faq => faq.category || 'General'))];
-        setCategories(uniqueCategories);
-        
-        // Initialize all categories as expanded
-        const initialExpandedCategories = {};
-        uniqueCategories.forEach(category => {
-          initialExpandedCategories[category] = true;
-        });
-        setExpandedCategories(initialExpandedCategories);
-
-        // Ensure data is written back with new key for future reads
-        try {
-          localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(parsedFaqs));
-        } catch {/* ignore quota errors */}
-
-      } else {
-        /* --------------------------------------------------------------
-         * 2) Try network fetch (/faq.json) for a shared FAQ resource
-         *    (wrapped in an async IIFE to avoid top-level await)
-         * ------------------------------------------------------------ */
-        (async () => {
-          const fetchRemoteFaqs = async () => {
-            try {
-              const res = await fetch('/faq.json', { credentials: 'omit' });
-              if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                  localStorage.setItem(FAQ_STORAGE_KEY, JSON.stringify(data));
-                  return data;
-                }
-              }
-            } catch {
-              /* network failure ignored – will fallback */
-            }
-            return null;
-          };
-
-          const remoteFaqs = await fetchRemoteFaqs();
-
-          if (remoteFaqs) {
-            setFaqs(remoteFaqs);
-            const uniqueCategories = [...new Set(remoteFaqs.map(faq => faq.category || 'General'))];
-            setCategories(uniqueCategories);
-            const initialExpandedCategories = {};
-            uniqueCategories.forEach(cat => { initialExpandedCategories[cat] = true; });
-            setExpandedCategories(initialExpandedCategories);
-            return; // exit early on success
-          }
-
-          /* ----------------------------------------------------------
-           * 3) Final fallback – hard-coded defaults
-           * -------------------------------------------------------- */
-        const defaultFaqs = [
-          // General
-          { id: '1', category: 'General', question: 'What is FaithTalkAI?', answer: 'FaithTalkAI is an AI-powered platform that lets you have meaningful conversations with Biblical characters, explore guided Bible studies and reading plans, and participate in roundtable discussions with multiple characters at once.', isVisible: true },
-          { id: '2', category: 'General', question: 'Is this a replacement for Bible study?', answer: 'No. FaithTalkAI is designed to supplement your faith journey, not replace traditional Bible study, church attendance, or pastoral counsel. Think of it as a companion tool to help you engage with Scripture in a new and interactive way.', isVisible: true },
-          { id: '3', category: 'General', question: 'How accurate are the character responses?', answer: 'Our AI characters are trained on Biblical scripture and historical context to provide thoughtful, scripturally-grounded responses. However, they are AI interpretations and should not be considered authoritative theological sources. Always refer to Scripture and trusted spiritual leaders for guidance.', isVisible: true },
-          
-          // Features
-          { id: '4', category: 'Features', question: 'How many characters can I chat with?', answer: 'We have over 50 Biblical characters available, including figures from both the Old and New Testaments such as Moses, David, Paul, Mary, and many more.', isVisible: true },
-          { id: '5', category: 'Features', question: 'What is a Roundtable discussion?', answer: 'A Roundtable brings multiple Biblical characters together to discuss a topic from their unique perspectives. You can select 2-5 characters and watch them engage with each other and with you on topics like faith, forgiveness, leadership, and more.', isVisible: true },
-          { id: '6', category: 'Features', question: 'What are Bible Studies?', answer: 'Our guided Bible Studies are multi-lesson journeys through Scripture with AI-powered conversation. Each lesson includes a reading passage, discussion questions, and the ability to chat with a relevant Biblical character about what you\'re learning.', isVisible: true },
-          { id: '7', category: 'Features', question: 'What are Reading Plans?', answer: 'Reading Plans help you establish a daily Bible reading habit. Choose from various plans covering topics like foundational readings, book studies, topical studies, and more. Track your progress and pick up where you left off.', isVisible: true },
-          { id: '8', category: 'Features', question: 'What is My Walk?', answer: 'My Walk is your personal dashboard (Premium feature) where you can view all your saved conversations, continue past chats, track your Bible study and reading plan progress, and see your spiritual journey at a glance.', isVisible: true },
-          
-          // Account & Pricing
-          { id: '9', category: 'Account & Pricing', question: 'What\'s included in the free plan?', answer: 'Free accounts get unlimited conversations with all characters. However, you won\'t be able to access your conversation history later or use premium features like My Walk, Roundtables, and Invite Friends.', isVisible: true },
-          { id: '10', category: 'Account & Pricing', question: 'What does Premium include?', answer: 'Premium ($5.99/month or $59.99/year) unlocks My Walk dashboard to access all your saved conversations, Roundtable discussions with multiple characters, the ability to invite friends to conversations, and priority support.', isVisible: true },
-          { id: '11', category: 'Account & Pricing', question: 'How do I upgrade to Premium?', answer: 'Tap the "Upgrade" button in the app or visit our Pricing page. You can subscribe monthly or yearly through the App Store (iOS) or directly through our website.', isVisible: true },
-          { id: '12', category: 'Account & Pricing', question: 'Can I cancel my subscription?', answer: 'Yes, you can cancel anytime. For iOS subscriptions, manage them in your Apple ID settings. For web subscriptions, visit your account settings. You\'ll retain Premium access until the end of your billing period.', isVisible: true },
-          
-          // Technical
-          { id: '13', category: 'Technical', question: 'Is my data private?', answer: 'Yes. Your conversations are private and stored securely. We do not share your personal conversations with third parties. See our Privacy Policy for full details.', isVisible: true },
-          { id: '14', category: 'Technical', question: 'Can I use FaithTalkAI on multiple devices?', answer: 'Yes! Sign in with the same account on any device - iOS app or web browser - and your account and Premium status will sync across all devices.', isVisible: true },
-          { id: '15', category: 'Technical', question: 'What if I encounter a problem?', answer: 'Contact us at support@FaithTalkAI.com and we\'ll help you resolve any issues. You can also use the Contact form on our website.', isVisible: true },
-        ];
-        
+        console.error('Error loading FAQs:', err);
+        // On error, just use defaults
         setFaqs(defaultFaqs);
-        
-        // Extract unique categories from default FAQs
-        const uniqueCategories = ['General', 'Features', 'Account & Pricing', 'Technical'];
-        setCategories(uniqueCategories);
-        
-        // Initialize all categories as expanded
-        const initialExpandedCategories = {};
-        uniqueCategories.forEach(category => {
-          initialExpandedCategories[category] = true;
-        });
-        setExpandedCategories(initialExpandedCategories);
-        })(); // end IIFE
+        const defaultCats = ['General', 'Features', 'Account & Pricing', 'Technical'];
+        setCategories(defaultCats);
+        const initCat = {};
+        defaultCats.forEach(c => (initCat[c] = true));
+        setExpandedCategories(initCat);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error('Error loading FAQs:', err);
-      setError('Failed to load FAQ content. Please try again later.');
-    } finally {
-      setIsLoading(false);
-    }
     })();
   }, []);
 
