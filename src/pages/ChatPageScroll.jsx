@@ -487,6 +487,11 @@ const ChatPageScroll = () => {
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const [hasConversationHistory, setHasConversationHistory] = useState(false);
   
+  // Bible Study context tracking
+  const [bibleStudyContext, setBibleStudyContext] = useState(null); // { studyId, lessonIndex, studyTitle, lessonTitle, progressId }
+  const [isLessonComplete, setIsLessonComplete] = useState(false);
+  const [isSavingStudyProgress, setIsSavingStudyProgress] = useState(false);
+  
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
@@ -496,7 +501,7 @@ const ChatPageScroll = () => {
   const studyContextLoadedRef = useRef(null);
   
   // Helper to load Bible Study context and auto-generate intro
-  const loadBibleStudyContext = async (studyId, lessonIdx, setContext, triggerIntro) => {
+  const loadBibleStudyContext = async (studyId, lessonIdx, progressId, setContext, triggerIntro) => {
     const contextKey = `${studyId}-${lessonIdx}`;
     if (studyContextLoadedRef.current === contextKey) return;
     studyContextLoadedRef.current = contextKey;
@@ -508,6 +513,25 @@ const ChatPageScroll = () => {
       console.log('[ChatPageScroll] Loaded study:', study?.title, 'lesson:', lesson?.title);
       
       if (study && lesson) {
+        // Store Bible Study context for UI (progress buttons, back link)
+        const lessonIndex = parseInt(lessonIdx, 10);
+        setBibleStudyContext({
+          studyId,
+          lessonIndex,
+          studyTitle: study.title,
+          lessonTitle: lesson.title,
+          progressId: progressId || null
+        });
+        
+        // Check if lesson is already complete
+        if (user?.id && progressId) {
+          try {
+            const progress = await bibleStudiesRepository.getProgress({ userId: user.id, studyId, progressId });
+            const completed = Array.isArray(progress?.completed_lessons) ? progress.completed_lessons : [];
+            setIsLessonComplete(completed.includes(lessonIndex));
+          } catch {}
+        }
+        
         // Build a comprehensive study context similar to mobile app
         const parts = [];
         
@@ -566,6 +590,7 @@ const ChatPageScroll = () => {
       const charParam = params.get('character');
       const studyParam = params.get('study');
       const lessonParam = params.get('lesson');
+      const progressParam = params.get('progress');
       
       // Create a key for this URL state to prevent duplicate loading
       const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}`;
@@ -602,7 +627,7 @@ const ChatPageScroll = () => {
             
             // If this is a Bible Study context, set up the lesson context and auto-generate intro
             if (isBibleStudy && setLessonContext) {
-              loadBibleStudyContext(studyParam, lessonParam, setLessonContext, sendMessage);
+              loadBibleStudyContext(studyParam, lessonParam, progressParam, setLessonContext, sendMessage);
             }
           }
         }
@@ -871,6 +896,68 @@ const ChatPageScroll = () => {
   // Handle back to characters
   const handleBackToCharacters = () => {
     resetChat();
+  };
+
+  // Bible Study: Save progress
+  const handleSaveStudyProgress = async () => {
+    if (!user?.id || !bibleStudyContext) return;
+    setIsSavingStudyProgress(true);
+    try {
+      const updated = await bibleStudiesRepository.saveProgress({
+        userId: user.id,
+        studyId: bibleStudyContext.studyId,
+        progressId: bibleStudyContext.progressId || undefined,
+        currentLessonIndex: bibleStudyContext.lessonIndex
+      });
+      setBibleStudyContext(prev => ({ ...prev, progressId: updated.id }));
+    } catch (err) {
+      console.error('Error saving study progress:', err);
+    } finally {
+      setIsSavingStudyProgress(false);
+    }
+  };
+
+  // Bible Study: Toggle lesson complete
+  const handleToggleLessonComplete = async () => {
+    if (!user?.id || !bibleStudyContext) return;
+    setIsSavingStudyProgress(true);
+    try {
+      // Get current progress
+      let progress = null;
+      if (bibleStudyContext.progressId) {
+        progress = await bibleStudiesRepository.getProgress({ 
+          userId: user.id, 
+          studyId: bibleStudyContext.studyId, 
+          progressId: bibleStudyContext.progressId 
+        });
+      }
+      
+      const completed = Array.isArray(progress?.completed_lessons) ? [...progress.completed_lessons] : [];
+      const idx = completed.indexOf(bibleStudyContext.lessonIndex);
+      const willBeComplete = idx < 0;
+      
+      if (willBeComplete) {
+        completed.push(bibleStudyContext.lessonIndex);
+        completed.sort((a, b) => a - b);
+      } else {
+        completed.splice(idx, 1);
+      }
+      
+      const updated = await bibleStudiesRepository.saveProgress({
+        userId: user.id,
+        studyId: bibleStudyContext.studyId,
+        progressId: bibleStudyContext.progressId || undefined,
+        currentLessonIndex: bibleStudyContext.lessonIndex,
+        completedLessons: completed
+      });
+      
+      setBibleStudyContext(prev => ({ ...prev, progressId: updated.id }));
+      setIsLessonComplete(willBeComplete);
+    } catch (err) {
+      console.error('Error toggling lesson complete:', err);
+    } finally {
+      setIsSavingStudyProgress(false);
+    }
   };
 
   // Show action message helper
@@ -1980,6 +2067,56 @@ const ChatPageScroll = () => {
           </div>
         </div>
       </div>
+
+      {/* Bible Study Controls Bar */}
+      {bibleStudyContext && user && (
+        <div className="bg-amber-100/80 border-b border-amber-200 px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            {/* Back to Study link */}
+            <Link 
+              to={`/studies/${bibleStudyContext.studyId}${bibleStudyContext.progressId ? `?progress=${bibleStudyContext.progressId}` : ''}`}
+              className="text-amber-700 hover:text-amber-900 text-sm flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Study
+            </Link>
+            
+            {/* Progress buttons */}
+            <div className="flex items-center gap-2">
+              {/* Save Progress button */}
+              {!isLessonComplete && (
+                <button
+                  onClick={handleSaveStudyProgress}
+                  disabled={isSavingStudyProgress}
+                  className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:bg-amber-400 transition-colors"
+                >
+                  {isSavingStudyProgress ? 'Saving...' : bibleStudyContext.progressId ? 'Save Progress' : 'Save to My Walk'}
+                </button>
+              )}
+              
+              {/* Mark Complete button */}
+              <button
+                onClick={handleToggleLessonComplete}
+                disabled={isSavingStudyProgress}
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  isLessonComplete 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'bg-white text-amber-800 border border-amber-300 hover:bg-amber-50'
+                }`}
+              >
+                {isSavingStudyProgress ? 'Saving...' : isLessonComplete ? '✓ Complete' : 'Mark Complete'}
+              </button>
+            </div>
+          </div>
+          
+          {/* Study/Lesson title */}
+          <div className="text-xs text-amber-600 mt-1 truncate">
+            {bibleStudyContext.studyTitle} • Lesson {bibleStudyContext.lessonIndex + 1}: {bibleStudyContext.lessonTitle}
+          </div>
+        </div>
+      )}
       
       {/* Rename Modal */}
       {showRenameModal && (
