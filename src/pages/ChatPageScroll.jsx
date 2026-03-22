@@ -493,6 +493,49 @@ const ChatPageScroll = () => {
   
   // Track if we've already loaded for current URL params
   const urlLoadedRef = useRef(null);
+  const studyContextLoadedRef = useRef(null);
+  
+  // Helper to load Bible Study context (called separately to avoid React re-render cancellation)
+  const loadBibleStudyContext = async (studyId, lessonIdx, setContext) => {
+    const contextKey = `${studyId}-${lessonIdx}`;
+    if (studyContextLoadedRef.current === contextKey) return;
+    studyContextLoadedRef.current = contextKey;
+    
+    console.log('[ChatPageScroll] Loading Bible Study context for study:', studyId, 'lesson:', lessonIdx);
+    try {
+      const study = await bibleStudiesRepository.getStudyById(studyId);
+      const lesson = await bibleStudiesRepository.getLessonByIndex(studyId, parseInt(lessonIdx, 10));
+      console.log('[ChatPageScroll] Loaded study:', study?.title, 'lesson:', lesson?.title);
+      
+      if (study && lesson) {
+        let context = `You are leading a Bible study discussion about "${study.title}". `;
+        context += `The current lesson is "${lesson.title}". `;
+        
+        if (lesson.scripture_refs?.length > 0) {
+          const refs = lesson.scripture_refs.map(r => typeof r === 'string' ? r : (r?.reference || '')).filter(Boolean).join(', ');
+          if (refs) context += `Key scripture references: ${refs}. `;
+        }
+        
+        if (lesson.summary) {
+          context += `Lesson summary: ${lesson.summary} `;
+        }
+        
+        if (lesson.prompts?.length > 0) {
+          const prompts = lesson.prompts.map(p => typeof p === 'string' ? p : (p?.text || p?.prompt || '')).filter(Boolean);
+          if (prompts.length > 0) {
+            context += `Discussion questions to explore: ${prompts.join('; ')}. `;
+          }
+        }
+        
+        context += `Guide the conversation around these themes while staying in character. Help the user explore the biblical concepts and apply them to their life.`;
+        
+        setContext(context);
+        console.log('[ChatPageScroll] Set Bible Study lesson context');
+      }
+    } catch (err) {
+      console.error('Failed to load Bible Study context:', err);
+    }
+  };
   
   // Load conversation from URL if conversationId or character param exists
   useEffect(() => {
@@ -535,44 +578,9 @@ const ChatPageScroll = () => {
             selectCharacter(char);
             
             // If this is a Bible Study context, set up the lesson context
+            // Note: We do this in a separate non-awaited call to avoid cancellation issues
             if (studyParam && lessonParam && setLessonContext) {
-              console.log('[ChatPageScroll] Loading Bible Study context for study:', studyParam, 'lesson:', lessonParam);
-              try {
-                const study = await bibleStudiesRepository.getStudyById(studyParam);
-                if (cancelled) return;
-                const lesson = await bibleStudiesRepository.getLessonByIndex(studyParam, parseInt(lessonParam, 10));
-                if (cancelled) return;
-                console.log('[ChatPageScroll] Loaded study:', study?.title, 'lesson:', lesson?.title);
-                
-                if (study && lesson) {
-                  // Build context for the AI
-                  let context = `You are leading a Bible study discussion about "${study.title}". `;
-                  context += `The current lesson is "${lesson.title}". `;
-                  
-                  if (lesson.scripture_refs?.length > 0) {
-                    const refs = lesson.scripture_refs.map(r => typeof r === 'string' ? r : (r?.reference || '')).filter(Boolean).join(', ');
-                    if (refs) context += `Key scripture references: ${refs}. `;
-                  }
-                  
-                  if (lesson.summary) {
-                    context += `Lesson summary: ${lesson.summary} `;
-                  }
-                  
-                  if (lesson.prompts?.length > 0) {
-                    const prompts = lesson.prompts.map(p => typeof p === 'string' ? p : (p?.text || p?.prompt || '')).filter(Boolean);
-                    if (prompts.length > 0) {
-                      context += `Discussion questions to explore: ${prompts.join('; ')}. `;
-                    }
-                  }
-                  
-                  context += `Guide the conversation around these themes while staying in character. Help the user explore the biblical concepts and apply them to their life.`;
-                  
-                  setLessonContext(context);
-                  console.log('[ChatPageScroll] Set Bible Study lesson context');
-                }
-              } catch (err) {
-                if (!cancelled) console.error('Failed to load Bible Study context:', err);
-              }
+              loadBibleStudyContext(studyParam, lessonParam, setLessonContext);
             }
           }
         }
