@@ -808,7 +808,12 @@ const ChatPageScroll = () => {
     try {
       const success = await saveChat();
       if (success) {
-        showActionMessage('Conversation saved!');
+        // Show different message for free vs premium users
+        if (isPremium) {
+          showActionMessage('Conversation saved!');
+        } else {
+          showActionMessage('Saved! Upgrade to Premium to access your saved conversations anytime.');
+        }
       } else {
         showActionMessage('Failed to save conversation', 'error');
       }
