@@ -86,6 +86,14 @@ const SuperadminUsersPage = () => {
   const [copyingContent, setCopyingContent] = useState(false);
   const [copyResult, setCopyResult] = useState(null);
   const [copyError, setCopyError] = useState('');
+
+  /* ─────────────────────────────────────────────
+   *  Delete Organization modal state (superadmin)
+   * ──────────────────────────────────────────── */
+  const [showDeleteOrg, setShowDeleteOrg] = useState(false);
+  const [deleteTargetOrg, setDeleteTargetOrg] = useState(null);
+  const [deletingOrg, setDeletingOrg] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   
   // Check if current user is superadmin
   useEffect(() => {
@@ -601,6 +609,71 @@ const SuperadminUsersPage = () => {
   };
 
   /* ─────────────────────────────────────────────
+   *  Delete Organization (superadmin)
+   * ──────────────────────────────────────────── */
+  const handleDeleteOrganization = async () => {
+    if (!isSuperAdmin || deletingOrg || !deleteTargetOrg) return;
+    
+    // Prevent deleting 'default' org
+    if (deleteTargetOrg.owner_slug === 'default') {
+      setDeleteError('Cannot delete the default organization');
+      return;
+    }
+
+    setDeleteError('');
+    setDeletingOrg(true);
+    
+    try {
+      // 1. Reassign all members to 'default' org
+      const { error: reassignError } = await supabase
+        .from('profiles')
+        .update({ owner_slug: 'default' })
+        .eq('owner_slug', deleteTargetOrg.owner_slug);
+      
+      if (reassignError) throw reassignError;
+
+      // 2. Delete org-specific tier settings if any
+      try {
+        await supabase
+          .from('tier_settings')
+          .delete()
+          .eq('owner_slug', deleteTargetOrg.owner_slug);
+      } catch (e) {
+        console.warn('No tier settings to delete or error:', e);
+      }
+
+      // 3. Delete the organization
+      const { error: deleteOrgError } = await supabase
+        .from('owners')
+        .delete()
+        .eq('owner_slug', deleteTargetOrg.owner_slug);
+      
+      if (deleteOrgError) throw deleteOrgError;
+
+      // Refresh owners list
+      await loadOwners();
+      
+      // Reset filter if we were viewing deleted org
+      if (filters.ownerSlug === deleteTargetOrg.owner_slug) {
+        handleFilterChange('ownerSlug', 'all');
+      }
+
+      setShowDeleteOrg(false);
+      setDeleteTargetOrg(null);
+      setActionMessage({
+        text: `Organization "${deleteTargetOrg.display_name || deleteTargetOrg.owner_slug}" deleted. Members reassigned to default.`,
+        type: 'success',
+      });
+    } catch (err) {
+      console.error('Failed to delete organization:', err);
+      setDeleteError(err.message || 'Failed to delete organization');
+    } finally {
+      setDeletingOrg(false);
+      setTimeout(() => setActionMessage({ text: '', type: '' }), 5000);
+    }
+  };
+
+  /* ─────────────────────────────────────────────
    *  Copy All Content to Organization (superadmin)
    * ──────────────────────────────────────────── */
   const handleCopyAllContent = async (e) => {
@@ -794,6 +867,33 @@ const SuperadminUsersPage = () => {
                 </button>
               </div>
             </div>
+            
+            {/* Organization List with Delete */}
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Organizations ({owners.length})</h4>
+              <div className="flex flex-wrap gap-2">
+                {owners.map(o => (
+                  <div key={o.owner_slug} className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-lg text-sm">
+                    <span className="text-gray-800">{o.display_name || o.owner_slug}</span>
+                    {o.owner_slug !== 'default' && (
+                      <button
+                        onClick={() => {
+                          setDeleteTargetOrg(o);
+                          setShowDeleteOrg(true);
+                          setDeleteError('');
+                        }}
+                        className="ml-1 p-0.5 text-gray-400 hover:text-red-600 transition-colors"
+                        title={`Delete ${o.display_name || o.owner_slug}`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
@@ -880,6 +980,69 @@ const SuperadminUsersPage = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ─────────────────────────────────────────────
+         *  Delete Organization Modal (superadmin only)
+         * ──────────────────────────────────────────── */}
+        {showDeleteOrg && deleteTargetOrg && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50"
+              onClick={() => !deletingOrg && setShowDeleteOrg(false)}
+            />
+
+            {/* Modal card */}
+            <div className="relative bg-white w-11/12 max-w-md rounded-lg shadow-xl p-6 z-10">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900">Delete Organization</h3>
+
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 font-medium">
+                  Are you sure you want to delete "{deleteTargetOrg.display_name || deleteTargetOrg.owner_slug}"?
+                </p>
+                <p className="text-red-700 text-sm mt-2">
+                  All members will be reassigned to the default organization. This action cannot be undone.
+                </p>
+              </div>
+
+              {deleteError && (
+                <div className="mb-3 p-2 rounded bg-red-100 text-red-700 text-sm border border-red-200">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteOrg(false);
+                    setDeleteTargetOrg(null);
+                    setDeleteError('');
+                  }}
+                  disabled={deletingOrg}
+                  className={`px-4 py-2 rounded-lg ${
+                    deletingOrg
+                      ? 'bg-gray-300 text-gray-500'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteOrganization}
+                  disabled={deletingOrg}
+                  className={`px-4 py-2 rounded-lg font-medium ${
+                    deletingOrg
+                      ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
+                >
+                  {deletingOrg ? 'Deleting...' : 'Delete Organization'}
+                </button>
+              </div>
             </div>
           </div>
         )}
