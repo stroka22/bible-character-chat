@@ -13,7 +13,7 @@ import { getActiveSubscription } from '../services/stripe';
 export function usePremium() {
   const { user, profile, refreshProfile } = useAuth();
   const [isPremium, setIsPremium] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true to prevent flash
   const [error, setError] = useState(null);
   const [lastCheckedUserId, setLastCheckedUserId] = useState(null);
   const pollingRef = useRef(null);
