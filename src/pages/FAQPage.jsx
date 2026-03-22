@@ -50,17 +50,17 @@ const FAQPage = () => {
       try {
         const dbData = await listPublishedFaqs();
         
-        // Merge: defaults take priority, db FAQs with non-matching questions are added
+        // DB FAQs take priority - only use defaults for questions not in DB
         const normalizeQuestion = (q) => q.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const defaultQuestions = new Set(defaultFaqs.map(f => normalizeQuestion(f.question)));
+        const dbQuestions = new Set((dbData || []).map(f => normalizeQuestion(f.question)));
         
-        // Filter out db FAQs that match default questions (defaults win)
-        const uniqueDbFaqs = (dbData || []).filter(
-          dbFaq => !defaultQuestions.has(normalizeQuestion(dbFaq.question))
+        // Filter defaults to only those NOT in database (DB controls visibility)
+        const fallbackDefaults = defaultFaqs.filter(
+          def => !dbQuestions.has(normalizeQuestion(def.question))
         );
         
-        // Combine: defaults first, then unique db FAQs
-        const mergedFaqs = [...defaultFaqs, ...uniqueDbFaqs];
+        // Combine: DB FAQs first (they're already filtered by is_published), then fallback defaults
+        const mergedFaqs = [...(dbData || []), ...fallbackDefaults];
         
         setFaqs(mergedFaqs);
         
