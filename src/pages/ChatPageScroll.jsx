@@ -491,8 +491,8 @@ const ChatPageScroll = () => {
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   
-  // Track if we've already loaded Bible Study context for current URL
-  const studyContextLoadedRef = useRef(null);
+  // Track if we've already loaded for current URL params
+  const urlLoadedRef = useRef(null);
   
   // Load conversation from URL if conversationId or character param exists
   useEffect(() => {
@@ -503,6 +503,12 @@ const ChatPageScroll = () => {
       const charParam = params.get('character');
       const studyParam = params.get('study');
       const lessonParam = params.get('lesson');
+      
+      // Create a key for this URL state to prevent duplicate loading
+      const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}`;
+      if (urlLoadedRef.current === urlKey) {
+        return; // Already loaded for this URL
+      }
       
       // If there's a conversationId in URL, load that conversation
       if (conversationId && fetchConversationWithMessages && hydrateFromConversation) {
@@ -523,14 +529,13 @@ const ChatPageScroll = () => {
         );
         if (char && !cancelled) {
           const canChat = isPremium || isCharacterFree(char, tierSettings);
-          if (canChat) {
+          // Only select if not already selected (prevents infinite loop)
+          if (canChat && (!character || character.id !== char.id)) {
+            urlLoadedRef.current = urlKey; // Mark as loaded BEFORE selecting
             selectCharacter(char);
             
             // If this is a Bible Study context, set up the lesson context
-            // Only load once per unique study+lesson combination
-            const contextKey = `${studyParam}-${lessonParam}`;
-            if (studyParam && lessonParam && setLessonContext && studyContextLoadedRef.current !== contextKey) {
-              studyContextLoadedRef.current = contextKey;
+            if (studyParam && lessonParam && setLessonContext) {
               console.log('[ChatPageScroll] Loading Bible Study context for study:', studyParam, 'lesson:', lessonParam);
               try {
                 const study = await bibleStudiesRepository.getStudyById(studyParam);
