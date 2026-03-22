@@ -2112,7 +2112,12 @@ const ChatPageScroll = () => {
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto py-4 space-y-4 px-1"
       >
-        {messages.map((msg, idx) => {
+        {messages.filter(msg => {
+          // Hide system messages and Bible Study trigger messages
+          if (msg.role === 'system') return false;
+          if (msg.content?.includes('[Begin the Bible study session now]')) return false;
+          return true;
+        }).map((msg, idx) => {
           const isUser = msg.role === 'user';
           return (
             <div key={msg.id || idx} className={`flex ${isUser ? 'justify-end' : 'justify-start'} pl-1`}>
