@@ -543,12 +543,13 @@ const ChatPageScroll = () => {
         setContext(context);
         console.log('[ChatPageScroll] Set Bible Study lesson context');
         
-        // Auto-trigger intro message after a short delay to ensure context is set
+        // Auto-trigger intro message after delay to ensure character and context are set
         if (triggerIntro) {
           setTimeout(() => {
             console.log('[ChatPageScroll] Auto-triggering Bible Study intro');
-            triggerIntro('[Begin the Bible study session now]');
-          }, 500);
+            // Use a hidden system-like prompt that won't show in chat
+            triggerIntro('Please begin this Bible study session with a prayer and introduction.');
+          }, 1000);
         }
       }
     } catch (err) {
@@ -2116,6 +2117,7 @@ const ChatPageScroll = () => {
           // Hide system messages and Bible Study trigger messages
           if (msg.role === 'system') return false;
           if (msg.content?.includes('[Begin the Bible study session now]')) return false;
+          if (msg.content?.includes('Please begin this Bible study session with a prayer')) return false;
           return true;
         }).map((msg, idx) => {
           const isUser = msg.role === 'user';
