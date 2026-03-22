@@ -56,3 +56,11 @@ export async function reorderFaq(id: string, order_index: number): Promise<void>
   const { error } = await supabase.from(table).update({ order_index }).eq('id', id);
   if (error) throw error;
 }
+
+export async function updateFaqVisibility(id: string, is_published: boolean): Promise<void> {
+  const { error } = await supabase
+    .from(table)
+    .update({ is_published, updated_at: new Date().toISOString() })
+    .eq('id', id);
+  if (error) throw error;
+}

@@ -5,6 +5,7 @@ import {
   listAllFaqs,
   upsertFaq as upsertFaqRow,
   deleteFaq as deleteFaqRow,
+  updateFaqVisibility,
 } from '../../services/faqs';
 
 /**
@@ -330,7 +331,7 @@ const AdminFAQEditor = () => {
     (async () => {
       if (isAdminUser) {
         try {
-          await upsertFaqRow({ id, is_published: nextPublished });
+          await updateFaqVisibility(id, nextPublished);
         } catch (err) {
           console.error('[AdminFAQEditor] Supabase toggle failed:', err);
         }
