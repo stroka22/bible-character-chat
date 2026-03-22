@@ -171,6 +171,8 @@ function PlanRow({ title, plans, userProgress, onStart, onRemove, icon, showRemo
               compact
             />
           ))}
+          {/* Spacer to ensure last card isn't cut off */}
+          <div className="flex-shrink-0 w-4" aria-hidden="true" />
         </div>
 
         {showRightArrow && (
