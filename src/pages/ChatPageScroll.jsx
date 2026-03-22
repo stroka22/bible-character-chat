@@ -508,27 +508,38 @@ const ChatPageScroll = () => {
       console.log('[ChatPageScroll] Loaded study:', study?.title, 'lesson:', lesson?.title);
       
       if (study && lesson) {
-        let context = `You are leading a Bible study discussion about "${study.title}". `;
-        context += `The current lesson is "${lesson.title}". `;
+        // Build a comprehensive study context similar to mobile app
+        const parts = [];
+        
+        // Include study's character_instructions if available (the "Study Prompt")
+        if (study.character_instructions) {
+          parts.push(`=== MANDATORY STUDY PROMPT (FOLLOW EXACTLY) ===\n${study.character_instructions}\n=== END MANDATORY STUDY PROMPT ===`);
+        }
+        
+        parts.push(`You are guiding a Bible study lesson.`);
+        parts.push(`Study: ${study.title}`);
+        parts.push(`Lesson: ${lesson.title}`);
         
         if (lesson.scripture_refs?.length > 0) {
           const refs = lesson.scripture_refs.map(r => typeof r === 'string' ? r : (r?.reference || '')).filter(Boolean).join(', ');
-          if (refs) context += `Key scripture references: ${refs}. `;
+          if (refs) parts.push(`Scripture: ${refs}`);
         }
         
         if (lesson.summary) {
-          context += `Lesson summary: ${lesson.summary} `;
+          parts.push(`Summary: ${lesson.summary}`);
         }
         
         if (lesson.prompts?.length > 0) {
           const prompts = lesson.prompts.map(p => typeof p === 'string' ? p : (p?.text || p?.prompt || '')).filter(Boolean);
           if (prompts.length > 0) {
-            context += `Discussion questions to explore: ${prompts.join('; ')}. `;
+            parts.push(`Lesson Instructions:\n${prompts.join('\n')}`);
           }
         }
         
-        context += `Guide the conversation around these themes while staying in character. Help the user explore the biblical concepts and apply them to their life.`;
+        // Add explicit instruction about prayer and structure
+        parts.push(`\nIMPORTANT: When beginning this study session, you MUST start with a sincere prayer about the lesson topic (2-3 sentences). After the prayer, greet the student warmly, introduce the lesson, and guide them through the discussion questions.`);
         
+        const context = parts.filter(Boolean).join('\n\n');
         setContext(context);
         console.log('[ChatPageScroll] Set Bible Study lesson context');
       }
