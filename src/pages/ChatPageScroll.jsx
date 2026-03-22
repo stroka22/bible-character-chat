@@ -1713,8 +1713,8 @@ const ChatPageScroll = () => {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
                   <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-amber-200 py-1 z-50 min-w-[160px]">
-                    {/* Invite - Premium only */}
-                    {isPremium && (
+                    {/* Invite - Premium only, show disabled for free users */}
+                    {isPremium ? (
                       <button
                         onClick={() => { handleInviteToChat(); setShowMobileMenu(false); }}
                         className="w-full px-4 py-2 text-left text-amber-800 hover:bg-amber-50 flex items-center gap-2 text-sm"
@@ -1724,6 +1724,13 @@ const ChatPageScroll = () => {
                         </svg>
                         Invite
                       </button>
+                    ) : (
+                      <div className="w-full px-4 py-2 text-left text-gray-400 flex items-center gap-2 text-sm cursor-not-allowed">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                        <span>Invite <span className="text-xs text-amber-600">(Premium)</span></span>
+                      </div>
                     )}
                     <button
                       onClick={() => { handleShareConversation(); setShowMobileMenu(false); }}
@@ -1783,17 +1790,29 @@ const ChatPageScroll = () => {
           
           {/* Desktop: Show all buttons inline */}
           <div className="hidden sm:flex items-center gap-1">
-            {/* Invite button - Premium only */}
-            {messages.length > 0 && isPremium && (
-              <button
-                onClick={handleInviteToChat}
-                className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
-                title="Invite to chat"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </button>
+            {/* Invite button - Premium only, show disabled for free users */}
+            {messages.length > 0 && (
+              isPremium ? (
+                <button
+                  onClick={handleInviteToChat}
+                  className="p-2 hover:bg-amber-100 rounded-full transition-colors text-amber-500 flex-shrink-0"
+                  title="Invite to chat"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  className="p-2 rounded-full text-gray-300 flex-shrink-0 cursor-not-allowed"
+                  title="Inviting others to your conversation is a premium feature"
+                  disabled
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                </button>
+              )
             )}
             
             {/* Share button */}
