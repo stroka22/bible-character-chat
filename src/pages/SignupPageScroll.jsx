@@ -65,9 +65,9 @@ const SignupPageScroll = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Check Your Email</h1>
-            <p className="text-amber-700 mb-6">We've sent a confirmation link to your email. Please verify your account to continue.</p>
-            <Link to="/login" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Go to Login</Link>
+            <h1 className="text-2xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Account Created!</h1>
+            <p className="text-amber-700 mb-6">Your account has been created successfully. You can now log in and start your faith journey.</p>
+            <Link to="/login" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Log In Now</Link>
           </ScrollWrap>
           </div>
         </ScrollBackground>
