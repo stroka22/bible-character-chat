@@ -131,6 +131,7 @@ const HeaderScroll = () => {
               { to: '/studies', label: 'Chat Guided Studies' },
               { to: '/how-it-works', label: 'How It Works' },
               { to: '/pricing', label: 'Pricing' },
+              { to: '/faq', label: 'FAQ' },
             ].map(({ to, label }) => (
               <Link 
                 key={to}
@@ -255,6 +256,7 @@ const HeaderScroll = () => {
               { to: '/studies', label: 'Chat Guided Studies' },
               { to: '/how-it-works', label: 'How It Works' },
               { to: '/pricing', label: 'Pricing' },
+              { to: '/faq', label: 'FAQ' },
             ].map(({ to, label }) => (
               <Link 
                 key={to}
