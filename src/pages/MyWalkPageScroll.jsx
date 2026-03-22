@@ -360,8 +360,8 @@ const MyWalkPageScroll = () => {
     );
   }
 
-  // Loading - include premiumLoading to avoid flashing the gate
-  if ((loading || premiumLoading || favLoading || conversationsLoading) && !hasAttemptedLoad) {
+  // Loading - always show loading while premium status is being checked
+  if (loading || premiumLoading || !premiumCheckDone) {
     return (
       <PreviewLayout>
         <ScrollBackground className="min-h-screen py-8 px-4">
@@ -376,8 +376,7 @@ const MyWalkPageScroll = () => {
   }
 
   // Premium gate - show full gate page for non-premium users when My Walk requires premium
-  // Don't show gate while premium status is still loading
-  if (premiumCheckDone && !premiumLoading && myWalkRequiresPremium && !isPremium && user) {
+  if (myWalkRequiresPremium && !isPremium && user) {
     return (
       <PreviewLayout>
         <MyWalkPremiumGate />
