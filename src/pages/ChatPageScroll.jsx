@@ -586,10 +586,13 @@ const ChatPageScroll = () => {
           // Only proceed if we haven't already loaded this URL
           if (canChat && urlLoadedRef.current !== urlKey) {
             urlLoadedRef.current = urlKey; // Mark as loaded BEFORE doing anything
-            selectCharacter(char);
+            
+            // If this is a Bible Study context, skip the generic greeting
+            const isBibleStudy = !!(studyParam && lessonParam);
+            selectCharacter(char, { skipGreeting: isBibleStudy });
             
             // If this is a Bible Study context, set up the lesson context
-            if (studyParam && lessonParam && setLessonContext) {
+            if (isBibleStudy && setLessonContext) {
               loadBibleStudyContext(studyParam, lessonParam, setLessonContext);
             }
           }
