@@ -495,8 +495,8 @@ const ChatPageScroll = () => {
   const urlLoadedRef = useRef(null);
   const studyContextLoadedRef = useRef(null);
   
-  // Helper to load Bible Study context (called separately to avoid React re-render cancellation)
-  const loadBibleStudyContext = async (studyId, lessonIdx, setContext) => {
+  // Helper to load Bible Study context and auto-generate intro
+  const loadBibleStudyContext = async (studyId, lessonIdx, setContext, triggerIntro) => {
     const contextKey = `${studyId}-${lessonIdx}`;
     if (studyContextLoadedRef.current === contextKey) return;
     studyContextLoadedRef.current = contextKey;
@@ -542,6 +542,14 @@ const ChatPageScroll = () => {
         const context = parts.filter(Boolean).join('\n\n');
         setContext(context);
         console.log('[ChatPageScroll] Set Bible Study lesson context');
+        
+        // Auto-trigger intro message after a short delay to ensure context is set
+        if (triggerIntro) {
+          setTimeout(() => {
+            console.log('[ChatPageScroll] Auto-triggering Bible Study intro');
+            triggerIntro('[Begin the Bible study session now]');
+          }, 500);
+        }
       }
     } catch (err) {
       console.error('Failed to load Bible Study context:', err);
@@ -591,9 +599,9 @@ const ChatPageScroll = () => {
             const isBibleStudy = !!(studyParam && lessonParam);
             selectCharacter(char, { skipGreeting: isBibleStudy });
             
-            // If this is a Bible Study context, set up the lesson context
+            // If this is a Bible Study context, set up the lesson context and auto-generate intro
             if (isBibleStudy && setLessonContext) {
-              loadBibleStudyContext(studyParam, lessonParam, setLessonContext);
+              loadBibleStudyContext(studyParam, lessonParam, setLessonContext, sendMessage);
             }
           }
         }
