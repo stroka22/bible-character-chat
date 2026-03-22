@@ -86,8 +86,8 @@ const Footer = () => {
               </a>
             </div>
             <p className="text-gray-300 mb-4">
-              <a href="mailto:contact@faithtalkai.com" className="hover:text-yellow-400 transition-colors">
-                contact@faithtalkai.com
+              <a href="mailto:support@FaithTalkAI.com" className="hover:text-yellow-400 transition-colors">
+                support@FaithTalkAI.com
               </a>
             </p>
             

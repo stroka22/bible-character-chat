@@ -168,8 +168,8 @@ const FooterScroll = () => {
             </div>
             
             <p className="text-amber-200/80 text-sm mb-4" style={{ fontFamily: 'Georgia, serif' }}>
-              <a href="mailto:contact@faithtalkai.com" className="hover:text-amber-200 transition-colors">
-                contact@faithtalkai.com
+              <a href="mailto:support@FaithTalkAI.com" className="hover:text-amber-200 transition-colors">
+                support@FaithTalkAI.com
               </a>
             </p>
             

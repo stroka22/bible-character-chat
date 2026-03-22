@@ -75,7 +75,7 @@ const AccessDeniedPage: React.FC = () => {
                   Need Access?
                 </h3>
                 <p className="text-xs text-gray-500">
-                  If you are a pastor or administrator who needs access to this area, please contact your system administrator or email <a href="mailto:support@biblechat.org" className="text-primary-600 hover:text-primary-500">support@biblechat.org</a> with your request.
+                  If you are a pastor or administrator who needs access to this area, please contact your system administrator or email <a href="mailto:support@FaithTalkAI.com" className="text-primary-600 hover:text-primary-500">support@FaithTalkAI.com</a> with your request.
                 </p>
               </div>
 
