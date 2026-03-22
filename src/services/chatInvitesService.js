@@ -22,13 +22,29 @@ export function generateInviteCode(len = 8) {
 }
 
 /**
- * Create a chat invite. Only chat owners can create.
+ * Create a chat invite. Only premium chat owners can create.
  */
 export async function createChatInvite(chatId, opts = {}) {
   if (!chatId) return { data: null, error: { message: 'Missing chatId' } };
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: null, error: { message: 'Not authenticated' } };
+
+  // Check premium status - invites are a premium feature
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('premium_override, stripe_customer_id')
+    .eq('id', user.id)
+    .single();
+  
+  // If not premium override, check for active subscription
+  if (!profile?.premium_override) {
+    // For now, just check if they have a stripe_customer_id as a basic gate
+    // The full subscription check happens in usePremium hook
+    if (!profile?.stripe_customer_id) {
+      return { data: null, error: { message: 'Invites require a premium subscription' } };
+    }
+  }
 
   // Compute defaults from tier settings
   let expiresAt = opts.expiresAt ?? null;
