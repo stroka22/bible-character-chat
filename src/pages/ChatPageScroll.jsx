@@ -24,6 +24,7 @@ import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
 import { createChatInvite } from '../services/chatInvitesService';
+import { bibleStudiesRepository } from '../repositories/bibleStudiesRepository';
 
 // Bible books for filtering
 const BIBLE_BOOKS = {
@@ -490,25 +491,28 @@ const ChatPageScroll = () => {
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   
+  // Track if we've already loaded Bible Study context for current URL
+  const studyContextLoadedRef = useRef(null);
+  
   // Load conversation from URL if conversationId or character param exists
   useEffect(() => {
+    let cancelled = false;
+    
     const loadFromUrl = async () => {
       const params = new URLSearchParams(location.search);
       const charParam = params.get('character');
       const studyParam = params.get('study');
       const lessonParam = params.get('lesson');
       
-      console.log('[ChatPageScroll] URL params:', { charParam, studyParam, lessonParam });
-      
       // If there's a conversationId in URL, load that conversation
       if (conversationId && fetchConversationWithMessages && hydrateFromConversation) {
         try {
           const conv = await fetchConversationWithMessages(conversationId);
-          if (conv) {
+          if (conv && !cancelled) {
             await hydrateFromConversation(conv);
           }
         } catch (err) {
-          console.error('Failed to load conversation:', err);
+          if (!cancelled) console.error('Failed to load conversation:', err);
         }
       }
       // If there's a character param, select that character
@@ -517,18 +521,22 @@ const ChatPageScroll = () => {
           String(c.id) === charParam || 
           c.name.toLowerCase() === charParam.toLowerCase()
         );
-        if (char) {
+        if (char && !cancelled) {
           const canChat = isPremium || isCharacterFree(char, tierSettings);
           if (canChat) {
             selectCharacter(char);
             
             // If this is a Bible Study context, set up the lesson context
-            if (studyParam && lessonParam && setLessonContext) {
+            // Only load once per unique study+lesson combination
+            const contextKey = `${studyParam}-${lessonParam}`;
+            if (studyParam && lessonParam && setLessonContext && studyContextLoadedRef.current !== contextKey) {
+              studyContextLoadedRef.current = contextKey;
               console.log('[ChatPageScroll] Loading Bible Study context for study:', studyParam, 'lesson:', lessonParam);
               try {
-                const { bibleStudiesRepository } = await import('../repositories/bibleStudiesRepository');
                 const study = await bibleStudiesRepository.getStudyById(studyParam);
+                if (cancelled) return;
                 const lesson = await bibleStudiesRepository.getLessonByIndex(studyParam, parseInt(lessonParam, 10));
+                if (cancelled) return;
                 console.log('[ChatPageScroll] Loaded study:', study?.title, 'lesson:', lesson?.title);
                 
                 if (study && lesson) {
@@ -558,7 +566,7 @@ const ChatPageScroll = () => {
                   console.log('[ChatPageScroll] Set Bible Study lesson context');
                 }
               } catch (err) {
-                console.error('Failed to load Bible Study context:', err);
+                if (!cancelled) console.error('Failed to load Bible Study context:', err);
               }
             }
           }
@@ -566,6 +574,8 @@ const ChatPageScroll = () => {
       }
     };
     loadFromUrl();
+    
+    return () => { cancelled = true; };
   }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext]);
 
   // Update URL when chat is saved (so refresh will reload conversation)
