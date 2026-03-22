@@ -515,6 +515,7 @@ const ChatPageScroll = () => {
       if (study && lesson) {
         // Store Bible Study context for UI (progress buttons, back link)
         const lessonIndex = parseInt(lessonIdx, 10);
+        console.log('[ChatPageScroll] Setting Bible Study context:', { studyId, lessonIndex, studyTitle: study.title, lessonTitle: lesson.title });
         setBibleStudyContext({
           studyId,
           lessonIndex,
