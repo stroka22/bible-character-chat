@@ -10,10 +10,26 @@ import { getActiveSubscription } from '../services/stripe';
  * @property {boolean} loading - Whether subscription status is being fetched
  * @property {string|null} error - Error message if subscription check failed
  */
+// Cache premium status in memory to prevent re-checking on navigation
+const premiumCache = { userId: null, isPremium: false, checked: false };
+
 export function usePremium() {
   const { user, profile, refreshProfile } = useAuth();
-  const [isPremium, setIsPremium] = useState(false);
-  const [loading, setLoading] = useState(true); // Start as true to prevent flash
+  
+  // Initialize from cache if available for this user
+  const [isPremium, setIsPremium] = useState(() => {
+    if (user && premiumCache.userId === user.id && premiumCache.checked) {
+      return premiumCache.isPremium;
+    }
+    return false;
+  });
+  const [loading, setLoading] = useState(() => {
+    // If we have a cached result for this user, don't show loading
+    if (user && premiumCache.userId === user.id && premiumCache.checked) {
+      return false;
+    }
+    return true;
+  });
   const [error, setError] = useState(null);
   const [lastCheckedUserId, setLastCheckedUserId] = useState(null);
   const pollingRef = useRef(null);
@@ -25,6 +41,10 @@ export function usePremium() {
       setLoading(false);
       setError(null);
       setLastCheckedUserId(null);
+      // Clear cache
+      premiumCache.userId = null;
+      premiumCache.isPremium = false;
+      premiumCache.checked = false;
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
         pollingRef.current = null;
@@ -50,6 +70,10 @@ export function usePremium() {
         
         setIsPremium(isActive);
         setLastCheckedUserId(user.id);
+        // Update cache
+        premiumCache.userId = user.id;
+        premiumCache.isPremium = isActive;
+        premiumCache.checked = true;
         if (isActive) {
           try {
             // Cross-tab/tab-local signal that subscription updated
@@ -78,6 +102,10 @@ export function usePremium() {
       setIsPremium(true);
       setLastCheckedUserId(user.id);
       setLoading(false);
+      // Update cache
+      premiumCache.userId = user.id;
+      premiumCache.isPremium = true;
+      premiumCache.checked = true;
       return;
     }
 
