@@ -97,10 +97,7 @@ const MyWalkPageScroll = () => {
         const requiresPremium = settings?.premiumRoundtableGates?.myWalkRequiresPremium !== false;
         setMyWalkRequiresPremium(requiresPremium);
         
-        // If requires premium and user is not premium, show promo
-        if (requiresPremium && !isPremium && user) {
-          setShowPromoModal(true);
-        }
+        // Note: We no longer show promo modal - free users see teaser view instead
       } catch (e) {
         console.error('Error checking premium gate:', e);
       } finally {
@@ -826,12 +823,6 @@ const MyWalkPageScroll = () => {
         </ScrollWrap>
       </ScrollBackground>
       <FooterScroll />
-      
-      {/* My Walk Premium Promo Modal */}
-      <MyWalkPromoModal
-        isOpen={showPromoModal}
-        onClose={() => setShowPromoModal(false)}
-      />
     </PreviewLayout>
   );
 };
