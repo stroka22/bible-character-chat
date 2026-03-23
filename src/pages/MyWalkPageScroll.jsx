@@ -445,7 +445,8 @@ const MyWalkPageScroll = () => {
             <div className="flex border-b border-amber-300 mb-4">
               {[
                 { key: 'chats', label: 'Chats', count: regularChats.length },
-                { key: 'roundtables', label: 'Roundtables', count: roundtables.length },
+                // Only show Roundtables tab for premium users
+                ...(isPremium ? [{ key: 'roundtables', label: 'Roundtables', count: roundtables.length }] : []),
                 { key: 'studies', label: 'Bible Studies', count: userStudies.length },
               ].map(tab => (
                 <button
@@ -546,8 +547,8 @@ const MyWalkPageScroll = () => {
               </>
             )}
 
-            {/* ROUNDTABLES TAB */}
-            {activeTab === 'roundtables' && (
+            {/* ROUNDTABLES TAB - Premium only */}
+            {activeTab === 'roundtables' && isPremium && (
               <>
                 {selectedRoundtableIds.size > 0 && (
                   <div className="flex items-center gap-3 mb-3 p-2 bg-red-100 border border-red-300 rounded-lg">
