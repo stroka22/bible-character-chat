@@ -428,42 +428,154 @@ const MyWalkPageScroll = () => {
           <section>
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
               <h2 className="text-xl font-bold text-amber-800" style={{ fontFamily: 'Cinzel, serif' }}>My Walk</h2>
-              <div className="flex items-center gap-2">
-                <label className="text-amber-700 text-sm">Sort by</label>
-                <select
-                  value={sortMode}
-                  onChange={(e) => setSortMode(e.target.value)}
-                  className="bg-white border border-amber-300 text-amber-800 text-sm rounded-lg px-2 py-1"
-                >
-                  <option value="recent">Most Recent</option>
-                  <option value="favorites">Favorites First</option>
-                </select>
+              {isPremium && (
+                <div className="flex items-center gap-2">
+                  <label className="text-amber-700 text-sm">Sort by</label>
+                  <select
+                    value={sortMode}
+                    onChange={(e) => setSortMode(e.target.value)}
+                    className="bg-white border border-amber-300 text-amber-800 text-sm rounded-lg px-2 py-1"
+                  >
+                    <option value="recent">Most Recent</option>
+                    <option value="favorites">Favorites First</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* FREE USER TEASER VIEW */}
+            {!isPremium && (
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-300 rounded-2xl p-6 mb-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                    Your Faith Journey Awaits
+                  </h3>
+                  <p className="text-amber-700">
+                    Unlock full access to continue your conversations and track your spiritual growth
+                  </p>
+                </div>
+
+                {/* Content Preview Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {/* Saved Chats Preview */}
+                  <div className="bg-white/80 rounded-xl p-4 border border-amber-200 text-center">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="text-3xl font-bold text-amber-900">{regularChats.length}</div>
+                    <div className="text-amber-600 text-sm">Saved Conversations</div>
+                    {regularChats.length > 0 && (
+                      <p className="text-amber-500 text-xs mt-2 italic">
+                        "{regularChats[0]?.title?.substring(0, 30) || 'Your conversation'}..."
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Roundtables Preview */}
+                  <div className="bg-white/80 rounded-xl p-4 border border-amber-200 text-center">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                      </svg>
+                    </div>
+                    <div className="text-3xl font-bold text-amber-900">{roundtables.length}</div>
+                    <div className="text-amber-600 text-sm">Roundtable Discussions</div>
+                    <p className="text-amber-500 text-xs mt-2">Premium feature</p>
+                  </div>
+
+                  {/* Bible Studies Preview */}
+                  <div className="bg-white/80 rounded-xl p-4 border border-amber-200 text-center">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                      </svg>
+                    </div>
+                    <div className="text-3xl font-bold text-amber-900">{userStudies.length}</div>
+                    <div className="text-amber-600 text-sm">Bible Studies in Progress</div>
+                    {userStudies.length > 0 && (
+                      <p className="text-amber-500 text-xs mt-2 italic">
+                        {userStudies[0]?.title?.substring(0, 25)}...
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Premium Benefits */}
+                <div className="bg-white/60 rounded-xl p-4 mb-6">
+                  <h4 className="font-bold text-amber-800 mb-3 text-center">With Premium, you can:</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-amber-700">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Continue past conversations anytime
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Host roundtable discussions
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Invite friends to conversations
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Track your spiritual growth
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    to="/pricing"
+                    className="px-8 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-colors text-center shadow-lg"
+                  >
+                    Upgrade to Premium — $5.99/month
+                  </Link>
+                  <Link
+                    to="/chat"
+                    className="px-6 py-3 bg-white text-amber-700 rounded-xl font-medium hover:bg-amber-50 transition-colors text-center border border-amber-300"
+                  >
+                    Continue Chatting Free
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Tabs */}
-            <div className="flex border-b border-amber-300 mb-4">
-              {[
-                { key: 'chats', label: 'Chats', count: regularChats.length },
-                // Only show Roundtables tab for premium users
-                ...(isPremium ? [{ key: 'roundtables', label: 'Roundtables', count: roundtables.length }] : []),
-                { key: 'studies', label: 'Bible Studies', count: userStudies.length },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    activeTab === tab.key
-                      ? 'text-amber-800 border-b-2 border-amber-600 -mb-[2px]'
-                      : 'text-amber-600 hover:text-amber-800'
-                  }`}
-                >
-                  {tab.label} ({tab.count})
-                </button>
-              ))}
-            </div>
+            {/* PREMIUM USER: Full Tabs and Content */}
+            {isPremium && (
+              <>
+                {/* Tabs */}
+                <div className="flex border-b border-amber-300 mb-4">
+                  {[
+                    { key: 'chats', label: 'Chats', count: regularChats.length },
+                    { key: 'roundtables', label: 'Roundtables', count: roundtables.length },
+                    { key: 'studies', label: 'Bible Studies', count: userStudies.length },
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
+                      className={`px-4 py-2 text-sm font-medium transition-colors ${
+                        activeTab === tab.key
+                          ? 'text-amber-800 border-b-2 border-amber-600 -mb-[2px]'
+                          : 'text-amber-600 hover:text-amber-800'
+                      }`}
+                    >
+                      {tab.label} ({tab.count})
+                    </button>
+                  ))}
+                </div>
 
-            {/* CHATS TAB */}
+                {/* CHATS TAB */}
             {activeTab === 'chats' && (
               <>
                 {selectedChatIds.size > 0 && (
@@ -712,6 +824,8 @@ const MyWalkPageScroll = () => {
                     })}
                   </div>
                 )}
+              </>
+            )}
               </>
             )}
           </section>
