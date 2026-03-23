@@ -375,14 +375,8 @@ const MyWalkPageScroll = () => {
     );
   }
 
-  // Premium gate - show full gate page for non-premium users when My Walk requires premium
-  if (myWalkRequiresPremium && !isPremium && user) {
-    return (
-      <PreviewLayout>
-        <MyWalkPremiumGate />
-      </PreviewLayout>
-    );
-  }
+  // Note: We no longer gate My Walk entirely - free users see a teaser view instead
+  // The teaser view is rendered inline below when !isPremium
 
   return (
     <PreviewLayout>
