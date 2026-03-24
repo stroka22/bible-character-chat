@@ -600,8 +600,12 @@ const ChatPageScroll = () => {
       }
       
       // If there's a conversationId in URL, load that conversation
-      if (conversationId && fetchConversationWithMessages && hydrateFromConversation) {
-        console.log('[ChatPageScroll] Loading conversation:', conversationId);
+      if (conversationId) {
+        console.log('[ChatPageScroll] Has conversationId:', conversationId, 'fetchFn:', !!fetchConversationWithMessages, 'hydrateFn:', !!hydrateFromConversation);
+        if (!fetchConversationWithMessages || !hydrateFromConversation) {
+          console.log('[ChatPageScroll] Waiting for context functions...');
+          return; // Wait for contexts to initialize
+        }
         urlLoadedRef.current = urlKey; // Mark as loaded
         try {
           const conv = await fetchConversationWithMessages(conversationId);
@@ -642,7 +646,7 @@ const ChatPageScroll = () => {
     loadFromUrl();
     
     return () => { cancelled = true; };
-  }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext, selectCharacter]);
+  }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext, selectCharacter, fetchConversationWithMessages, hydrateFromConversation, sendMessage]);
 
   // Update URL when chat is saved (so refresh will reload conversation)
   useEffect(() => {
