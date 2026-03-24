@@ -41,7 +41,7 @@ export function AuthProvider({ children }) {
         try {
             let { data, error, status } = await supabase
                 .from('profiles')
-                .select('id, role, email, display_name, avatar_url, owner_slug, weekly_csv_enabled')
+                .select('id, role, email, display_name, avatar_url, owner_slug, premium_override, weekly_csv_enabled')
                 .eq('id', uid)
                 .maybeSingle();
             console.log(`fetchProfile: Query completed with status ${status}`);
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
                     dbgwarn('fetchProfile: weekly_csv_enabled column missing; retrying without it');
                     const fallback = await supabase
                         .from('profiles')
-                        .select('id, role, email, display_name, avatar_url, owner_slug')
+                        .select('id, role, email, display_name, avatar_url, owner_slug, premium_override')
                         .eq('id', uid)
                         .maybeSingle();
                     status = fallback.status;
