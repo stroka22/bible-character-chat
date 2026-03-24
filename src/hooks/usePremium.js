@@ -98,7 +98,9 @@ export function usePremium() {
     }
 
     // If admin has granted manual premium override, short-circuit to premium
-    if (profile?.premium_override) {
+    console.log('[usePremium] Checking premium_override:', profile?.premium_override, 'profile:', profile?.id);
+    if (profile?.premium_override === true) {
+      console.log('[usePremium] Premium override granted by admin');
       setIsPremium(true);
       setLastCheckedUserId(user.id);
       setLoading(false);
