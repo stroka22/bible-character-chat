@@ -562,6 +562,7 @@ export const ChatProvider = ({ children }) => {
    */
   const hydrateFromConversation = useCallback((conversation) => {
     if (!conversation) return;
+    console.log('[ChatContext] hydrateFromConversation called:', conversation.id, 'messages:', conversation.messages?.length);
 
     try {
       // 1️⃣  Character (prefer embedded characters object)
@@ -628,6 +629,7 @@ export const ChatProvider = ({ children }) => {
 
       // Clear residual error
       setError(null);
+      console.log('[ChatContext] Hydration complete - chatId:', conversation.id, 'messages set:', normalisedMessages.length);
     } catch (err) {
       console.error('[ChatContext] Failed to hydrate from conversation:', err);
       setError('Unable to load conversation. Please try again.');
