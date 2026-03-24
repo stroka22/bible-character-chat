@@ -1884,6 +1884,49 @@ const ChatPageScroll = () => {
               )}
             </button>
           )}
+
+          {/* Bible Study: Save Progress (pause icon) - Premium only */}
+          {bibleStudyContext && user && (
+            <button
+              onClick={isPremium ? handleSaveStudyProgress : undefined}
+              disabled={isSavingStudyProgress || !isPremium}
+              className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${
+                isPremium 
+                  ? 'hover:bg-amber-100 text-amber-500' 
+                  : 'text-gray-300 cursor-not-allowed'
+              }`}
+              title={isPremium ? 'Save study progress' : 'Save progress (Premium feature)'}
+            >
+              {isSavingStudyProgress ? (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+          )}
+
+          {/* Bible Study: Mark Complete (checkmark icon) */}
+          {bibleStudyContext && user && (
+            <button
+              onClick={handleToggleLessonComplete}
+              disabled={isSavingStudyProgress}
+              className={`p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0 ${
+                isLessonComplete 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'hover:bg-amber-100 text-amber-500'
+              }`}
+              title={isLessonComplete ? 'Lesson complete - click to unmark' : 'Mark lesson complete'}
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill={isLessonComplete ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+          )}
           
           {/* Mobile: More options button */}
           {messages.length > 0 && (
@@ -2076,51 +2119,10 @@ const ChatPageScroll = () => {
         </div>
       </div>
 
-      {/* Bible Study Controls Bar */}
+      {/* Bible Study Context Bar - just shows study/lesson info */}
       {bibleStudyContext && user && (
-        <div className="bg-amber-100/80 border-b border-amber-200 px-3 py-2">
-          <div className="flex items-center justify-between gap-2">
-            {/* Back to Study link */}
-            <Link 
-              to={`/studies/${bibleStudyContext.studyId}${bibleStudyContext.progressId ? `?progress=${bibleStudyContext.progressId}` : ''}`}
-              className="text-amber-700 hover:text-amber-900 text-sm flex items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Study
-            </Link>
-            
-            {/* Progress buttons */}
-            <div className="flex items-center gap-2">
-              {/* Save Progress button */}
-              {!isLessonComplete && (
-                <button
-                  onClick={handleSaveStudyProgress}
-                  disabled={isSavingStudyProgress}
-                  className="px-3 py-1.5 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:bg-amber-400 transition-colors"
-                >
-                  {isSavingStudyProgress ? 'Saving...' : bibleStudyContext.progressId ? 'Save Progress' : 'Save to My Walk'}
-                </button>
-              )}
-              
-              {/* Mark Complete button */}
-              <button
-                onClick={handleToggleLessonComplete}
-                disabled={isSavingStudyProgress}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
-                  isLessonComplete 
-                    ? 'bg-green-600 text-white hover:bg-green-700' 
-                    : 'bg-white text-amber-800 border border-amber-300 hover:bg-amber-50'
-                }`}
-              >
-                {isSavingStudyProgress ? 'Saving...' : isLessonComplete ? '✓ Complete' : 'Mark Complete'}
-              </button>
-            </div>
-          </div>
-          
-          {/* Study/Lesson title */}
-          <div className="text-xs text-amber-600 mt-1 truncate">
+        <div className="bg-amber-100/80 border-b border-amber-200 px-3 py-1.5">
+          <div className="text-xs text-amber-700 truncate">
             {bibleStudyContext.studyTitle} • Lesson {bibleStudyContext.lessonIndex + 1}: {bibleStudyContext.lessonTitle}
           </div>
         </div>
