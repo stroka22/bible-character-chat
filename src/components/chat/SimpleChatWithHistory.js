@@ -578,9 +578,11 @@ const SimpleChatWithHistory = () => {
     useEffect(() => {
         const loadExisting = async () => {
             if (!conversationId) return;
+            console.log('[SimpleChatWithHistory] Loading conversation:', conversationId);
 
             try {
                 const conv = await fetchConversationWithMessages(conversationId);
+                console.log('[SimpleChatWithHistory] Fetched conv:', conv?.id, 'messages:', conv?.messages?.length, 'character:', conv?.character_id);
                 if (conv) {
                     // If this is a roundtable conversation, hydrate roundtable and redirect
                     const convType = (conv.type || conv.conversation_type || '').toLowerCase();
@@ -1110,10 +1112,14 @@ const SimpleChatWithHistory = () => {
                                                                 }
                                                                 for (const m of messages) {
                                                                     if (!m?.content || m.content.trim() === '') continue;
+                                                                    // Skip system and hidden trigger messages
+                                                                    if (m.role === 'system') continue;
+                                                                    if (m.content?.includes('[Begin the Bible study session now]')) continue;
+                                                                    if (m.content?.includes('Please begin this Bible study session with a prayer')) continue;
                                                                     if (m.role === 'user') {
-                                                                        lines.push(`You: ${m.content}`);
+                                                                        lines.push(`**You**: ${m.content}`);
                                                                     } else {
-                                                                        lines.push(`${character?.name || 'Assistant'}: ${m.content}`);
+                                                                        lines.push(`**${character?.name || 'Assistant'}**: ${m.content}`);
                                                                     }
                                                                 }
                                                                 const text = lines.join('\n');
@@ -1285,8 +1291,13 @@ const SimpleChatWithHistory = () => {
                                                             // If no public share URL, fallback to sharing conversation as text
                                                             if (!shareUrl) {
                                                               const conversationText = messages
-                                                                .filter(m => m.role !== 'system')
-                                                                .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Character'}: ${m.content}`)
+                                                                .filter(m => {
+                                                                  if (m.role === 'system') return false;
+                                                                  if (m.content?.includes('[Begin the Bible study session now]')) return false;
+                                                                  if (m.content?.includes('Please begin this Bible study session with a prayer')) return false;
+                                                                  return true;
+                                                                })
+                                                                .map(m => m.role === 'user' ? `**You**: ${m.content}` : `**${character?.name || 'Character'}**: ${m.content}`)
                                                                 .join('\n\n');
                                                               const shareText = `Conversation with ${character?.name || 'FaithTalk AI'}\n\n${conversationText}\n\n— via Faith Talk AI (faithtalkai.com)`;
                                                               
