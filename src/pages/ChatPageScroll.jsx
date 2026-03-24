@@ -601,14 +601,19 @@ const ChatPageScroll = () => {
       
       // If there's a conversationId in URL, load that conversation
       if (conversationId && fetchConversationWithMessages && hydrateFromConversation) {
+        console.log('[ChatPageScroll] Loading conversation:', conversationId);
+        urlLoadedRef.current = urlKey; // Mark as loaded
         try {
           const conv = await fetchConversationWithMessages(conversationId);
+          console.log('[ChatPageScroll] Fetched conversation:', conv?.id, 'messages:', conv?.messages?.length);
           if (conv && !cancelled) {
             await hydrateFromConversation(conv);
+            console.log('[ChatPageScroll] Hydrated conversation successfully');
           }
         } catch (err) {
-          if (!cancelled) console.error('Failed to load conversation:', err);
+          if (!cancelled) console.error('[ChatPageScroll] Failed to load conversation:', err);
         }
+        return; // Don't continue to character selection
       }
       // If there's a character param, select that character
       else if (charParam && characters.length > 0) {
@@ -967,13 +972,19 @@ const ChatPageScroll = () => {
     setTimeout(() => setActionMessage(null), 3000);
   };
 
-  // Format conversation for copying
+  // Format conversation for copying (with bold names)
   const formatConversationAsText = () => {
     if (!character || messages.length === 0) return '';
     const title = `Conversation with ${character.name}\n`;
     const date = `Date: ${new Date().toLocaleDateString()}\n\n`;
-    const formatted = messages.map(m => {
-      const speaker = m.role === 'user' ? 'You' : character.name;
+    const formatted = messages.filter(m => {
+      // Filter out hidden messages
+      if (m.role === 'system') return false;
+      if (m.content?.includes('[Begin the Bible study session now]')) return false;
+      if (m.content?.includes('Please begin this Bible study session with a prayer')) return false;
+      return true;
+    }).map(m => {
+      const speaker = m.role === 'user' ? '**You**' : `**${character.name}**`;
       return `${speaker}:\n${m.content}\n`;
     }).join('\n');
     return `${title}${date}${formatted}`;
