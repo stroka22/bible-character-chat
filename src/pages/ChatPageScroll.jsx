@@ -609,10 +609,13 @@ const ChatPageScroll = () => {
         urlLoadedRef.current = urlKey; // Mark as loaded
         try {
           const conv = await fetchConversationWithMessages(conversationId);
-          console.log('[ChatPageScroll] Fetched conversation:', conv?.id, 'messages:', conv?.messages?.length);
+          console.log('[ChatPageScroll] Fetched conversation:', conv?.id, 'messages:', conv?.messages?.length, 'character_id:', conv?.character_id);
           if (conv && !cancelled) {
+            console.log('[ChatPageScroll] About to call hydrateFromConversation...');
             await hydrateFromConversation(conv);
             console.log('[ChatPageScroll] Hydrated conversation successfully');
+          } else {
+            console.log('[ChatPageScroll] Skipped hydration - conv:', !!conv, 'cancelled:', cancelled);
           }
         } catch (err) {
           if (!cancelled) console.error('[ChatPageScroll] Failed to load conversation:', err);
