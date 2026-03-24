@@ -1839,11 +1839,22 @@ const ChatPageScroll = () => {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h2 className="font-extrabold text-amber-200 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
-            {character?.name}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-extrabold text-amber-200 truncate text-sm sm:text-base" style={{ fontFamily: 'Cinzel, serif' }}>
+              {character?.name}
+            </h2>
+            {bibleStudyContext && (
+              <span className="text-amber-400/70 text-xs truncate hidden sm:inline">
+                • {bibleStudyContext.studyTitle} - L{bibleStudyContext.lessonIndex + 1}
+              </span>
+            )}
+          </div>
           <p className="text-amber-300 text-xs">
-            {isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}
+            {bibleStudyContext 
+              ? <span className="sm:hidden">{bibleStudyContext.lessonTitle}</span>
+              : (isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat')
+            }
+            {bibleStudyContext && <span className="hidden sm:inline">{isChatSaved ? 'Saved' : messages.length > 1 ? 'Unsaved' : 'New chat'}</span>}
           </p>
         </div>
         
@@ -2119,14 +2130,7 @@ const ChatPageScroll = () => {
         </div>
       </div>
 
-      {/* Bible Study Context Bar - just shows study/lesson info */}
-      {bibleStudyContext && user && (
-        <div className="bg-amber-100/80 border-b border-amber-200 px-3 py-1.5">
-          <div className="text-xs text-amber-700 truncate">
-            {bibleStudyContext.studyTitle} • Lesson {bibleStudyContext.lessonIndex + 1}: {bibleStudyContext.lessonTitle}
-          </div>
-        </div>
-      )}
+
       
       {/* Rename Modal */}
       {showRenameModal && (
