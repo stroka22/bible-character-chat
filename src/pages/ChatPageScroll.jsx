@@ -979,7 +979,7 @@ const ChatPageScroll = () => {
     setTimeout(() => setActionMessage(null), 3000);
   };
 
-  // Format conversation for copying (with bold names)
+  // Format conversation for copying (with line breaks between messages)
   const formatConversationAsText = () => {
     if (!character || messages.length === 0) return '';
     const title = `Conversation with ${character.name}\n`;
@@ -991,9 +991,9 @@ const ChatPageScroll = () => {
       if (m.content?.includes('Please begin this Bible study session with a prayer')) return false;
       return true;
     }).map(m => {
-      const speaker = m.role === 'user' ? '**You**' : `**${character.name}**`;
-      return `${speaker}:\n${m.content}\n`;
-    }).join('\n');
+      const speaker = m.role === 'user' ? 'You' : character.name;
+      return `${speaker}:\n${m.content}`;
+    }).join('\n\n');
     return `${title}${date}${formatted}`;
   };
 

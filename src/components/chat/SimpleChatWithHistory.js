@@ -1117,9 +1117,9 @@ const SimpleChatWithHistory = () => {
                                                                     if (m.content?.includes('[Begin the Bible study session now]')) continue;
                                                                     if (m.content?.includes('Please begin this Bible study session with a prayer')) continue;
                                                                     if (m.role === 'user') {
-                                                                        lines.push(`**You**: ${m.content}`);
+                                                                        lines.push(`You:\n${m.content}\n`);
                                                                     } else {
-                                                                        lines.push(`**${character?.name || 'Assistant'}**: ${m.content}`);
+                                                                        lines.push(`${character?.name || 'Assistant'}:\n${m.content}\n`);
                                                                     }
                                                                 }
                                                                 const text = lines.join('\n');
@@ -1297,7 +1297,7 @@ const SimpleChatWithHistory = () => {
                                                                   if (m.content?.includes('Please begin this Bible study session with a prayer')) return false;
                                                                   return true;
                                                                 })
-                                                                .map(m => m.role === 'user' ? `**You**: ${m.content}` : `**${character?.name || 'Character'}**: ${m.content}`)
+                                                                .map(m => m.role === 'user' ? `You:\n${m.content}` : `${character?.name || 'Character'}:\n${m.content}`)
                                                                 .join('\n\n');
                                                               const shareText = `Conversation with ${character?.name || 'FaithTalk AI'}\n\n${conversationText}\n\n— via Faith Talk AI (faithtalkai.com)`;
                                                               

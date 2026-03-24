@@ -98,6 +98,7 @@ export function usePremium() {
     }
 
     // If admin has granted manual premium override, short-circuit to premium
+    // This check runs every time profile changes, regardless of forceRefresh
     console.log('[usePremium] Checking premium_override:', profile?.premium_override, 'profile:', profile?.id);
     if (profile?.premium_override === true) {
       console.log('[usePremium] Premium override granted by admin');
@@ -111,8 +112,16 @@ export function usePremium() {
       return;
     }
 
+    // If we haven't checked this user yet, or it's a checkout success, check Stripe
     if (forceRefresh) {
       checkPremiumStatus();
+    } else if (!premiumCache.checked || premiumCache.userId !== user.id) {
+      // Cache not set for this user yet, need to check
+      checkPremiumStatus();
+    } else {
+      // Use cached value
+      setIsPremium(premiumCache.isPremium);
+      setLoading(false);
     }
 
     // If we just returned from checkout success, poll briefly to catch webhook delay
