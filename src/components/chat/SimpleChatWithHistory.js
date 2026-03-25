@@ -1122,7 +1122,7 @@ const SimpleChatWithHistory = () => {
                                                                         lines.push(`${character?.name || 'Assistant'}:\n${m.content}\n`);
                                                                     }
                                                                 }
-                                                                const text = lines.join('\n');
+                                                                const text = lines.join('\n\n');
                                                                 await navigator.clipboard.writeText(text);
                                                             } catch (e) {
                                                                 console.warn('[SimpleChatWithHistory] Copy transcript failed:', e);
@@ -1298,7 +1298,7 @@ const SimpleChatWithHistory = () => {
                                                                   return true;
                                                                 })
                                                                 .map(m => m.role === 'user' ? `You:\n${m.content}` : `${character?.name || 'Character'}:\n${m.content}`)
-                                                                .join('\n\n');
+                                                                .join('\n\n\n');
                                                               const shareText = `Conversation with ${character?.name || 'FaithTalk AI'}\n\n${conversationText}\n\n— via Faith Talk AI (faithtalkai.com)`;
                                                               
                                                               try {
