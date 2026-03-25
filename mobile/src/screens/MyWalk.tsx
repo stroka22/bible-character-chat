@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView, Alert, TextInput, Modal } from 'react-native';
+import { FlatList, SafeAreaView, Text, TouchableOpacity, View, Image, ScrollView, Alert, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { chat, type Chat } from '../lib/chat';
 import { useNavigation } from '@react-navigation/native';
@@ -8,7 +8,7 @@ import { listFavoriteCharacters, setFavoriteCharacter } from '../lib/favorites';
 import { getUserStudiesWithProgress, deleteProgress, updateProgressLabel, saveStudyProgress, getProgressPercent, type StudyWithProgress } from '../lib/studyProgress';
 import { getUserPlans, leavePlan, type UserPlanProgress } from '../lib/readingPlans';
 import { supabase } from '../lib/supabase';
-import { getOwnerSlug } from '../lib/tier';
+import { getOwnerSlug, isPremiumUser } from '../lib/tier';
 
 type TabType = 'chats' | 'roundtables' | 'studies' | 'plans';
 
@@ -28,10 +28,34 @@ export default function MyWalk() {
   const [userPlans, setUserPlans] = React.useState<UserPlanProgress[]>([]);
   const [plansLoading, setPlansLoading] = React.useState(false);
   
+  // Premium state
+  const [isPremium, setIsPremium] = React.useState(false);
+  const [premiumLoading, setPremiumLoading] = React.useState(true);
+  
   // Add favorites modal state
   const [showAddFavorite, setShowAddFavorite] = React.useState(false);
   const [allCharacters, setAllCharacters] = React.useState<any[]>([]);
   const [loadingCharacters, setLoadingCharacters] = React.useState(false);
+  
+  // Check premium status
+  React.useEffect(() => {
+    const checkPremium = async () => {
+      if (!user?.id) {
+        setIsPremium(false);
+        setPremiumLoading(false);
+        return;
+      }
+      try {
+        const premium = await isPremiumUser(user.id);
+        setIsPremium(premium);
+      } catch (e) {
+        console.warn('[MyWalk] Error checking premium:', e);
+      } finally {
+        setPremiumLoading(false);
+      }
+    };
+    checkPremium();
+  }, [user?.id]);
 
   // Separate chats by type (only show saved/favorited items, exclude study chats - those are shown in Studies tab)
   const regularChats = React.useMemo(() => 
@@ -333,6 +357,77 @@ export default function MyWalk() {
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>Already have an account? Sign In</Text>
           </TouchableOpacity>
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Loading premium status
+  if (premiumLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator color={theme.colors.primary} size="large" />
+          <Text style={{ color: theme.colors.muted, marginTop: 12 }}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Free user teaser view
+  if (!isPremium) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold', marginBottom: 16 }}>My Walk</Text>
+          
+          <View style={{ backgroundColor: theme.colors.card, borderRadius: 12, padding: 20, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.accent, marginBottom: 8, textAlign: 'center' }}>
+              Your Faith Journey Awaits
+            </Text>
+            <Text style={{ color: theme.colors.text, textAlign: 'center', marginBottom: 16, lineHeight: 20 }}>
+              Upgrade to Premium to access your saved conversations, continue past chats, and track your spiritual growth.
+            </Text>
+            
+            {/* Show counts of saved content */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 }}>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.primary }}>{regularChats.length}</Text>
+                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>Saved Chats</Text>
+              </View>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.primary }}>{roundtables.length}</Text>
+                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>Roundtables</Text>
+              </View>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 24, fontWeight: '700', color: theme.colors.primary }}>{userStudies.length}</Text>
+                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>Bible Studies</Text>
+              </View>
+            </View>
+            
+            {/* Premium benefits */}
+            <View style={{ marginBottom: 16 }}>
+              <Text style={{ color: theme.colors.text, marginBottom: 4 }}>✓ Access all your saved conversations</Text>
+              <Text style={{ color: theme.colors.text, marginBottom: 4 }}>✓ Continue chats where you left off</Text>
+              <Text style={{ color: theme.colors.text, marginBottom: 4 }}>✓ Roundtable discussions</Text>
+              <Text style={{ color: theme.colors.text, marginBottom: 4 }}>✓ Invite friends to conversations</Text>
+              <Text style={{ color: theme.colors.text }}>✓ Track Bible study progress</Text>
+            </View>
+            
+            <TouchableOpacity 
+              onPress={() => nav.navigate('Paywall')}
+              style={{ backgroundColor: theme.colors.primary, paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
+            >
+              <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 16 }}>Upgrade to Premium — $5.99/month</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              onPress={() => nav.navigate('MainTabs', { screen: 'Home' })}
+              style={{ backgroundColor: theme.colors.card, paddingVertical: 12, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}
+            >
+              <Text style={{ color: theme.colors.text, fontWeight: '600' }}>Continue Chatting Free</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }

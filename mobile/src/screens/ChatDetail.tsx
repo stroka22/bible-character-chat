@@ -626,7 +626,7 @@ Keep each section concise but informative. This is for someone about to have a c
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
           </TouchableOpacity>
           
-          {/* Save requires account */}
+          {/* Save requires account (free users can save, but need premium to access in My Walk) */}
           {!studyId && (
             <TouchableOpacity 
               onPress={async () => {
@@ -637,15 +637,12 @@ Keep each section concise but informative. This is for someone about to have a c
                   ]);
                   return;
                 }
-                await requirePremiumOrPrompt({
-                  userId: user?.id,
-                  feature: 'save',
-                  onUpgrade: () => navigation.navigate('Paywall'),
-                  onAllowed: async () => {
-                    await chat.toggleFavorite(chatId, !isFav);
-                    setIsFav(!isFav);
-                  }
-                });
+                // Free users can save - they just can't access saved chats in My Walk without premium
+                await chat.toggleFavorite(chatId, !isFav);
+                setIsFav(!isFav);
+                if (!isFav) {
+                  Alert.alert('Saved!', 'Your conversation has been saved. Upgrade to Premium to access your saved conversations in My Walk anytime.');
+                }
               }}
               style={{ backgroundColor: isFav ? theme.colors.primary : theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isFav ? theme.colors.primary : theme.colors.border }}
             >
