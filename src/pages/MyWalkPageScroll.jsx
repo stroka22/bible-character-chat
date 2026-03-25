@@ -64,9 +64,13 @@ const FavoriteCharacterCard = ({ character, isFeatured, onToggleFavorite, onSetF
 );
 
 const MyWalkPageScroll = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   const navigate = useNavigate();
   const { isPremium, loading: premiumLoading } = usePremium();
+  
+  // Check premium_override directly from profile as backup
+  const hasPremiumOverride = profile?.premium_override === true;
+  const effectivePremium = isPremium || hasPremiumOverride;
   const {
     conversations = [],
     fetchConversations,
@@ -276,13 +280,18 @@ const MyWalkPageScroll = () => {
     try {
       const full = await fetchConversationWithMessages(conv.id);
       if (!full) return;
-      const lines = [full.title || 'Conversation', ''];
+      const characterName = full.characters?.name || 'Assistant';
+      const title = `Conversation with ${characterName}\n`;
+      const date = `Date: ${new Date(full.created_at || Date.now()).toLocaleDateString()}\n\n`;
       const msgs = [...(full.messages || [])].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-      for (const m of msgs) {
-        if (!m?.content) continue;
-        lines.push(`${m.role === 'user' ? 'You' : full.characters?.name || 'Assistant'}: ${m.content}`);
-      }
-      await navigator.clipboard.writeText(lines.join('\n'));
+      const formatted = msgs
+        .filter(m => m?.content && m.role !== 'system')
+        .map(m => {
+          const speaker = m.role === 'user' ? 'You' : characterName;
+          return `${speaker}:\n${m.content}`;
+        })
+        .join('\n\n');
+      await navigator.clipboard.writeText(`${title}${date}${formatted}`);
     } catch (e) {
       console.warn('Copy failed:', e);
     }
@@ -373,7 +382,7 @@ const MyWalkPageScroll = () => {
   }
 
   // Note: We no longer gate My Walk entirely - free users see a teaser view instead
-  // The teaser view is rendered inline below when !isPremium
+  // The teaser view is rendered inline below when !effectivePremium
 
   return (
     <PreviewLayout>
@@ -419,7 +428,7 @@ const MyWalkPageScroll = () => {
           <section>
             <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
               <h2 className="text-xl font-bold text-amber-800" style={{ fontFamily: 'Cinzel, serif' }}>My Walk</h2>
-              {isPremium && (
+              {effectivePremium && (
                 <div className="flex items-center gap-2">
                   <label className="text-amber-700 text-sm">Sort by</label>
                   <select
@@ -435,7 +444,7 @@ const MyWalkPageScroll = () => {
             </div>
 
             {/* FREE USER TEASER VIEW */}
-            {!isPremium && (
+            {!effectivePremium && (
               <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-300 rounded-2xl p-6 mb-6">
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-amber-900 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
@@ -651,7 +660,7 @@ const MyWalkPageScroll = () => {
             )}
 
             {/* ROUNDTABLES TAB - Premium only */}
-            {activeTab === 'roundtables' && isPremium && (
+            {activeTab === 'roundtables' && effectivePremium && (
               <>
                 {selectedRoundtableIds.size > 0 && (
                   <div className="flex items-center gap-3 mb-3 p-2 bg-red-100 border border-red-300 rounded-lg">

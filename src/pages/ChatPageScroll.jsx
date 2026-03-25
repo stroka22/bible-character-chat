@@ -993,7 +993,7 @@ const ChatPageScroll = () => {
     }).map(m => {
       const speaker = m.role === 'user' ? 'You' : character.name;
       return `${speaker}:\n${m.content}`;
-    }).join('\n\n\n');
+    }).join('\n\n');
     return `${title}${date}${formatted}`;
   };
 
