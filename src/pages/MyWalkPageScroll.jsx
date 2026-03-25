@@ -64,13 +64,21 @@ const FavoriteCharacterCard = ({ character, isFeatured, onToggleFavorite, onSetF
 );
 
 const MyWalkPageScroll = () => {
-  const { user, loading, profile } = useAuth();
+  const { user, loading, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const { isPremium, loading: premiumLoading } = usePremium();
   
   // Check premium_override directly from profile as backup
   const hasPremiumOverride = profile?.premium_override === true;
   const effectivePremium = isPremium || hasPremiumOverride;
+  
+  // Ensure profile is loaded when user is available
+  useEffect(() => {
+    if (user && !profile && refreshProfile) {
+      console.log('[MyWalkPageScroll] Profile not loaded, triggering refresh...');
+      refreshProfile(user.id);
+    }
+  }, [user, profile, refreshProfile]);
   const {
     conversations = [],
     fetchConversations,
