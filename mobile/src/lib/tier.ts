@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
-import { isLocalPremiumActive } from './iap';
+import { isLocalPremiumActive, setLocalPremiumActive } from './iap';
 
 type PremiumRoundtableGates = {
   savingRequiresPremium: boolean;
@@ -129,7 +129,7 @@ export async function requirePremiumOrPrompt(opts: {
   
   console.log('[Tier] requirePremiumOrPrompt called:', { userId, feature, studyId });
   
-  // Check if user has premium - server is source of truth, local cache is fallback
+  // Check if user has premium - server is source of truth
   let hasPremium = false;
   
   // First check server (source of truth for premium_override)
@@ -138,11 +138,16 @@ export async function requirePremiumOrPrompt(opts: {
   
   if (serverPremium) {
     hasPremium = true;
-  } else if (Platform.OS === 'ios') {
-    // If server says not premium, check local IAP cache (for recent purchases not yet synced)
-    const localPremium = await isLocalPremiumActive();
-    console.log('[Tier] isLocalPremiumActive:', localPremium);
-    hasPremium = localPremium;
+    // Sync local cache with server
+    if (Platform.OS === 'ios') {
+      await setLocalPremiumActive(true);
+    }
+  } else {
+    // Server says not premium - clear local cache to prevent stale access
+    if (Platform.OS === 'ios') {
+      await setLocalPremiumActive(false);
+    }
+    hasPremium = false;
   }
   
   // If user has premium, always allow
@@ -218,16 +223,22 @@ export async function guardMessageSend(opts: {
 }) {
   const { userId, onUpgrade, onAllowed } = opts;
   
-  // Check if user has premium - server is source of truth, local cache is fallback
+  // Check if user has premium - server is source of truth
   let hasPremium = false;
   
   // First check server (source of truth)
   const serverPremium = await isPremiumUser(userId);
   if (serverPremium) {
     hasPremium = true;
-  } else if (Platform.OS === 'ios') {
-    // If server says not premium, check local IAP cache
-    hasPremium = await isLocalPremiumActive();
+    if (Platform.OS === 'ios') {
+      await setLocalPremiumActive(true);
+    }
+  } else {
+    // Server says not premium - clear local cache
+    if (Platform.OS === 'ios') {
+      await setLocalPremiumActive(false);
+    }
+    hasPremium = false;
   }
   
   // Premium users have unlimited messages

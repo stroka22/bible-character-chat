@@ -15,7 +15,7 @@ export async function isLocalPremiumActive(): Promise<boolean> {
   try { return (await AsyncStorage.getItem(PREMIUM_KEY)) === '1'; } catch { return false; }
 }
 
-async function setLocalPremiumActive(active: boolean) {
+export async function setLocalPremiumActive(active: boolean) {
   try { await AsyncStorage.setItem(PREMIUM_KEY, active ? '1' : '0'); } catch {}
 }
 
