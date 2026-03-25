@@ -84,6 +84,20 @@ const MyWalkPageScroll = () => {
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [myWalkRequiresPremium, setMyWalkRequiresPremium] = useState(true);
   const [premiumCheckDone, setPremiumCheckDone] = useState(false);
+  const [profileWaitDone, setProfileWaitDone] = useState(false);
+  
+  // Wait for profile to load (with timeout)
+  useEffect(() => {
+    if (profile) {
+      setProfileWaitDone(true);
+      return;
+    }
+    // Give profile 2 seconds to load, then proceed anyway
+    const timeout = setTimeout(() => {
+      setProfileWaitDone(true);
+    }, 2000);
+    return () => clearTimeout(timeout);
+  }, [profile]);
 
   // State
   const [favoriteCharacters, setFavoriteCharacters] = useState([]);
@@ -367,8 +381,8 @@ const MyWalkPageScroll = () => {
   }
 
   // Loading - always show loading while premium status is being checked
-  // Also wait for profile to load so we can check premium_override
-  if (loading || premiumLoading || !premiumCheckDone || (user && !profile)) {
+  // Also wait for profile (or timeout) so premium_override can be checked
+  if (loading || premiumLoading || !premiumCheckDone || !profileWaitDone) {
     return (
       <PreviewLayout>
         <ScrollBackground className="min-h-screen py-8 px-4">
