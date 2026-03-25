@@ -129,15 +129,20 @@ export async function requirePremiumOrPrompt(opts: {
   
   console.log('[Tier] requirePremiumOrPrompt called:', { userId, feature, studyId });
   
-  // Check if user has premium (via IAP on iOS or server flag)
+  // Check if user has premium - server is source of truth, local cache is fallback
   let hasPremium = false;
-  if (Platform.OS === 'ios') {
-    hasPremium = await isLocalPremiumActive();
-    console.log('[Tier] isLocalPremiumActive:', hasPremium);
-  }
-  if (!hasPremium) {
-    hasPremium = await isPremiumUser(userId);
-    console.log('[Tier] isPremiumUser:', hasPremium);
+  
+  // First check server (source of truth for premium_override)
+  const serverPremium = await isPremiumUser(userId);
+  console.log('[Tier] isPremiumUser (server):', serverPremium);
+  
+  if (serverPremium) {
+    hasPremium = true;
+  } else if (Platform.OS === 'ios') {
+    // If server says not premium, check local IAP cache (for recent purchases not yet synced)
+    const localPremium = await isLocalPremiumActive();
+    console.log('[Tier] isLocalPremiumActive:', localPremium);
+    hasPremium = localPremium;
   }
   
   // If user has premium, always allow
@@ -213,13 +218,16 @@ export async function guardMessageSend(opts: {
 }) {
   const { userId, onUpgrade, onAllowed } = opts;
   
-  // Check if user has premium (via IAP on iOS or server flag)
+  // Check if user has premium - server is source of truth, local cache is fallback
   let hasPremium = false;
-  if (Platform.OS === 'ios') {
+  
+  // First check server (source of truth)
+  const serverPremium = await isPremiumUser(userId);
+  if (serverPremium) {
+    hasPremium = true;
+  } else if (Platform.OS === 'ios') {
+    // If server says not premium, check local IAP cache
     hasPremium = await isLocalPremiumActive();
-  }
-  if (!hasPremium) {
-    hasPremium = await isPremiumUser(userId);
   }
   
   // Premium users have unlimited messages

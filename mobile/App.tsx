@@ -30,6 +30,7 @@ import ResetPassword from './src/screens/ResetPassword';
 import Paywall from './src/screens/Paywall';
 import JoinChat from './src/screens/JoinChat';
 import HowItWorks from './src/screens/HowItWorks';
+import FAQ from './src/screens/FAQ';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { theme } from './src/theme';
 import { startSettingsRealtimeForUser, refreshAllSettingsForUser } from './src/lib/settings';
@@ -107,9 +108,14 @@ function HomeScreen({ navigation }: any) {
         <TouchableOpacity onPress={() => navigation.navigate('My Walk')} style={{ minHeight: 52, paddingVertical: 12, backgroundColor: theme.colors.primary, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('HowItWorks')} style={{ minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.card, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-          <Text style={{ fontWeight: '700', fontSize: 14, color: theme.colors.text }}>📚 How It Works</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TouchableOpacity onPress={() => navigation.navigate('HowItWorks')} style={{ flex: 1, minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.card, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ fontWeight: '700', fontSize: 14, color: theme.colors.text }}>📚 How It Works</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('FAQ')} style={{ flex: 1, minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.card, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ fontWeight: '700', fontSize: 14, color: theme.colors.text }}>❓ FAQ</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <StatusBar style="dark" />
       </View>
@@ -220,6 +226,16 @@ function AppInner() {
               headerLeft: () => (
                 <TouchableOpacity onPress={() => navigation.navigate('MainTabs', { screen: 'Home' })} style={{ paddingHorizontal: 8 }}>
                   <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Home'}</Text>
+                </TouchableOpacity>
+              )
+            })} />
+            <Stack.Screen name="FAQ" component={FAQ} options={({ navigation }) => ({ 
+              headerShown: true, 
+              headerTitleAlign: 'center', 
+              headerTitle: () => <BrandHeaderTitle />,
+              headerLeft: () => (
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 8 }}>
+                  <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{'< Back'}</Text>
                 </TouchableOpacity>
               )
             })} />

@@ -723,13 +723,14 @@ Keep each section concise but informative. This is for someone about to have a c
           </View>
         )}
         
-        <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: 12 + Math.max(insets.bottom, 6) }}>
+        <View style={{ flexDirection: 'row', padding: 12, gap: 8, paddingBottom: 12 + Math.max(insets.bottom, 6), alignItems: 'flex-end' }}>
           <TextInput
             value={input}
             onChangeText={setInput}
             placeholder="Type a message…"
             placeholderTextColor={theme.colors.muted}
-            style={{ flex: 1, height: 44, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12 }}
+            multiline
+            style={{ flex: 1, minHeight: 44, maxHeight: 120, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, color: theme.colors.text, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, textAlignVertical: 'top' }}
             editable={!sending}
           />
           <TouchableOpacity disabled={sending} onPress={onSend} style={{ height: 44, paddingHorizontal: 16, backgroundColor: theme.colors.primary, borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}>

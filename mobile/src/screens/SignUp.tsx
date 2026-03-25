@@ -37,7 +37,10 @@ export default function SignUp() {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       const { error } = (await signUpWithEmail(email.trim(), password, { displayName })) || {};
       if (error) Alert.alert('Sign Up', error.message || String(error));
-      else Alert.alert('Sign Up', 'Check your email to confirm your account.');
+      else {
+        Alert.alert('Welcome!', 'Your account has been created. You can now start exploring!');
+        navigation.navigate('MainTabs', { screen: 'Home' });
+      }
     } finally { setLoading(false); }
   };
 
