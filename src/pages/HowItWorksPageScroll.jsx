@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
 import { ScrollWrap, ScrollDivider, ScrollBackground } from '../components/ScrollWrap';
+import { useAuth } from '../contexts/AuthContext';
 
 const HowItWorksPageScroll = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('chat');
 
   const tabs = [
@@ -194,8 +196,8 @@ const HowItWorksPageScroll = () => {
             </h2>
             <p className="text-amber-700 mb-6">Join thousands of users exploring Scripture in a new way</p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/signup" className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors">
-                Create Free Account
+              <Link to={user ? "/chat" : "/signup"} className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors">
+                {user ? "Start Chatting" : "Create Free Account"}
               </Link>
               <Link to="/" className="px-6 py-3 bg-white hover:bg-amber-50 text-amber-800 font-bold rounded-lg transition-colors border border-amber-300">
                 Back to Home
