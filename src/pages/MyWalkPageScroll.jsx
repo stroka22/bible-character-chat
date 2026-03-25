@@ -367,7 +367,8 @@ const MyWalkPageScroll = () => {
   }
 
   // Loading - always show loading while premium status is being checked
-  if (loading || premiumLoading || !premiumCheckDone) {
+  // Also wait for profile to load so we can check premium_override
+  if (loading || premiumLoading || !premiumCheckDone || (user && !profile)) {
     return (
       <PreviewLayout>
         <ScrollBackground className="min-h-screen py-8 px-4">
