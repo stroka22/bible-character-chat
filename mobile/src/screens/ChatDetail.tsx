@@ -211,12 +211,25 @@ export default function ChatDetail() {
     setInput('');
     setSending(true);
     try {
-      // gating: free daily limit
-      await guardMessageSend({
-        userId: user?.id,
-        onAllowed: async () => {},
-        onUpgrade: () => { throw new Error('UPGRADE_REQUIRED'); }
-      });
+      // For logged-in users, check premium gating (unlimited for free, gated features for premium)
+      // For anonymous users, show signup prompt every 5 messages but allow them to continue
+      if (user?.id) {
+        // Logged-in users have unlimited chat - no message limit check needed
+      } else {
+        // Anonymous: show signup prompt at 5, 10, 15 messages etc.
+        const userMsgCount = messages.filter(m => m.role === 'user').length + 1; // +1 for current
+        if (userMsgCount >= 5 && userMsgCount % 5 === 0) {
+          // Show signup prompt but don't block
+          Alert.alert(
+            'Create an Account',
+            'Sign up for free to save your conversations and unlock more features!',
+            [
+              { text: 'Maybe Later', style: 'cancel' },
+              { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+            ]
+          );
+        }
+      }
       
       // Create user message
       const userMsg: ChatMessage = {
@@ -260,7 +273,6 @@ export default function ChatDetail() {
         aiMsg.id = savedMsg.id;
       }
       setMessages((m) => [...m, aiMsg]);
-      await incrementDailyMessageCount(user?.id);
     } catch (e) {
       if ((e as any)?.message === 'UPGRADE_REQUIRED') {
         // show prompt
