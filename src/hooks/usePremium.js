@@ -99,7 +99,7 @@ export function usePremium() {
 
     // If admin has granted manual premium override, short-circuit to premium
     // This check runs every time profile changes, regardless of forceRefresh
-    console.log('[usePremium] Checking premium_override:', profile?.premium_override, 'profile:', profile?.id);
+    console.log('[usePremium] Checking premium_override:', profile?.premium_override, 'profile:', profile?.id, 'user:', user?.id);
     if (profile?.premium_override === true) {
       console.log('[usePremium] Premium override granted by admin');
       setIsPremium(true);
@@ -112,7 +112,15 @@ export function usePremium() {
       return;
     }
 
-    // If we haven't checked this user yet, or it's a checkout success, check Stripe
+    // Wait for profile to load before checking Stripe - profile might have premium_override
+    // If profile hasn't loaded yet (id doesn't match user.id), keep loading
+    if (!profile || profile.id !== user.id) {
+      console.log('[usePremium] Waiting for profile to load...');
+      setLoading(true);
+      return;
+    }
+
+    // Profile loaded but no premium_override - check Stripe
     if (forceRefresh) {
       checkPremiumStatus();
     } else if (!premiumCache.checked || premiumCache.userId !== user.id) {
@@ -155,7 +163,7 @@ export function usePremium() {
         pollingRef.current = null;
       }
     };
-  }, [user, lastCheckedUserId, profile?.premium_override]);
+  }, [user, lastCheckedUserId, profile]);
 
   // React to cross-tab and focus events to refresh status
   useEffect(() => {
