@@ -597,17 +597,22 @@ Keep each section concise but informative. This is for someone about to have a c
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>💡 Insights</Text>
           </TouchableOpacity>
           
-          {/* Share requires account */}
+          {/* Share requires premium */}
           <TouchableOpacity 
-            onPress={() => {
+            onPress={async () => {
               if (!user) {
                 Alert.alert('Account Required', 'Create a free account to share conversations.', [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
                 ]);
-              } else {
-                shareConversation();
+                return;
               }
+              await requirePremiumOrPrompt({
+                userId: user.id,
+                feature: 'save',
+                onUpgrade: () => navigation.navigate('Paywall'),
+                onAllowed: () => shareConversation()
+              });
             }}
             style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
           >
