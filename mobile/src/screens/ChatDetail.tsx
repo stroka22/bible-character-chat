@@ -174,10 +174,31 @@ export default function ChatDetail() {
       headerRight: () => (
         <TouchableOpacity 
           onPress={async () => {
-            const { success, error } = await inviteFriendToChat(chatId, title);
-            if (error) {
-              Alert.alert('Error', error);
+            // Require account to invite
+            if (!user) {
+              Alert.alert('Account Required', 'Create a free account to invite friends to conversations.', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+              ]);
+              return;
             }
+            // Require saved chat to invite
+            if (!chatId || isEphemeral) {
+              Alert.alert('Save First', 'Save this conversation to My Walk before inviting friends.');
+              return;
+            }
+            // Check premium for invite feature
+            await requirePremiumOrPrompt({
+              userId: user.id,
+              feature: 'other',
+              onUpgrade: () => navigation.navigate('Paywall'),
+              onAllowed: async () => {
+                const { success, error } = await inviteFriendToChat(chatId, title);
+                if (error) {
+                  Alert.alert('Error', error);
+                }
+              }
+            });
           }} 
           style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: theme.colors.primary, borderRadius: 6 }}
         >
@@ -576,8 +597,18 @@ Keep each section concise but informative. This is for someone about to have a c
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>💡 Insights</Text>
           </TouchableOpacity>
           
+          {/* Share requires account */}
           <TouchableOpacity 
-            onPress={shareConversation}
+            onPress={() => {
+              if (!user) {
+                Alert.alert('Account Required', 'Create a free account to share conversations.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+                ]);
+              } else {
+                shareConversation();
+              }
+            }}
             style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
           >
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📤 Share</Text>
@@ -590,9 +621,17 @@ Keep each section concise but informative. This is for someone about to have a c
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
           </TouchableOpacity>
           
+          {/* Save requires account */}
           {!studyId && (
             <TouchableOpacity 
               onPress={async () => {
+                if (!user) {
+                  Alert.alert('Account Required', 'Create a free account to save conversations.', [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+                  ]);
+                  return;
+                }
                 await requirePremiumOrPrompt({
                   userId: user?.id,
                   feature: 'save',

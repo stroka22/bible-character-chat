@@ -23,7 +23,12 @@ export default function Login() {
     try {
       const { error } = (await signInWithPassword(email.trim(), password)) || {};
       if (error) {
-        setError(error.message || String(error));
+        let errorMsg = error.message || String(error);
+        // Provide clearer message for email confirmation error
+        if (errorMsg.toLowerCase().includes('email not confirmed')) {
+          errorMsg = 'Please check your email and click the confirmation link to verify your account.';
+        }
+        setError(errorMsg);
       } else {
         // Navigate to Home after successful login
         navigation.navigate('MainTabs', { screen: 'Home' });

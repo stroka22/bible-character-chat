@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   FlatList,
+  Alert,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
@@ -175,7 +176,10 @@ export default function ReadingPlans() {
 
   const handleStartPlan = async (plan: ReadingPlan) => {
     if (!user) {
-      navigation.navigate('Login');
+      Alert.alert('Account Required', 'Create a free account to track your reading plan progress.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Up', onPress: () => navigation.navigate('SignUp') }
+      ]);
       return;
     }
     try {

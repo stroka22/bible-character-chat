@@ -109,11 +109,11 @@ function HomeScreen({ navigation }: any) {
           <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <TouchableOpacity onPress={() => navigation.navigate('HowItWorks')} style={{ flex: 1, minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.card, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-            <Text style={{ fontWeight: '700', fontSize: 14, color: theme.colors.text }}>📚 How It Works</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('HowItWorks')} style={{ flex: 1, minHeight: 40, paddingVertical: 8, backgroundColor: theme.colors.card, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ fontWeight: '600', fontSize: 12, color: theme.colors.text }}>📖 How It Works</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('FAQ')} style={{ flex: 1, minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.card, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
-            <Text style={{ fontWeight: '700', fontSize: 14, color: theme.colors.text }}>❓ FAQ</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('FAQ')} style={{ flex: 1, minHeight: 40, paddingVertical: 8, backgroundColor: theme.colors.card, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ fontWeight: '600', fontSize: 12, color: theme.colors.text }}>❓ FAQ</Text>
           </TouchableOpacity>
         </View>
       </View>

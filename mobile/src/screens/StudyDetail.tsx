@@ -158,7 +158,14 @@ export default function StudyDetail({ route, navigation }: any) {
   };
 
   async function startLesson(lesson: Lesson) {
-    if (!user || starting) return;
+    if (!user) {
+      Alert.alert('Account Required', 'Create a free account to start Bible study lessons and track your progress.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+      ]);
+      return;
+    }
+    if (starting) return;
     setStarting(true);
     try {
       // Get or create progress record
