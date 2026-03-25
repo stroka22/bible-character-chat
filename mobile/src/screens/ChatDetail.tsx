@@ -480,21 +480,30 @@ export default function ChatDetail() {
 
   // Copy conversation to clipboard
   const copyConversation = () => {
+    const characterName = character?.name || 'Guide';
+    const header = `Conversation with ${characterName}\nDate: ${new Date().toLocaleDateString()}\n\n`;
     const text = messages
       .filter(m => m.role !== 'system')
-      .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Guide'}: ${m.content}`)
+      .map(m => {
+        const speaker = m.role === 'user' ? 'You' : characterName;
+        return `${speaker}:\n${m.content}`;
+      })
       .join('\n\n');
-    Clipboard.setString(text);
+    Clipboard.setString(`${header}${text}`);
     Alert.alert('Copied!', 'Conversation copied to clipboard.');
   };
 
   // Share conversation
   const shareConversation = async () => {
+    const characterName = character?.name || 'Guide';
     const text = messages
       .filter(m => m.role !== 'system')
-      .map(m => m.role === 'user' ? `You: ${m.content}` : `${character?.name || 'Guide'}: ${m.content}`)
+      .map(m => {
+        const speaker = m.role === 'user' ? 'You' : characterName;
+        return `${speaker}:\n${m.content}`;
+      })
       .join('\n\n');
-    const shareText = `${title}\n\n${text}\n\n— via Faith Talk AI`;
+    const shareText = `Conversation with ${characterName}\n\n${text}\n\n— via Faith Talk AI (faithtalkai.com)`;
     try {
       await Share.share({ message: shareText, title });
     } catch {}
