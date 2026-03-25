@@ -88,16 +88,24 @@ const MyWalkPageScroll = () => {
   
   // Wait for profile to load (with timeout)
   useEffect(() => {
+    console.log('[MyWalkPageScroll] Profile check:', { 
+      profile: profile?.id, 
+      premium_override: profile?.premium_override,
+      isPremium,
+      effectivePremium,
+      user: user?.id 
+    });
     if (profile) {
       setProfileWaitDone(true);
       return;
     }
     // Give profile 2 seconds to load, then proceed anyway
     const timeout = setTimeout(() => {
+      console.log('[MyWalkPageScroll] Profile timeout - proceeding without profile');
       setProfileWaitDone(true);
     }, 2000);
     return () => clearTimeout(timeout);
-  }, [profile]);
+  }, [profile, isPremium, effectivePremium, user]);
 
   // State
   const [favoriteCharacters, setFavoriteCharacters] = useState([]);
