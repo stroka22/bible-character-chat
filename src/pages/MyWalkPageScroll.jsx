@@ -92,27 +92,16 @@ const MyWalkPageScroll = () => {
   const [showPromoModal, setShowPromoModal] = useState(false);
   const [myWalkRequiresPremium, setMyWalkRequiresPremium] = useState(true);
   const [premiumCheckDone, setPremiumCheckDone] = useState(false);
-  const [profileWaitDone, setProfileWaitDone] = useState(false);
   
-  // Wait for profile to load (with timeout)
+  // Debug logging
   useEffect(() => {
-    console.log('[MyWalkPageScroll] Profile check:', { 
+    console.log('[MyWalkPageScroll] Premium state:', { 
       profile: profile?.id, 
       premium_override: profile?.premium_override,
       isPremium,
       effectivePremium,
       user: user?.id 
     });
-    if (profile) {
-      setProfileWaitDone(true);
-      return;
-    }
-    // Give profile 2 seconds to load, then proceed anyway
-    const timeout = setTimeout(() => {
-      console.log('[MyWalkPageScroll] Profile timeout - proceeding without profile');
-      setProfileWaitDone(true);
-    }, 2000);
-    return () => clearTimeout(timeout);
   }, [profile, isPremium, effectivePremium, user]);
 
   // State
@@ -397,8 +386,7 @@ const MyWalkPageScroll = () => {
   }
 
   // Loading - always show loading while premium status is being checked
-  // Also wait for profile (or timeout) so premium_override can be checked
-  if (loading || premiumLoading || !premiumCheckDone || !profileWaitDone) {
+  if (loading || premiumLoading || !premiumCheckDone) {
     return (
       <PreviewLayout>
         <ScrollBackground className="min-h-screen py-8 px-4">
@@ -583,7 +571,7 @@ const MyWalkPageScroll = () => {
             )}
 
             {/* PREMIUM USER: Full Tabs and Content */}
-            {isPremium && (
+            {effectivePremium && (
               <>
                 {/* Tabs */}
                 <div className="flex border-b border-amber-300 mb-4">
