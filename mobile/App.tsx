@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, Modal, TextInput, Share } from 'react-native';
 import { DefaultTheme, DarkTheme, NavigationContainer } from '@react-navigation/native';
 import * as LinkingExpo from 'expo-linking';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -76,6 +76,58 @@ function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
   const { width, height } = useWindowDimensions();
   const logoWidth = Math.min(width * 0.7, 900);
+  const [joinModalVisible, setJoinModalVisible] = useState(false);
+  const [inviteInput, setInviteInput] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [joining, setJoining] = useState(false);
+
+  const handleJoinInvite = async () => {
+    if (!inviteInput.trim()) return;
+    
+    // Extract code from URL or use as-is
+    let code = inviteInput.trim();
+    const match = code.match(/\/join\/([A-Za-z0-9]+)/);
+    if (match) code = match[1];
+    
+    if (!code || code.length < 6) {
+      setJoinError('Please enter a valid invite link or code');
+      return;
+    }
+    
+    if (!user) {
+      setJoinModalVisible(false);
+      setInviteInput('');
+      navigation.navigate('JoinChat', { code });
+      return;
+    }
+    
+    setJoining(true);
+    setJoinError('');
+    try {
+      const { supabase } = await import('./src/lib/supabase');
+      const { data, error } = await supabase.rpc('redeem_chat_invite', { p_code: code });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const chatId = data?.chat_id;
+      if (!chatId) throw new Error('Invalid response');
+      setJoinModalVisible(false);
+      setInviteInput('');
+      navigation.navigate('Chat', { screen: 'ChatDetail', params: { chatId } });
+    } catch (e: any) {
+      setJoinError(e?.message || 'Failed to join. Please check the invite link.');
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const handleInviteFriend = async () => {
+    const url = 'https://faithtalkai.com';
+    const message = `Check out Faith Talk AI - have meaningful conversations with Biblical characters!\n\n${url}`;
+    try {
+      await Share.share({ message, url });
+    } catch {}
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -109,6 +161,14 @@ function HomeScreen({ navigation }: any) {
           <Text style={{ fontWeight: '900', fontSize: 16, color: theme.colors.primaryText }}>My Walk</Text>
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TouchableOpacity onPress={() => setJoinModalVisible(true)} style={{ flex: 1, minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.accent, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ fontWeight: '700', fontSize: 13, color: '#fff' }}>🔗 Join Invite</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleInviteFriend} style={{ flex: 1, minHeight: 44, paddingVertical: 10, backgroundColor: theme.colors.accent, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ fontWeight: '700', fontSize: 13, color: '#fff' }}>📨 Invite Friend</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
           <TouchableOpacity onPress={() => navigation.navigate('HowItWorks')} style={{ flex: 1, minHeight: 40, paddingVertical: 8, backgroundColor: theme.colors.card, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
             <Text style={{ fontWeight: '600', fontSize: 12, color: theme.colors.text }}>📖 How It Works</Text>
           </TouchableOpacity>
@@ -120,6 +180,34 @@ function HomeScreen({ navigation }: any) {
       <StatusBar style="dark" />
       </View>
       </KeyboardAvoidingView>
+
+      {/* Join Invite Modal */}
+      <Modal visible={joinModalVisible} transparent animationType="fade" onRequestClose={() => setJoinModalVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: theme.colors.card, borderRadius: 16, padding: 20, width: '100%', maxWidth: 340 }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.text, marginBottom: 8, textAlign: 'center' }}>Join a Conversation</Text>
+            <Text style={{ fontSize: 14, color: theme.colors.muted, marginBottom: 16, textAlign: 'center' }}>Paste the invite link or code you received</Text>
+            <TextInput
+              value={inviteInput}
+              onChangeText={(t) => { setInviteInput(t); setJoinError(''); }}
+              placeholder="Paste invite link or code..."
+              placeholderTextColor={theme.colors.muted}
+              style={{ backgroundColor: theme.colors.surface, borderRadius: 10, padding: 14, fontSize: 15, color: theme.colors.text, borderWidth: 1, borderColor: theme.colors.border, marginBottom: 12 }}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {joinError ? <Text style={{ color: '#dc2626', fontSize: 13, marginBottom: 12, textAlign: 'center' }}>{joinError}</Text> : null}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity onPress={() => { setJoinModalVisible(false); setInviteInput(''); setJoinError(''); }} style={{ flex: 1, padding: 14, borderRadius: 10, backgroundColor: theme.colors.surface, alignItems: 'center' }}>
+                <Text style={{ fontWeight: '600', color: theme.colors.text }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleJoinInvite} disabled={joining} style={{ flex: 1, padding: 14, borderRadius: 10, backgroundColor: theme.colors.primary, alignItems: 'center', opacity: joining ? 0.6 : 1 }}>
+                <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>{joining ? 'Joining...' : 'Join'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

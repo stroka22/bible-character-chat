@@ -1,4 +1,3 @@
-import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { SafeAreaView, Text, View, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
