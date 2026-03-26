@@ -98,6 +98,7 @@ export async function redeemChatInvite(code) {
  * Returns: inviter name, character name/avatar, conversation topic
  */
 export async function getChatInvitePreview(code) {
+  console.log('[chatInvitesService] getChatInvitePreview called with code:', code);
   if (!code) return { data: null, error: { message: 'Missing code' } };
   
   // Get the invite
@@ -107,7 +108,10 @@ export async function getChatInvitePreview(code) {
     .eq('code', code)
     .single();
   
+  console.log('[chatInvitesService] Invite query result:', { invite, inviteError });
+  
   if (inviteError || !invite) {
+    console.log('[chatInvitesService] Invite not found, error:', inviteError);
     return { data: null, error: { message: 'Invite not found or expired' } };
   }
   
