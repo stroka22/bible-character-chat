@@ -158,15 +158,62 @@ export default function StudyDetail({ route, navigation }: any) {
   };
 
   async function startLesson(lesson: Lesson) {
-    if (!user) {
-      Alert.alert('Account Required', 'Create a free account to start Bible study lessons and track your progress.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
-      ]);
+    // Anonymous users can only access Lesson 1 (order_index 0)
+    if (!user && lesson.order_index >= 1) {
+      Alert.alert(
+        'Create an Account',
+        'Sign up for free to continue to the next lesson and track your progress!',
+        [
+          { text: 'Maybe Later', style: 'cancel' },
+          { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+        ]
+      );
       return;
     }
     if (starting) return;
     setStarting(true);
+    
+    // Anonymous users can access Lesson 1 without progress tracking
+    if (!user) {
+      try {
+        // Determine which character to use: lesson override > study default
+        const targetCharacterId = lesson.character_id || studyMeta?.character_id || null;
+        let char = guide;
+        if (targetCharacterId && (!char || char.id !== targetCharacterId)) {
+          const { data: c } = await supabase
+            .from('characters')
+            .select('id,name,persona_prompt,avatar_url')
+            .eq('id', targetCharacterId)
+            .maybeSingle();
+          if (c) char = c as any;
+        }
+        
+        // Build study context for the chat
+        const studyContext = {
+          studyId,
+          studyTitle: title,
+          lessonTitle: lesson.title,
+          lessonIndex: lesson.order_index,
+          characterInstructions: studyMeta?.character_instructions || undefined,
+        };
+        
+        // Navigate to ephemeral chat (no chatId = new chat)
+        navigation.navigate('MainTabs', {
+          screen: 'Chat',
+          params: {
+            screen: 'ChatDetail',
+            params: { 
+              character: char,
+              studyContext,
+            }
+          }
+        } as any);
+      } finally {
+        setStarting(false);
+      }
+      return;
+    }
+    
     try {
       // Get or create progress record
       let currentProgressId = routeProgressId || progress?.id;
