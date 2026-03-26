@@ -1025,7 +1025,7 @@ const ChatPageScroll = () => {
   const handleCopyTranscript = async () => {
     // Premium check
     if (!isPremium) {
-      showActionMessage('This is a Premium feature', 'info');
+      showActionMessage('Copying your conversation is a premium feature', 'info');
       setShowUpgrade(true);
       return;
     }
@@ -1044,7 +1044,7 @@ const ChatPageScroll = () => {
   const handleShareConversation = async () => {
     // Premium check
     if (!isPremium) {
-      showActionMessage('This is a Premium feature', 'info');
+      showActionMessage('Sharing your conversation is a premium feature', 'info');
       setShowUpgrade(true);
       return;
     }
@@ -1163,7 +1163,7 @@ const ChatPageScroll = () => {
     
     // Require premium for invites
     if (!isPremium) {
-      showActionMessage('This is a Premium feature', 'info');
+      showActionMessage('Inviting others to your conversation is a premium feature', 'info');
       setShowUpgrade(true);
       return;
     }
