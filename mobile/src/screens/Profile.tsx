@@ -98,7 +98,13 @@ export default function Profile() {
             <Text style={{ fontWeight: '700', color: theme.colors.primaryText }}>Upgrade</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={signOut} style={{ backgroundColor: theme.colors.surface, padding: 14, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}>
+        <TouchableOpacity 
+          onPress={async () => {
+            await signOut();
+            navigation.navigate('MainTabs', { screen: 'Home' });
+          }} 
+          style={{ backgroundColor: theme.colors.surface, padding: 14, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}
+        >
           <Text style={{ fontWeight: '700', color: theme.colors.text }}>Sign Out</Text>
         </TouchableOpacity>
 
@@ -119,12 +125,22 @@ export default function Profile() {
                     try {
                       setDeleting(true);
                       const { supabase } = await import('../lib/supabase');
-                      const { error } = await supabase.functions.invoke('delete-user', { body: { userId: user.id } });
-                      if (error) throw error;
+                      console.log('[Profile] Attempting to delete user:', user.id);
+                      const { data, error } = await supabase.functions.invoke('delete-user', { body: { userId: user.id } });
+                      console.log('[Profile] Delete response:', { data, error });
+                      if (error) {
+                        console.error('[Profile] Delete error:', error);
+                        throw new Error(error.message || JSON.stringify(error));
+                      }
+                      if (data?.error) {
+                        throw new Error(data.error);
+                      }
                       Alert.alert('Account deleted', 'Your account has been deleted.');
                       await signOut();
-                    } catch (e) {
-                      Alert.alert('Error', e instanceof Error ? e.message : 'Unable to delete account');
+                      navigation.navigate('MainTabs', { screen: 'Home' });
+                    } catch (e: any) {
+                      console.error('[Profile] Delete catch:', e);
+                      Alert.alert('Error', e?.message || 'Unable to delete account');
                     } finally {
                       setDeleting(false);
                     }

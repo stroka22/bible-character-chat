@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { chat, type ChatMessage } from '../lib/chat';
-import { guardMessageSend, incrementDailyMessageCount, requirePremiumOrPrompt } from '../lib/tier';
+import { guardMessageSend, incrementDailyMessageCount, requirePremiumOrPrompt, isPremiumUser } from '../lib/tier';
 import { useAuth } from '../contexts/AuthContext';
 import { Linking } from 'react-native';
 import { generateCharacterResponse } from '../lib/api';
@@ -187,18 +187,16 @@ export default function ChatDetail() {
               Alert.alert('Save First', 'Save this conversation to My Walk before inviting friends.');
               return;
             }
-            // Check premium for invite feature
-            await requirePremiumOrPrompt({
-              userId: user.id,
-              feature: 'other',
-              onUpgrade: () => navigation.navigate('Paywall'),
-              onAllowed: async () => {
-                const { success, error } = await inviteFriendToChat(chatId, title);
-                if (error) {
-                  Alert.alert('Error', error);
-                }
-              }
-            });
+            // Check premium for invite feature - invite always requires premium
+            const hasPremium = await isPremiumUser(user.id);
+            if (!hasPremium) {
+              navigation.navigate('Paywall');
+              return;
+            }
+            const { success, error } = await inviteFriendToChat(chatId, title);
+            if (error) {
+              Alert.alert('Error', error);
+            }
           }} 
           style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: theme.colors.primary, borderRadius: 6 }}
         >

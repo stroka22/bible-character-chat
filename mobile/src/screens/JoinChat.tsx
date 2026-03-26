@@ -28,7 +28,9 @@ export default function JoinChat() {
       }
       try {
         setStatus('working');
+        console.log('[JoinChat] Attempting to redeem code:', code);
         const { data, error } = await supabase.rpc('redeem_chat_invite', { p_code: code });
+        console.log('[JoinChat] RPC response:', { data, error });
         if (error) throw error;
         const chatId = (data as any)?.chat_id;
         if (!chatId) throw new Error('Invalid response');
@@ -60,7 +62,7 @@ export default function JoinChat() {
               <Text style={{ color: theme.colors.primaryText, fontWeight: '700', textAlign: 'center' }}>Create Free Account</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Login')} style={{ paddingHorizontal: 24, paddingVertical: 12, backgroundColor: theme.colors.card, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}>
-              <Text style={{ color: theme.colors.text, fontWeight: '600', textAlign: 'center' }}>Already have an account? Sign In</Text>
+              <Text style={{ color: theme.colors.text, fontWeight: '600', textAlign: 'center' }}>Already have an account?{'\n'}Sign In</Text>
             </TouchableOpacity>
           </View>
         )}

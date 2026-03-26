@@ -342,7 +342,7 @@ export default function MyWalk() {
         <View style={{ padding: 16, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold', marginBottom: 12 }}>My Walk</Text>
           <Text style={{ color: theme.colors.text, textAlign: 'center', marginBottom: 20 }}>
-            Create a free account to save your favorite characters, track your Bible study progress, and access your saved conversations.
+            Create a free account to save your favorite characters and track your Bible study progress.
           </Text>
           <TouchableOpacity 
             onPress={() => nav.navigate('SignUp')}
@@ -354,7 +354,7 @@ export default function MyWalk() {
             onPress={() => nav.navigate('Login')}
             style={{ backgroundColor: theme.colors.card, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderColor: theme.colors.border }}
           >
-            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16 }}>Already have an account? Sign In</Text>
+            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16, textAlign: 'center' }}>Already have an account?{'\n'}Sign In</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
