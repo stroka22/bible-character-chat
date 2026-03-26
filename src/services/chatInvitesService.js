@@ -101,98 +101,31 @@ export async function getChatInvitePreview(code) {
   console.log('[chatInvitesService] getChatInvitePreview called with code:', code);
   if (!code) return { data: null, error: { message: 'Missing code' } };
   
-  // Get the invite
-  const { data: invite, error: inviteError } = await supabase
-    .from('chat_invites')
-    .select('id, chat_id, created_by, expires_at, revoked, max_uses, use_count')
-    .eq('code', code)
-    .single();
+  // Use RPC function that bypasses RLS
+  const { data, error } = await supabase.rpc('get_chat_invite_preview', { p_code: code });
   
-  console.log('[chatInvitesService] Invite query result:', { invite, inviteError });
+  console.log('[chatInvitesService] RPC result:', { data, error });
   
-  if (inviteError || !invite) {
-    console.log('[chatInvitesService] Invite not found, error:', inviteError);
-    return { data: null, error: { message: 'Invite not found or expired' } };
+  if (error) {
+    console.log('[chatInvitesService] RPC error:', error);
+    return { data: null, error: { message: error.message || 'Failed to load invite' } };
   }
   
-  // Check if invite is valid
-  if (invite.revoked) {
-    return { data: null, error: { message: 'This invite has been revoked' } };
-  }
-  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
-    return { data: null, error: { message: 'This invite has expired' } };
-  }
-  if (invite.max_uses && invite.use_count >= invite.max_uses) {
-    return { data: null, error: { message: 'This invite has reached its maximum uses' } };
-  }
-  
-  // Get the chat details including conversation_type and participants for roundtables
-  const { data: chat, error: chatError } = await supabase
-    .from('chats')
-    .select('id, title, character_id, conversation_type, participants')
-    .eq('id', invite.chat_id)
-    .single();
-  
-  console.log('[chatInvitesService] Chat query result:', { chat, chatError });
-  
-  if (chatError || !chat) {
-    console.log('[chatInvitesService] Chat not found for id:', invite.chat_id);
-    return { data: null, error: { message: 'Conversation not found' } };
-  }
-  
-  // Detect if this is a roundtable
-  const isRoundtable = chat.conversation_type === 'roundtable' || 
-    (chat.title && chat.title.startsWith('Roundtable: '));
-  
-  // Get roundtable topic from title
-  let roundtableTopic = null;
-  if (isRoundtable && chat.title && chat.title.startsWith('Roundtable: ')) {
-    roundtableTopic = chat.title.substring('Roundtable: '.length);
-  }
-  
-  // Get the character (for regular chats)
-  let character = null;
-  if (!isRoundtable && chat.character_id) {
-    const { data: charData } = await supabase
-      .from('characters')
-      .select('id, name, avatar_url, short_biography')
-      .eq('id', chat.character_id)
-      .single();
-    character = charData;
-  }
-  
-  // Get roundtable participants
-  let participants = [];
-  if (isRoundtable && chat.participants && Array.isArray(chat.participants)) {
-    // participants is an array of character IDs
-    const { data: participantChars } = await supabase
-      .from('characters')
-      .select('id, name, avatar_url')
-      .in('id', chat.participants);
-    participants = participantChars || [];
-  }
-  
-  // Get the inviter's profile
-  let inviter = null;
-  if (invite.created_by) {
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('id, display_name')
-      .eq('id', invite.created_by)
-      .single();
-    inviter = profileData;
+  // Check if RPC returned an error in the data
+  if (data?.error) {
+    return { data: null, error: { message: data.error } };
   }
   
   return {
     data: {
-      inviteId: invite.id,
-      chatId: chat.id,
-      chatTitle: chat.title,
-      character,
-      inviter,
-      isRoundtable,
-      roundtableTopic,
-      participants
+      inviteId: data.inviteId,
+      chatId: data.chatId,
+      chatTitle: data.chatTitle,
+      character: data.character,
+      inviter: data.inviter,
+      isRoundtable: data.isRoundtable,
+      roundtableTopic: data.roundtableTopic,
+      participants: data.participants || []
     },
     error: null
   };
