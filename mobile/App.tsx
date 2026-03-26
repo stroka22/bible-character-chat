@@ -105,15 +105,19 @@ function HomeScreen({ navigation }: any) {
     setJoinError('');
     try {
       const { supabase } = await import('./src/lib/supabase');
+      console.log('[JoinInvite] Calling redeem_chat_invite with code:', code);
       const { data, error } = await supabase.rpc('redeem_chat_invite', { p_code: code });
+      console.log('[JoinInvite] Response:', { data, error });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      // RPC returns {success: false, error: "..."} on failure
+      if (data?.success === false) throw new Error(data.error || 'Failed to join');
       const chatId = data?.chat_id;
       if (!chatId) throw new Error('Invalid response');
       setJoinModalVisible(false);
       setInviteInput('');
       navigation.navigate('Chat', { screen: 'ChatDetail', params: { chatId } });
     } catch (e: any) {
+      console.log('[JoinInvite] Error:', e);
       setJoinError(e?.message || 'Failed to join. Please check the invite link.');
     } finally {
       setJoining(false);

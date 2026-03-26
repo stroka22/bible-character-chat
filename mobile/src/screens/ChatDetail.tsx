@@ -605,12 +605,15 @@ Keep each section concise but informative. This is for someone about to have a c
                 ]);
                 return;
               }
-              await requirePremiumOrPrompt({
-                userId: user.id,
-                feature: 'save',
-                onUpgrade: () => navigation.navigate('Paywall'),
-                onAllowed: () => shareConversation()
-              });
+              const premium = await isPremiumUser(user.id);
+              if (!premium) {
+                Alert.alert('Premium Feature', 'Upgrade to Premium to share conversations.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+                ]);
+                return;
+              }
+              shareConversation();
             }}
             style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
           >
@@ -618,7 +621,24 @@ Keep each section concise but informative. This is for someone about to have a c
           </TouchableOpacity>
           
           <TouchableOpacity 
-            onPress={copyConversation}
+            onPress={async () => {
+              if (!user) {
+                Alert.alert('Account Required', 'Create a free account to copy conversations.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+                ]);
+                return;
+              }
+              const premium = await isPremiumUser(user.id);
+              if (!premium) {
+                Alert.alert('Premium Feature', 'Upgrade to Premium to copy conversations.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+                ]);
+                return;
+              }
+              copyConversation();
+            }}
             style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
           >
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>

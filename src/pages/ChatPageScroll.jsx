@@ -1023,6 +1023,13 @@ const ChatPageScroll = () => {
 
   // Handle copy transcript
   const handleCopyTranscript = async () => {
+    // Premium check
+    if (!isPremium) {
+      showActionMessage('Upgrade to Premium to copy conversations', 'info');
+      setShowUpgrade(true);
+      return;
+    }
+    
     try {
       const text = formatConversationAsText();
       await navigator.clipboard.writeText(text);
@@ -1035,6 +1042,13 @@ const ChatPageScroll = () => {
 
   // Handle share conversation
   const handleShareConversation = async () => {
+    // Premium check
+    if (!isPremium) {
+      showActionMessage('Upgrade to Premium to share conversations', 'info');
+      setShowUpgrade(true);
+      return;
+    }
+    
     try {
       let shareUrl = null;
       
