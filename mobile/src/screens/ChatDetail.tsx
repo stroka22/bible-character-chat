@@ -243,7 +243,7 @@ export default function ChatDetail() {
             if (!isPremium) {
               Alert.alert('Premium Feature', 'Inviting others to your conversation is a premium feature.', [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+                { text: user ? 'Upgrade' : 'Sign Up', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
               ]);
               return;
             }
@@ -660,7 +660,7 @@ Keep each section concise but informative. This is for someone about to have a c
               if (!isPremium) {
                 Alert.alert('Premium Feature', 'Sharing your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+                  { text: user ? 'Upgrade' : 'Sign Up', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
                 ]);
                 return;
               }
@@ -677,7 +677,7 @@ Keep each section concise but informative. This is for someone about to have a c
               if (!isPremium) {
                 Alert.alert('Premium Feature', 'Copying your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+                  { text: user ? 'Upgrade' : 'Sign Up', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
                 ]);
                 return;
               }
