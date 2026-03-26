@@ -69,18 +69,33 @@ export default function ChatDetail() {
     (async () => {
       // For ephemeral chats, just set up the opening line
       if (isEphemeral) {
-        // If this is a Bible Study context, generate an intro message
+        // If this is a Bible Study context, generate an intro message (same as logged-in users)
         if (studyContext && character) {
           setTitle(`${studyContext.studyTitle} - Lesson ${studyContext.lessonIndex + 1}`);
-          // Generate intro message for Bible Study
+          // Generate intro message for Bible Study - same logic as logged-in users
           try {
-            const systemPrompt = studyContext.characterInstructions 
-              ? `${studyContext.characterInstructions}\n\nYou are starting a Bible Study lesson titled "${studyContext.lessonTitle}". Greet the user warmly and introduce the lesson topic. Keep it brief (2-3 sentences).`
-              : `You are ${character.name}. The user is starting a Bible Study lesson titled "${studyContext.lessonTitle}" from the study "${studyContext.studyTitle}". Greet them warmly and introduce the lesson topic. Keep it brief (2-3 sentences).`;
+            const hasStudyPrompt = studyContext.characterInstructions && studyContext.characterInstructions.trim().length > 0;
+            
+            // Build lesson context prompt (same as logged-in flow)
+            const lessonPrompt = [
+              hasStudyPrompt ? `=== MANDATORY STUDY PROMPT (FOLLOW EXACTLY) ===\n${studyContext.characterInstructions}\n=== END MANDATORY STUDY PROMPT ===` : '',
+              `You are guiding a Bible study lesson.`,
+              `Study: ${studyContext.studyTitle}`,
+              `Lesson: ${studyContext.lessonTitle}`,
+            ].filter(Boolean).join('\n\n');
+            
+            // Same intro request as logged-in users
+            const introRequest = hasStudyPrompt
+              ? `Begin this Bible study session now. CRITICAL: You MUST start with a prayer about this lesson's topic. After the prayer, follow any other instructions in the Study Prompt section above. The prayer should be sincere, relevant to the lesson topic, and about 2-3 sentences. Then greet the student and introduce the lesson.`
+              : `Begin this Bible study session now. Start with a brief prayer about the lesson topic (2-3 sentences), then greet the student warmly and introduce what you'll be studying together.`;
+            
             const response = await generateCharacterResponse(
               character.name,
-              systemPrompt,
-              [{ role: 'user', content: 'Please introduce this lesson.' }]
+              character.persona_prompt || '',
+              [
+                { role: 'system', content: lessonPrompt },
+                { role: 'user', content: introRequest }
+              ]
             );
             if (response) {
               setMessages([{
@@ -228,7 +243,7 @@ export default function ChatDetail() {
             if (!isPremium) {
               Alert.alert('Premium Feature', 'Inviting others to your conversation is a premium feature.', [
                 { text: 'Cancel', style: 'cancel' },
-                { text: user ? 'Upgrade' : 'Learn More', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
+                { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
               ]);
               return;
             }
@@ -645,7 +660,7 @@ Keep each section concise but informative. This is for someone about to have a c
               if (!isPremium) {
                 Alert.alert('Premium Feature', 'Sharing your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: user ? 'Upgrade' : 'Learn More', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
+                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
                 ]);
                 return;
               }
@@ -662,7 +677,7 @@ Keep each section concise but informative. This is for someone about to have a c
               if (!isPremium) {
                 Alert.alert('Premium Feature', 'Copying your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: user ? 'Upgrade' : 'Learn More', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
+                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
                 ]);
                 return;
               }
