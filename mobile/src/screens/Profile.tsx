@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { SafeAreaView, Text, View, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { getDailyMessageCount, getOwnerSlug, getTierSettings, isPremiumUser } from '../lib/tier';
 import { theme } from '../theme';
