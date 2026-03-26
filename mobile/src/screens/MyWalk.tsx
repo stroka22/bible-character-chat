@@ -335,20 +335,46 @@ export default function MyWalk() {
     return { screen: 'Chat', params: { screen: 'ChatDetail', params: { chatId: item.id } } };
   };
 
-  // If not logged in, show signup prompt
+  // If not logged in, show signup prompt with Free vs Premium breakdown
   if (!user) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        <View style={{ padding: 16, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold', marginBottom: 12 }}>My Walk</Text>
-          <Text style={{ color: theme.colors.text, textAlign: 'center', marginBottom: 20 }}>
-            Create a free account to save your favorite characters and track your Bible study progress.
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: theme.colors.accent, fontFamily: 'Cinzel_700Bold', marginBottom: 8, textAlign: 'center' }}>My Walk</Text>
+          <Text style={{ color: theme.colors.muted, textAlign: 'center', marginBottom: 20, fontSize: 14 }}>
+            Track your spiritual journey with Faith Talk AI
           </Text>
+          
+          {/* Free Account Benefits */}
+          <View style={{ backgroundColor: theme.colors.card, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: theme.colors.border }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: theme.colors.text, marginBottom: 12 }}>✨ Free Account</Text>
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Unlimited conversations with characters</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Access to Bible Studies (Lesson 1)</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Save conversations for later</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Track Bible study progress</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Reading Plans access</Text>
+            </View>
+          </View>
+          
+          {/* Premium Benefits */}
+          <View style={{ backgroundColor: theme.colors.accent + '15', borderRadius: 12, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: theme.colors.accent }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: theme.colors.accent, marginBottom: 12 }}>👑 Premium ($5.99/mo)</Text>
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Everything in Free, plus:</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Access saved conversations in My Walk</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ All Bible Study lessons</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Roundtable discussions</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Invite friends to conversations</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 14 }}>✓ Share & copy conversations</Text>
+            </View>
+          </View>
+          
           <TouchableOpacity 
             onPress={() => nav.navigate('SignUp')}
             style={{ backgroundColor: theme.colors.primary, paddingHorizontal: 32, paddingVertical: 14, borderRadius: 10, marginBottom: 12 }}
           >
-            <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 16 }}>Create Free Account</Text>
+            <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 16, textAlign: 'center' }}>Create Free Account</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={() => nav.navigate('Login')}
@@ -356,7 +382,7 @@ export default function MyWalk() {
           >
             <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 16, textAlign: 'center' }}>Already have an account?{'\n'}Sign In</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }

@@ -50,6 +50,20 @@ export default function ChatDetail() {
   // AI consent state
   const [showConsentModal, setShowConsentModal] = React.useState(false);
   const [pendingMessage, setPendingMessage] = React.useState<string | null>(null);
+  
+  // Premium status for button styling
+  const [isPremium, setIsPremium] = React.useState(false);
+  
+  React.useEffect(() => {
+    (async () => {
+      if (user?.id) {
+        const premium = await isPremiumUser(user.id);
+        setIsPremium(premium);
+      } else {
+        setIsPremium(false);
+      }
+    })();
+  }, [user?.id]);
 
   React.useEffect(() => {
     (async () => {
@@ -188,9 +202,11 @@ export default function ChatDetail() {
               return;
             }
             // Check premium for invite feature - invite always requires premium
-            const hasPremium = await isPremiumUser(user.id);
-            if (!hasPremium) {
-              navigation.navigate('Paywall');
+            if (!isPremium) {
+              Alert.alert('Premium Feature', 'Inviting others to your conversation is a premium feature.', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+              ]);
               return;
             }
             const { success, error } = await inviteFriendToChat(chatId, title);
@@ -198,13 +214,13 @@ export default function ChatDetail() {
               Alert.alert('Error', error);
             }
           }} 
-          style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: theme.colors.primary, borderRadius: 6 }}
+          style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: isPremium ? theme.colors.primary : theme.colors.muted, borderRadius: 6 }}
         >
-          <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
+          <Text style={{ color: isPremium ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
         </TouchableOpacity>
       )
     });
-  }, [navigation, isFav, title, chatId, character, studyId]);
+  }, [navigation, isFav, title, chatId, character, studyId, isPremium]);
 
   // character is passed from ChatNew; optional.
 
@@ -605,9 +621,8 @@ Keep each section concise but informative. This is for someone about to have a c
                 ]);
                 return;
               }
-              const premium = await isPremiumUser(user.id);
-              if (!premium) {
-                Alert.alert('Premium Feature', 'Upgrade to Premium to share conversations.', [
+              if (!isPremium) {
+                Alert.alert('Premium Feature', 'Sharing your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
                 ]);
@@ -615,11 +630,12 @@ Keep each section concise but informative. This is for someone about to have a c
               }
               shareConversation();
             }}
-            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isPremium ? theme.colors.border : theme.colors.muted }}
           >
-            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📤 Share</Text>
+            <Text style={{ color: isPremium ? theme.colors.text : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>📤 Share</Text>
           </TouchableOpacity>
           
+          {/* Copy requires premium */}
           <TouchableOpacity 
             onPress={async () => {
               if (!user) {
@@ -629,9 +645,8 @@ Keep each section concise but informative. This is for someone about to have a c
                 ]);
                 return;
               }
-              const premium = await isPremiumUser(user.id);
-              if (!premium) {
-                Alert.alert('Premium Feature', 'Upgrade to Premium to copy conversations.', [
+              if (!isPremium) {
+                Alert.alert('Premium Feature', 'Copying your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
                   { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
                 ]);
@@ -639,9 +654,9 @@ Keep each section concise but informative. This is for someone about to have a c
               }
               copyConversation();
             }}
-            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: theme.colors.border }}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isPremium ? theme.colors.border : theme.colors.muted }}
           >
-            <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
+            <Text style={{ color: isPremium ? theme.colors.text : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
           </TouchableOpacity>
           
           {/* Save requires account (free users can save, but need premium to access in My Walk) */}
