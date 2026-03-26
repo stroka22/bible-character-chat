@@ -133,7 +133,10 @@ export async function getChatInvitePreview(code) {
     .eq('id', invite.chat_id)
     .single();
   
+  console.log('[chatInvitesService] Chat query result:', { chat, chatError });
+  
   if (chatError || !chat) {
+    console.log('[chatInvitesService] Chat not found for id:', invite.chat_id);
     return { data: null, error: { message: 'Conversation not found' } };
   }
   
