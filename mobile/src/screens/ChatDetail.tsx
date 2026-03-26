@@ -17,7 +17,7 @@ import AIConsentModal from '../components/AIConsentModal';
 export default function ChatDetail() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
-  const { chatId, ephemeral } = route.params || {};
+  const { chatId, ephemeral, studyContext } = route.params || {};
   const { user } = useAuth();
   const isEphemeral = ephemeral === true || !chatId;
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
@@ -69,7 +69,41 @@ export default function ChatDetail() {
     (async () => {
       // For ephemeral chats, just set up the opening line
       if (isEphemeral) {
-        if (character?.opening_line) {
+        // If this is a Bible Study context, generate an intro message
+        if (studyContext && character) {
+          setTitle(`${studyContext.studyTitle} - Lesson ${studyContext.lessonIndex + 1}`);
+          // Generate intro message for Bible Study
+          try {
+            const systemPrompt = studyContext.characterInstructions 
+              ? `${studyContext.characterInstructions}\n\nYou are starting a Bible Study lesson titled "${studyContext.lessonTitle}". Greet the user warmly and introduce the lesson topic. Keep it brief (2-3 sentences).`
+              : `You are ${character.name}. The user is starting a Bible Study lesson titled "${studyContext.lessonTitle}" from the study "${studyContext.studyTitle}". Greet them warmly and introduce the lesson topic. Keep it brief (2-3 sentences).`;
+            const response = await generateCharacterResponse(
+              character.name,
+              systemPrompt,
+              [{ role: 'user', content: 'Please introduce this lesson.' }]
+            );
+            if (response) {
+              setMessages([{
+                id: 'opening',
+                chat_id: 'ephemeral',
+                content: response,
+                role: 'assistant',
+                created_at: new Date().toISOString(),
+              }]);
+            }
+          } catch (e) {
+            console.warn('[ChatDetail] Failed to generate study intro:', e);
+            // Fallback to character opening line or generic message
+            const fallback = character.opening_line || `Welcome to ${studyContext.lessonTitle}. I'm ${character.name}, and I'll be your guide for this lesson.`;
+            setMessages([{
+              id: 'opening',
+              chat_id: 'ephemeral',
+              content: fallback,
+              role: 'assistant',
+              created_at: new Date().toISOString(),
+            }]);
+          }
+        } else if (character?.opening_line) {
           setMessages([{
             id: 'opening',
             chat_id: 'ephemeral',
@@ -77,8 +111,10 @@ export default function ChatDetail() {
             role: 'assistant',
             created_at: new Date().toISOString(),
           }]);
+          setTitle(character?.name ? `Chat with ${character.name}` : 'Chat');
+        } else {
+          setTitle(character?.name ? `Chat with ${character.name}` : 'Chat');
         }
-        setTitle(character?.name ? `Chat with ${character.name}` : 'Chat');
         return;
       }
       
@@ -188,11 +224,11 @@ export default function ChatDetail() {
       headerRight: () => (
         <TouchableOpacity 
           onPress={async () => {
-            // Require account to invite
-            if (!user) {
-              Alert.alert('Account Required', 'Create a free account to invite friends to conversations.', [
+            // Check premium for invite feature - invite always requires premium
+            if (!isPremium) {
+              Alert.alert('Premium Feature', 'Inviting others to your conversation is a premium feature.', [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+                { text: user ? 'Upgrade' : 'Learn More', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
               ]);
               return;
             }
@@ -201,22 +237,14 @@ export default function ChatDetail() {
               Alert.alert('Save First', 'Save this conversation to My Walk before inviting friends.');
               return;
             }
-            // Check premium for invite feature - invite always requires premium
-            if (!isPremium) {
-              Alert.alert('Premium Feature', 'Inviting others to your conversation is a premium feature.', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
-              ]);
-              return;
-            }
             const { success, error } = await inviteFriendToChat(chatId, title);
             if (error) {
               Alert.alert('Error', error);
             }
           }} 
-          style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: isPremium ? theme.colors.primary : theme.colors.muted, borderRadius: 6 }}
+          style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: isPremium ? theme.colors.primary : '#9ca3af', borderRadius: 6 }}
         >
-          <Text style={{ color: isPremium ? theme.colors.primaryText : theme.colors.text, fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
+          <Text style={{ color: isPremium ? theme.colors.primaryText : '#ffffff', fontWeight: '600', fontSize: 12 }}>👥 Invite</Text>
         </TouchableOpacity>
       )
     });
@@ -614,49 +642,35 @@ Keep each section concise but informative. This is for someone about to have a c
           {/* Share requires premium */}
           <TouchableOpacity 
             onPress={async () => {
-              if (!user) {
-                Alert.alert('Account Required', 'Create a free account to share conversations.', [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
-                ]);
-                return;
-              }
               if (!isPremium) {
                 Alert.alert('Premium Feature', 'Sharing your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+                  { text: user ? 'Upgrade' : 'Learn More', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
                 ]);
                 return;
               }
               shareConversation();
             }}
-            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isPremium ? theme.colors.border : theme.colors.muted }}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isPremium ? theme.colors.border : '#9ca3af' }}
           >
-            <Text style={{ color: isPremium ? theme.colors.text : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>📤 Share</Text>
+            <Text style={{ color: isPremium ? theme.colors.text : '#6b7280', fontWeight: '600', fontSize: 12 }}>📤 Share</Text>
           </TouchableOpacity>
           
           {/* Copy requires premium */}
           <TouchableOpacity 
             onPress={async () => {
-              if (!user) {
-                Alert.alert('Account Required', 'Create a free account to copy conversations.', [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
-                ]);
-                return;
-              }
               if (!isPremium) {
                 Alert.alert('Premium Feature', 'Copying your conversation is a premium feature.', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Upgrade', onPress: () => navigation.navigate('Paywall' as never) }
+                  { text: user ? 'Upgrade' : 'Learn More', onPress: () => navigation.navigate(user ? 'Paywall' : 'SignUp' as never) }
                 ]);
                 return;
               }
               copyConversation();
             }}
-            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isPremium ? theme.colors.border : theme.colors.muted }}
+            style={{ backgroundColor: theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isPremium ? theme.colors.border : '#9ca3af' }}
           >
-            <Text style={{ color: isPremium ? theme.colors.text : theme.colors.muted, fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
+            <Text style={{ color: isPremium ? theme.colors.text : '#6b7280', fontWeight: '600', fontSize: 12 }}>📋 Copy</Text>
           </TouchableOpacity>
           
           {/* Save requires account (free users can save, but need premium to access in My Walk) */}
