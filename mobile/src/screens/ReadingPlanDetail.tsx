@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   FlatList,
   Alert,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,6 +45,7 @@ export default function ReadingPlanDetail() {
   const [selectedDay, setSelectedDay] = useState<PlanDay | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [suggestedCharacters, setSuggestedCharacters] = useState<any[]>([]);
 
   const loadData = async () => {
     setLoading(true);
@@ -87,8 +89,70 @@ export default function ReadingPlanDetail() {
     }, [params.slug, user])
   );
 
+  // Load suggested characters when day is selected
+  useEffect(() => {
+    if (!selectedDay || !plan) {
+      setSuggestedCharacters([]);
+      return;
+    }
+    
+    let active = true;
+    (async () => {
+      try {
+        const readings = selectedDay.readings || [];
+        if (readings.length === 0) return;
+        
+        // Get unique book names from readings
+        const bookNames = [...new Set(readings.map(r => r.book))];
+        
+        // Find characters associated with these books
+        const { data: chars } = await supabase
+          .from('characters')
+          .select('id,name,avatar_url,persona_prompt,bible_book')
+          .or('is_visible.is.null,is_visible.eq.true')
+          .limit(10);
+        
+        if (!chars || !active) return;
+        
+        // Score characters by relevance to today's readings
+        const scored = chars
+          .map(c => {
+            let score = 0;
+            const charBook = (c.bible_book || '').toLowerCase();
+            for (const bookName of bookNames) {
+              if (charBook.includes(bookName.toLowerCase())) {
+                score += 10;
+              }
+            }
+            // Bonus for primary suggested character
+            const primaryName = getBestCharacterName(readings, plan.title);
+            if (c.name.toLowerCase().includes(primaryName.toLowerCase())) {
+              score += 20;
+            }
+            return { ...c, score };
+          })
+          .filter(c => c.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3);
+        
+        if (active) setSuggestedCharacters(scored);
+      } catch (e) {
+        console.error('Error loading suggested characters:', e);
+      }
+    })();
+    
+    return () => { active = false; };
+  }, [selectedDay, plan]);
+
   const handleStartPlan = async () => {
-    if (!user || !plan) return;
+    if (!user) {
+      Alert.alert('Account Required', 'Create a free account to track your reading plan progress.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+      ]);
+      return;
+    }
+    if (!plan) return;
     try {
       const newProgress = await startPlan(user.id, plan.id);
       setProgress(newProgress);
@@ -152,9 +216,101 @@ export default function ReadingPlanDetail() {
     if (nextDay) setSelectedDay(nextDay);
   };
 
+  // Start chat with a specific character (from suggestions)
+  const startChatWithCharacter = async (charData: any) => {
+    if (!selectedDay || !plan) return;
+    
+    try {
+      const readings = selectedDay.readings || [];
+      const readingsStr = readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ');
+      
+      // For anonymous users, start ephemeral chat
+      if (!user) {
+        const planContext = {
+          planTitle: plan.title,
+          planSlug: plan.slug,
+          dayNumber: selectedDay.day_number,
+          dayTitle: selectedDay.title,
+          readings: readingsStr,
+          context: selectedDay.context,
+          reflectionPrompt: selectedDay.reflection_prompt,
+        };
+        
+        navigation.navigate('MainTabs', { 
+          screen: 'Chat', 
+          params: { 
+            screen: 'ChatDetail', 
+            params: { 
+              character: charData,
+              planContext,
+              fromPlan: { slug: plan.slug, title: plan.title, dayNumber: selectedDay.day_number }
+            }
+          }
+        });
+        return;
+      }
+      
+      // For logged-in users, create persistent chat
+      const chatTitle = `${plan.title} - Day ${selectedDay.day_number}`;
+      const newChat = await chat.createChat(user.id, charData.id, chatTitle);
+      
+      // Build system prompt
+      const systemPrompt = [
+        `READING PLAN CONTEXT:`,
+        `Plan: "${plan.title}"`,
+        `Day ${selectedDay.day_number} of ${plan.duration_days}: ${selectedDay.title || ''}`,
+        `Today's Passages: ${readingsStr}`,
+        selectedDay.context ? `\nToday's Teaching:\n${selectedDay.context}` : '',
+        selectedDay.reflection_prompt ? `\nReflection Question: ${selectedDay.reflection_prompt}` : '',
+        `\nINSTRUCTIONS:`,
+        `You are ${charData.name}, guiding this person through their daily reading plan.`,
+        `Lead the conversation - don't wait for them to ask questions.`,
+        `1. Start by warmly greeting them and introducing today's reading.`,
+        `2. Share your personal connection to these passages (if relevant to your biblical story).`,
+        `3. After they've read, guide them through the key themes and lessons.`,
+        `4. Use the reflection question to spark deeper discussion.`,
+        `5. Encourage them and remind them of God's faithfulness.`,
+        `Keep responses warm, conversational, and spiritually encouraging.`
+      ].filter(Boolean).join('\n');
+      
+      await chat.addMessage(newChat.id, systemPrompt, 'system');
+      
+      // Generate intro
+      const { generateCharacterResponse } = await import('../lib/api');
+      const introPrompt = `Begin today's reading plan session. Warmly greet the reader, introduce Day ${selectedDay.day_number} (${selectedDay.title || readingsStr}), and share why these passages are meaningful. If these passages relate to your own story in Scripture, briefly mention that connection. Encourage them to read the passages and let you know when they're ready to discuss. Keep it warm and inviting (3-4 sentences).`;
+      
+      try {
+        const introResponse = await generateCharacterResponse(
+          charData.name,
+          charData.persona_prompt || '',
+          [{ role: 'user', content: introPrompt }]
+        );
+        await chat.addMessage(newChat.id, introResponse, 'assistant');
+      } catch {
+        const fallbackIntro = `Welcome to Day ${selectedDay.day_number} of "${plan.title}"! Today we'll be reading ${readingsStr}. Take your time with the passages, and when you're ready, I'd love to discuss what stood out to you.`;
+        await chat.addMessage(newChat.id, fallbackIntro, 'assistant');
+      }
+      
+      navigation.navigate('MainTabs', { 
+        screen: 'Chat', 
+        params: { 
+          screen: 'ChatDetail', 
+          params: { 
+            chatId: newChat.id, 
+            character: charData,
+            fromPlan: { slug: plan.slug, title: plan.title, dayNumber: selectedDay.day_number }
+          }
+        }
+      });
+    } catch (e) {
+      console.error('Error starting chat with character:', e);
+      Alert.alert('Error', 'Failed to start chat. Please try again.');
+    }
+  };
+
   // Start chat with a suggested character based on today's reading
   const startCharacterChat = async () => {
-    if (!user || !selectedDay || !plan) {
+    if (!selectedDay || !plan) {
       navigation.navigate('MainTabs', { screen: 'Chat', params: { screen: 'ChatNew' } });
       return;
     }
@@ -163,6 +319,7 @@ export default function ReadingPlanDetail() {
       // Get suggested character name based on readings
       const readings = selectedDay.readings || [];
       const characterName = getBestCharacterName(readings, plan.title);
+      const readingsStr = readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ');
       
       // Find the character in the database
       const { data: charData } = await supabase
@@ -178,10 +335,35 @@ export default function ReadingPlanDetail() {
         return;
       }
       
-      // Create chat with context about today's reading
-      const readingsStr = readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ');
-      const chatTitle = `${plan.title} - Day ${selectedDay.day_number}`;
+      // For anonymous users, start ephemeral chat
+      if (!user) {
+        // Build reading plan context for ephemeral chat
+        const planContext = {
+          planTitle: plan.title,
+          planSlug: plan.slug,
+          dayNumber: selectedDay.day_number,
+          dayTitle: selectedDay.title,
+          readings: readingsStr,
+          context: selectedDay.context,
+          reflectionPrompt: selectedDay.reflection_prompt,
+        };
+        
+        navigation.navigate('MainTabs', { 
+          screen: 'Chat', 
+          params: { 
+            screen: 'ChatDetail', 
+            params: { 
+              character: charData,
+              planContext,
+              fromPlan: { slug: plan.slug, title: plan.title, dayNumber: selectedDay.day_number }
+            }
+          }
+        });
+        return;
+      }
       
+      // For logged-in users, create persistent chat
+      const chatTitle = `${plan.title} - Day ${selectedDay.day_number}`;
       const newChat = await chat.createChat(user.id, charData.id, chatTitle);
       
       // Build comprehensive system message for character-led conversation
@@ -416,31 +598,123 @@ export default function ReadingPlanDetail() {
               </View>
             )}
 
+            {/* Character Suggestions */}
+            {suggestedCharacters.length > 0 && (
+              <View style={{ marginTop: 16 }}>
+                <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '600', marginBottom: 12 }}>
+                  👥 Discuss With
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  {suggestedCharacters.map((char) => (
+                    <TouchableOpacity
+                      key={char.id}
+                      onPress={() => startChatWithCharacter(char)}
+                      style={{
+                        flex: 1,
+                        backgroundColor: theme.colors.surface,
+                        borderRadius: 10,
+                        padding: 12,
+                        alignItems: 'center',
+                        borderWidth: 1,
+                        borderColor: theme.colors.border,
+                      }}
+                    >
+                      {char.avatar_url ? (
+                        <Image
+                          source={{ uri: char.avatar_url }}
+                          style={{ width: 48, height: 48, borderRadius: 24, marginBottom: 8 }}
+                        />
+                      ) : (
+                        <View style={{ 
+                          width: 48, 
+                          height: 48, 
+                          borderRadius: 24, 
+                          backgroundColor: theme.colors.primary,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          marginBottom: 8,
+                        }}>
+                          <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 18 }}>
+                            {char.name.charAt(0)}
+                          </Text>
+                        </View>
+                      )}
+                      <Text style={{ 
+                        color: theme.colors.text, 
+                        fontWeight: '600', 
+                        fontSize: 12,
+                        textAlign: 'center',
+                      }} numberOfLines={1}>
+                        {char.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
             {/* Action Buttons */}
             <View style={{ gap: 12, marginTop: 20 }}>
-              {isDayCompleted ? (
-                <TouchableOpacity
-                  onPress={handleUncompleteDay}
-                  style={{
-                    backgroundColor: '#6b7280',
-                    paddingVertical: 14,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontWeight: '700' }}>↩ Unmark Complete</Text>
-                </TouchableOpacity>
+              {user ? (
+                // Logged in users see complete/uncomplete buttons
+                progress ? (
+                  isDayCompleted ? (
+                    <TouchableOpacity
+                      onPress={handleUncompleteDay}
+                      style={{
+                        backgroundColor: '#6b7280',
+                        paddingVertical: 14,
+                        borderRadius: 10,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#fff', fontWeight: '700' }}>↩ Unmark Complete</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={handleCompleteDay}
+                      style={{
+                        backgroundColor: '#16a34a',
+                        paddingVertical: 14,
+                        borderRadius: 10,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#fff', fontWeight: '700' }}>✓ Mark Day Complete</Text>
+                    </TouchableOpacity>
+                  )
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleStartPlan}
+                    style={{
+                      backgroundColor: '#16a34a',
+                      paddingVertical: 14,
+                      borderRadius: 10,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ color: '#fff', fontWeight: '700' }}>▶ Start Tracking This Plan</Text>
+                  </TouchableOpacity>
+                )
               ) : (
+                // Anonymous users see sign up prompt
                 <TouchableOpacity
-                  onPress={handleCompleteDay}
+                  onPress={() => {
+                    Alert.alert('Account Required', 'Create a free account to track your reading plan progress.', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
+                    ]);
+                  }}
                   style={{
-                    backgroundColor: '#16a34a',
+                    backgroundColor: theme.colors.surface,
                     paddingVertical: 14,
                     borderRadius: 10,
                     alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
                   }}
                 >
-                  <Text style={{ color: '#fff', fontWeight: '700' }}>✓ Mark Day Complete</Text>
+                  <Text style={{ color: theme.colors.text, fontWeight: '700' }}>📝 Sign Up to Track Progress</Text>
                 </TouchableOpacity>
               )}
               

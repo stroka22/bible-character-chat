@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase';
 import { theme } from '../theme';
 import { getFavoriteCharacterIds, setFavoriteCharacter } from '../lib/favorites';
 import { generateCharacterResponse } from '../lib/api';
+import { getBestCharacterName } from '../utils/characterSuggestions';
 
 const CURATED_BOOKS = ['Genesis','Exodus','Psalms','Proverbs','Gospels','Acts','Romans','Hebrews'];
 
@@ -220,6 +221,95 @@ export default function ChatNew() {
     
     return () => { active = false; };
   }, [params.readingPlanContext, user]);
+
+  // Handle bibleContext (verse selection from Bible reader without reading plan)
+  React.useEffect(() => {
+    if (!params.bibleContext || params.readingPlanContext) return; // Skip if already handled by readingPlanContext
+    
+    let active = true;
+    (async () => {
+      try {
+        const ctx = params.bibleContext!;
+        
+        // Parse book from reference (e.g., "Genesis 1:1-3" -> "Genesis")
+        const bookMatch = ctx.reference.match(/^(\d?\s*[A-Za-z]+)/);
+        const bookName = bookMatch ? bookMatch[1].trim() : 'Genesis';
+        
+        // Get suggested character based on the book
+        const characterName = getBestCharacterName([{ book: bookName, chapter: 1 }], '');
+        
+        // Find the character
+        const { data: charData } = await supabase
+          .from('characters')
+          .select('id,name,avatar_url,persona_prompt,opening_line')
+          .ilike('name', `%${characterName}%`)
+          .limit(1)
+          .maybeSingle();
+        
+        if (!charData || !active) return;
+        
+        if (user) {
+          // Logged in user - create persistent chat
+          const chatTitle = `Discussion: ${ctx.reference}`;
+          const newChat = await chat.createChat(user.id, String(charData.id), chatTitle);
+          
+          // Build system prompt with verse context
+          const systemPrompt = [
+            `BIBLE VERSE CONTEXT:`,
+            `Reference: ${ctx.reference} (${ctx.translation})`,
+            `\nSelected verses:\n"${ctx.text}"`,
+            `\nINSTRUCTIONS:`,
+            `You are ${charData.name}, discussing the verses the user selected.`,
+            `1. Acknowledge the specific verses they selected.`,
+            `2. Share your perspective on these verses, especially if they relate to your biblical story.`,
+            `3. Ask what drew them to these particular verses.`,
+            `4. Guide a meaningful discussion about the spiritual truths in these passages.`,
+            `Keep responses warm, conversational, and spiritually encouraging.`
+          ].join('\n');
+          
+          await chat.addMessage(newChat.id, systemPrompt, 'system');
+          
+          // Generate character-led opening
+          try {
+            const introPrompt = `The reader just selected ${ctx.reference} from the Bible. Warmly acknowledge their selection and share why these verses are meaningful. If they relate to your own story, mention that. Ask what drew them to these particular verses. Keep it conversational (3-4 sentences).`;
+            
+            const introResponse = await generateCharacterResponse(
+              charData.name,
+              charData.persona_prompt || '',
+              [{ role: 'user', content: introPrompt }]
+            );
+            await chat.addMessage(newChat.id, introResponse, 'assistant');
+          } catch {
+            const fallback = `I see you've selected ${ctx.reference}. These are wonderful verses! I'd love to discuss what stood out to you and explore their meaning together.`;
+            await chat.addMessage(newChat.id, fallback, 'assistant');
+          }
+          
+          if (active) {
+            nav.navigate('ChatDetail', { chatId: newChat.id, character: charData });
+          }
+        } else {
+          // Anonymous user - ephemeral chat with verse context
+          const verseContext = {
+            reference: ctx.reference,
+            translation: ctx.translation,
+            text: ctx.text,
+          };
+          
+          if (active) {
+            nav.navigate('ChatDetail', { 
+              character: charData, 
+              ephemeral: true,
+              verseContext,
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Error auto-starting verse chat:', e);
+      }
+    })();
+    
+    return () => { active = false; };
+  }, [params.bibleContext, user]);
 
   // Categories kept small and curated for speed and legibility
 

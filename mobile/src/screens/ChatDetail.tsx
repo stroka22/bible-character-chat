@@ -17,7 +17,7 @@ import AIConsentModal from '../components/AIConsentModal';
 export default function ChatDetail() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
-  const { chatId, ephemeral, studyContext } = route.params || {};
+  const { chatId, ephemeral, studyContext, planContext, verseContext } = route.params || {};
   const { user } = useAuth();
   const isEphemeral = ephemeral === true || !chatId;
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
@@ -110,6 +110,106 @@ export default function ChatDetail() {
             console.warn('[ChatDetail] Failed to generate study intro:', e);
             // Fallback to character opening line or generic message
             const fallback = character.opening_line || `Welcome to ${studyContext.lessonTitle}. I'm ${character.name}, and I'll be your guide for this lesson.`;
+            setMessages([{
+              id: 'opening',
+              chat_id: 'ephemeral',
+              content: fallback,
+              role: 'assistant',
+              created_at: new Date().toISOString(),
+            }]);
+          }
+        } else if (planContext && character) {
+          // Reading Plan context for ephemeral chat
+          setTitle(`${planContext.planTitle} - Day ${planContext.dayNumber}`);
+          try {
+            // Build system prompt for reading plan
+            const systemPrompt = [
+              `READING PLAN CONTEXT:`,
+              `Plan: "${planContext.planTitle}"`,
+              `Day ${planContext.dayNumber}: ${planContext.dayTitle || ''}`,
+              `Today's Passages: ${planContext.readings}`,
+              planContext.context ? `\nToday's Teaching:\n${planContext.context}` : '',
+              planContext.reflectionPrompt ? `\nReflection Question: ${planContext.reflectionPrompt}` : '',
+              `\nINSTRUCTIONS:`,
+              `You are ${character.name}, guiding this person through their daily reading plan.`,
+              `Lead the conversation - don't wait for them to ask questions.`,
+              `1. Start by warmly greeting them and introducing today's reading.`,
+              `2. Share your personal connection to these passages (if relevant to your biblical story).`,
+              `3. After they've read, guide them through the key themes and lessons.`,
+              `4. Use the reflection question to spark deeper discussion.`,
+              `5. Encourage them and remind them of God's faithfulness.`,
+              `Keep responses warm, conversational, and spiritually encouraging.`
+            ].filter(Boolean).join('\n');
+            
+            const introPrompt = `Begin today's reading plan session. Warmly greet the reader, introduce Day ${planContext.dayNumber} (${planContext.dayTitle || planContext.readings}), and share why these passages are meaningful. If these passages relate to your own story in Scripture, briefly mention that connection. Encourage them to read the passages and let you know when they're ready to discuss. Keep it warm and inviting (3-4 sentences).`;
+            
+            const response = await generateCharacterResponse(
+              character.name,
+              character.persona_prompt || '',
+              [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: introPrompt }
+              ]
+            );
+            if (response) {
+              setMessages([{
+                id: 'opening',
+                chat_id: 'ephemeral',
+                content: response,
+                role: 'assistant',
+                created_at: new Date().toISOString(),
+              }]);
+            }
+          } catch (e) {
+            console.warn('[ChatDetail] Failed to generate plan intro:', e);
+            const fallback = `Welcome to Day ${planContext.dayNumber} of "${planContext.planTitle}"! Today we'll be reading ${planContext.readings}. Take your time with the passages, and when you're ready, I'd love to discuss what stood out to you and explore these truths together.`;
+            setMessages([{
+              id: 'opening',
+              chat_id: 'ephemeral',
+              content: fallback,
+              role: 'assistant',
+              created_at: new Date().toISOString(),
+            }]);
+          }
+        } else if (verseContext && character) {
+          // Verse selection context for ephemeral chat
+          setTitle(`Discussion: ${verseContext.reference}`);
+          try {
+            const systemPrompt = [
+              `BIBLE VERSE CONTEXT:`,
+              `Reference: ${verseContext.reference} (${verseContext.translation})`,
+              `\nSelected verses:\n"${verseContext.text}"`,
+              `\nINSTRUCTIONS:`,
+              `You are ${character.name}, discussing the verses the user selected.`,
+              `1. Acknowledge the specific verses they selected.`,
+              `2. Share your perspective on these verses, especially if they relate to your biblical story.`,
+              `3. Ask what drew them to these particular verses.`,
+              `4. Guide a meaningful discussion about the spiritual truths in these passages.`,
+              `Keep responses warm, conversational, and spiritually encouraging.`
+            ].join('\n');
+            
+            const introPrompt = `The reader just selected ${verseContext.reference} from the Bible. Warmly acknowledge their selection and share why these verses are meaningful. If they relate to your own story, mention that. Ask what drew them to these particular verses. Keep it conversational (3-4 sentences).`;
+            
+            const response = await generateCharacterResponse(
+              character.name,
+              character.persona_prompt || '',
+              [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: introPrompt }
+              ]
+            );
+            if (response) {
+              setMessages([{
+                id: 'opening',
+                chat_id: 'ephemeral',
+                content: response,
+                role: 'assistant',
+                created_at: new Date().toISOString(),
+              }]);
+            }
+          } catch (e) {
+            console.warn('[ChatDetail] Failed to generate verse intro:', e);
+            const fallback = `I see you've selected ${verseContext.reference}. These are wonderful verses! I'd love to discuss what stood out to you and explore their meaning together.`;
             setMessages([{
               id: 'opening',
               chat_id: 'ephemeral',

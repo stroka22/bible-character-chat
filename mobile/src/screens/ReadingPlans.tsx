@@ -40,11 +40,13 @@ function PlanCard({
   progress,
   onStart,
   onContinue,
+  onView,
 }: { 
   plan: ReadingPlan; 
   progress?: UserPlanProgress;
   onStart: () => void;
   onContinue: () => void;
+  onView: () => void;
 }) {
   const progressPercent = progress 
     ? Math.round((progress.completed_days?.length || 0) / plan.duration_days * 100)
@@ -120,7 +122,7 @@ function PlanCard({
         </View>
       ) : (
         <TouchableOpacity
-          onPress={onStart}
+          onPress={onView}
           style={{
             backgroundColor: theme.colors.surface,
             paddingVertical: 12,
@@ -130,7 +132,7 @@ function PlanCard({
             borderColor: theme.colors.border,
           }}
         >
-          <Text style={{ color: theme.colors.text, fontWeight: '600' }}>Start Plan</Text>
+          <Text style={{ color: theme.colors.text, fontWeight: '600' }}>View Plan</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -192,6 +194,10 @@ export default function ReadingPlans() {
   };
 
   const handleContinuePlan = (plan: ReadingPlan) => {
+    navigation.navigate('ReadingPlanDetail', { planId: plan.id, slug: plan.slug });
+  };
+
+  const handleViewPlan = (plan: ReadingPlan) => {
     navigation.navigate('ReadingPlanDetail', { planId: plan.id, slug: plan.slug });
   };
 
@@ -334,6 +340,7 @@ export default function ReadingPlans() {
                 progress={progress}
                 onStart={() => {}}
                 onContinue={() => handleContinuePlan(progress.plan!)}
+                onView={() => handleViewPlan(progress.plan!)}
               />
             ))}
           </View>
@@ -352,6 +359,7 @@ export default function ReadingPlans() {
                 progress={getProgressForPlan(plan.id)}
                 onStart={() => handleStartPlan(plan)}
                 onContinue={() => handleContinuePlan(plan)}
+                onView={() => handleViewPlan(plan)}
               />
             ))}
           </View>
@@ -372,6 +380,7 @@ export default function ReadingPlans() {
                 progress={getProgressForPlan(plan.id)}
                 onStart={() => handleStartPlan(plan)}
                 onContinue={() => handleContinuePlan(plan)}
+                onView={() => handleViewPlan(plan)}
               />
             ))}
           </View>
