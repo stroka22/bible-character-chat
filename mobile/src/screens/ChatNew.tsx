@@ -230,23 +230,43 @@ export default function ChatNew() {
     (async () => {
       try {
         const ctx = params.bibleContext!;
+        console.log('[ChatNew] Handling bibleContext:', ctx.reference);
         
         // Parse book from reference (e.g., "Genesis 1:1-3" -> "Genesis")
         const bookMatch = ctx.reference.match(/^(\d?\s*[A-Za-z]+)/);
         const bookName = bookMatch ? bookMatch[1].trim() : 'Genesis';
+        console.log('[ChatNew] Parsed book:', bookName);
         
         // Get suggested character based on the book
         const characterName = getBestCharacterName([{ book: bookName, chapter: 1 }], '');
+        console.log('[ChatNew] Suggested character:', characterName);
         
         // Find the character
-        const { data: charData } = await supabase
+        let { data: charData } = await supabase
           .from('characters')
           .select('id,name,avatar_url,persona_prompt,opening_line')
           .ilike('name', `%${characterName}%`)
           .limit(1)
           .maybeSingle();
         
-        if (!charData || !active) return;
+        // Fallback to Chat Guide if no character found
+        if (!charData) {
+          console.log('[ChatNew] Character not found, trying Chat Guide');
+          const { data: fallbackChar } = await supabase
+            .from('characters')
+            .select('id,name,avatar_url,persona_prompt,opening_line')
+            .ilike('name', '%Chat Guide%')
+            .limit(1)
+            .maybeSingle();
+          charData = fallbackChar;
+        }
+        
+        if (!charData || !active) {
+          console.log('[ChatNew] No character found, cannot start chat');
+          return;
+        }
+        
+        console.log('[ChatNew] Using character:', charData.name);
         
         if (user) {
           // Logged in user - create persistent chat
