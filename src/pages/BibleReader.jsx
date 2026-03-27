@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { BOOK_AUTHOR } from '../data/bibleAuthorship.js';
 import { characterRepository } from '../repositories/characterRepository.js';
 import { LocalBibleProvider, AVAILABLE_TRANSLATIONS } from '../services/bible/providers/localBible.js';
@@ -49,16 +49,23 @@ function linkInline(text, charMap) {
 export default function BibleReader() {
   const navigate = useNavigate();
   const { translation = 'KJV', book = 'Genesis', chapter = '1' } = useParams();
+  const [searchParams] = useSearchParams();
   const [data, setData] = React.useState({ translation: 'KJV', book, chapter: Number(chapter), verses: [], notice: '' });
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
   const [bookList, setBookList] = React.useState([]);
   const [chapterList, setChapterList] = React.useState([]);
+  const [selectedVerses, setSelectedVerses] = React.useState(new Set());
   const charMap = useCharacters();
 
   const authorName = BOOK_AUTHOR[book];
   const authorChar = authorName ? charMap.get(authorName.toLowerCase()) : null;
   const [featuredPlans, setFeaturedPlans] = React.useState([]);
+  
+  // Reading plan context from URL params
+  const fromPlan = searchParams.get('from') === 'plan';
+  const planSlug = searchParams.get('plan');
+  const planDay = searchParams.get('day');
 
   // Load featured reading plans
   React.useEffect(() => {
@@ -78,6 +85,7 @@ export default function BibleReader() {
   React.useEffect(() => {
     (async () => {
       setLoading(true); setError('');
+      setSelectedVerses(new Set()); // Clear selection on chapter change
       try {
         const res = await prov.getChapterText(book, Number(chapter));
         setData(res);
@@ -89,8 +97,69 @@ export default function BibleReader() {
     })();
   }, [translation, book, chapter]);
 
+  const toggleVerseSelection = (verseNum) => {
+    setSelectedVerses(prev => {
+      const next = new Set(prev);
+      if (next.has(verseNum)) {
+        next.delete(verseNum);
+      } else {
+        next.add(verseNum);
+      }
+      return next;
+    });
+  };
+
+  const chatAboutSelection = () => {
+    if (selectedVerses.size === 0 || !data.verses.length) return;
+    
+    const sortedVerses = Array.from(selectedVerses).sort((a, b) => a - b);
+    const passageText = sortedVerses
+      .map(v => `${v}. ${data.verses[v - 1]}`)
+      .join('\n');
+    
+    // Build reference string
+    let reference = `${book} ${chapter}:`;
+    if (sortedVerses.length === 1) {
+      reference += sortedVerses[0];
+    } else {
+      const ranges = [];
+      let start = sortedVerses[0];
+      let end = sortedVerses[0];
+      for (let i = 1; i < sortedVerses.length; i++) {
+        if (sortedVerses[i] === end + 1) {
+          end = sortedVerses[i];
+        } else {
+          ranges.push(start === end ? `${start}` : `${start}-${end}`);
+          start = sortedVerses[i];
+          end = sortedVerses[i];
+        }
+      }
+      ranges.push(start === end ? `${start}` : `${start}-${end}`);
+      reference += ranges.join(', ');
+    }
+    
+    // Find suggested character based on book
+    const suggestedChar = authorChar || Array.from(charMap.values())[0];
+    const characterId = suggestedChar?.id || '';
+    const context = encodeURIComponent(`Discussing ${reference} (${translation}):\n\n${passageText}`);
+    
+    navigate(`/chat?character=${characterId}&context=${context}`);
+  };
+
   return (
     <div className="container mx-auto px-4 pt-24 pb-12">
+      {/* Back to Reading Plan link */}
+      {fromPlan && planSlug && (
+        <div className="mb-4">
+          <Link 
+            to={`/reading-plans/${planSlug}`}
+            className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+          >
+            ← Back to Reading Plan{planDay ? ` (Day ${planDay})` : ''}
+          </Link>
+        </div>
+      )}
+      
       <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Bible – {translation}</h1>
@@ -118,13 +187,52 @@ export default function BibleReader() {
       ) : (
         <div className="grid md:grid-cols-12 gap-6">
           <div className="md:col-span-8">
+            {/* Verse selection chat button */}
+            {selectedVerses.size > 0 && (
+              <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg flex items-center justify-between">
+                <span className="text-purple-800 font-medium">
+                  {selectedVerses.size} verse{selectedVerses.size > 1 ? 's' : ''} selected
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedVerses(new Set())}
+                    className="px-3 py-1 text-gray-600 hover:text-gray-800"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={chatAboutSelection}
+                    className="px-4 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium"
+                  >
+                    💬 Chat About These Verses
+                  </button>
+                </div>
+              </div>
+            )}
+            
             {data.verses.length === 0 ? (
               <div className="p-4 bg-white border border-gray-200 rounded">No verses loaded.</div>
             ) : (
-              <div className="space-y-3 bg-white border border-gray-200 rounded p-4">
-                {data.verses.map((v, idx) => (
-                  <p key={idx} className="text-gray-900" dangerouslySetInnerHTML={{ __html: `<span class='text-gray-500 select-none pr-2'>${idx+1}</span>` + linkInline(v, charMap) }} />
-                ))}
+              <div className="space-y-1 bg-white border border-gray-200 rounded p-4">
+                <p className="text-xs text-gray-500 mb-3">Tap verses to select them for discussion</p>
+                {data.verses.map((v, idx) => {
+                  const verseNum = idx + 1;
+                  const isSelected = selectedVerses.has(verseNum);
+                  return (
+                    <p 
+                      key={idx} 
+                      onClick={() => toggleVerseSelection(verseNum)}
+                      className={`text-gray-900 cursor-pointer p-2 rounded transition-colors ${
+                        isSelected 
+                          ? 'bg-purple-100 border-l-4 border-purple-500' 
+                          : 'hover:bg-gray-50'
+                      }`}
+                      dangerouslySetInnerHTML={{ 
+                        __html: `<span class='${isSelected ? 'text-purple-700 font-bold' : 'text-gray-500'} select-none pr-2'>${verseNum}</span>` + linkInline(v, charMap) 
+                      }} 
+                    />
+                  );
+                })}
               </div>
             )}
           </div>

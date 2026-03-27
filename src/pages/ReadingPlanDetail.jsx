@@ -108,7 +108,7 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
             {readings.map((reading, idx) => (
               <Link
                 key={idx}
-                to={`/bible/KJV/${reading.book}/${reading.chapter}`}
+                to={`/bible/KJV/${reading.book}/${reading.chapter}?from=plan&plan=${plan.slug}&day=${day.day_number}`}
                 className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <span className="font-medium text-gray-900">
@@ -136,13 +136,20 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
             >
               Unmark Complete
             </button>
-          ) : (
+          ) : onComplete ? (
             <button
               onClick={onComplete}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
               Mark Complete ✓
             </button>
+          ) : (
+            <a
+              href="/signup"
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors text-center"
+            >
+              📝 Sign Up to Track Progress
+            </a>
           )}
           <button
             onClick={() => {
@@ -325,8 +332,8 @@ export default function ReadingPlanDetail() {
         <ReadingView 
           day={selectedDay} 
           plan={plan}
-          onComplete={handleCompleteDay}
-          onUncomplete={handleUncompleteDay}
+          onComplete={user && progress ? handleCompleteDay : null}
+          onUncomplete={user && progress ? handleUncompleteDay : null}
           onBack={() => setSelectedDay(null)}
           onPrevDay={handlePrevDay}
           onNextDay={handleNextDay}
@@ -366,15 +373,27 @@ export default function ReadingPlanDetail() {
             </div>
           )}
 
-          {/* Start Button */}
+          {/* Start Button / View Days */}
           {!progress && (
-            <div className="mb-6">
-              <button
-                onClick={handleStartPlan}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-              >
-                Start This Plan
-              </button>
+            <div className="mb-6 flex gap-3">
+              {user ? (
+                <button
+                  onClick={handleStartPlan}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                >
+                  Start Tracking This Plan
+                </button>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-600">Browse the days below, or</span>
+                  <a
+                    href="/signup"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-block"
+                  >
+                    Sign Up to Track Progress
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
