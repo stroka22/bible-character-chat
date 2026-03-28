@@ -36,7 +36,7 @@ function DayCard({ day, isCompleted, isCurrent, onSelect }) {
   );
 }
 
-function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, onNextDay, isCompleted, navigate }) {
+function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, onNextDay, isCompleted, navigate, user }) {
   const readings = day.readings || [];
   const suggestedCharacter = getBestCharacterSuggestion(readings, plan.title);
   const chatContext = encodeURIComponent(`Today's reading: ${readings.map(r => `${r.book} ${r.chapter}${r.verses ? ':' + r.verses : ''}`).join(', ')} from "${plan.title}". ${day.reflection_prompt || ''}`);
@@ -50,13 +50,28 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
   
   return (
     <div className="max-w-3xl mx-auto">
+      {/* Branding header */}
+      <div className="mb-6">
+        <Link to="/" className="text-2xl font-bold text-blue-700 hover:text-blue-800">
+          Faith Talk AI
+        </Link>
+        <span className="text-gray-400 mx-2">›</span>
+        <Link to="/reading-plans" className="text-gray-600 hover:text-blue-600">
+          Reading Plans
+        </Link>
+        <span className="text-gray-400 mx-2">›</span>
+        <button onClick={onBack} className="text-gray-600 hover:text-blue-600">
+          {plan.title}
+        </button>
+      </div>
+      
       {/* Navigation header */}
       <div className="flex items-center justify-between mb-4">
         <button 
           onClick={onBack}
           className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
         >
-          ← Back to Plan
+          ← Back to Plan Overview
         </button>
         <div className="flex items-center gap-2">
           <button
@@ -132,44 +147,41 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
           {isCompleted ? (
             <button
               onClick={onUncomplete}
-              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
             >
               Unmark Complete
             </button>
           ) : onComplete ? (
             <button
               onClick={onComplete}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
             >
               Mark Complete ✓
             </button>
           ) : (
-            <a
-              href="/signup"
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors text-center"
-            >
-              📝 Sign Up to Track Progress
-            </a>
+            <div className="flex-1 flex items-center justify-center gap-2 bg-gray-100 py-3 px-4 rounded-lg">
+              <a href="/signup" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg">
+                Create Free Account
+              </a>
+              <span className="text-gray-500">or</span>
+              <a href="/login" className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg">
+                Sign In
+              </a>
+              <span className="text-gray-500 text-sm ml-2">to track progress</span>
+            </div>
           )}
-          <button
-            onClick={() => {
-              const reading = readings[0];
-              if (reading) {
-                navigate(`/bible/KJV/${reading.book}/${reading.chapter}`);
-              }
-            }}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+          <Link
+            to={`/bible/KJV/${readings[0]?.book || 'Genesis'}/${readings[0]?.chapter || 1}?from=plan&plan=${plan.slug}&day=${day.day_number}`}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
           >
             Open in Bible Reader
-          </button>
-          <a
-            href={`/chat?character=${characterParam}&context=${chatContext}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-center"
+          </Link>
+          <Link
+            to={`/chat?character=${characterParam}&context=${chatContext}`}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
           >
             Chat with {suggestedCharacter}
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -339,6 +351,7 @@ export default function ReadingPlanDetail() {
           onNextDay={handleNextDay}
           isCompleted={completedDays.has(selectedDay.day_number)}
           navigate={navigate}
+          user={user}
         />
       ) : (
         <>
@@ -375,7 +388,7 @@ export default function ReadingPlanDetail() {
 
           {/* Start Button / View Days */}
           {!progress && (
-            <div className="mb-6 flex gap-3">
+            <div className="mb-6">
               {user ? (
                 <button
                   onClick={handleStartPlan}
@@ -384,14 +397,21 @@ export default function ReadingPlanDetail() {
                   Start Tracking This Plan
                 </button>
               ) : (
-                <div className="flex items-center gap-4">
-                  <span className="text-gray-600">Browse the days below, or</span>
+                <div className="flex flex-wrap items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <a
                     href="/signup"
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-block"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                   >
-                    Sign Up to Track Progress
+                    Create Free Account
                   </a>
+                  <span className="text-gray-500">or</span>
+                  <a
+                    href="/login"
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Sign In
+                  </a>
+                  <span className="text-gray-600">to have Faith Talk AI track your progress.</span>
                 </div>
               )}
             </div>
