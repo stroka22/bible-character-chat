@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import FooterScroll from '../components/FooterScroll';
 import PreviewLayout from '../components/PreviewLayout';
@@ -7,7 +7,11 @@ import { ScrollWrap, ScrollBackground } from '../components/ScrollWrap';
 
 const SignupPageScroll = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signUp, loading, error } = useAuth();
+  
+  // Get redirect URL from query params
+  const redirectTo = new URLSearchParams(location.search).get('to');
   
   const [formData, setFormData] = useState({
     email: '',
@@ -67,7 +71,7 @@ const SignupPageScroll = () => {
             </div>
             <h1 className="text-2xl font-bold text-amber-900 mb-4" style={{ fontFamily: 'Cinzel, serif' }}>Account Created!</h1>
             <p className="text-amber-700 mb-6">Your account has been created successfully. You can now log in and start your faith journey.</p>
-            <Link to="/login" className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Log In Now</Link>
+            <Link to={redirectTo ? `/login?to=${encodeURIComponent(redirectTo)}` : '/login'} className="px-6 py-3 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Log In Now</Link>
           </ScrollWrap>
           </div>
         </ScrollBackground>
