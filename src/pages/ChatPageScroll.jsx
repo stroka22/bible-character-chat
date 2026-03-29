@@ -686,8 +686,8 @@ const ChatPageScroll = () => {
                 verseIntroGeneratedRef.current = verseKey;
                 console.log('[ChatPageScroll] Generating verse-aware intro for:', decodedContext.substring(0, 100));
                 
-                // Small delay to ensure character selection has completed and we're not in a render cycle
-                setTimeout(async () => {
+                // Generate intro and use sendMessage pattern to add it
+                (async () => {
                   try {
                     console.log('[ChatPageScroll] Making API call for verse intro...');
                     const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
@@ -708,12 +708,19 @@ const ChatPageScroll = () => {
                       const data = await response.json();
                       console.log('[ChatPageScroll] API response data:', data);
                       const introMessage = data.text || data.content || data.message;
-                      if (introMessage && postAssistantMessage) {
-                        console.log('[ChatPageScroll] Adding verse intro message:', introMessage.substring(0, 50), 'character:', character?.name || 'null');
-                        postAssistantMessage(introMessage);
-                        console.log('[ChatPageScroll] postAssistantMessage called, current messages:', messages.length);
+                      if (introMessage) {
+                        console.log('[ChatPageScroll] Got intro message, selecting character with greeting');
+                        // Re-select the character but this time with the custom greeting
+                        selectCharacter(char, { skipGreeting: true });
+                        // Wait a tick for state to update, then post the message
+                        setTimeout(() => {
+                          console.log('[ChatPageScroll] Posting intro message after character select');
+                          if (postAssistantMessage) {
+                            postAssistantMessage(introMessage);
+                          }
+                        }, 50);
                       } else {
-                        console.log('[ChatPageScroll] No intro message or postAssistantMessage missing', { introMessage: !!introMessage, postFn: !!postAssistantMessage });
+                        console.log('[ChatPageScroll] No intro message in response');
                       }
                     } else {
                       console.log('[ChatPageScroll] API response not ok:', response.status);
@@ -721,7 +728,7 @@ const ChatPageScroll = () => {
                   } catch (introErr) {
                     console.warn('[ChatPageScroll] Failed to generate verse intro:', introErr);
                   }
-                }, 100);
+                })();
               }
             }
           }
