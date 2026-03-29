@@ -670,6 +670,12 @@ const ChatPageScroll = () => {
               const decodedContext = decodeURIComponent(contextParam);
               const verseKey = contextParam.substring(0, 100);
               
+              console.log('[ChatPageScroll] Verse context check:', { 
+                verseKey: verseKey.substring(0, 50), 
+                refValue: verseIntroGeneratedRef.current?.substring(0, 50) || 'null',
+                alreadySelected 
+              });
+              
               // Check if we already generated intro for these exact verses
               if (verseIntroGeneratedRef.current === verseKey) {
                 console.log('[ChatPageScroll] Already generated intro for these verses, skipping');
