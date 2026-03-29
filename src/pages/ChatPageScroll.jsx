@@ -501,6 +501,12 @@ const ChatPageScroll = () => {
   const urlLoadedRef = useRef(null);
   const studyContextLoadedRef = useRef(null);
   
+  // Reset URL loaded ref when location.search changes (new URL params)
+  useEffect(() => {
+    console.log('[ChatPageScroll] Location changed, resetting urlLoadedRef');
+    urlLoadedRef.current = null;
+  }, [location.search]);
+  
   // Helper to load Bible Study context and auto-generate intro
   const loadBibleStudyContext = async (studyId, lessonIdx, progressId, setContext, triggerIntro) => {
     const contextKey = `${studyId}-${lessonIdx}`;
