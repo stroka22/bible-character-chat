@@ -19,7 +19,7 @@ import { getBestCharacterName } from '../utils/characterSuggestions';
 export default function ChatDetail() {
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
-  const { chatId, ephemeral, studyContext, planContext, verseContext } = route.params || {};
+  const { chatId, ephemeral, studyContext, planContext, verseContext, suggestedCharacterName } = route.params || {};
   const { user } = useAuth();
   const isEphemeral = ephemeral === true || !chatId;
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
@@ -181,12 +181,14 @@ export default function ChatDetail() {
           let charData = character;
           if (!charData) {
             try {
-              // Parse book from reference (e.g., "Psalms 1:1-3" -> "Psalms")
-              const bookMatch = verseContext.reference.match(/^(\d?\s*[A-Za-z]+)/);
-              const bookName = bookMatch ? bookMatch[1].trim() : 'Genesis';
-              
-              // Get suggested character based on the book
-              const characterName = getBestCharacterName([{ book: bookName, chapter: 1 }], '');
+              // Use suggested character name if provided, otherwise derive from book
+              let characterName = suggestedCharacterName;
+              if (!characterName) {
+                // Parse book from reference (e.g., "Psalms 1:1-3" -> "Psalms")
+                const bookMatch = verseContext.reference.match(/^(\d?\s*[A-Za-z]+)/);
+                const bookName = bookMatch ? bookMatch[1].trim() : 'Genesis';
+                characterName = getBestCharacterName([{ book: bookName, chapter: 1 }], '');
+              }
               
               // Find the character in database
               const { data: foundChar } = await supabase

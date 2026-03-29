@@ -139,10 +139,16 @@ export default function BibleReader() {
         params: {
           ephemeral: true,
           verseContext,
+          suggestedCharacterName: planContext?.suggestedCharacter,
           readingPlanContext: planContext ? {
             ...planContext,
             highlightedVerses: reference,
             highlightedText: passageText,
+          } : undefined,
+          fromPlan: planContext ? {
+            slug: planContext.planSlug,
+            title: planContext.planTitle,
+            dayNumber: planContext.dayNumber,
           } : undefined,
         },
       },
