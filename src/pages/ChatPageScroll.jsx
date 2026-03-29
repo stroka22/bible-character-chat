@@ -591,6 +591,7 @@ const ChatPageScroll = () => {
     let cancelled = false;
     
     const loadFromUrl = async () => {
+      const runId = Math.random().toString(36).substring(2, 8);
       const params = new URLSearchParams(location.search);
       const charParam = params.get('character');
       const studyParam = params.get('study');
@@ -603,7 +604,7 @@ const ChatPageScroll = () => {
       const contextHash = contextParam ? contextParam.substring(0, 100) : '';
       const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}-${contextHash}`;
       
-      console.log('[ChatPageScroll] loadFromUrl called', { 
+      console.log('[ChatPageScroll] loadFromUrl called runId=' + runId, { 
         charParam, 
         contextParam: contextParam?.substring(0, 50), 
         charactersLoaded: characters.length,
@@ -655,7 +656,7 @@ const ChatPageScroll = () => {
             
             // Only select character if not already selected (prevents loop and message clearing)
             const alreadySelected = character && character.id === char.id;
-            console.log('[ChatPageScroll] Processing character:', char.name, 'hasVerseContext:', hasVerseContext, 'alreadySelected:', alreadySelected);
+            console.log('[ChatPageScroll] Processing character runId=' + runId + ':', char.name, 'hasVerseContext:', hasVerseContext, 'alreadySelected:', alreadySelected);
             
             if (!alreadySelected) {
               selectCharacter(char, { skipGreeting: isBibleStudy || hasVerseContext });
@@ -670,7 +671,7 @@ const ChatPageScroll = () => {
               const decodedContext = decodeURIComponent(contextParam);
               const verseKey = contextParam.substring(0, 100);
               
-              console.log('[ChatPageScroll] Verse context check:', { 
+              console.log('[ChatPageScroll] Verse context check runId=' + runId + ':', { 
                 verseKey: verseKey.substring(0, 50), 
                 refValue: verseIntroGeneratedRef.current?.substring(0, 50) || 'null',
                 alreadySelected 
