@@ -591,7 +591,6 @@ const ChatPageScroll = () => {
     let cancelled = false;
     
     const loadFromUrl = async () => {
-      const runId = Math.random().toString(36).substring(2, 8);
       const params = new URLSearchParams(location.search);
       const charParam = params.get('character');
       const studyParam = params.get('study');
@@ -604,12 +603,9 @@ const ChatPageScroll = () => {
       const contextHash = contextParam ? contextParam.substring(0, 100) : '';
       const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}-${contextHash}`;
       
-      console.log('[ChatPageScroll] loadFromUrl called runId=' + runId, { 
+      console.log('[ChatPageScroll] loadFromUrl called', { 
         charParam, 
-        contextParam: contextParam?.substring(0, 50), 
-        charactersLoaded: characters.length,
-        urlKey: urlKey.substring(0, 80),
-        refValue: urlLoadedRef.current?.substring(0, 80) || 'null'
+        hasContext: !!contextParam
       });
       
       // If character param exists but characters aren't loaded yet, wait
@@ -656,7 +652,7 @@ const ChatPageScroll = () => {
             
             // Check if character is already selected in ChatContext
             const alreadySelected = character && character.id === char.id;
-            console.log('[ChatPageScroll] Processing character runId=' + runId + ':', char.name, 'hasVerseContext:', hasVerseContext, 'alreadySelected:', alreadySelected, 'contextCharacter:', character?.name || 'null');
+            console.log('[ChatPageScroll] Processing character:', char.name, 'hasVerseContext:', hasVerseContext);
             
             // Always select the character if context character is null or different
             if (!character || character.id !== char.id) {
@@ -673,11 +669,7 @@ const ChatPageScroll = () => {
               const decodedContext = decodeURIComponent(contextParam);
               const verseKey = contextParam.substring(0, 100);
               
-              console.log('[ChatPageScroll] Verse context check runId=' + runId + ':', { 
-                verseKey: verseKey.substring(0, 50), 
-                refValue: verseIntroGeneratedRef.current?.substring(0, 50) || 'null',
-                alreadySelected 
-              });
+
               
               // Check if we already generated intro for these exact verses
               if (verseIntroGeneratedRef.current === verseKey) {
@@ -689,7 +681,7 @@ const ChatPageScroll = () => {
                 // Generate intro and select character with custom greeting
                 (async () => {
                   try {
-                    console.log('[ChatPageScroll] Making API call for verse intro...');
+    
                     const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
                     
                     const response = await fetch('/api/openai/chat', {
@@ -702,14 +694,11 @@ const ChatPageScroll = () => {
                       })
                     });
                     
-                    console.log('[ChatPageScroll] API response status:', response.status);
-                    
                     if (response.ok) {
                       const data = await response.json();
-                      console.log('[ChatPageScroll] API response data:', data);
                       const introMessage = data.text || data.content || data.message;
                       if (introMessage) {
-                        console.log('[ChatPageScroll] Got intro message, selecting character with custom greeting');
+                        console.log('[ChatPageScroll] Generated verse intro, selecting character');
                         // Select the character with the custom greeting - this sets both character AND message atomically
                         selectCharacter(char, { customGreeting: introMessage });
                       } else {
