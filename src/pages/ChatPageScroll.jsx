@@ -437,6 +437,7 @@ const ChatPageScroll = () => {
     isFavorite: isChatFavorite,
     hydrateFromConversation,
     setLessonContext,
+    postAssistantMessage,
   } = useChat();
   
   // Conversation context for sharing and fetching
@@ -592,9 +593,10 @@ const ChatPageScroll = () => {
       const studyParam = params.get('study');
       const lessonParam = params.get('lesson');
       const progressParam = params.get('progress');
+      const contextParam = params.get('context'); // Verse selection context
       
       // Create a key for this URL state to prevent duplicate loading
-      const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}`;
+      const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}-${contextParam ? 'ctx' : ''}`;
       if (urlLoadedRef.current === urlKey) {
         return; // Already loaded for this URL
       }
@@ -636,11 +638,44 @@ const ChatPageScroll = () => {
             
             // If this is a Bible Study context, skip the generic greeting
             const isBibleStudy = !!(studyParam && lessonParam);
-            selectCharacter(char, { skipGreeting: isBibleStudy });
+            const hasVerseContext = !!contextParam;
+            selectCharacter(char, { skipGreeting: isBibleStudy || hasVerseContext });
             
             // If this is a Bible Study context, set up the lesson context and auto-generate intro
             if (isBibleStudy && setLessonContext) {
               loadBibleStudyContext(studyParam, lessonParam, progressParam, setLessonContext, sendMessage);
+            }
+            // If verse context is provided (from verse selection), generate AI intro
+            else if (hasVerseContext && contextParam) {
+              const decodedContext = decodeURIComponent(contextParam);
+              console.log('[ChatPageScroll] Generating verse-aware intro for:', decodedContext.substring(0, 100));
+              
+              (async () => {
+                try {
+                  const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
+                  
+                  const response = await fetch('/api/openai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      characterName: char.name,
+                      characterPersona: char.persona_prompt || '',
+                      messages: [{ role: 'user', content: introPrompt }]
+                    })
+                  });
+                  
+                  if (response.ok) {
+                    const data = await response.json();
+                    const introMessage = data.content || data.message;
+                    if (introMessage && postAssistantMessage) {
+                      console.log('[ChatPageScroll] Adding verse intro message');
+                      postAssistantMessage(introMessage);
+                    }
+                  }
+                } catch (introErr) {
+                  console.warn('[ChatPageScroll] Failed to generate verse intro:', introErr);
+                }
+              })();
             }
           }
         }
