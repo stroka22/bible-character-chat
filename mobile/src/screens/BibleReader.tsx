@@ -125,32 +125,38 @@ export default function BibleReader() {
     
     if (planContext) {
       // Navigate with reading plan context for character-led discussion
-      navigation.navigate('Chat', {
-        screen: 'ChatNew',
+      navigation.navigate('MainTabs', {
+        screen: 'Chat',
         params: {
-          initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
-          bibleContext: {
-            reference,
-            translation,
-            text: passageText,
-          },
-          readingPlanContext: {
-            ...planContext,
-            highlightedVerses: reference,
-            highlightedText: passageText,
+          screen: 'ChatNew',
+          params: {
+            initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
+            bibleContext: {
+              reference,
+              translation,
+              text: passageText,
+            },
+            readingPlanContext: {
+              ...planContext,
+              highlightedVerses: reference,
+              highlightedText: passageText,
+            },
           },
         },
       });
     } else {
       // Navigate to chat with basic context
-      navigation.navigate('Chat', {
-        screen: 'ChatNew',
+      navigation.navigate('MainTabs', {
+        screen: 'Chat',
         params: {
-          initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
-          bibleContext: {
-            reference,
-            translation,
-            text: passageText,
+          screen: 'ChatNew',
+          params: {
+            initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
+            bibleContext: {
+              reference,
+              translation,
+              text: passageText,
+            },
           },
         },
       });
