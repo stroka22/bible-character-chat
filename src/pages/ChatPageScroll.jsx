@@ -501,11 +501,7 @@ const ChatPageScroll = () => {
   const urlLoadedRef = useRef(null);
   const studyContextLoadedRef = useRef(null);
   
-  // Reset URL loaded ref when location.search changes (new URL params)
-  useEffect(() => {
-    console.log('[ChatPageScroll] Location changed, resetting urlLoadedRef');
-    urlLoadedRef.current = null;
-  }, [location.search]);
+
   
   // Helper to load Bible Study context and auto-generate intro
   const loadBibleStudyContext = async (studyId, lessonIdx, progressId, setContext, triggerIntro) => {
@@ -601,12 +597,19 @@ const ChatPageScroll = () => {
       const progressParam = params.get('progress');
       const contextParam = params.get('context'); // Verse selection context
       
-      console.log('[ChatPageScroll] loadFromUrl called', { charParam, contextParam: contextParam?.substring(0, 50), charactersLoaded: characters.length });
-      
       // Create a key for this URL state to prevent duplicate loading
       // Include a hash of the context to differentiate different verse selections
       const contextHash = contextParam ? contextParam.substring(0, 100) : '';
       const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}-${contextHash}`;
+      
+      console.log('[ChatPageScroll] loadFromUrl called', { 
+        charParam, 
+        contextParam: contextParam?.substring(0, 50), 
+        charactersLoaded: characters.length,
+        urlKey: urlKey.substring(0, 80),
+        refValue: urlLoadedRef.current?.substring(0, 80) || 'null'
+      });
+      
       if (urlLoadedRef.current === urlKey) {
         console.log('[ChatPageScroll] Already loaded this URL, skipping');
         return; // Already loaded for this URL
