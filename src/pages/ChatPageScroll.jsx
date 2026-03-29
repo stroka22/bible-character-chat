@@ -705,7 +705,7 @@ const ChatPageScroll = () => {
                     if (response.ok) {
                       const data = await response.json();
                       console.log('[ChatPageScroll] API response data:', data);
-                      const introMessage = data.content || data.message;
+                      const introMessage = data.text || data.content || data.message;
                       if (introMessage && postAssistantMessage) {
                         console.log('[ChatPageScroll] Adding verse intro message:', introMessage.substring(0, 50));
                         postAssistantMessage(introMessage);
