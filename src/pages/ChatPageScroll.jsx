@@ -598,10 +598,18 @@ const ChatPageScroll = () => {
       console.log('[ChatPageScroll] loadFromUrl called', { charParam, contextParam: contextParam?.substring(0, 50), charactersLoaded: characters.length });
       
       // Create a key for this URL state to prevent duplicate loading
-      const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}-${contextParam ? 'ctx' : ''}`;
+      // Include a hash of the context to differentiate different verse selections
+      const contextHash = contextParam ? contextParam.substring(0, 100) : '';
+      const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}-${contextHash}`;
       if (urlLoadedRef.current === urlKey) {
         console.log('[ChatPageScroll] Already loaded this URL, skipping');
         return; // Already loaded for this URL
+      }
+      
+      // If character param exists but characters aren't loaded yet, wait
+      if (charParam && characters.length === 0) {
+        console.log('[ChatPageScroll] Waiting for characters to load...');
+        return; // Don't set urlLoadedRef - let it retry when characters load
       }
       
       // If there's a conversationId in URL, load that conversation
