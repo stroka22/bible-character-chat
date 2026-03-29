@@ -610,11 +610,6 @@ const ChatPageScroll = () => {
         refValue: urlLoadedRef.current?.substring(0, 80) || 'null'
       });
       
-      if (urlLoadedRef.current === urlKey) {
-        console.log('[ChatPageScroll] Already loaded this URL, skipping');
-        return; // Already loaded for this URL
-      }
-      
       // If character param exists but characters aren't loaded yet, wait
       if (charParam && characters.length === 0) {
         console.log('[ChatPageScroll] Waiting for characters to load...');
@@ -653,8 +648,14 @@ const ChatPageScroll = () => {
         if (char && !cancelled) {
           const canChat = isPremium || isCharacterFree(char, tierSettings);
           // Only proceed if we haven't already loaded this URL
-          if (canChat && urlLoadedRef.current !== urlKey) {
+          if (canChat) {
+            // Check if already loaded
+            if (urlLoadedRef.current === urlKey) {
+              console.log('[ChatPageScroll] Already processed this URL key, skipping');
+              return;
+            }
             urlLoadedRef.current = urlKey; // Mark as loaded BEFORE doing anything
+            console.log('[ChatPageScroll] Processing character with context, set ref to:', urlKey.substring(0, 80));
             
             // If this is a Bible Study context, skip the generic greeting
             const isBibleStudy = !!(studyParam && lessonParam);
