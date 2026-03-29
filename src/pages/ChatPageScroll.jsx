@@ -683,7 +683,8 @@ const ChatPageScroll = () => {
                 verseIntroGeneratedRef.current = verseKey;
                 console.log('[ChatPageScroll] Generating verse-aware intro for:', decodedContext.substring(0, 100));
                 
-                (async () => {
+                // Small delay to ensure character selection has completed and we're not in a render cycle
+                setTimeout(async () => {
                   try {
                     console.log('[ChatPageScroll] Making API call for verse intro...');
                     const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
@@ -716,7 +717,7 @@ const ChatPageScroll = () => {
                   } catch (introErr) {
                     console.warn('[ChatPageScroll] Failed to generate verse intro:', introErr);
                   }
-                })();
+                }, 100);
               }
             }
           }
