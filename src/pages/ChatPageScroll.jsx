@@ -500,6 +500,7 @@ const ChatPageScroll = () => {
   // Track if we've already loaded for current URL params
   const urlLoadedRef = useRef(null);
   const studyContextLoadedRef = useRef(null);
+  const verseIntroGeneratedRef = useRef(null); // Track verse intro generation separately
   
 
   
@@ -647,15 +648,8 @@ const ChatPageScroll = () => {
         );
         if (char && !cancelled) {
           const canChat = isPremium || isCharacterFree(char, tierSettings);
-          // Only proceed if we haven't already loaded this URL
           if (canChat) {
-            // Check if already loaded
-            if (urlLoadedRef.current === urlKey) {
-              console.log('[ChatPageScroll] Already processed this URL key, skipping');
-              return;
-            }
-            urlLoadedRef.current = urlKey; // Mark as loaded BEFORE doing anything
-            console.log('[ChatPageScroll] Processing character with context, set ref to:', urlKey.substring(0, 80));
+            console.log('[ChatPageScroll] Processing character:', char.name, 'hasVerseContext:', !!contextParam);
             
             // If this is a Bible Study context, skip the generic greeting
             const isBibleStudy = !!(studyParam && lessonParam);
@@ -669,34 +663,42 @@ const ChatPageScroll = () => {
             // If verse context is provided (from verse selection), generate AI intro
             else if (hasVerseContext && contextParam) {
               const decodedContext = decodeURIComponent(contextParam);
-              console.log('[ChatPageScroll] Generating verse-aware intro for:', decodedContext.substring(0, 100));
+              const verseKey = contextParam.substring(0, 100);
               
-              (async () => {
-                try {
-                  const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
-                  
-                  const response = await fetch('/api/openai/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      characterName: char.name,
-                      characterPersona: char.persona_prompt || '',
-                      messages: [{ role: 'user', content: introPrompt }]
-                    })
-                  });
-                  
-                  if (response.ok) {
-                    const data = await response.json();
-                    const introMessage = data.content || data.message;
-                    if (introMessage && postAssistantMessage) {
-                      console.log('[ChatPageScroll] Adding verse intro message');
-                      postAssistantMessage(introMessage);
+              // Check if we already generated intro for these exact verses
+              if (verseIntroGeneratedRef.current === verseKey) {
+                console.log('[ChatPageScroll] Already generated intro for these verses, skipping');
+              } else {
+                verseIntroGeneratedRef.current = verseKey;
+                console.log('[ChatPageScroll] Generating verse-aware intro for:', decodedContext.substring(0, 100));
+                
+                (async () => {
+                  try {
+                    const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
+                    
+                    const response = await fetch('/api/openai/chat', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        characterName: char.name,
+                        characterPersona: char.persona_prompt || '',
+                        messages: [{ role: 'user', content: introPrompt }]
+                      })
+                    });
+                    
+                    if (response.ok) {
+                      const data = await response.json();
+                      const introMessage = data.content || data.message;
+                      if (introMessage && postAssistantMessage) {
+                        console.log('[ChatPageScroll] Adding verse intro message');
+                        postAssistantMessage(introMessage);
+                      }
                     }
+                  } catch (introErr) {
+                    console.warn('[ChatPageScroll] Failed to generate verse intro:', introErr);
                   }
-                } catch (introErr) {
-                  console.warn('[ChatPageScroll] Failed to generate verse intro:', introErr);
-                }
-              })();
+                })();
+              }
             }
           }
         }
