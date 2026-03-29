@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
+
+interface RouteParams {
+  returnTo?: {
+    screen: string;
+    params?: any;
+  };
+}
 
 export default function SignUp() {
   const { signUpWithEmail } = useAuth();
   const navigation = useNavigation<any>();
+  const route = useRoute();
+  const params = (route.params || {}) as RouteParams;
   const insets = useSafeAreaInsets();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -39,7 +48,12 @@ export default function SignUp() {
       if (error) Alert.alert('Sign Up', error.message || String(error));
       else {
         Alert.alert('Welcome!', 'Your account has been created. You can now start exploring!');
-        navigation.navigate('MainTabs', { screen: 'Home' });
+        // Return to the screen they came from, or default to Home
+        if (params.returnTo) {
+          navigation.navigate(params.returnTo.screen, params.returnTo.params);
+        } else {
+          navigation.navigate('MainTabs', { screen: 'Home' });
+        }
       }
     } finally { setLoading(false); }
   };

@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, View, ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,8 +6,17 @@ import Wordmark from '../components/Wordmark';
 import { useAuth } from '../contexts/AuthContext';
 import { theme } from '../theme';
 
+interface RouteParams {
+  returnTo?: {
+    screen: string;
+    params?: any;
+  };
+}
+
 export default function Login() {
   const navigation = useNavigation<any>();
+  const route = useRoute();
+  const params = (route.params || {}) as RouteParams;
   const { signInWithPassword } = useAuth();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -30,8 +39,12 @@ export default function Login() {
         }
         setError(errorMsg);
       } else {
-        // Navigate to Home after successful login
-        navigation.navigate('MainTabs', { screen: 'Home' });
+        // Return to the screen they came from, or default to Home
+        if (params.returnTo) {
+          navigation.navigate(params.returnTo.screen, params.returnTo.params);
+        } else {
+          navigation.navigate('MainTabs', { screen: 'Home' });
+        }
       }
     } catch (e: any) {
       setError(e?.message || String(e));

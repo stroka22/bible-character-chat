@@ -697,40 +697,93 @@ export default function ReadingPlanDetail() {
                   </TouchableOpacity>
                 )
               ) : (
-                // Anonymous users see sign up prompt
+                // Anonymous users see sign up/login options
+                <View style={{
+                  backgroundColor: theme.colors.surface,
+                  paddingVertical: 14,
+                  paddingHorizontal: 16,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                }}>
+                  <Text style={{ color: theme.colors.muted, fontSize: 13, textAlign: 'center', marginBottom: 12 }}>
+                    Track your progress with a free account
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('SignUp', { 
+                        returnTo: { 
+                          screen: 'ReadingPlanDetail', 
+                          params: { slug: plan?.slug } 
+                        } 
+                      })}
+                      style={{
+                        backgroundColor: theme.colors.primary,
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text style={{ color: theme.colors.primaryText, fontWeight: '600', fontSize: 14 }}>Create Free Account</Text>
+                    </TouchableOpacity>
+                    <Text style={{ color: theme.colors.muted }}>or</Text>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('Login', { 
+                        returnTo: { 
+                          screen: 'ReadingPlanDetail', 
+                          params: { slug: plan?.slug } 
+                        } 
+                      })}
+                      style={{
+                        backgroundColor: theme.colors.card,
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: theme.colors.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.colors.text, fontWeight: '600', fontSize: 14 }}>Sign In</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+              
+              {/* Primary action buttons row */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
                 <TouchableOpacity
                   onPress={() => {
-                    Alert.alert('Account Required', 'Create a free account to track your reading plan progress.', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Sign Up', onPress: () => navigation.navigate('SignUp' as never) }
-                    ]);
+                    const firstReading = selectedDay?.readings?.[0];
+                    if (firstReading) {
+                      openReading(firstReading);
+                    }
                   }}
                   style={{
-                    backgroundColor: theme.colors.surface,
+                    flex: 1,
+                    backgroundColor: '#2563eb',
                     paddingVertical: 14,
                     borderRadius: 10,
                     alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: theme.colors.border,
                   }}
                 >
-                  <Text style={{ color: theme.colors.text, fontWeight: '700' }}>📝 Sign Up to Track Progress</Text>
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>📖 Open in Bible</Text>
                 </TouchableOpacity>
-              )}
-              
-              <TouchableOpacity
-                onPress={startCharacterChat}
-                style={{
-                  backgroundColor: theme.colors.primary,
-                  paddingVertical: 14,
-                  borderRadius: 10,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ color: theme.colors.primaryText, fontWeight: '700' }}>
-                  💬 Discuss with {selectedDay?.readings?.[0]?.book ? getBestCharacterName(selectedDay.readings, plan?.title || '') : 'a Character'}
-                </Text>
-              </TouchableOpacity>
+                
+                <TouchableOpacity
+                  onPress={startCharacterChat}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#7c3aed',
+                    paddingVertical: 14,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>
+                    💬 Chat with {selectedDay?.readings?.[0]?.book ? getBestCharacterName(selectedDay.readings, plan?.title || '').split(' ')[0] : 'Guide'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </ScrollView>
