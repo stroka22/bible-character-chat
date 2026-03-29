@@ -686,7 +686,7 @@ const ChatPageScroll = () => {
                 verseIntroGeneratedRef.current = verseKey;
                 console.log('[ChatPageScroll] Generating verse-aware intro for:', decodedContext.substring(0, 100));
                 
-                // Generate intro and use sendMessage pattern to add it
+                // Generate intro and select character with custom greeting
                 (async () => {
                   try {
                     console.log('[ChatPageScroll] Making API call for verse intro...');
@@ -709,16 +709,9 @@ const ChatPageScroll = () => {
                       console.log('[ChatPageScroll] API response data:', data);
                       const introMessage = data.text || data.content || data.message;
                       if (introMessage) {
-                        console.log('[ChatPageScroll] Got intro message, selecting character with greeting');
-                        // Re-select the character but this time with the custom greeting
-                        selectCharacter(char, { skipGreeting: true });
-                        // Wait a tick for state to update, then post the message
-                        setTimeout(() => {
-                          console.log('[ChatPageScroll] Posting intro message after character select');
-                          if (postAssistantMessage) {
-                            postAssistantMessage(introMessage);
-                          }
-                        }, 50);
+                        console.log('[ChatPageScroll] Got intro message, selecting character with custom greeting');
+                        // Select the character with the custom greeting - this sets both character AND message atomically
+                        selectCharacter(char, { customGreeting: introMessage });
                       } else {
                         console.log('[ChatPageScroll] No intro message in response');
                       }

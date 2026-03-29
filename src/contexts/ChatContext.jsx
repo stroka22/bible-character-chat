@@ -174,6 +174,7 @@ export const ChatProvider = ({ children }) => {
    * @param {Object} characterData - The character to select
    * @param {Object} options - Optional settings
    * @param {boolean} options.skipGreeting - If true, don't add opening_line (used for Bible studies)
+   * @param {string} options.customGreeting - If provided, use this instead of opening_line
    */
   const selectCharacter = useCallback((characterData, options = {}) => {
     console.log(`[ChatContext] Selecting character: ${characterData?.name ?? 'unknown'}`, options);
@@ -185,12 +186,13 @@ export const ChatProvider = ({ children }) => {
     setIsChatSaved(false);
     setIsFavorite(false);
     
-    // Add greeting message if character has an opening line (unless skipped for Bible studies)
-    if (characterData?.opening_line && !options.skipGreeting) {
+    // Add greeting message - use custom greeting if provided, otherwise opening_line
+    const greetingContent = options.customGreeting || (options.skipGreeting ? null : characterData?.opening_line);
+    if (greetingContent) {
       const greeting = {
         id: generateMessageId(),
         role: 'assistant',
-        content: characterData.opening_line,
+        content: greetingContent,
         timestamp: new Date().toISOString()
       };
       
