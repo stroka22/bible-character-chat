@@ -796,7 +796,7 @@ export default function ReadingPlanDetail() {
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
         <TouchableOpacity 
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('ReadingPlans')}
           style={{ marginBottom: 16 }}
         >
           <Text style={{ color: theme.colors.primary, fontSize: 16 }}>← All Plans</Text>
