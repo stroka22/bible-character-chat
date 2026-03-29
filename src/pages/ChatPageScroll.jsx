@@ -685,6 +685,7 @@ const ChatPageScroll = () => {
                 
                 (async () => {
                   try {
+                    console.log('[ChatPageScroll] Making API call for verse intro...');
                     const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
                     
                     const response = await fetch('/api/openai/chat', {
@@ -697,13 +698,20 @@ const ChatPageScroll = () => {
                       })
                     });
                     
+                    console.log('[ChatPageScroll] API response status:', response.status);
+                    
                     if (response.ok) {
                       const data = await response.json();
+                      console.log('[ChatPageScroll] API response data:', data);
                       const introMessage = data.content || data.message;
                       if (introMessage && postAssistantMessage) {
-                        console.log('[ChatPageScroll] Adding verse intro message');
+                        console.log('[ChatPageScroll] Adding verse intro message:', introMessage.substring(0, 50));
                         postAssistantMessage(introMessage);
+                      } else {
+                        console.log('[ChatPageScroll] No intro message or postAssistantMessage missing', { introMessage: !!introMessage, postFn: !!postAssistantMessage });
                       }
+                    } else {
+                      console.log('[ChatPageScroll] API response not ok:', response.status);
                     }
                   } catch (introErr) {
                     console.warn('[ChatPageScroll] Failed to generate verse intro:', introErr);
