@@ -543,8 +543,9 @@ const SimpleChatWithHistory = () => {
             
             // If this is a Bible study, skip the default greeting - AI will generate intro
             const isBibleStudy = params.get('study') && params.get('lesson') !== null;
-            // Skip greeting if context is provided (e.g., from reading plans)
-            const hasContext = params.get('context');
+            // Check if context is provided (e.g., from verse selection)
+            const contextParam = params.get('context');
+            const hasContext = !!contextParam;
 
             try {
                 console.log(`[SimpleChatWithHistory] Looking up character: "${charParam}"`);
@@ -562,6 +563,47 @@ const SimpleChatWithHistory = () => {
                 if (fetched) {
                     console.log(`[SimpleChatWithHistory] Calling selectCharacter for: ${fetched.name}`);
                     selectCharacter(fetched, { skipGreeting: isBibleStudy || hasContext });
+                    
+                    // If context is provided (verse selection), generate AI intro about the verses
+                    if (hasContext && contextParam && !isBibleStudy) {
+                        const decodedContext = decodeURIComponent(contextParam);
+                        console.log(`[SimpleChatWithHistory] Generating verse-aware intro for context:`, decodedContext.substring(0, 100));
+                        
+                        // Generate AI intro that acknowledges the selected verses
+                        try {
+                            const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
+                            
+                            const response = await fetch('/api/openai/chat', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    characterName: fetched.name,
+                                    characterPersona: fetched.persona_prompt || '',
+                                    messages: [{ role: 'user', content: introPrompt }]
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                const introMessage = data.content || data.message;
+                                if (introMessage) {
+                                    // Add the AI-generated intro as an assistant message
+                                    const greeting = {
+                                        id: `intro-${Date.now()}`,
+                                        role: 'assistant',
+                                        content: introMessage,
+                                        timestamp: new Date().toISOString()
+                                    };
+                                    // Use the chat context to add this message
+                                    if (typeof postAssistantMessage === 'function') {
+                                        postAssistantMessage(introMessage);
+                                    }
+                                }
+                            }
+                        } catch (introErr) {
+                            console.warn('[SimpleChatWithHistory] Failed to generate verse intro:', introErr);
+                        }
+                    }
                 } else {
                     console.warn(`[SimpleChatWithHistory] Character "${charParam}" not found by ID or name`);
                 }
