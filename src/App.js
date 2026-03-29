@@ -47,6 +47,9 @@ import RoundtableSetup from './pages/RoundtableSetup.jsx';
 import RoundtableChat from './pages/RoundtableChat.jsx';
 import SimpleChatWithHistory from './components/chat/SimpleChatWithHistory';
 import DebugPanel from './components/DebugPanel';
+import BibleReader from './pages/BibleReader';
+import ReadingPlansPage from './pages/ReadingPlansPage';
+import ReadingPlanDetail from './pages/ReadingPlanDetail';
 const DEV = import.meta && import.meta.env && import.meta.env.DEV === true;
 import Header from './components/Header';
 
@@ -210,6 +213,14 @@ function App() {
         /* -------- Study Series (public) -------------------------- */
         _jsx(Route, { path: "/series", element: _jsx(SeriesList, {}) }),
         _jsx(Route, { path: "/series/:slug", element: _jsx(SeriesDetails, {}) }),
+        /* -------- Bible Reader (public) -------------------------- */
+        _jsx(Route, { path: "/bible", element: _jsx(BibleReader, {}) }),
+        _jsx(Route, { path: "/bible/:translation", element: _jsx(BibleReader, {}) }),
+        _jsx(Route, { path: "/bible/:translation/:book", element: _jsx(BibleReader, {}) }),
+        _jsx(Route, { path: "/bible/:translation/:book/:chapter", element: _jsx(BibleReader, {}) }),
+        /* -------- Reading Plans (public) ------------------------- */
+        _jsx(Route, { path: "/reading-plans", element: _jsx(ReadingPlansPage, {}) }),
+        _jsx(Route, { path: "/reading-plans/:slug", element: _jsx(ReadingPlanDetail, {}) }),
         DEV && _jsx(Route, { path: "/debug", element: _jsxs("div", { className: "min-h-screen bg-slate-800 text-white p-4", children: [_jsx("h1", { className: "text-2xl mb-4", children: "Debug Tools" }), _jsx(DebugPanel, {})] }) }),
         
         // Chat & Shared conversation routes (public access)
