@@ -13,6 +13,8 @@ import { saveStudyProgress, getStudyProgress } from '../lib/studyProgress';
 import { inviteFriendToChat } from '../lib/invites';
 import { hasAIConsent, setAIConsent } from '../lib/aiConsent';
 import AIConsentModal from '../components/AIConsentModal';
+import { supabase } from '../lib/supabase';
+import { getBestCharacterName } from '../utils/characterSuggestions';
 
 export default function ChatDetail() {
   const route = useRoute<any>();
@@ -171,16 +173,68 @@ export default function ChatDetail() {
               created_at: new Date().toISOString(),
             }]);
           }
-        } else if (verseContext && character) {
+        } else if (verseContext) {
           // Verse selection context for ephemeral chat
           setTitle(`Discussion: ${verseContext.reference}`);
+          
+          // Look up character if not provided
+          let charData = character;
+          if (!charData) {
+            try {
+              // Parse book from reference (e.g., "Psalms 1:1-3" -> "Psalms")
+              const bookMatch = verseContext.reference.match(/^(\d?\s*[A-Za-z]+)/);
+              const bookName = bookMatch ? bookMatch[1].trim() : 'Genesis';
+              
+              // Get suggested character based on the book
+              const characterName = getBestCharacterName([{ book: bookName, chapter: 1 }], '');
+              
+              // Find the character in database
+              const { data: foundChar } = await supabase
+                .from('characters')
+                .select('id,name,avatar_url,persona_prompt,opening_line')
+                .ilike('name', `%${characterName}%`)
+                .limit(1)
+                .maybeSingle();
+              
+              if (foundChar) {
+                charData = foundChar;
+                setCharacter(foundChar);
+              } else {
+                // Fallback to Chat Guide
+                const { data: fallbackChar } = await supabase
+                  .from('characters')
+                  .select('id,name,avatar_url,persona_prompt,opening_line')
+                  .ilike('name', '%Chat Guide%')
+                  .limit(1)
+                  .maybeSingle();
+                if (fallbackChar) {
+                  charData = fallbackChar;
+                  setCharacter(fallbackChar);
+                }
+              }
+            } catch (e) {
+              console.warn('[ChatDetail] Failed to look up character:', e);
+            }
+          }
+          
+          if (!charData) {
+            // No character found, show fallback message
+            setMessages([{
+              id: 'opening',
+              chat_id: 'ephemeral',
+              content: `I see you've selected ${verseContext.reference}. These are wonderful verses! I'd love to discuss what stood out to you.`,
+              role: 'assistant',
+              created_at: new Date().toISOString(),
+            }]);
+            return;
+          }
           try {
             const systemPrompt = [
               `BIBLE VERSE CONTEXT:`,
               `Reference: ${verseContext.reference} (${verseContext.translation})`,
               `\nSelected verses:\n"${verseContext.text}"`,
               `\nINSTRUCTIONS:`,
-              `You are ${character.name}, discussing the verses the user selected.`,
+              `You are ${charData.name}, discussing the verses the user selected.`,
               `1. Acknowledge the specific verses they selected.`,
               `2. Share your perspective on these verses, especially if they relate to your biblical story.`,
               `3. Ask what drew them to these particular verses.`,
@@ -191,8 +245,8 @@ export default function ChatDetail() {
             const introPrompt = `The reader just selected ${verseContext.reference} from the Bible. Warmly acknowledge their selection and share why these verses are meaningful. If they relate to your own story, mention that. Ask what drew them to these particular verses. Keep it conversational (3-4 sentences).`;
             
             const response = await generateCharacterResponse(
-              character.name,
-              character.persona_prompt || '',
+              charData.name,
+              charData.persona_prompt || '',
               [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: introPrompt }

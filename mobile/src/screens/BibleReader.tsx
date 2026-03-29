@@ -89,7 +89,7 @@ export default function BibleReader() {
     });
   };
 
-  const chatAboutSelection = () => {
+  const chatAboutSelection = async () => {
     if (selectedVerses.size === 0 || !data) return;
     
     // Build the passage text
@@ -120,47 +120,33 @@ export default function BibleReader() {
       reference += ranges.join(', ');
     }
     
+    // Build verse context for ChatDetail
+    const verseContext = {
+      reference,
+      translation,
+      text: passageText,
+    };
+    
     // Check if we have reading plan context
     const planContext = params.readingPlanContext;
     
-    if (planContext) {
-      // Navigate with reading plan context for character-led discussion
-      navigation.navigate('MainTabs', {
-        screen: 'Chat',
+    // Navigate directly to ChatDetail with verse context
+    // ChatDetail will handle character lookup and intro generation
+    navigation.navigate('MainTabs', {
+      screen: 'Chat',
+      params: {
+        screen: 'ChatDetail',
         params: {
-          screen: 'ChatNew',
-          params: {
-            initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
-            bibleContext: {
-              reference,
-              translation,
-              text: passageText,
-            },
-            readingPlanContext: {
-              ...planContext,
-              highlightedVerses: reference,
-              highlightedText: passageText,
-            },
-          },
+          ephemeral: true,
+          verseContext,
+          readingPlanContext: planContext ? {
+            ...planContext,
+            highlightedVerses: reference,
+            highlightedText: passageText,
+          } : undefined,
         },
-      });
-    } else {
-      // Navigate to chat with basic context
-      navigation.navigate('MainTabs', {
-        screen: 'Chat',
-        params: {
-          screen: 'ChatNew',
-          params: {
-            initialMessage: `I'd like to discuss ${reference} (${translation}):\n\n${passageText}`,
-            bibleContext: {
-              reference,
-              translation,
-              text: passageText,
-            },
-          },
-        },
-      });
-    }
+      },
+    });
   };
 
   const goToNextChapter = () => {
