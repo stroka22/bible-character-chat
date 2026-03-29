@@ -707,8 +707,9 @@ const ChatPageScroll = () => {
                       console.log('[ChatPageScroll] API response data:', data);
                       const introMessage = data.text || data.content || data.message;
                       if (introMessage && postAssistantMessage) {
-                        console.log('[ChatPageScroll] Adding verse intro message:', introMessage.substring(0, 50));
+                        console.log('[ChatPageScroll] Adding verse intro message:', introMessage.substring(0, 50), 'character:', character?.name || 'null');
                         postAssistantMessage(introMessage);
+                        console.log('[ChatPageScroll] postAssistantMessage called, current messages:', messages.length);
                       } else {
                         console.log('[ChatPageScroll] No intro message or postAssistantMessage missing', { introMessage: !!introMessage, postFn: !!postAssistantMessage });
                       }
