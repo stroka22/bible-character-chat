@@ -654,11 +654,13 @@ const ChatPageScroll = () => {
             const isBibleStudy = !!(studyParam && lessonParam);
             const hasVerseContext = !!contextParam;
             
-            // Only select character if not already selected (prevents loop and message clearing)
+            // Check if character is already selected in ChatContext
             const alreadySelected = character && character.id === char.id;
-            console.log('[ChatPageScroll] Processing character runId=' + runId + ':', char.name, 'hasVerseContext:', hasVerseContext, 'alreadySelected:', alreadySelected);
+            console.log('[ChatPageScroll] Processing character runId=' + runId + ':', char.name, 'hasVerseContext:', hasVerseContext, 'alreadySelected:', alreadySelected, 'contextCharacter:', character?.name || 'null');
             
-            if (!alreadySelected) {
+            // Always select the character if context character is null or different
+            if (!character || character.id !== char.id) {
+              console.log('[ChatPageScroll] Selecting character:', char.name);
               selectCharacter(char, { skipGreeting: isBibleStudy || hasVerseContext });
             }
             
