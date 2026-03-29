@@ -595,9 +595,12 @@ const ChatPageScroll = () => {
       const progressParam = params.get('progress');
       const contextParam = params.get('context'); // Verse selection context
       
+      console.log('[ChatPageScroll] loadFromUrl called', { charParam, contextParam: contextParam?.substring(0, 50), charactersLoaded: characters.length });
+      
       // Create a key for this URL state to prevent duplicate loading
       const urlKey = `${conversationId || ''}-${charParam || ''}-${studyParam || ''}-${lessonParam || ''}-${contextParam ? 'ctx' : ''}`;
       if (urlLoadedRef.current === urlKey) {
+        console.log('[ChatPageScroll] Already loaded this URL, skipping');
         return; // Already loaded for this URL
       }
       
