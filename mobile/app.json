@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "com.faithtalkai.app",
-      "versionCode": 1,
+      "versionCode": 78,
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
