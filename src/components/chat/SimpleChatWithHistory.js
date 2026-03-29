@@ -530,22 +530,51 @@ const SimpleChatWithHistory = () => {
             const charParam = params.get('character');
             if (!charParam) return;
             
-            // Check if we already have the requested character selected
-            if (character) {
-                const currentName = (character.name || '').toLowerCase();
-                const currentId = character.id || '';
-                const requestedLower = charParam.toLowerCase();
-                // If already have the right character, skip
-                if (currentId === charParam || currentName === requestedLower) {
-                    return;
-                }
-            }
-            
             // If this is a Bible study, skip the default greeting - AI will generate intro
             const isBibleStudy = params.get('study') && params.get('lesson') !== null;
             // Check if context is provided (e.g., from verse selection)
             const contextParam = params.get('context');
             const hasContext = !!contextParam;
+            
+            // Check if we already have the requested character selected
+            if (character) {
+                const currentName = (character.name || '').toLowerCase();
+                const currentId = character.id || '';
+                const requestedLower = charParam.toLowerCase();
+                // If already have the right character, check if we need to generate context intro
+                if (currentId === charParam || currentName === requestedLower) {
+                    // Still need to generate verse intro if context provided and no messages yet
+                    if (hasContext && contextParam && !isBibleStudy && messages.length === 0) {
+                        const decodedContext = decodeURIComponent(contextParam);
+                        console.log(`[SimpleChatWithHistory] Character already selected, generating verse intro for:`, decodedContext.substring(0, 100));
+                        
+                        try {
+                            const introPrompt = `The user has selected some Bible verses to discuss with you. Here is what they selected:\n\n${decodedContext}\n\nWarmly greet them and acknowledge the specific verses they've chosen. Share briefly why these verses are meaningful or interesting to discuss. If these passages relate to your own story in Scripture, mention that connection. Ask what drew them to these particular verses. Keep your response conversational and warm (3-4 sentences).`;
+                            
+                            const response = await fetch('/api/openai/chat', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    characterName: character.name,
+                                    characterPersona: character.persona_prompt || '',
+                                    messages: [{ role: 'user', content: introPrompt }]
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                const introMessage = data.content || data.message;
+                                if (introMessage && typeof postAssistantMessage === 'function') {
+                                    postAssistantMessage(introMessage);
+                                }
+                            }
+                        } catch (introErr) {
+                            console.warn('[SimpleChatWithHistory] Failed to generate verse intro:', introErr);
+                        }
+                    }
+                    return;
+                }
+            }
 
             try {
                 console.log(`[SimpleChatWithHistory] Looking up character: "${charParam}"`);
