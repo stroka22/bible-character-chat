@@ -649,12 +649,17 @@ const ChatPageScroll = () => {
         if (char && !cancelled) {
           const canChat = isPremium || isCharacterFree(char, tierSettings);
           if (canChat) {
-            console.log('[ChatPageScroll] Processing character:', char.name, 'hasVerseContext:', !!contextParam);
-            
             // If this is a Bible Study context, skip the generic greeting
             const isBibleStudy = !!(studyParam && lessonParam);
             const hasVerseContext = !!contextParam;
-            selectCharacter(char, { skipGreeting: isBibleStudy || hasVerseContext });
+            
+            // Only select character if not already selected (prevents loop and message clearing)
+            const alreadySelected = character && character.id === char.id;
+            console.log('[ChatPageScroll] Processing character:', char.name, 'hasVerseContext:', hasVerseContext, 'alreadySelected:', alreadySelected);
+            
+            if (!alreadySelected) {
+              selectCharacter(char, { skipGreeting: isBibleStudy || hasVerseContext });
+            }
             
             // If this is a Bible Study context, set up the lesson context and auto-generate intro
             if (isBibleStudy && setLessonContext) {
