@@ -121,9 +121,11 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
           <h3 className="text-lg font-semibold text-gray-900 mb-3">📜 Today's Scripture</h3>
           <div className="space-y-2">
             {readings.map((reading, idx) => (
-              <Link
+              <a
                 key={idx}
-                to={`/bible/KJV/${reading.book}/${reading.chapter}?from=plan&plan=${plan.slug}&day=${day.day_number}`}
+                href={`/bible/KJV/${reading.book}/${reading.chapter}?from=plan&plan=${plan.slug}&day=${day.day_number}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <span className="font-medium text-gray-900">
@@ -131,7 +133,7 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
                   {reading.verses && `:${reading.verses}`}
                 </span>
                 <span className="text-blue-600">Read →</span>
-              </Link>
+              </a>
             ))}
           </div>
         </div>
@@ -147,12 +149,14 @@ function ReadingView({ day, plan, onComplete, onUncomplete, onBack, onPrevDay, o
         <div className="space-y-3">
           {/* Primary actions row */}
           <div className="grid grid-cols-2 gap-3">
-            <Link
-              to={`/bible/KJV/${readings[0]?.book || 'Genesis'}/${readings[0]?.chapter || 1}?from=plan&plan=${plan.slug}&day=${day.day_number}`}
+            <a
+              href={`/bible/KJV/${readings[0]?.book || 'Genesis'}/${readings[0]?.chapter || 1}?from=plan&plan=${plan.slug}&day=${day.day_number}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-center"
             >
               📖 Open in Bible Reader
-            </Link>
+            </a>
             <a
               href={`/chat?character=${characterParam}&context=${chatContext}`}
               target="_blank"
