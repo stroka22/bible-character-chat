@@ -2,12 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
 
-// Conditionally import IAP only on iOS to avoid Android build errors
-// expo-in-app-purchases is deprecated and broken on Android with newer Expo SDKs
-let InAppPurchases: any = null;
-if (Platform.OS === 'ios') {
-  InAppPurchases = require('expo-in-app-purchases');
-}
+// expo-in-app-purchases has been removed due to incompatibility with current Expo SDK
+// TODO: Replace with react-native-iap or expo-iap when needed
+// For now, IAP functionality is disabled
+const InAppPurchases: any = null;
+const IAP_DISABLED = true;
 
 // Product IDs (must match App Store Connect)
 export const PRODUCT_MONTHLY = 'FTAIMONTHLY';
@@ -26,7 +25,7 @@ export async function setLocalPremiumActive(active: boolean) {
 }
 
 export async function initIAP(): Promise<{ connected: boolean; products: any[] }> {
-  if (Platform.OS !== 'ios' || !InAppPurchases) return { connected: false, products: [] };
+  if (IAP_DISABLED || Platform.OS !== 'ios' || !InAppPurchases) return { connected: false, products: [] };
   try {
     if (!iapConnected) {
       await InAppPurchases.connectAsync();
@@ -60,7 +59,7 @@ async function markPremiumOnServer(userId?: string) {
 }
 
 export async function restorePurchases(userId?: string) {
-  if (Platform.OS !== 'ios' || !InAppPurchases) return { restored: false };
+  if (IAP_DISABLED || Platform.OS !== 'ios' || !InAppPurchases) return { restored: false };
   try {
     await initIAP();
     const anyHist: any = await (InAppPurchases as any).getPurchaseHistoryAsync();
@@ -82,8 +81,8 @@ export async function restorePurchases(userId?: string) {
 }
 
 async function purchase(productId: string, userId?: string) {
-  if (Platform.OS !== 'ios' || !InAppPurchases) {
-    return { ok: false, error: new Error('IAP not supported on this platform yet') };
+  if (IAP_DISABLED || Platform.OS !== 'ios' || !InAppPurchases) {
+    return { ok: false, error: new Error('In-app purchases temporarily unavailable. Please try again later.') };
   }
   
   try {
@@ -150,8 +149,8 @@ export async function purchaseYearly(userId?: string) {
 
 // Debug helper to check product availability
 export async function getAvailableProducts(): Promise<{ products: any[]; error?: string }> {
-  if (Platform.OS !== 'ios' || !InAppPurchases) {
-    return { products: [], error: 'IAP only available on iOS' };
+  if (IAP_DISABLED || Platform.OS !== 'ios' || !InAppPurchases) {
+    return { products: [], error: 'In-app purchases temporarily unavailable' };
   }
   try {
     const { connected, products } = await initIAP();
