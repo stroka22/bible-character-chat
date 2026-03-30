@@ -1,7 +1,13 @@
-import * as InAppPurchases from 'expo-in-app-purchases';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
+
+// Conditionally import IAP only on iOS to avoid Android build errors
+// expo-in-app-purchases is deprecated and broken on Android with newer Expo SDKs
+let InAppPurchases: any = null;
+if (Platform.OS === 'ios') {
+  InAppPurchases = require('expo-in-app-purchases');
+}
 
 // Product IDs (must match App Store Connect)
 export const PRODUCT_MONTHLY = 'FTAIMONTHLY';
@@ -9,7 +15,7 @@ export const PRODUCT_YEARLY = 'FTAIYEARLY';
 
 const PREMIUM_KEY = 'iap.premium.active';
 let iapConnected = false;
-let cachedProducts: InAppPurchases.IAPItemDetails[] = [];
+let cachedProducts: any[] = [];
 
 export async function isLocalPremiumActive(): Promise<boolean> {
   try { return (await AsyncStorage.getItem(PREMIUM_KEY)) === '1'; } catch { return false; }
@@ -19,8 +25,8 @@ export async function setLocalPremiumActive(active: boolean) {
   try { await AsyncStorage.setItem(PREMIUM_KEY, active ? '1' : '0'); } catch {}
 }
 
-export async function initIAP(): Promise<{ connected: boolean; products: InAppPurchases.IAPItemDetails[] }> {
-  if (Platform.OS !== 'ios') return { connected: false, products: [] };
+export async function initIAP(): Promise<{ connected: boolean; products: any[] }> {
+  if (Platform.OS !== 'ios' || !InAppPurchases) return { connected: false, products: [] };
   try {
     if (!iapConnected) {
       await InAppPurchases.connectAsync();
@@ -54,7 +60,7 @@ async function markPremiumOnServer(userId?: string) {
 }
 
 export async function restorePurchases(userId?: string) {
-  if (Platform.OS !== 'ios') return { restored: false };
+  if (Platform.OS !== 'ios' || !InAppPurchases) return { restored: false };
   try {
     await initIAP();
     const anyHist: any = await (InAppPurchases as any).getPurchaseHistoryAsync();
@@ -76,7 +82,7 @@ export async function restorePurchases(userId?: string) {
 }
 
 async function purchase(productId: string, userId?: string) {
-  if (Platform.OS !== 'ios') {
+  if (Platform.OS !== 'ios' || !InAppPurchases) {
     return { ok: false, error: new Error('IAP not supported on this platform yet') };
   }
   
@@ -98,7 +104,7 @@ async function purchase(productId: string, userId?: string) {
     
     // Step 3: Set up purchase listener BEFORE initiating purchase
     return new Promise((resolve) => {
-      InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }) => {
+      InAppPurchases.setPurchaseListener(({ responseCode, results, errorCode }: { responseCode: number; results: any[]; errorCode: number }) => {
         (async () => {
           try {
             if (responseCode === InAppPurchases.IAPResponseCode.OK && results) {
@@ -125,7 +131,7 @@ async function purchase(productId: string, userId?: string) {
       });
       
       // Step 4: Initiate purchase AFTER listener is set and products are queried
-      InAppPurchases.purchaseItemAsync(productId).catch((e) => {
+      InAppPurchases.purchaseItemAsync(productId).catch((e: any) => {
         resolve({ ok: false, error: e });
       });
     });
@@ -143,8 +149,8 @@ export async function purchaseYearly(userId?: string) {
 }
 
 // Debug helper to check product availability
-export async function getAvailableProducts(): Promise<{ products: InAppPurchases.IAPItemDetails[]; error?: string }> {
-  if (Platform.OS !== 'ios') {
+export async function getAvailableProducts(): Promise<{ products: any[]; error?: string }> {
+  if (Platform.OS !== 'ios' || !InAppPurchases) {
     return { products: [], error: 'IAP only available on iOS' };
   }
   try {
