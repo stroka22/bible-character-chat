@@ -125,8 +125,18 @@ export default function Profile() {
         )}
         <TouchableOpacity 
           onPress={async () => {
-            await signOut();
-            navigation.navigate('MainTabs', { screen: 'Home' });
+            try {
+              console.log('[Profile] Starting sign out...');
+              await signOut();
+              console.log('[Profile] Sign out complete, navigating to Home...');
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'MainTabs', params: { screen: 'Home' } }],
+              });
+            } catch (e) {
+              console.error('[Profile] Sign out error:', e);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
           }} 
           style={{ backgroundColor: theme.colors.surface, padding: 14, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border }}
         >

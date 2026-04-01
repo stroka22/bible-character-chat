@@ -85,14 +85,21 @@ async function loadBibleData(translation: string): Promise<any> {
     }
   } catch {}
   
-  // Fetch from server
+  // Fetch from server (follow redirects)
   const url = `${BASE_URL}/data/${effectiveTranslation.toLowerCase()}.json`;
-  const response = await fetch(url);
+  const response = await fetch(url, { redirect: 'follow' });
   if (!response.ok) {
-    throw new Error(`Failed to load ${effectiveTranslation} Bible`);
+    throw new Error(`Failed to load ${effectiveTranslation} Bible (${response.status})`);
   }
   
-  const data = await response.json();
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    console.error('[Bible] JSON parse error, response:', text.substring(0, 200));
+    throw new Error(`Failed to parse Bible data: Invalid JSON response`);
+  }
   bibleCache[effectiveTranslation] = data;
   
   // Cache in AsyncStorage (async, don't await)

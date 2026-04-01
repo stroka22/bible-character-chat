@@ -26,6 +26,25 @@ export default function ChatDetail() {
   const [input, setInput] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [character, setCharacter] = React.useState<any>(route.params?.character || null);
+  
+  // Reset state when chatId changes (navigating to a different conversation)
+  const prevChatIdRef = React.useRef<string | undefined>(chatId);
+  React.useEffect(() => {
+    if (prevChatIdRef.current !== chatId) {
+      // ChatId changed - reset state for new conversation
+      setMessages([]);
+      setCharacter(route.params?.character || null);
+      setIsFav(false);
+      setTitle('Chat');
+      setStudyId(null);
+      setStudyTitle(null);
+      setLessonId(null);
+      setProgressId(null);
+      setLessonIndex(0);
+      setIsLessonComplete(false);
+      prevChatIdRef.current = chatId;
+    }
+  }, [chatId, route.params?.character]);
   const [isFav, setIsFav] = React.useState<boolean>(false);
   const [title, setTitle] = React.useState<string>('Chat');
   const insets = useSafeAreaInsets();
