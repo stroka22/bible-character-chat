@@ -519,11 +519,10 @@ const ChatPageScroll = () => {
       if (study && lesson) {
         // Store Bible Study context for UI (progress buttons, back link)
         const lessonIndex = parseInt(lessonIdx, 10);
-        console.log('[ChatPageScroll] Setting Bible Study context:', { studyId, lessonIndex, lessonId: lesson.id, studyTitle: study.title, lessonTitle: lesson.title });
+        console.log('[ChatPageScroll] Setting Bible Study context:', { studyId, lessonIndex, studyTitle: study.title, lessonTitle: lesson.title });
         setBibleStudyContext({
           studyId,
           lessonIndex,
-          lessonId: lesson.id !== 'synthetic-intro' ? lesson.id : null,
           studyTitle: study.title,
           lessonTitle: lesson.title,
           progressId: progressId || null
@@ -1044,28 +1043,6 @@ const ChatPageScroll = () => {
       setIsSavingStudyProgress(false);
     }
   };
-
-  // Auto-save for Bible Study chats (allows free users to revisit their study conversations)
-  useEffect(() => {
-    // Only auto-save for Bible study chats
-    if (!bibleStudyContext) return;
-    // Must be authenticated
-    if (!user?.id) return;
-    // Must have a character and at least 2 messages (intro + user message)
-    if (!character || messages.length < 2) return;
-    // Don't save while loading/typing
-    if (isTyping) return;
-    // Already saved
-    if (isChatSaved || chatId) return;
-    
-    console.log('[ChatPageScroll] Auto-saving Bible study conversation');
-    const studyOptions = {
-      studyId: bibleStudyContext.studyId,
-      lessonId: bibleStudyContext.lessonId,
-      progressId: bibleStudyContext.progressId
-    };
-    saveChat(null, studyOptions);
-  }, [bibleStudyContext, user?.id, character, messages.length, isTyping, isChatSaved, chatId, saveChat]);
 
   // Show action message helper
   const showActionMessage = (text, type = 'success') => {
