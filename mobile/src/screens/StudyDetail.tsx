@@ -187,9 +187,8 @@ export default function StudyDetail({ route, navigation }: any) {
     if (starting) return;
     setStarting(true);
     
-    // Anonymous users and free users use ephemeral chats (no saving)
-    // Only premium users can save and revisit Bible Study conversations
-    if (!user || !isPremium) {
+    // Anonymous users use ephemeral chats (no account = can't save)
+    if (!user) {
       try {
         // Determine which character to use: lesson override > study default
         const targetCharacterId = lesson.character_id || studyMeta?.character_id || null;
@@ -228,6 +227,9 @@ export default function StudyDetail({ route, navigation }: any) {
       }
       return;
     }
+    
+    // Logged-in users (free and premium) - chats are saved
+    // But only premium users can resume existing chats (checked below)
     
     try {
       // Get or create progress record
