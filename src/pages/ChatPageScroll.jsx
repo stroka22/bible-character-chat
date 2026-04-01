@@ -501,6 +501,22 @@ const ChatPageScroll = () => {
   const urlLoadedRef = useRef(null);
   const studyContextLoadedRef = useRef(null);
   const verseIntroGeneratedRef = useRef(null); // Track verse intro generation separately
+  const prevConversationIdRef = useRef(conversationId);
+  
+  // Reset chat state when navigating to a different conversation
+  useEffect(() => {
+    if (prevConversationIdRef.current !== conversationId) {
+      console.log('[ChatPageScroll] conversationId changed from', prevConversationIdRef.current, 'to', conversationId);
+      // Reset the URL loaded ref so the new conversation loads
+      urlLoadedRef.current = null;
+      studyContextLoadedRef.current = null;
+      verseIntroGeneratedRef.current = null;
+      // Reset Bible study context
+      setBibleStudyContext(null);
+      setIsLessonComplete(false);
+      prevConversationIdRef.current = conversationId;
+    }
+  }, [conversationId]);
   
 
   
