@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, SafeAreaView, Text, TouchableOpacity, View
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { isPremiumUser } from '../lib/tier';
 import { chat } from '../lib/chat';
 import { generateCharacterResponse } from '../lib/api';
 import { getStudyProgress, getAllProgressForStudy, toggleLessonComplete, getProgressPercent, saveStudyProgress, StudyProgress } from '../lib/studyProgress';
@@ -26,6 +27,7 @@ export default function StudyDetail({ route, navigation }: any) {
   const { studyId, title, progressId: routeProgressId } = route.params as { studyId: string; title: string; progressId?: string };
   console.log('[StudyDetail] Loading study:', { studyId, title, expectedId: 'a52fe2cf-a931-4488-b377-7ab4d2259ec6' });
   const { user } = useAuth();
+  const [isPremium, setIsPremium] = useState(false);
   const isFocused = useIsFocused();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,6 +128,18 @@ export default function StudyDetail({ route, navigation }: any) {
     setLoading(false);
   };
 
+  // Check premium status
+  useEffect(() => {
+    (async () => {
+      if (user?.id) {
+        const premium = await isPremiumUser(user.id);
+        setIsPremium(premium);
+      } else {
+        setIsPremium(false);
+      }
+    })();
+  }, [user?.id]);
+
   // Always reload data when screen comes into focus (e.g., after marking lesson complete)
   useEffect(() => {
     if (isFocused) {
@@ -173,8 +187,9 @@ export default function StudyDetail({ route, navigation }: any) {
     if (starting) return;
     setStarting(true);
     
-    // Anonymous users can access Lesson 1 without progress tracking
-    if (!user) {
+    // Anonymous users and free users use ephemeral chats (no saving)
+    // Only premium users can save and revisit Bible Study conversations
+    if (!user || !isPremium) {
       try {
         // Determine which character to use: lesson override > study default
         const targetCharacterId = lesson.character_id || studyMeta?.character_id || null;
@@ -247,8 +262,8 @@ export default function StudyDetail({ route, navigation }: any) {
         });
       }
       
-      // Check if there's an existing chat for this lesson and progress
-      if (currentProgressId) {
+      // Check if there's an existing chat for this lesson and progress (Premium only)
+      if (isPremium && currentProgressId) {
         const existingChats = await chat.getChatsByProgress(currentProgressId);
         const lessonChat = existingChats.find((c: any) => c.lesson_id === lesson.id);
         if (lessonChat) {
@@ -598,8 +613,8 @@ export default function StudyDetail({ route, navigation }: any) {
                         </Text>
                       )}
                       
-                      {/* Show conversation history if exists */}
-                      {hasExistingChat && (
+                      {/* Show conversation history if exists (Premium only) */}
+                      {isPremium && hasExistingChat && (
                         <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.colors.surface }}>
                           <Text style={{ color: theme.colors.muted, fontSize: 11, marginBottom: 4 }}>
                             Previous conversations:
