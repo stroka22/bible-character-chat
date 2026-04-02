@@ -646,7 +646,7 @@ export default function StudyDetail({ route, navigation }: any) {
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                     <TouchableOpacity onPress={() => startLesson(item)} disabled={starting}>
                       <Text style={{ color: theme.colors.primary, fontWeight: '600' }}>
-                        {starting ? 'Loading...' : hasExistingChat ? 'Continue →' : 'Start Lesson →'}
+                        {starting ? 'Loading...' : (isPremium && hasExistingChat) ? 'Continue →' : 'Start Lesson →'}
                       </Text>
                     </TouchableOpacity>
                     
