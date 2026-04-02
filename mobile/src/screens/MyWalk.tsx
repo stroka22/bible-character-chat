@@ -443,7 +443,7 @@ export default function MyWalk() {
               onPress={() => nav.navigate('Paywall')}
               style={{ backgroundColor: theme.colors.primary, paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginBottom: 12 }}
             >
-              <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 16 }}>Upgrade to Premium — $5.99/month</Text>
+              <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 16, textAlign: 'center' }}>Upgrade to Premium{'\n'}$5.99/month</Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
