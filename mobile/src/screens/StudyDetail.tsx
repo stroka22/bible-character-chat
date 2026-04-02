@@ -539,18 +539,7 @@ export default function StudyDetail({ route, navigation }: any) {
           </View>
         )}
 
-        {!!guide && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            {guide.avatar_url ? (
-              <Image source={{ uri: guide.avatar_url }} style={{ width: 28, height: 28, borderRadius: 14 }} />
-            ) : (
-              <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: theme.colors.primaryText, fontWeight: '700', fontSize: 12 }}>{guide?.name?.[0] || '?'}</Text>
-              </View>
-            )}
-            <Text style={{ color: theme.colors.muted }}>Guide: <Text style={{ color: theme.colors.text, fontWeight: '700' }}>{guide.name}</Text></Text>
-          </View>
-        )}
+
         <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <TouchableOpacity 
             onPress={async () => {
