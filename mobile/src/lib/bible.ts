@@ -124,7 +124,13 @@ async function loadBibleData(translation: string): Promise<any> {
     throw new Error(`Failed to load ${effectiveTranslation} Bible (${response.status})`);
   }
   
-  const text = await response.text();
+  let text = await response.text();
+  
+  // Remove BOM (Byte Order Mark) if present - causes JSON.parse to fail on Android
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
+  
   console.log('[Bible] Response length:', text.length, 'first 100 chars:', text.substring(0, 100));
   
   let data;
