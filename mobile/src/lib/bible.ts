@@ -99,7 +99,25 @@ async function loadBibleData(translation: string): Promise<any> {
   const url = `${BASE_URL}/data/${effectiveTranslation.toLowerCase()}.json`;
   console.log('[Bible] Fetching from:', url);
   
-  const response = await fetch(url);
+  // Use AbortController for timeout (30 seconds for large Bible files)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
+  let response;
+  try {
+    response = await fetch(url, { 
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+  } catch (fetchError: any) {
+    clearTimeout(timeoutId);
+    console.error('[Bible] Fetch error:', fetchError.message);
+    throw new Error(`Failed to fetch Bible: ${fetchError.message}`);
+  }
+  clearTimeout(timeoutId);
+  
   console.log('[Bible] Response status:', response.status, 'ok:', response.ok);
   
   if (!response.ok) {
