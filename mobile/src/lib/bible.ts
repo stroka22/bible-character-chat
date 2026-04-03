@@ -80,25 +80,47 @@ async function loadBibleData(translation: string): Promise<any> {
     const cached = await AsyncStorage.getItem(cacheKey);
     if (cached) {
       const data = JSON.parse(cached);
-      bibleCache[effectiveTranslation] = data;
-      return data;
+      // Validate it's actually Bible data
+      if (Array.isArray(data) && data.length > 0 && data[0].chapters) {
+        bibleCache[effectiveTranslation] = data;
+        return data;
+      }
+      // Invalid cache, clear it
+      console.log('[Bible] Invalid cache data, clearing...');
+      await AsyncStorage.removeItem(cacheKey);
     }
-  } catch {}
+  } catch (e) {
+    // Cache read failed, clear it
+    console.log('[Bible] Cache read error, clearing...', e);
+    await AsyncStorage.removeItem(cacheKey).catch(() => {});
+  }
   
-  // Fetch from server (follow redirects)
+  // Fetch from server
   const url = `${BASE_URL}/data/${effectiveTranslation.toLowerCase()}.json`;
-  const response = await fetch(url, { redirect: 'follow' });
+  console.log('[Bible] Fetching from:', url);
+  
+  const response = await fetch(url);
+  console.log('[Bible] Response status:', response.status, 'ok:', response.ok);
+  
   if (!response.ok) {
     throw new Error(`Failed to load ${effectiveTranslation} Bible (${response.status})`);
   }
   
   const text = await response.text();
+  console.log('[Bible] Response length:', text.length, 'first 100 chars:', text.substring(0, 100));
+  
   let data;
   try {
     data = JSON.parse(text);
   } catch (e) {
-    console.error('[Bible] JSON parse error, response:', text.substring(0, 200));
+    console.error('[Bible] JSON parse error, response preview:', text.substring(0, 500));
     throw new Error(`Failed to parse Bible data: Invalid JSON response`);
+  }
+  
+  // Validate parsed data
+  if (!Array.isArray(data) || data.length === 0) {
+    console.error('[Bible] Parsed data is not valid Bible format');
+    throw new Error('Failed to parse Bible data: Invalid format');
   }
   bibleCache[effectiveTranslation] = data;
   
