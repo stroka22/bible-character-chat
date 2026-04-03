@@ -1,7 +1,7 @@
 // Bible provider for mobile - fetches Bible data from the web app's static JSON files
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'https://faithtalkai.com';
+const BASE_URL = 'https://www.faithtalkai.com';
 const CACHE_PREFIX = 'bible_cache_';
 
 export interface BibleVerse {
