@@ -1049,7 +1049,7 @@ Keep each section concise but informative. This is for someone about to have a c
             style={{
               position: 'absolute',
               right: 16,
-              bottom: studyId ? 160 : 80,
+              bottom: studyId ? 200 : 120,
               width: 44,
               height: 44,
               borderRadius: 22,
