@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, View, Image, Alert, Share, Clipboard, ScrollView, Modal } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View, Image, Alert, Share, Clipboard, ScrollView, Modal, ActionSheetIOS, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -74,6 +74,15 @@ export default function ChatDetail() {
   
   // Premium status for button styling
   const [isPremium, setIsPremium] = React.useState(false);
+  
+  // FlatList ref and scroll-to-bottom state
+  const flatListRef = React.useRef<FlatList>(null);
+  const [showScrollButton, setShowScrollButton] = React.useState(false);
+  const [isNearBottom, setIsNearBottom] = React.useState(true);
+  
+  // Message editing state
+  const [editingMessageId, setEditingMessageId] = React.useState<string | null>(null);
+  const [editText, setEditText] = React.useState('');
   
   React.useEffect(() => {
     (async () => {
@@ -807,6 +816,83 @@ Keep each section concise but informative. This is for someone about to have a c
     }
   };
 
+  // Scroll to bottom handler
+  const scrollToBottom = () => {
+    flatListRef.current?.scrollToEnd({ animated: true });
+  };
+
+  // Handle scroll events for showing/hiding scroll button
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
+    const nearBottom = distanceFromBottom < 100;
+    setIsNearBottom(nearBottom);
+    setShowScrollButton(!nearBottom && contentSize.height > layoutMeasurement.height + 200);
+  };
+
+  // Handle long press on a message - show copy/edit options
+  const handleMessageLongPress = (message: ChatMessage) => {
+    const isUserMessage = message.role === 'user';
+    
+    if (Platform.OS === 'ios') {
+      const options = isUserMessage 
+        ? ['Copy', 'Edit', 'Cancel']
+        : ['Copy', 'Cancel'];
+      const cancelButtonIndex = options.length - 1;
+      
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex },
+        (buttonIndex) => {
+          if (buttonIndex === 0) {
+            // Copy
+            Clipboard.setString(message.content);
+            Alert.alert('Copied', 'Message copied to clipboard');
+          } else if (isUserMessage && buttonIndex === 1) {
+            // Edit (only for user messages)
+            setEditingMessageId(message.id);
+            setEditText(message.content);
+          }
+        }
+      );
+    } else {
+      // Android - use Alert
+      const buttons = isUserMessage
+        ? [
+            { text: 'Copy', onPress: () => { Clipboard.setString(message.content); Alert.alert('Copied', 'Message copied to clipboard'); }},
+            { text: 'Edit', onPress: () => { setEditingMessageId(message.id); setEditText(message.content); }},
+            { text: 'Cancel', style: 'cancel' as const }
+          ]
+        : [
+            { text: 'Copy', onPress: () => { Clipboard.setString(message.content); Alert.alert('Copied', 'Message copied to clipboard'); }},
+            { text: 'Cancel', style: 'cancel' as const }
+          ];
+      
+      Alert.alert('Message Options', '', buttons);
+    }
+  };
+
+  // Save edited message
+  const saveEditedMessage = async () => {
+    if (!editingMessageId || !editText.trim()) return;
+    
+    const updatedMessages = messages.map(m => 
+      m.id === editingMessageId ? { ...m, content: editText.trim() } : m
+    );
+    setMessages(updatedMessages);
+    
+    // If not ephemeral, save to database
+    if (!isEphemeral && chatId && user?.id) {
+      try {
+        await chat.updateMessage(editingMessageId, editText.trim());
+      } catch (e) {
+        console.error('Failed to save edited message:', e);
+      }
+    }
+    
+    setEditingMessageId(null);
+    setEditText('');
+  };
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: theme.colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}>
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -915,6 +1001,7 @@ Keep each section concise but informative. This is for someone about to have a c
         </Modal>
 
         <FlatList
+          ref={flatListRef}
           data={messages.filter((m) => {
             if (m.role === 'system') return false;
             const content = m.content || '';
@@ -926,21 +1013,59 @@ Keep each section concise but informative. This is for someone about to have a c
           })}
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: 12, paddingBottom: 12 + Math.max(insets.bottom, 8) + 56 }}
+          onScroll={handleScroll}
+          scrollEventThrottle={100}
+          onContentSizeChange={() => {
+            // Auto-scroll to bottom when new messages arrive, if user is near bottom
+            if (isNearBottom) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
           renderItem={({ item }) => (
-            <View style={{
-              alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start',
-              backgroundColor: item.role === 'user' ? theme.colors.primary : theme.colors.card,
-              padding: 10,
-              borderRadius: 12,
-              marginBottom: 8,
-              maxWidth: '85%',
-              borderWidth: item.role === 'user' ? 0 : 1,
-              borderColor: theme.colors.border
-            }}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onLongPress={() => handleMessageLongPress(item)}
+              delayLongPress={300}
+              style={{
+                alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start',
+                backgroundColor: item.role === 'user' ? theme.colors.primary : theme.colors.card,
+                padding: 10,
+                borderRadius: 12,
+                marginBottom: 8,
+                maxWidth: '85%',
+                borderWidth: item.role === 'user' ? 0 : 1,
+                borderColor: theme.colors.border
+              }}
+            >
               <Text style={{ color: item.role === 'user' ? theme.colors.primaryText : theme.colors.text }}>{item.content}</Text>
-            </View>
+            </TouchableOpacity>
           )}
         />
+        
+        {/* Scroll to bottom button */}
+        {showScrollButton && (
+          <TouchableOpacity
+            onPress={scrollToBottom}
+            style={{
+              position: 'absolute',
+              right: 16,
+              bottom: studyId ? 160 : 80,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: theme.colors.primary,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 5
+            }}
+          >
+            <Text style={{ color: theme.colors.primaryText, fontSize: 20, fontWeight: 'bold' }}>↓</Text>
+          </TouchableOpacity>
+        )}
         {/* Back to Study + Save/Complete buttons for Bible Studies */}
         {studyId && (
           <View style={{ paddingHorizontal: 12, paddingBottom: 6 }}>
@@ -1034,6 +1159,46 @@ Keep each section concise but informative. This is for someone about to have a c
           onAccept={handleConsentAccept}
           onDecline={handleConsentDecline}
         />
+        
+        {/* Edit Message Modal */}
+        <Modal visible={!!editingMessageId} transparent animationType="fade">
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 }}>
+            <View style={{ backgroundColor: theme.colors.background, borderRadius: 12, padding: 16 }}>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: theme.colors.text, marginBottom: 12 }}>Edit Message</Text>
+              <TextInput
+                value={editText}
+                onChangeText={setEditText}
+                multiline
+                style={{
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.surface,
+                  color: theme.colors.text,
+                  borderRadius: 8,
+                  padding: 12,
+                  minHeight: 100,
+                  maxHeight: 200,
+                  textAlignVertical: 'top'
+                }}
+                autoFocus
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
+                <TouchableOpacity
+                  onPress={() => { setEditingMessageId(null); setEditText(''); }}
+                  style={{ paddingVertical: 10, paddingHorizontal: 20 }}
+                >
+                  <Text style={{ color: theme.colors.muted, fontWeight: '600' }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={saveEditedMessage}
+                  style={{ backgroundColor: theme.colors.primary, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 }}
+                >
+                  <Text style={{ color: theme.colors.primaryText, fontWeight: '600' }}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
       </SafeAreaView>
     </KeyboardAvoidingView>

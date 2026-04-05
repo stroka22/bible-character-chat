@@ -143,6 +143,14 @@ export const chat = {
       .eq('id', chatId);
     if (error) throw error;
   },
+
+  async updateMessage(messageId: string, content: string): Promise<void> {
+    const { error } = await supabase
+      .from('chat_messages')
+      .update({ content })
+      .eq('id', messageId);
+    if (error) throw error;
+  },
 };
 
 export default chat;
