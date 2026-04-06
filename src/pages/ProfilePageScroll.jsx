@@ -215,7 +215,17 @@ const ProfilePageScroll = () => {
             </div>
           </div>
 
-          <div className="mt-8 text-center">
+          {/* Delete Account */}
+          <div className="mt-8 pt-6 border-t border-red-200">
+            <Link
+              to="/delete-account"
+              className="text-red-600 hover:text-red-800 text-sm"
+            >
+              Delete Account
+            </Link>
+          </div>
+
+          <div className="mt-6 text-center">
             <Link to="/" className="text-amber-600 hover:text-amber-800 text-sm">← Back to Home</Link>
           </div>
         </ScrollWrap>
