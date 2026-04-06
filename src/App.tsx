@@ -86,6 +86,7 @@ import InfluencerPartnerPage from './pages/InfluencerPartnerPage.jsx';
 import UserFeaturesPageScroll from './pages/UserFeaturesPageScroll.jsx';
 import BusinessFeaturesPageScroll from './pages/BusinessFeaturesPageScroll.jsx';
 import StudyLessonScroll from './pages/StudyLessonScroll.jsx';
+import DeleteAccountPage from './pages/DeleteAccountPage.jsx';
 import DebugPanel from './components/DebugPanel';
 import Header from './components/Header';
 import LeadCaptureBanner from './components/LeadCaptureBanner';
@@ -435,6 +436,7 @@ function AppContent() {
     <Route path="/favorites" element={<FavoritesPageScroll />} />
     <Route path="/profile" element={<ProfilePageScroll />} />
     <Route path="/settings" element={<SettingsPageScroll />} />
+    <Route path="/delete-account" element={<DeleteAccountPage />} />
     
     {/* ============================================================
         CLASSIC THEME (Blue) - Fallback at /classic/*
