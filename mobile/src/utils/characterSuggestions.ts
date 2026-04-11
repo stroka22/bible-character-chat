@@ -70,6 +70,25 @@ export function getBestCharacterName(readings: { book: string; chapter: number }
   if (titleLower.includes('daniel')) return 'Daniel';
   if (titleLower.includes('elijah')) return 'Elijah';
   if (titleLower.includes('mary')) return 'Mary';
+  // Topic-based hints
+  if (titleLower.includes('spirit')) return 'Paul';
+  if (titleLower.includes('fruit')) return 'Paul';
+  if (titleLower.includes('galatians')) return 'Paul';
+  if (titleLower.includes('romans')) return 'Paul';
+  if (titleLower.includes('corinthians')) return 'Paul';
+  if (titleLower.includes('ephesians')) return 'Paul';
+  if (titleLower.includes('philippians')) return 'Paul';
+  if (titleLower.includes('colossians')) return 'Paul';
+  if (titleLower.includes('thessalonians')) return 'Paul';
+  if (titleLower.includes('acts')) return 'Paul';
+  if (titleLower.includes('faith')) return 'Abraham';
+  if (titleLower.includes('prayer')) return 'David';
+  if (titleLower.includes('hope')) return 'Paul';
+  if (titleLower.includes('love')) return 'John';
+  if (titleLower.includes('courage')) return 'David';
+  if (titleLower.includes('wisdom')) return 'Solomon';
+  if (titleLower.includes('suffering')) return 'Job';
+  if (titleLower.includes('forgiveness')) return 'Joseph';
   
   return getSuggestedCharacterName(readings);
 }

@@ -960,11 +960,42 @@ Keep each section concise but informative. This is for someone about to have a c
                   ]);
                   return;
                 }
-                // Free users can save - they just can't access saved chats in My Walk without premium
-                await chat.toggleFavorite(chatId, !isFav);
-                setIsFav(!isFav);
-                if (!isFav) {
-                  Alert.alert('Saved!', 'Your conversation has been saved. Upgrade to Premium to access your saved conversations in My Walk anytime.');
+                
+                try {
+                  // If this is an ephemeral chat, we need to create it first
+                  if (isEphemeral || !chatId) {
+                    if (!character?.id) {
+                      Alert.alert('Error', 'Cannot save - no character selected.');
+                      return;
+                    }
+                    // Create the chat
+                    const newChat = await chat.createChat(user.id, character.id, title || 'Conversation');
+                    
+                    // Save all messages to the new chat
+                    for (const msg of messages) {
+                      if (msg.role !== 'system') {
+                        await chat.addMessage(newChat.id, msg.content, msg.role);
+                      }
+                    }
+                    
+                    // Mark as favorite
+                    await chat.toggleFavorite(newChat.id, true);
+                    setIsFav(true);
+                    
+                    // Navigate to the saved chat (replacing this ephemeral one)
+                    navigation.replace('ChatDetail', { chatId: newChat.id, character });
+                    Alert.alert('Saved!', 'Your conversation has been saved. Upgrade to Premium to access your saved conversations in My Walk anytime.');
+                  } else {
+                    // Regular toggle for existing chats
+                    await chat.toggleFavorite(chatId, !isFav);
+                    setIsFav(!isFav);
+                    if (!isFav) {
+                      Alert.alert('Saved!', 'Your conversation has been saved. Upgrade to Premium to access your saved conversations in My Walk anytime.');
+                    }
+                  }
+                } catch (e) {
+                  console.error('Error saving chat:', e);
+                  Alert.alert('Error', 'Failed to save conversation. Please try again.');
                 }
               }}
               style={{ backgroundColor: isFav ? theme.colors.primary : theme.colors.surface, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: isFav ? theme.colors.primary : theme.colors.border }}
