@@ -138,8 +138,27 @@ export default function BibleReaderScroll() {
       reference += ranges.join(', ');
     }
     
-    // Find suggested character based on book
-    const suggestedChar = authorChar || Array.from(charMap.values())[0];
+    // Find suggested character based on book author
+    // Re-lookup from charMap in case it wasn't populated during initial render
+    const bookAuthor = BOOK_AUTHOR[book];
+    let suggestedChar = bookAuthor ? charMap.get(bookAuthor.toLowerCase()) : null;
+    
+    // If not found by exact match, try partial match
+    if (!suggestedChar && bookAuthor && charMap.size > 0) {
+      const authorLower = bookAuthor.toLowerCase();
+      for (const [name, char] of charMap.entries()) {
+        if (name.includes(authorLower) || authorLower.includes(name)) {
+          suggestedChar = char;
+          break;
+        }
+      }
+    }
+    
+    // Final fallback to first character (alphabetically)
+    if (!suggestedChar && charMap.size > 0) {
+      suggestedChar = Array.from(charMap.values())[0];
+    }
+    
     const characterId = suggestedChar?.id || '';
     const context = encodeURIComponent(`Discussing ${reference} (${translation}):\n\n${passageText}`);
     
