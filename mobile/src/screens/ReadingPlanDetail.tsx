@@ -31,6 +31,7 @@ import { getBestCharacterName } from '../utils/characterSuggestions';
 interface RouteParams {
   planId?: string;
   slug?: string;
+  initialDay?: number;
 }
 
 export default function ReadingPlanDetail() {
@@ -66,11 +67,18 @@ export default function ReadingPlanDetail() {
       setDays(daysData);
       setProgress(progressData);
 
-      // Auto-select current day if user has progress
-      if (progressData && !selectedDay) {
-        const currentDayData = daysData.find(d => d.day_number === progressData.current_day);
-        if (currentDayData) {
-          setSelectedDay(currentDayData);
+      // Auto-select day: prioritize initialDay param, then current progress
+      if (!selectedDay) {
+        if (params.initialDay) {
+          const initialDayData = daysData.find(d => d.day_number === params.initialDay);
+          if (initialDayData) {
+            setSelectedDay(initialDayData);
+          }
+        } else if (progressData) {
+          const currentDayData = daysData.find(d => d.day_number === progressData.current_day);
+          if (currentDayData) {
+            setSelectedDay(currentDayData);
+          }
         }
       }
     } catch (e: any) {

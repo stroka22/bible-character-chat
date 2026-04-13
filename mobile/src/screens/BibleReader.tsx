@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -11,6 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
 import {
   AVAILABLE_TRANSLATIONS,
@@ -40,6 +41,7 @@ export default function BibleReader() {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const params = (route.params || {}) as RouteParams;
+  const planContext = params.readingPlanContext;
 
   const [translation, setTranslation] = useState(params.translation || 'KJV');
   const [book, setBook] = useState(params.book || 'Genesis');
@@ -47,6 +49,27 @@ export default function BibleReader() {
   const [data, setData] = useState<ChapterData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Custom back button to return to the reading plan day (not just the plan)
+  useLayoutEffect(() => {
+    if (planContext?.planSlug && planContext?.dayNumber) {
+      navigation.setOptions({
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('ReadingPlanDetail', {
+                slug: planContext.planSlug,
+                initialDay: planContext.dayNumber,
+              });
+            }}
+            style={{ marginLeft: 8, padding: 8 }}
+          >
+            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+        ),
+      });
+    }
+  }, [navigation, planContext]);
 
   // Modal states
   const [showTranslationPicker, setShowTranslationPicker] = useState(false);
