@@ -17,7 +17,7 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.faithtalkai.app",
       "icon": "./assets/icon-ios.png",
-      "buildNumber": "86",
+      "buildNumber": "87",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -27,7 +27,7 @@
     },
     "android": {
       "package": "com.faithtalkai.app",
-      "versionCode": 85,
+      "versionCode": 87,
       "icon": "./assets/icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
