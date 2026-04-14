@@ -18,6 +18,8 @@ import {
   BIBLE_BOOKS,
   getChapters,
   getChapterText,
+  getDefaultTranslation,
+  setDefaultTranslation,
   ChapterData,
 } from '../lib/bible';
 
@@ -57,6 +59,23 @@ export default function BibleReader() {
   const [data, setData] = useState<ChapterData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isDefaultTranslation, setIsDefaultTranslation] = useState(false);
+  
+  // Load user's default translation on mount (only if no translation param passed)
+  useEffect(() => {
+    if (!params.translation) {
+      getDefaultTranslation().then(defaultTrans => {
+        setTranslation(defaultTrans);
+      });
+    }
+  }, []);
+  
+  // Check if current translation is the default
+  useEffect(() => {
+    getDefaultTranslation().then(defaultTrans => {
+      setIsDefaultTranslation(translation === defaultTrans);
+    });
+  }, [translation]);
   
   // Reading plan navigation
   const readings = planContext?.readings || [];
@@ -426,12 +445,32 @@ export default function BibleReader() {
       {/* Translation Picker Modal */}
       <Modal visible={showTranslationPicker} animationType="slide" transparent>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
-          <View style={{ backgroundColor: theme.colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' }}>
-            <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '700' }}>Select Translation</Text>
-              <TouchableOpacity onPress={() => setShowTranslationPicker(false)}>
-                <Text style={{ color: theme.colors.primary, fontSize: 16 }}>Done</Text>
-              </TouchableOpacity>
+          <View style={{ backgroundColor: theme.colors.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%' }}>
+            <View style={{ padding: 16, borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: '700' }}>Select Translation</Text>
+                <TouchableOpacity onPress={() => setShowTranslationPicker(false)}>
+                  <Text style={{ color: theme.colors.primary, fontSize: 16 }}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              {!isDefaultTranslation && (
+                <TouchableOpacity 
+                  onPress={async () => {
+                    await setDefaultTranslation(translation);
+                    setIsDefaultTranslation(true);
+                  }}
+                  style={{ marginTop: 12 }}
+                >
+                  <Text style={{ color: theme.colors.primary, fontSize: 14 }}>
+                    ★ Set {translation} as my default
+                  </Text>
+                </TouchableOpacity>
+              )}
+              {isDefaultTranslation && (
+                <Text style={{ color: theme.colors.muted, fontSize: 14, marginTop: 12 }}>
+                  ★ {translation} is your default translation
+                </Text>
+              )}
             </View>
             <FlatList
               data={AVAILABLE_TRANSLATIONS}

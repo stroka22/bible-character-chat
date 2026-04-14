@@ -3,6 +3,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BASE_URL = 'https://www.faithtalkai.com';
 const CACHE_PREFIX = 'bible_cache_';
+const DEFAULT_TRANSLATION_KEY = 'bible_default_translation';
+
+// Get user's preferred default translation
+export async function getDefaultTranslation(): Promise<string> {
+  try {
+    const value = await AsyncStorage.getItem(DEFAULT_TRANSLATION_KEY);
+    return value || 'KJV';
+  } catch {
+    return 'KJV';
+  }
+}
+
+// Set user's preferred default translation
+export async function setDefaultTranslation(code: string): Promise<void> {
+  try {
+    await AsyncStorage.setItem(DEFAULT_TRANSLATION_KEY, code);
+  } catch {}
+}
 
 export interface BibleVerse {
   book: string;

@@ -27,6 +27,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { chat } from '../lib/chat';
 import { getBestCharacterName } from '../utils/characterSuggestions';
+import { getDefaultTranslation } from '../lib/bible';
 
 interface RouteParams {
   planId?: string;
@@ -430,11 +431,12 @@ export default function ReadingPlanDetail() {
     }
   };
 
-  const openReading = (reading: { book: string; chapter: number; verses?: string }, readingIndex: number) => {
+  const openReading = async (reading: { book: string; chapter: number; verses?: string }, readingIndex: number) => {
     const allReadings = selectedDay?.readings || [];
+    const defaultTranslation = await getDefaultTranslation();
     // Pass reading plan context so highlighted verses can flow into character chat
     navigation.navigate('Bible', {
-      translation: 'KJV',
+      translation: defaultTranslation,
       book: reading.book,
       chapter: reading.chapter,
       readingPlanContext: plan ? {
