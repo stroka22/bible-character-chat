@@ -21,6 +21,12 @@ import {
   ChapterData,
 } from '../lib/bible';
 
+interface Reading {
+  book: string;
+  chapter: number;
+  verses?: string;
+}
+
 interface ReadingPlanContext {
   planTitle: string;
   planSlug: string;
@@ -28,6 +34,8 @@ interface ReadingPlanContext {
   dayTitle?: string;
   reflectionPrompt?: string;
   suggestedCharacter?: string;
+  readings?: Reading[];
+  currentReadingIndex?: number;
 }
 
 interface RouteParams {
@@ -49,6 +57,13 @@ export default function BibleReader() {
   const [data, setData] = useState<ChapterData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Reading plan navigation
+  const readings = planContext?.readings || [];
+  const [currentReadingIndex, setCurrentReadingIndex] = useState(planContext?.currentReadingIndex || 0);
+  const hasMultipleReadings = readings.length > 1;
+  const hasPrevReading = currentReadingIndex > 0;
+  const hasNextReading = currentReadingIndex < readings.length - 1;
 
   // Custom back button to return to the reading plan day (not just the plan)
   useLayoutEffect(() => {
@@ -70,6 +85,16 @@ export default function BibleReader() {
       });
     }
   }, [navigation, planContext]);
+
+  // Navigate to a different reading in the plan
+  const goToReading = (index: number) => {
+    if (index >= 0 && index < readings.length) {
+      const reading = readings[index];
+      setCurrentReadingIndex(index);
+      setBook(reading.book);
+      setChapter(reading.chapter);
+    }
+  };
 
   // Modal states
   const [showTranslationPicker, setShowTranslationPicker] = useState(false);
@@ -313,13 +338,50 @@ export default function BibleReader() {
             );
           })}
 
-          {/* Navigation */}
+          {/* Reading Plan Navigation - show when there are multiple readings */}
+          {hasMultipleReadings && (
+            <View style={{ 
+              marginTop: 24, 
+              padding: 16, 
+              backgroundColor: theme.colors.surface, 
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+            }}>
+              <Text style={{ 
+                color: theme.colors.muted, 
+                fontSize: 12, 
+                textAlign: 'center',
+                marginBottom: 8,
+              }}>
+                Reading {currentReadingIndex + 1} of {readings.length}
+              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <TouchableOpacity 
+                  onPress={() => goToReading(currentReadingIndex - 1)} 
+                  disabled={!hasPrevReading}
+                  style={{ padding: 12, opacity: hasPrevReading ? 1 : 0.3 }}
+                >
+                  <Text style={{ color: theme.colors.primary, fontSize: 16 }}>← Prev Reading</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => goToReading(currentReadingIndex + 1)} 
+                  disabled={!hasNextReading}
+                  style={{ padding: 12, opacity: hasNextReading ? 1 : 0.3 }}
+                >
+                  <Text style={{ color: theme.colors.primary, fontSize: 16 }}>Next Reading →</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Chapter Navigation */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24, paddingBottom: 40 }}>
             <TouchableOpacity onPress={goToPrevChapter} style={{ padding: 12 }}>
-              <Text style={{ color: theme.colors.primary, fontSize: 16 }}>← Previous</Text>
+              <Text style={{ color: theme.colors.muted, fontSize: 14 }}>← Prev Chapter</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={goToNextChapter} style={{ padding: 12 }}>
-              <Text style={{ color: theme.colors.primary, fontSize: 16 }}>Next →</Text>
+              <Text style={{ color: theme.colors.muted, fontSize: 14 }}>Next Chapter →</Text>
             </TouchableOpacity>
           </View>
 

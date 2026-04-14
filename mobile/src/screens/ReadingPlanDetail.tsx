@@ -430,7 +430,8 @@ export default function ReadingPlanDetail() {
     }
   };
 
-  const openReading = (reading: { book: string; chapter: number; verses?: string }) => {
+  const openReading = (reading: { book: string; chapter: number; verses?: string }, readingIndex: number) => {
+    const allReadings = selectedDay?.readings || [];
     // Pass reading plan context so highlighted verses can flow into character chat
     navigation.navigate('Bible', {
       translation: 'KJV',
@@ -442,7 +443,9 @@ export default function ReadingPlanDetail() {
         dayNumber: selectedDay?.day_number,
         dayTitle: selectedDay?.title,
         reflectionPrompt: selectedDay?.reflection_prompt,
-        suggestedCharacter: getBestCharacterName(selectedDay?.readings || [], plan.title),
+        suggestedCharacter: getBestCharacterName(allReadings, plan.title),
+        readings: allReadings,
+        currentReadingIndex: readingIndex,
       } : undefined,
     });
   };
@@ -570,7 +573,7 @@ export default function ReadingPlanDetail() {
             {selectedDay.readings?.map((reading, idx) => (
               <TouchableOpacity
                 key={idx}
-                onPress={() => openReading(reading)}
+                onPress={() => openReading(reading, idx)}
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
@@ -763,7 +766,7 @@ export default function ReadingPlanDetail() {
                   onPress={() => {
                     const firstReading = selectedDay?.readings?.[0];
                     if (firstReading) {
-                      openReading(firstReading);
+                      openReading(firstReading, 0);
                     }
                   }}
                   style={{
