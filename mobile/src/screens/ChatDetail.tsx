@@ -816,9 +816,12 @@ Keep each section concise but informative. This is for someone about to have a c
     }
   };
 
-  // Scroll to bottom handler
+  // Scroll to bottom handler - use scrollToOffset for reliability
   const scrollToBottom = () => {
-    flatListRef.current?.scrollToEnd({ animated: true });
+    if (flatListRef.current && messages.length > 0) {
+      // Use a very large offset to ensure we reach the bottom
+      flatListRef.current.scrollToOffset({ offset: 999999, animated: true });
+    }
   };
 
   // Handle scroll events for showing/hiding scroll button
