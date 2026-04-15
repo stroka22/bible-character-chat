@@ -2,6 +2,11 @@
   "buildCommand": "vite build",
   "framework": "vite",
   "outputDirectory": "dist",
+  "functions": {
+    "api/**": {
+      "maxDuration": 60
+    }
+  },
   "github": {
     "silent": true
   },
