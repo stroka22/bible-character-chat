@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 // Use the unified ChatContext implementation so *all* components
 // (including any legacy ones still importing from `../contexts/ChatContext`)
@@ -500,6 +501,7 @@ function AppContent() {
     {/* Fallback route */}
     <Route path="*" element={<Navigate to="/" replace={true} />} />
     </Routes></main></div>
+    <Analytics />
   </>);
 }
 
