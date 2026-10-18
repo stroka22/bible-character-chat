@@ -647,6 +647,34 @@ const ChatPageScroll = () => {
             console.log('[ChatPageScroll] About to call hydrateFromConversation...');
             hydrateFromConversation(conv);
             console.log('[ChatPageScroll] Hydrated conversation');
+
+            // If this conversation belongs to a Bible Study, restore the lesson
+            // system context so the character keeps leading the study on reopen.
+            // Only re-trigger the prayer/intro when the chat has no messages yet.
+            if (conv.study_id && setLessonContext) {
+              let lessonIdx = (typeof conv.lesson_id === 'number') ? conv.lesson_id : null;
+              if (lessonIdx === null && conv.progress_id && user?.id) {
+                try {
+                  const prog = await bibleStudiesRepository.getProgress({
+                    userId: user.id,
+                    studyId: conv.study_id,
+                    progressId: conv.progress_id
+                  });
+                  lessonIdx = prog?.current_lesson_index ?? 0;
+                } catch {
+                  lessonIdx = 0;
+                }
+              }
+              if (lessonIdx === null) lessonIdx = 0;
+              const hasMessages = (conv.messages || []).length > 0;
+              loadBibleStudyContext(
+                conv.study_id,
+                lessonIdx,
+                conv.progress_id || null,
+                setLessonContext,
+                hasMessages ? null : sendMessage
+              );
+            }
           }
         } catch (err) {
           if (!cancelled) console.error('[ChatPageScroll] Failed to load conversation:', err);
@@ -736,7 +764,7 @@ const ChatPageScroll = () => {
     loadFromUrl();
     
     return () => { cancelled = true; };
-  }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext, selectCharacter, fetchConversationWithMessages, hydrateFromConversation, sendMessage]);
+  }, [conversationId, location.search, characters, tierSettings, isPremium, setLessonContext, selectCharacter, fetchConversationWithMessages, hydrateFromConversation, sendMessage, user?.id]);
 
   // Update URL when chat is saved (so refresh will reload conversation)
   useEffect(() => {
