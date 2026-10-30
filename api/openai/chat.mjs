@@ -88,7 +88,7 @@ export default async function handler(req, res) {
 
     let generatedText = await callOpenAI('gpt-4o-mini');
     if (!generatedText) generatedText = await callOpenAI('gpt-4o');
-    if (!generatedText) generatedText = await callOpenAI('gpt-4');
+    if (!generatedText) generatedText = await callOpenAI('gpt-4.1-mini');
 
     if (!generatedText) {
       return res.status(502).json({ error: 'Failed to generate response from OpenAI' });
